@@ -1,4 +1,4 @@
-package uk.gov.hmrc.tradergoodsprofilesrouter
+package uk.gov.hmrc.tradergoodsprofiles
 
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers

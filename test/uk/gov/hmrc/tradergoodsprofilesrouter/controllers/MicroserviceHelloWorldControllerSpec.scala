@@ -1,4 +1,4 @@
-package uk.gov.hmrc.tradergoodsprofilesrouter.controllers
+package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec

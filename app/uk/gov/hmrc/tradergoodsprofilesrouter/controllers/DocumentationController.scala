@@ -1,4 +1,4 @@
-package uk.gov.hmrc.tradergoodsprofilesrouter.controllers
+package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import controllers.Assets
 import javax.inject.{Inject, Singleton}

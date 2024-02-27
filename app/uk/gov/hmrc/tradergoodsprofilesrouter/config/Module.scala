@@ -1,4 +1,4 @@
-package uk.gov.hmrc.tradergoodsprofilesrouter.config
+package uk.gov.hmrc.tradergoodsprofiles.config
 
 import com.google.inject.AbstractModule
 
