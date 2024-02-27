@@ -1,5 +1,5 @@
 
-# trader-goods-profiles
+# trader-goods-profiles-router
 
 This is a placeholder README.md for a new repository
 

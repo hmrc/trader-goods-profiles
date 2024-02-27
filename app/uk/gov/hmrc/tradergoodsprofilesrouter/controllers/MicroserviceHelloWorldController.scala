@@ -1,4 +1,4 @@
-package uk.gov.hmrc.tradergoodsprofiles.controllers
+package uk.gov.hmrc.tradergoodsprofilesrouter.controllers
 
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import play.api.mvc.{Action, AnyContent, ControllerComponents}

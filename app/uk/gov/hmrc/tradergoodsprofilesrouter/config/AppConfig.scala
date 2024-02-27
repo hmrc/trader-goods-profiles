@@ -1,4 +1,4 @@
-package uk.gov.hmrc.tradergoodsprofiles.config
+package uk.gov.hmrc.tradergoodsprofilesrouter.config
 
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration

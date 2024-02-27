@@ -1,3 +1,4 @@
 # Add all the application routes to the app.routes file
-->         /trader-goods-profiles              app.Routes
+->         /                          app.Routes
 ->         /                          health.Routes
+->         /                          definition.Routes
