@@ -1,0 +1,17 @@
+{
+  "scopes": [
+  ],
+  "api": {
+    "name": "Trader Goods Profiles",
+    "description": "The externally facing API for the TGP service",
+    "context": "/customs/trader-goods-profiles/",
+    "categories": ["CUSTOMS"],
+    "versions": [
+      {
+        "version": "1.4",
+        "status": "ALPHA",
+        "endpointsEnabled": false
+      }
+    ]
+  }
+}
