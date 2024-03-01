@@ -1,4 +1,3 @@
-application.yaml
 openapi: 3.0.3
 info:
   title: TGP Product APIs - OpenAPI 3.0
