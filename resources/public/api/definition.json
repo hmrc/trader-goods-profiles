@@ -4,7 +4,7 @@
   "api": {
     "name": "Trader Goods Profiles",
     "description": "The externally facing API for the TGP service",
-    "context": "/customs/trader-goods-profiles/",
+    "context": "customs/traders/goods-profiles",
     "categories": ["CUSTOMS"],
     "versions": [
       {
