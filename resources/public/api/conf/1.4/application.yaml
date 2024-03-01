@@ -2,8 +2,7 @@ openapi: 3.0.3
 info:
   title: TGP Product APIs - OpenAPI 3.0
   version: "1.4"
-  description: 1. Updated commcode_effective_from_date and commcode_effective_to
-    date to comcode_effective_from_date and comcode_effective_to_date
+  description: "1. Updated commcode_effective_from_date and commcode_effective_to date to comcode_effective_from_date and comcode_effective_to_date"
 servers:
   - url: https://www.trader-goods-profile.service.gov.uk/api/v(?)
 tags:
@@ -25,8 +24,7 @@ paths:
           required: true
           schema:
             type: string
-          description: The name or IP address of the application system that submitted the
-            message.
+          description: The name or IP address of the application system that submitted the message.
           example: TSS
         - in: header
           name: Date
@@ -34,8 +32,7 @@ paths:
           schema:
             type: string
             format: date-time
-          description: The date and time that the message was originated(in "HTTP-date"
-            format as defined by FRC 7231 Date/Time formats
+          description: The date and time that the message was originated(in "HTTP-date" format as defined by FRC 7231 Date/Time formats
           example: Sun, 06 Nov 2023 08:49:37 GMT
         - in: header
           name: X-Client-ID
@@ -44,6 +41,7 @@ paths:
             type: string
           description: Identifier of calling system
           example: TSS
+
       tags:
         - TGP Product
       summary: Create a TGP Product
@@ -52,15 +50,15 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TGPCreateProductSchema"
+              $ref: '#/components/schemas/TGPCreateProductSchema'
         required: true
       responses:
-        "201":
+        '201':
           description: TGP Product was successfully created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TGPCreateProductResponseSchema"
+                $ref: '#/components/schemas/TGPCreateProductResponseSchema'
           headers:
             X-Correlation-ID:
               schema:
@@ -68,12 +66,13 @@ paths:
               description: A unique id created at source, i.e. client to TGP Digital.
               required: true
               example: 8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f
-        "400":
+        '400':
           description: Bad Request; Incorrect request parameters provided.
-        "401":
+        '401':
           description: Unauthorised; Credentials failed
-        "403":
+        '403':
           description: Forbidden;   User was valid, but not allowed to perform this action
+    
     patch:
       parameters:
         - in: header
@@ -88,8 +87,7 @@ paths:
           required: true
           schema:
             type: string
-          description: The name or IP address of the application system that submitted the
-            message.
+          description: The name or IP address of the application system that submitted the message.
           example: TSS
         - in: header
           name: Date
@@ -97,8 +95,7 @@ paths:
           schema:
             type: string
             format: date-time
-          description: The date and time that the message was originated(in "HTTP-date"
-            format as defined by FRC 7231 Date/Time formats
+          description: The date and time that the message was originated(in "HTTP-date" format as defined by FRC 7231 Date/Time formats
           example: Sun, 06 Nov 2023 08:49:37 GMT
         - in: header
           name: X-Client-ID
@@ -116,28 +113,29 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TGPUpdateProductSchema"
+              $ref: '#/components/schemas/TGPUpdateProductSchema'
         required: true
       responses:
-        "200":
+        '200':
           description: OK;   Request completed successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TGPUpdateProductResponseSchema"
+                $ref: '#/components/schemas/TGPUpdateProductResponseSchema'
+          
           headers:
             X-Correlation-ID:
               required: true
               schema:
                 type: string
               description: A unique id created at source, i.e. client to TGP Digital.
-        "400":
+        '400':
           description: Bad Request; Incorrect request parameters provided.
-        "401":
+        '401':
           description: Unauthorised; Credentials failed
-        "403":
+        '403':
           description: Forbidden;   User was valid, but not allowed to perform this action
-        "404":
+        '404':
           description: TGP Product not found to update
     put:
       parameters:
@@ -153,8 +151,7 @@ paths:
           required: true
           schema:
             type: string
-          description: The name or IP address of the application system that submitted the
-            message.
+          description: The name or IP address of the application system that submitted the message.
           example: TSS
         - in: header
           name: Date
@@ -162,8 +159,7 @@ paths:
           schema:
             type: string
             format: date-time
-          description: The date and time that the message was originated(in "HTTP-date"
-            format as defined by FRC 7231 Date/Time formats
+          description: The date and time that the message was originated(in "HTTP-date" format as defined by FRC 7231 Date/Time formats
           example: Sun, 06 Nov 2023 08:49:37 GMT
         - in: header
           name: X-Client-ID
@@ -180,28 +176,28 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TGPDeactivateProductSchema"
+              $ref: '#/components/schemas/TGPDeactivateProductSchema'
         required: true
       responses:
-        "200":
+        '200':
           description: OK;   Request completed successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TGPDeactivateProductResponse"
+                $ref: '#/components/schemas/TGPDeactivateProductResponse'
           headers:
             X-Correlation-ID:
               required: true
               schema:
                 type: string
               description: A unique id created at source, i.e. client to TGP Digital.
-        "400":
+        '400':
           description: Bad Request; Incorrect request parameters provided.
-        "401":
+        '401':
           description: Unauthorised; Credentials failed
-        "403":
+        '403':
           description: Forbidden;   User was valid, but not allowed to perform this action
-        "404":
+        '404':
           description: TGP Product not found to deactivate
     get:
       parameters:
@@ -217,8 +213,7 @@ paths:
           required: true
           schema:
             type: string
-          description: The name or IP address of the application system that submitted the
-            message.
+          description: The name or IP address of the application system that submitted the message.
           example: TSS
         - in: header
           name: Date
@@ -226,8 +221,7 @@ paths:
           schema:
             type: string
             format: date-time
-          description: The date and time that the message was originated(in "HTTP-date"
-            format as defined by FRC 7231 Date/Time formats
+          description: The date and time that the message was originated(in "HTTP-date" format as defined by FRC 7231 Date/Time formats
           example: Sun, 06 Nov 2023 08:49:37 GMT
         - in: header
           name: X-Client-ID
@@ -244,16 +238,14 @@ paths:
             minLength: 17
             maxLength: 17
           example: GB1234567890
-          description: Identity of the trader as known to HMRC. In the UK this is the
-            17-character EORI number.
+          description: Identity of the trader as known to HMRC. In the UK this is the 17-character EORI number.
         - in: query
           name: trader_ref
           required: false
           schema:
             type: string
             maxLength: 512
-          description: Unique product reference used by the trader to identify the goods.
-            For example a Stock Keeping Unit (SKU) code.
+          description: Unique product reference used by the trader to identify the goods. For example a Stock Keeping Unit (SKU) code.
           example: BAN001001
         - in: query
           name: goods_description
@@ -261,8 +253,7 @@ paths:
           schema:
             type: string
             maxLength: 512
-          description: Description of the goods using terminology that is familiar to the
-            trader. For example, Bananas or T-Shirts.
+          description: Description of the goods using terminology that is familiar to the trader. For example, Bananas or T-Shirts.
           example: Organic bananas
         - in: query
           name: state
@@ -279,8 +270,7 @@ paths:
             type: string
             minLength: 2
             maxLength: 2
-          description: "Country where the product came from. This is a char field with 2
-            letters in it as per ISO 3166 standards.  "
+          description: "Country where the product came from. This is a char field with 2 letters in it as per ISO 3166 standards.  "
           example: EC
         - in: query
           name: category
@@ -291,10 +281,7 @@ paths:
             minLength: 1
             maxLength: 1
           example: 1
-          description: To be retrieved using the Online Trade Tariff API. The category of
-            the goods based on applicable restrictions, prohibitions or any
-            exemptions the trader may hold. This is an integer field with value
-            1, 2, or 3.
+          description: To be retrieved using the Online Trade Tariff API. The category of the goods based on applicable restrictions, prohibitions or any exemptions the trader may hold. This is an integer field with value 1, 2, or 3.
         - in: query
           name: comcode
           required: false
@@ -302,32 +289,26 @@ paths:
             type: string
             maxLength: 10
           example: 104101000
-          description: A code specific to goods that is internationally recognised. Can be
-            6, 8 or 10 digits.
+          description: A code specific to goods that is internationally recognised. Can be 6, 8 or 10 digits.
         - in: query
           name: last_updated_from
-          description: Start of date range, all records after which have to be
-            retrieved.from the backend; should be the last_updated_date. This
-            should use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
+          description: Start of date range, all records after which have to be retrieved.from the backend; should be the last_updated_date. This should use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
           schema:
             type: string
             format: date-time
-            pattern: ^([1-9][0-9]{3})-(0[0-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])[T]([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])Z$
+            pattern: "^([1-9][0-9]{3})-(0[0-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])[T]([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])Z$"
           example: 2024-11-18T23:20:19Z
         - in: query
           name: last_updated_to
-          description: End of date range, all records before which have to be
-            retrieved.from the backend; should be the last_updated_date. This
-            should use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
+          description: End of date range, all records before which have to be retrieved.from the backend; should be the last_updated_date. This should use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
           schema:
             type: string
             format: date-time
-            pattern: ^([1-9][0-9]{3})-(0[0-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])[T]([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])Z$
+            pattern: "^([1-9][0-9]{3})-(0[0-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])[T]([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])Z$"
           example: 2024-11-18T23:20:19Z
         - in: query
           name: id_list
-          description: Comma separated list of TGP IDs. TGP_ID is an unique identifier of
-            the product record to be updated
+          description: Comma separated list of TGP IDs. TGP_ID is an unique identifier of the product record to be updated
           schema:
             type: string
           example: 1,2,3
@@ -336,29 +317,29 @@ paths:
       summary: Read/list TGP Data
       description: Helps read TGP Data
       responses:
-        "200":
+        '200':
           description: OK;   Request completed successfully
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/TGPUpdateProductResponseSchema"
+                  $ref: '#/components/schemas/TGPUpdateProductResponseSchema'
           headers:
             X-Correlation-ID:
               required: true
               schema:
                 type: string
               description: A unique id created at source, i.e. client to TGP Digital.
-        "400":
+        '400':
           description: Bad Request; Incorrect request parameters provided.
-        "401":
+        '401':
           description: Unauthorised; Credentials failed
-        "403":
+        '403':
           description: Forbidden;   User was valid, but not allowed to perform this action
-        "404":
+        '404':
           description: TGP data not found for the search criteria
-  "/tgpProduct/{trader_eori}":
+  /tgpProduct/{trader_eori}:
     get:
       parameters:
         - in: header
@@ -373,8 +354,7 @@ paths:
           required: true
           schema:
             type: string
-          description: The name or IP address of the application system that submitted the
-            message.
+          description: The name or IP address of the application system that submitted the message.
           example: TSS
         - in: header
           name: Date
@@ -382,8 +362,7 @@ paths:
           schema:
             type: string
             format: date-time
-          description: The date and time that the message was originated(in "HTTP-date"
-            format as defined by FRC 7231 Date/Time formats
+          description: The date and time that the message was originated(in "HTTP-date" format as defined by FRC 7231 Date/Time formats
           example: Sun, 06 Nov 2023 08:49:37 GMT
         - in: header
           name: X-Client-ID
@@ -400,36 +379,36 @@ paths:
             minLength: 17
             maxLength: 17
           example: GB1234567890
-          description: Identity of the trader as known to HMRC. In the UK this is the
-            17-character EORI number.
+          description: Identity of the trader as known to HMRC. In the UK this is the 17-character EORI number.
       tags:
         - TGP Product
       summary: Read/list TGP Data
       description: Helps read TGP Data
       responses:
-        "200":
+        '200':
           description: OK;   Request completed successfully
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/TGPUpdateProductResponseSchema"
+                  $ref: '#/components/schemas/TGPUpdateProductResponseSchema'
           headers:
             X-Correlation-ID:
               required: true
               schema:
                 type: string
               description: A unique id created at source, i.e. client to TGP Digital.
-        "400":
+        '400':
           description: Bad Request; Incorrect request parameters provided.
-        "401":
+        '401':
           description: Unauthorised; Credentials failed
-        "403":
+        '403':
           description: Forbidden;   User was valid, but not allowed to perform this action
-        "404":
+        '404':
           description: TGP data not found for the search criteria
-  "/tgpProduct/{trader_eori}/{page_number}/{last_updated_date}":
+  
+  /tgpProduct/{trader_eori}/{page_number}/{last_updated_date}:
     get:
       parameters:
         - in: header
@@ -444,8 +423,7 @@ paths:
           required: true
           schema:
             type: string
-          description: The name or IP address of the application system that submitted the
-            message.
+          description: The name or IP address of the application system that submitted the message.
           example: TSS
         - in: header
           name: Date
@@ -453,8 +431,7 @@ paths:
           schema:
             type: string
             format: date-time
-          description: The date and time that the message was originated(in "HTTP-date"
-            format as defined by FRC 7231 Date/Time formats
+          description: The date and time that the message was originated(in "HTTP-date" format as defined by FRC 7231 Date/Time formats
           example: Sun, 06 Nov 2023 08:49:37 GMT
         - in: header
           name: X-Client-ID
@@ -477,44 +454,42 @@ paths:
           schema:
             type: integer
           example: 1
-          description: Identity of the trader as known to HMRC. In the UK this is the
-            17-character EORI number.
+          description: Identity of the trader as known to HMRC. In the UK this is the 17-character EORI number.
         - in: path
           name: last_updated_date
           required: true
           schema:
             type: string
             format: date-time
-            pattern: ^([1-9][0-9]{3})-(0[0-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])[T]([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])Z$
+            pattern: "^([1-9][0-9]{3})-(0[0-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])[T]([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])Z$"
           example: 2024-11-18T23:20:19Z
-          description: Timestamp when the record was last updated retrieved from TGP
-            Digital.
+          description: Timestamp when the record was last updated retrieved from TGP Digital.
       tags:
         - TGP Product
       summary: Read/list TGP Data
       description: Helps read TGP Data
       responses:
-        "200":
+        '200':
           description: OK;   Request completed successfully
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/TGPUpdateProductResponseSchema"
+                  $ref: '#/components/schemas/TGPUpdateProductResponseSchema'
           headers:
             X-Correlation-ID:
               required: true
               schema:
                 type: string
               description: A unique id created at source, i.e. client to TGP Digital.
-        "400":
+        '400':
           description: Bad Request; Incorrect request parameters provided.
-        "401":
+        '401':
           description: Unauthorised; Credentials failed
-        "403":
+        '403':
           description: Forbidden;   User was valid, but not allowed to perform this action
-        "404":
+        '404':
           description: TGP data not found for the search criteria
 components:
   schemas:
@@ -534,32 +509,24 @@ components:
           minLength: 17
           maxLength: 17
           example: GB1234567890
-          description: Identity of the trader as known to HMRC. In the UK this is the
-            12-character EORI number.
+          description: Identity of the trader as known to HMRC. In the UK this is the 12-character EORI number.
         actor_id:
           type: string
           example: GB1234567890
-          description: EORI number of the user making the change, which may be the same or
-            different to the trader_eori.
+          description: EORI number of the user making the change, which may be the same or different to the trader_eori.
         trader_ref:
           type: string
           example: BAN001001
-          description: Unique product reference used by the trader to identify the goods.
-            For example a Stock Keeping Unit (SKU) code.If the trader does not
-            provide a trader_ref, the front end should duplicate the
-            goods_description field and pass this as trader_ref.
+          description: Unique product reference used by the trader to identify the goods. For example a Stock Keeping Unit (SKU) code.If the trader does not provide a trader_ref, the front end should duplicate the goods_description field and pass this as trader_ref.
         comcode:
           type: string
           minLength: 6
           maxLength: 10
           example: 104101000
-          description: A code specific to goods that is internationally recognised. Can be
-            6, 8 or 10 digits.
+          description: A code specific to goods that is internationally recognised. Can be 6, 8 or 10 digits.
         accreditation_request:
           type: string
-          description: Optional field but can be set to 'Accreditation requested' to
-            submit a request to the HMRC Classification team who will check
-            whether the provided commodity code is correct.
+          description: Optional field but can be set to 'Accreditation requested' to submit a request to the HMRC Classification team who will check whether the provided commodity code is correct.
           example: accreditation_requested
           enum:
             - null
@@ -568,63 +535,42 @@ components:
         goods_description:
           type: string
           example: Organic bananas
-          description: Description of the goods using terminology that is familiar to the
-            trader. For example, Bananas or T-Shirts. Is not required to be
-            unique, however this is recommended for ease of trader
-            identification.
+          description: Description of the goods using terminology that is familiar to the trader. For example, Bananas or T-Shirts. Is not required to be unique, however this is recommended for ease of trader identification.
         country_of_origin:
           type: string
           minLength: 2
           maxLength: 2
           example: EC
-          description: Country where the product came from. This is a char field with 2
-            letters in it as per ISO 3166 standards. Can also refer to CDS
-            Appendix 13 -
-            https://www.gov.uk/government/publications/country-codes-for-the-customs-declaration-service.
+          description: Country where the product came from. This is a char field with 2 letters in it as per ISO 3166 standards. Can also refer to CDS Appendix 13 - https://www.gov.uk/government/publications/country-codes-for-the-customs-declaration-service.
         category:
           type: integer
           format: int64
           minLength: 1
           maxLength: 1
           example: 1
-          description: To be retrieved using the Online Trade Tariff API. The category of
-            the goods based on applicable restrictions, prohibitions or any
-            exemptions the trader may hold. This is an integer field with value
-            1, 2, or 3.
+          description: To be retrieved using the Online Trade Tariff API. The category of the goods based on applicable restrictions, prohibitions or any exemptions the trader may hold. This is an integer field with value 1, 2, or 3.
         prohibition_restriction_doc_id:
           type: string
           example: 999L
-          description: To be retrieved using the Online Trade Tariff API. Trader should
-            identify which prohibitions are applicable to their business.
+          description: To be retrieved using the Online Trade Tariff API. Trader should identify which prohibitions are applicable to their business.
         prohibition_restriction_explanation:
           type: string
           example: CDS Waiver
-          description: To be retrieved using the Online Trade Tariff API. Trader should
-            identify which prohibitions are applicable to their business.
+          description: To be retrieved using the Online Trade Tariff API. Trader should identify which prohibitions are applicable to their business.
         supplementary_unit:
           type: number
           example: 500
-          description: Supplementary units are used to provide quantity of goods. For eg.
-            13. Optional and should only be used by traders if their quantity is
-            consistent between movements.
+          description: Supplementary units are used to provide quantity of goods. For eg. 13. Optional and should only be used by traders if their quantity is consistent between movements.
         measurement_unit:
           type: string
           example: square meters(m^2)
-          description: Measurement units are used when an additional measurement unit is
-            needed on customs declarations. For eg, the quantity of the products
-            as well as the weight in kilograms. This should be retrieved from
-            the OTT API for the given commodity code and may be used to inform
-            the trader of the required units when populating a declaration.
+          description: Measurement units are used when an additional measurement unit is needed on customs declarations. For eg, the quantity of the products as well as the weight in kilograms. This should be retrieved from the OTT API for the given commodity code and may be used to inform the trader of the required units when populating a declaration.
         comcode_effective_from_date:
-          description: Date in the (OTT) when authorised usage of a commodity code came
-            into effect. This should be retrieved from the OTT API and use
-            standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
-          $ref: "#/components/schemas/TGPDateTime"
+          description: Date in the (OTT) when authorised usage of a commodity code came into effect. This should be retrieved from the OTT API and use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
+          "$ref": "#/components/schemas/TGPDateTime"
         comcode_effective_to_date:
-          $ref: "#/components/schemas/TGPDateTime"
-          description: Date in the (OTT) when authorised usage of a commodity code expired
-            or will expire. This should be retrieved from the OTT API and use
-            standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ)
+          "$ref": "#/components/schemas/TGPDateTime"
+          description: Date in the (OTT) when authorised usage of a commodity code expired or will expire. This should be retrieved from the OTT API and use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ)
     TGPUpdateProductSchema:
       type: object
       required:
@@ -642,13 +588,11 @@ components:
           minLength: 17
           maxLength: 17
           example: GB1234567890
-          description: EORI number of the trader as known to HMRC. In the UK this starts
-            GB or XI followed by 12 numbers.
+          description: EORI number of the trader as known to HMRC. In the UK this starts GB or XI followed by 12 numbers.
         actor_id:
           type: string
           example: GB1234567890
-          description: EORI number of the user making the change, which may be the same or
-            different to the trader_eori.
+          description: EORI number of the user making the change, which may be the same or different to the trader_eori.
         id:
           type: integer
           format: int64
@@ -657,25 +601,16 @@ components:
         trader_ref:
           type: string
           example: BAN001001
-          description: Unique product reference used by the trader to identify the goods.
-            For example a Stock Keeping Unit (SKU) code. If the trader does not
-            provide a trader_ref, the front end should duplicate the
-            goods_description field and pass this as trader_ref.
+          description: Unique product reference used by the trader to identify the goods. For example a Stock Keeping Unit (SKU) code. If the trader does not provide a trader_ref, the front end should duplicate the goods_description field and pass this as trader_ref.
         comcode:
           type: string
           minLength: 6
           maxLength: 10
           example: 104101000
-          description: A code specific to goods that is internationally recognised. Can be
-            6, 8 or 10 digits.
+          description: A code specific to goods that is internationally recognised. Can be 6, 8 or 10 digits.
         accreditation_request:
           type: string
-          description: Optional field but can be set to 'Accreditation requested' to
-            submit a request to the HMRC Classification team who will check
-            whether the provided commodity code is correct. If the current
-            status is "accreditation requested" then "accreditation withdrawn"
-            can be provided along with a withdrawal_reason to cancel the
-            accreditation request.
+          description: Optional field but can be set to 'Accreditation requested' to submit a request to the HMRC Classification team who will check whether the provided commodity code is correct. If the current status is "accreditation requested" then "accreditation withdrawn" can be provided along with a withdrawal_reason to cancel the accreditation request.
           example: accreditation_requested
           enum:
             - null
@@ -683,70 +618,47 @@ components:
             - accreditation_withdrawn
         accreditation_withdrawal_reason:
           type: string
-          description: To be provided when accreditation_status has been set to "Null"
-            from "Accreditation requested" which withdraws the accreditation
-            request.
+          description: To be provided when accreditation_status has been set to "Null" from "Accreditation requested" which withdraws the accreditation request.
           example: Advice received by webchat, no longer needed
         goods_description:
           type: string
           example: Organic bananas
-          description: Description of the goods using terminology that is familiar to the
-            trader. For example, Bananas or T-Shirts. Is not required to be
-            unique, however this is recommended for ease of trader
-            identification.
+          description: Description of the goods using terminology that is familiar to the trader. For example, Bananas or T-Shirts. Is not required to be unique, however this is recommended for ease of trader identification.
         country_of_origin:
           type: string
           minLength: 2
           maxLength: 2
           example: EC
-          description: Country where the product came from. This is a char field with 2
-            letters in it as per ISO 3166 standards. Can also refer to CDS
-            Appendix 13 -
-            https://www.gov.uk/government/publications/country-codes-for-the-customs-declaration-service.
+          description: Country where the product came from. This is a char field with 2 letters in it as per ISO 3166 standards. Can also refer to CDS Appendix 13 - https://www.gov.uk/government/publications/country-codes-for-the-customs-declaration-service.
         category:
           type: integer
           format: int64
           minLength: 1
           maxLength: 1
           example: 1
-          description: To be retrieved using the Online Trade Tariff API. The category of
-            the goods based on applicable restrictions, prohibitions or any
-            exemptions the trader may hold. This is an integer field with value
-            1, 2, or 3.
+          description: To be retrieved using the Online Trade Tariff API. The category of the goods based on applicable restrictions, prohibitions or any exemptions the trader may hold. This is an integer field with value 1, 2, or 3.
         prohibition_restriction_doc_id:
           type: string
           example: 999L
-          description: To be retrieved using the Online Trade Tariff API. Trader should
-            identify which prohibitions are applicable to their business.
+          description: To be retrieved using the Online Trade Tariff API. Trader should identify which prohibitions are applicable to their business.
         prohibition_restriction_explanation:
           type: string
           example: CDS Waiver
-          description: To be retrieved using the Online Trade Tariff API. Trader should
-            identify which prohibitions are applicable to their business.
+          description: To be retrieved using the Online Trade Tariff API. Trader should identify which prohibitions are applicable to their business.
         supplementary_unit:
           type: number
           example: 500
-          description: Supplementary units are used to provide quantity of goods. For eg.
-            13. Optional and should only be used by traders if their quantity is
-            consistent between movements.
+          description: Supplementary units are used to provide quantity of goods. For eg. 13. Optional and should only be used by traders if their quantity is consistent between movements.
         measurement_unit:
           type: string
           example: square meters(m^2)
-          description: Measurement units are used when an additional measurement unit is
-            needed on customs declarations. For eg, the quantity of the products
-            as well as the weight in kilograms. This should be retrieved from
-            the OTT API for the given commodity code and may be used to inform
-            the trader of the required units when populating a declaration.
+          description: Measurement units are used when an additional measurement unit is needed on customs declarations. For eg, the quantity of the products as well as the weight in kilograms. This should be retrieved from the OTT API for the given commodity code and may be used to inform the trader of the required units when populating a declaration.
         comcode_effective_from_date:
-          description: Date in the (OTT) when authorised usage of a commodity code expired
-            or will expire. This should be retrieved from the OTT API and use
-            standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
-          $ref: "#/components/schemas/TGPDateTime"
+          description: Date in the (OTT) when authorised usage of a commodity code expired or will expire. This should be retrieved from the OTT API and use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
+          "$ref": "#/components/schemas/TGPDateTime"
         comcode_effective_to_date:
-          description: Date in the (OTT) when authorised usage of a commodity code expired
-            or will expire. This should be retrieved from the OTT API and use
-            standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
-          $ref: "#/components/schemas/TGPDateTime"
+          description: Date in the (OTT) when authorised usage of a commodity code expired or will expire. This should be retrieved from the OTT API and use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
+          "$ref": "#/components/schemas/TGPDateTime"
     TGPDeactivateProductSchema:
       type: object
       required:
@@ -764,16 +676,14 @@ components:
           minLength: 17
           maxLength: 17
           example: GB1234567890
-          description: EORI number of the trader as known to HMRC. In the UK this starts
-            GB or XI followed by 12 numbers.
+          description: EORI number of the trader as known to HMRC. In the UK this starts GB or XI followed by 12 numbers.
         actor_id:
           type: string
           example: GB1234567890
-          description: EORI number of the user making the change, which may be the same or
-            different to the trader_eori.
+          description: EORI number of the user making the change, which may be the same or different to the trader_eori.
     TGPDateTime:
       type: string
-      pattern: ^([1-9][0-9]{3})-(0[0-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])[T]([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])Z$
+      pattern: "^([1-9][0-9]{3})-(0[0-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])[T]([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])Z$"
       example: 2024-11-18T23:20:19Z
     TGPUpdateProductResponseSchema:
       required:
@@ -802,13 +712,11 @@ components:
           minLength: 17
           maxLength: 17
           example: GB1234567890
-          description: EORI number of the trader as known to HMRC. In the UK this starts
-            GB or XI followed by 12 numbers.
+          description: EORI number of the trader as known to HMRC. In the UK this starts GB or XI followed by 12 numbers.
         actor_id:
           type: string
           example: GB1234567890
-          description: EORI number of the user making the change, which may be the same or
-            different to the trader_eori.
+          description: EORI number of the user making the change, which may be the same or different to the trader_eori.
         id:
           type: integer
           format: int64
@@ -817,25 +725,16 @@ components:
         trader_ref:
           type: string
           example: BAN001001
-          description: Unique product reference used by the trader to identify the goods.
-            For example a Stock Keeping Unit (SKU) code. If the trader does not
-            provide a trader_ref, the front end should duplicate the
-            goods_description field and pass this as trader_ref.
+          description: Unique product reference used by the trader to identify the goods. For example a Stock Keeping Unit (SKU) code. If the trader does not provide a trader_ref, the front end should duplicate the goods_description field and pass this as trader_ref.
         comcode:
           type: string
           minLength: 6
           maxLength: 10
           example: 104101000
-          description: A code specific to goods that is internationally recognised. Can be
-            6, 8 or 10 digits.
+          description: A code specific to goods that is internationally recognised. Can be 6, 8 or 10 digits.
         accreditation_request:
           type: string
-          description: Optional field but can be set to 'Accreditation requested' to
-            submit a request to the HMRC Classification team who will check
-            whether the provided commodity code is correct. If the current
-            status is "accreditation requested" then "accreditation withdrawn"
-            can be provided along with a withdrawal_reason to cancel the
-            accreditation request.
+          description: Optional field but can be set to 'Accreditation requested' to submit a request to the HMRC Classification team who will check whether the provided commodity code is correct. If the current status is "accreditation requested" then "accreditation withdrawn" can be provided along with a withdrawal_reason to cancel the accreditation request.
           example: accreditation_requested
           enum:
             - null
@@ -843,70 +742,47 @@ components:
             - accreditation_withdrawn
         accreditation_withdrawal_reason:
           type: string
-          description: To be provided when accreditation_status has been set to "Null"
-            from "Accreditation requested" which withdraws the accreditation
-            request.
+          description: To be provided when accreditation_status has been set to "Null" from "Accreditation requested" which withdraws the accreditation request.
           example: Advice received by webchat, no longer needed
         goods_description:
           type: string
           example: Organic bananas
-          description: Description of the goods using terminology that is familiar to the
-            trader. For example, Bananas or T-Shirts. Is not required to be
-            unique, however this is recommended for ease of trader
-            identification.
+          description: Description of the goods using terminology that is familiar to the trader. For example, Bananas or T-Shirts. Is not required to be unique, however this is recommended for ease of trader identification.
         country_of_origin:
           type: string
           minLength: 2
           maxLength: 2
           example: EC
-          description: Country where the product came from. This is a char field with 2
-            letters in it as per ISO 3166 standards. Can also refer to CDS
-            Appendix 13 -
-            https://www.gov.uk/government/publications/country-codes-for-the-customs-declaration-service
+          description: Country where the product came from. This is a char field with 2 letters in it as per ISO 3166 standards. Can also refer to CDS Appendix 13 - https://www.gov.uk/government/publications/country-codes-for-the-customs-declaration-service
         category:
           type: integer
           format: int64
           minLength: 1
           maxLength: 1
           example: 1
-          description: To be retrieved using the Online Trade Tariff API. The category of
-            the goods based on applicable restrictions, prohibitions or any
-            exemptions the trader may hold. This is an integer field with value
-            1, 2, or 3.
+          description: To be retrieved using the Online Trade Tariff API. The category of the goods based on applicable restrictions, prohibitions or any exemptions the trader may hold. This is an integer field with value 1, 2, or 3.
         prohibition_restriction_doc_id:
           type: string
           example: 999L
-          description: To be retrieved using the Online Trade Tariff API. Trader should
-            identify which prohibitions are applicable to their business.
+          description: To be retrieved using the Online Trade Tariff API. Trader should identify which prohibitions are applicable to their business.
         prohibition_restriction_explanation:
           type: string
           example: CDS Waiver
-          description: To be retrieved using the Online Trade Tariff API. Trader should
-            identify which prohibitions are applicable to their business.
+          description: To be retrieved using the Online Trade Tariff API. Trader should identify which prohibitions are applicable to their business.
         supplementary_unit:
           type: number
           example: 500
-          description: Supplementary units are used to provide quantity of goods. For eg.
-            13. Optional and should only be used by traders if their quantity is
-            consistent between movements.
+          description: Supplementary units are used to provide quantity of goods. For eg. 13. Optional and should only be used by traders if their quantity is consistent between movements.
         measurement_unit:
           type: string
           example: square meters(m^2)
-          description: Measurement units are used when an additional measurement unit is
-            needed on customs declarations. For eg, the quantity of the products
-            as well as the weight in kilograms. This should be retrieved from
-            the OTT API for the given commodity code and may be used to inform
-            the trader of the required units when populating a declaration.
+          description: Measurement units are used when an additional measurement unit is needed on customs declarations. For eg, the quantity of the products as well as the weight in kilograms. This should be retrieved from the OTT API for the given commodity code and may be used to inform the trader of the required units when populating a declaration.
         comcode_effective_from_date:
-          description: Date in the (OTT) when authorised usage of a commodity code came
-            into effect. This should be retrieved from the OTT API and use
-            standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
-          $ref: "#/components/schemas/TGPDateTime"
+          description: Date in the (OTT) when authorised usage of a commodity code came into effect. This should be retrieved from the OTT API and use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
+          "$ref": "#/components/schemas/TGPDateTime"
         comcode_effective_to_date:
-          description: Date in the (OTT) when authorised usage of a commodity code expired
-            or will expire. This should be retrieved from the OTT API and use
-            standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ)
-          $ref: "#/components/schemas/TGPDateTime"
+          description: Date in the (OTT) when authorised usage of a commodity code expired or will expire. This should be retrieved from the OTT API and use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ)
+          "$ref": "#/components/schemas/TGPDateTime"
         version:
           type: integer
           format: int64
@@ -934,11 +810,11 @@ components:
           example: 6 S12345
           description: Northern Ireland Plant Health Label scheme registration number.
         last_created_date:
-          $ref: "#/components/schemas/TGPDateTime"
+          "$ref": "#/components/schemas/TGPDateTime"
           example: 2024-11-18T23:20:19Z
           description: Timestamp when the record was last created in TGP Digital.
         last_updated_date:
-          $ref: "#/components/schemas/TGPDateTime"
+          "$ref": "#/components/schemas/TGPDateTime"
           example: 2024-11-18T23:20:19Z
           description: Timestamp when the record was last updated in TGP Digital.
     TGPCreateProductResponseSchema:
@@ -972,32 +848,24 @@ components:
           minLength: 17
           maxLength: 17
           example: GB1234567890
-          description: EORI number of the trader as known to HMRC. In the UK this starts
-            GB or XI followed by 12 numbers.
+          description: EORI number of the trader as known to HMRC. In the UK this starts GB or XI followed by 12 numbers.
         actor_id:
           type: string
           example: GB1234567890
-          description: EORI number of the user making the change, which may be the same or
-            different to the trader_eori.
+          description: EORI number of the user making the change, which may be the same or different to the trader_eori.
         trader_ref:
           type: string
           example: BAN001001
-          description: Unique product reference used by the trader to identify the goods.
-            For example a Stock Keeping Unit (SKU) code.If the trader does not
-            provide a trader_ref, the front end should duplicate the
-            goods_description field and pass this as trader_ref.
+          description: Unique product reference used by the trader to identify the goods. For example a Stock Keeping Unit (SKU) code.If the trader does not provide a trader_ref, the front end should duplicate the goods_description field and pass this as trader_ref.
         comcode:
           type: string
           minLength: 6
           maxLength: 10
           example: 104101000
-          description: A code specific to goods that is internationally recognised. Can be
-            6, 8 or 10 digits.
+          description: A code specific to goods that is internationally recognised. Can be 6, 8 or 10 digits.
         accreditation_request:
           type: string
-          description: Optional field but can be set to 'Accreditation requested' to
-            submit a request to the HMRC Classification team who will check
-            whether the provided commodity code is correct.
+          description: Optional field but can be set to 'Accreditation requested' to submit a request to the HMRC Classification team who will check whether the provided commodity code is correct.
           enum:
             - null
             - accreditation_requested
@@ -1005,63 +873,42 @@ components:
         goods_description:
           type: string
           example: Organic bananas
-          description: Description of the goods using terminology that is familiar to the
-            trader. For example, Bananas or T-Shirts. Is not required to be
-            unique, however this is recommended for ease of trader
-            identification.
+          description: Description of the goods using terminology that is familiar to the trader. For example, Bananas or T-Shirts. Is not required to be unique, however this is recommended for ease of trader identification.
         country_of_origin:
           type: string
           minLength: 2
           maxLength: 2
           example: EC
-          description: Country where the product came from. This is a char field with 2
-            letters in it as per ISO 3166 standards. Ca.n also refer to CDS
-            Appendix 13 -
-            https://www.gov.uk/government/publications/country-codes-for-the-customs-declaration-service.
+          description: Country where the product came from. This is a char field with 2 letters in it as per ISO 3166 standards. Ca.n also refer to CDS Appendix 13 - https://www.gov.uk/government/publications/country-codes-for-the-customs-declaration-service.
         category:
           type: integer
           format: int64
           minLength: 1
           maxLength: 1
           example: 1
-          description: To be retrieved using the Online Trade Tariff API. The category of
-            the goods based on applicable restrictions, prohibitions or any
-            exemptions the trader may hold. This is an integer field with value
-            1, 2, or 3.
+          description: To be retrieved using the Online Trade Tariff API. The category of the goods based on applicable restrictions, prohibitions or any exemptions the trader may hold. This is an integer field with value 1, 2, or 3.
         prohibition_restriction_doc_id:
           type: string
           example: 999L
-          description: To be retrieved using the Online Trade Tariff API. Trader should
-            identify which prohibitions are applicable to their business.
+          description: To be retrieved using the Online Trade Tariff API. Trader should identify which prohibitions are applicable to their business.
         prohibition_restriction_explanation:
           type: string
           example: CDS Waiver
-          description: To be retrieved using the Online Trade Tariff API. Trader should
-            identify which prohibitions are applicable to their business.
+          description: To be retrieved using the Online Trade Tariff API. Trader should identify which prohibitions are applicable to their business.
         supplementary_unit:
           type: number
           example: 500
-          description: Supplementary units are used to provide quantity of goods. For eg.
-            13. Optional and should only be used by traders if their quantity is
-            consistent between movements.
+          description: Supplementary units are used to provide quantity of goods. For eg. 13. Optional and should only be used by traders if their quantity is consistent between movements.
         measurement_unit:
           type: string
           example: square meters(m^2)
-          description: Measurement units are used when an additional measurement unit is
-            needed on customs declarations. For eg, the quantity of the products
-            as well as the weight in kilograms. This should be retrieved from
-            the OTT API for the given commodity code and may be used to inform
-            the trader of the required units when populating a declaration.
+          description: Measurement units are used when an additional measurement unit is needed on customs declarations. For eg, the quantity of the products as well as the weight in kilograms. This should be retrieved from the OTT API for the given commodity code and may be used to inform the trader of the required units when populating a declaration.
         comcode_effective_from_date:
-          $ref: "#/components/schemas/TGPDateTime"
-          description: Date in the (OTT) when authorised usage of a commodity code came
-            into effect. This should be retrieved from the OTT API and use
-            standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
+          "$ref": "#/components/schemas/TGPDateTime"
+          description: Date in the (OTT) when authorised usage of a commodity code came into effect. This should be retrieved from the OTT API and use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
         comcode_effective_to_date:
-          $ref: "#/components/schemas/TGPDateTime"
-          description: Date in the (OTT) when authorised usage of a commodity code expired
-            or will expire. This should be retrieved from the OTT API and use
-            standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
+          "$ref": "#/components/schemas/TGPDateTime"
+          description: Date in the (OTT) when authorised usage of a commodity code expired or will expire. This should be retrieved from the OTT API and use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
         version:
           type: integer
           format: int64
@@ -1090,15 +937,13 @@ components:
           example: 6 S12345
           description: Northern Ireland Plant Health Label scheme registration number
         last_created_date:
-          $ref: "#/components/schemas/TGPDateTime"
+          "$ref": "#/components/schemas/TGPDateTime"
           example: 2024-11-18T23:20:19Z
-          description: Timestamp when the record was last created in TGP Digital. This
-            should use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
+          description: Timestamp when the record was last created in TGP Digital. This should use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
         last_updated_date:
-          $ref: "#/components/schemas/TGPDateTime"
+          "$ref": "#/components/schemas/TGPDateTime"
           example: 2024-11-18T23:20:19Z
-          description: Timestamp when the record was last updated in TGP Digital.  This
-            should use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
+          description: Timestamp when the record was last updated in TGP Digital.  This should use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
     TGPDeactivateProductResponse:
       type: object
       properties:
