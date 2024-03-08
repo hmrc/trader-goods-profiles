@@ -12,6 +12,20 @@ servers:
     description: Sandbox
   - url: https://api.service.hmrc.gov.uk
     description: Production
+components:
+  securitySchemes:
+    userRestricted:
+      type: oauth2
+      description: |
+        HMRC supports OAuth 2.0 for authenticating user restricted API requests using an OAuth 2.0 Bearer Token in the AUTHORIZATION header.
+        See https://developer.service.hmrc.gov.uk/api-documentation/docs/authorisation/user-restricted-endpoints for details.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://api.service.hmrc.gov.uk/oauth/authorize
+          tokenUrl: https://api.service.hmrc.gov.uk/oauth/token
+          refreshUrl: https://api.service.hmrc.gov.uk/oauth/refresh
+          scopes:
+            trader-goods-profiles: Allow full access to the Trader Goods Profiles public API
 tags:
   - name: Good records
     description: Information relating to good records
@@ -122,7 +136,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateTGPRecordSchema'
+              $ref: '#//schemas/UpdateTGPRecordSchema'
         required: true
       responses:
         '200':
@@ -130,7 +144,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UpdateTGPRecordResponseSchema'
+                $ref: '#//schemas/UpdateTGPRecordResponseSchema'
 
           headers:
             X-Correlation-ID:
@@ -191,7 +205,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RemoveTGPRecordSchema'
+              $ref: '#//schemas/RemoveTGPRecordSchema'
         required: true
       responses:
         '200':
@@ -199,7 +213,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RemoveTGPRecordResponse'
+                $ref: '#//schemas/RemoveTGPRecordResponse'
           headers:
             X-Correlation-ID:
               required: true
@@ -342,7 +356,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/UpdateTGPRecordResponseSchema'
+                  $ref: '#//schemas/UpdateTGPRecordResponseSchema'
           headers:
             X-Correlation-ID:
               required: true
@@ -413,7 +427,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/UpdateTGPRecordResponseSchema'
+                  $ref: '#//schemas/UpdateTGPRecordResponseSchema'
           headers:
             X-Correlation-ID:
               required: true
@@ -501,7 +515,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/UpdateTGPRecordResponseSchema'
+                  $ref: '#//schemas/UpdateTGPRecordResponseSchema'
           headers:
             X-Correlation-ID:
               required: true
@@ -519,7 +533,7 @@ paths:
       security:
         - userRestricted:
             - trader-goods-profiles-service
-components:
+:
   schemas:
     CreateTGPRecordSchema:
       type: object
