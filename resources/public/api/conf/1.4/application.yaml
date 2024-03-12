@@ -90,7 +90,7 @@ paths:
           description: Forbidden;   User was valid, but not allowed to perform this action
       security:
         - userRestricted:
-            - trader-goods-profiles-service
+            - trader-goods-profiles
     patch:
       parameters:
         - in: header
@@ -166,7 +166,7 @@ paths:
           description: TGP record not found to update
       security:
         - userRestricted:
-            - trader-goods-profiles-service
+            - trader-goods-profiles
     put:
       parameters:
         - in: header
@@ -243,7 +243,7 @@ paths:
           description: Good records not found to deactivate
       security:
         - userRestricted:
-            - trader-goods-profiles-service
+            - trader-goods-profiles
     get:
       parameters:
         - in: header
@@ -321,7 +321,7 @@ paths:
           description: TGP data not found for the search criteria
       security:
         - userRestricted:
-            - trader-goods-profiles-service
+            - trader-goods-profiles
 components:
   schemas:
     CreateTGPRecordSchema:
@@ -813,7 +813,7 @@ components:
           tokenUrl: https://api.service.hmrc.gov.uk/oauth/token
           refreshUrl: https://api.service.hmrc.gov.uk/oauth/refresh
           scopes:
-            trader-goods-profiles-service: Access all aspects of EMCS API
+            trader-goods-profiles: Access all aspects of EMCS API
     applicationRestricted:
       type: oauth2
       description: HMRC supports OAuth 2.0 for authenticating application restricted
@@ -824,4 +824,4 @@ components:
         clientCredentials:
           tokenUrl: https://api.service.hmrc.gov.uk/oauth/token
           scopes:
-            trader-goods-profiles-service: Access traders's goods profile and record via the TGP API
+            trader-goods-profiles: Access traders's goods profile and record via the TGP API
