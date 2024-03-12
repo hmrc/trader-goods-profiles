@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Trader Goods Profile External APIs - OpenAPI 3.0
-  version: "1.6"
+  version: "1.0 Draft"
   description: "Use the TGP API to submit trader goods-profile records to the Trader\
     \ Goods Profile Service (TGP).\n\nThe [Trader\
     \ goods profile service guide](/guides/trader-goods-profile-service-guide/) contains a detailed overview\
@@ -12,25 +12,11 @@ servers:
     description: Sandbox
   - url: https://api.service.hmrc.gov.uk
     description: Production
-components:
-  securitySchemes:
-    userRestricted:
-      type: oauth2
-      description: |
-        HMRC supports OAuth 2.0 for authenticating user restricted API requests using an OAuth 2.0 Bearer Token in the AUTHORIZATION header.
-        See https://developer.service.hmrc.gov.uk/api-documentation/docs/authorisation/user-restricted-endpoints for details.
-      flows:
-        authorizationCode:
-          authorizationUrl: https://api.service.hmrc.gov.uk/oauth/authorize
-          tokenUrl: https://api.service.hmrc.gov.uk/oauth/token
-          refreshUrl: https://api.service.hmrc.gov.uk/oauth/refresh
-          scopes:
-            trader-goods-profiles: Allow full access to the Trader Goods Profiles public API
 tags:
   - name: Good records
     description: Information relating to good records
 paths:
-  /customer/trader-goods-profiles/records:
+  /customs/traders/goods-profiles/{eori}/records:
     post:
       tags:
         - Good records
@@ -67,6 +53,15 @@ paths:
             type: string
           description: Identifier of calling system
           example: TSS
+        - in: path
+          name: eori
+          required: true
+          schema:
+            type: string
+            minLength: 14
+            maxLength: 17
+          example: GB1234567890
+          description: Identity of the trader as known to HMRC. In the UK this is the 17-character EORI number.
       requestBody:
         content:
           application/json:
@@ -127,6 +122,15 @@ paths:
             type: string
           description: Identifier of calling system
           example: TSS
+        - in: path
+          name: eori
+          required: true
+          schema:
+            type: string
+            minLength: 14
+            maxLength: 17
+          example: GB1234567890
+          description: Identity of the trader as known to HMRC. In the UK this is the 17-character EORI number.
       tags:
         - Good records
       summary: Update an existing trader goods record
@@ -136,7 +140,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#//schemas/UpdateTGPRecordSchema'
+              $ref: '#/components/schemas/UpdateTGPRecordSchema'
         required: true
       responses:
         '200':
@@ -144,7 +148,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#//schemas/UpdateTGPRecordResponseSchema'
+                $ref: '#/components/schemas/UpdateTGPRecordResponseSchema'
 
           headers:
             X-Correlation-ID:
@@ -194,6 +198,15 @@ paths:
             type: string
           description: Identifier of calling system
           example: TSS
+        - in: path
+          name: eori
+          required: true
+          schema:
+            type: string
+            minLength: 14
+            maxLength: 17
+          example: GB1234567890
+          description: Identity of the trader as known to HMRC. In the UK this is the 17-character EORI number.
       tags:
         - Good records
 
@@ -205,7 +218,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#//schemas/RemoveTGPRecordSchema'
+              $ref: '#/components/schemas/RemoveTGPRecordSchema'
         required: true
       responses:
         '200':
@@ -213,7 +226,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#//schemas/RemoveTGPRecordResponse'
+                $ref: '#/components/schemas/RemoveTGPRecordResponse'
           headers:
             X-Correlation-ID:
               required: true
@@ -262,7 +275,7 @@ paths:
             type: string
           description: Identifier of calling system
           example: TSS
-        - in: query
+        - in: path
           name: eori
           required: true
           schema:
@@ -272,78 +285,13 @@ paths:
           example: GB1234567890
           description: Identity of the trader as known to HMRC. In the UK this is the 17-character EORI number.
         - in: query
-          name: trader_ref
-          required: false
-          schema:
-            type: string
-            maxLength: 512
-          description: Unique product reference used by the trader to identify the goods. For example a Stock Keeping Unit (SKU) code.
-          example: BAN001001
-        - in: query
-          name: goods_description
-          required: false
-          schema:
-            type: string
-            maxLength: 512
-          description: Description of the goods using terminology that is familiar to the trader. For example, Bananas or T-Shirts.
-          example: Organic bananas
-        - in: query
-          name: state
-          required: false
-          schema:
-            type: string
-            maxLength: 20
-          description: Status of TGP PRoduct in TGP Digital
-          example: active
-        - in: query
-          name: country_of_origin
-          required: false
-          schema:
-            type: string
-            minLength: 2
-            maxLength: 2
-          description: "Country where the product came from. This is a char field with 2 letters in it as per ISO 3166 standards.  "
-          example: EC
-        - in: query
-          name: category
-          required: false
-          schema:
-            type: integer
-            format: int64
-            minLength: 1
-            maxLength: 1
-          example: 1
-          description: To be retrieved using the Online Trade Tariff API. The category of the goods based on applicable restrictions, prohibitions or any exemptions the trader may hold. This is an integer field with value 1, 2, or 3.
-        - in: query
-          name: comcode
-          required: false
-          schema:
-            type: string
-            maxLength: 10
-          example: 104101000
-          description: A code specific to goods that is internationally recognised. Can be 6, 8 or 10 digits.
-        - in: query
-          name: last_updated_from
-          description: Start of date range, all records after which have to be retrieved.from the backend; should be the last_updated_date. This should use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
+          name: updated_since
+          description: Date value, all records after which have to be retrieved from the backend; This should use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
           schema:
             type: string
             format: date-time
             pattern: "^([1-9][0-9]{3})-(0[0-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])[T]([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])Z$"
           example: 2024-11-18T23:20:19Z
-        - in: query
-          name: last_updated_to
-          description: End of date range, all records before which have to be retrieved.from the backend; should be the last_updated_date. This should use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
-          schema:
-            type: string
-            format: date-time
-            pattern: "^([1-9][0-9]{3})-(0[0-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])[T]([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])Z$"
-          example: 2024-11-18T23:20:19Z
-        - in: query
-          name: id_list
-          description: Comma separated list of TGP IDs. TGP_ID is an unique identifier of the record to be updated
-          schema:
-            type: string
-          example: 1,2,3
       tags:
         - Good records
       summary: Get good records
@@ -356,7 +304,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#//schemas/UpdateTGPRecordResponseSchema'
+                  $ref: '#/components/schemas/UpdateTGPRecordResponseSchema'
           headers:
             X-Correlation-ID:
               required: true
@@ -374,166 +322,7 @@ paths:
       security:
         - userRestricted:
             - trader-goods-profiles-service
-  /customer/trader-goods-profiles/{eori}:
-    get:
-      parameters:
-        - in: header
-          name: Authorisation
-          schema:
-            type: string
-          required: true
-          description: An OAuth 2.0 Bearer Token.
-          example: Bearer 59fc92c1cdf0b8ef1f138a702effdbd2
-        - in: header
-          name: X-Forwarded-Host
-          required: true
-          schema:
-            type: string
-          description: The name or IP address of the application system that submitted the message.
-          example: TSS
-        - in: header
-          name: Date
-          required: true
-          schema:
-            type: string
-            format: date-time
-          description: The date and time that the message was originated(in "HTTP-date" format as defined by FRC 7231 Date/Time formats
-          example: Sun, 06 Nov 2023 08:49:37 GMT
-        - in: header
-          name: X-Client-ID
-          required: true
-          schema:
-            type: string
-          description: Identifier of calling system
-          example: TSS
-        - in: path
-          name: eori
-          required: true
-          schema:
-            type: string
-            minLength: 14
-            maxLength: 17
-          example: GB1234567890
-          description: Identity of the trader as known to HMRC. In the UK this is the 17-character EORI number.
-      tags:
-        - Good records
-      summary: Get goods records
-      description: Helps read Good records
-      responses:
-        '200':
-          description: OK;   Request completed successfully
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#//schemas/UpdateTGPRecordResponseSchema'
-          headers:
-            X-Correlation-ID:
-              required: true
-              schema:
-                type: string
-              description: A unique id created at source, i.e. client to TGP Digital.
-        '400':
-          description: Bad Request; Incorrect request parameters provided.
-        '401':
-          description: Unauthorised; Credentials failed
-        '403':
-          description: Forbidden;   User was valid, but not allowed to perform this action
-        '404':
-          description: TGP data not found for the search criteria
-      security:
-        - userRestricted:
-            - trader-goods-profiles-service
-  /customer/trader-goods-profiles/{eori}/{page_number}/{last_updated_date}:
-    get:
-      parameters:
-        - in: header
-          name: Authorisation
-          schema:
-            type: string
-          required: true
-          description: An OAuth 2.0 Bearer Token.
-          example: Bearer 59fc92c1cdf0b8ef1f138a702effdbd2
-        - in: header
-          name: X-Forwarded-Host
-          required: true
-          schema:
-            type: string
-          description: The name or IP address of the application system that submitted the message.
-          example: TSS
-        - in: header
-          name: Date
-          required: true
-          schema:
-            type: string
-            format: date-time
-          description: The date and time that the message was originated(in "HTTP-date" format as defined by FRC 7231 Date/Time formats
-          example: Sun, 06 Nov 2023 08:49:37 GMT
-        - in: header
-          name: X-Client-ID
-          required: true
-          schema:
-            type: string
-          description: Identifier of calling system
-          example: TSS
-        - in: path
-          name: eori
-          required: true
-          schema:
-            type: string
-            minLength: 14
-            maxLength: 17
-          example: GB1234567890
-        - in: path
-          name: page_number
-          required: true
-          schema:
-            type: integer
-          example: 1
-          description: Identity of the trader as known to HMRC. In the UK this is the 17-character EORI number.
-        - in: path
-          name: last_updated_date
-          required: true
-          schema:
-            type: string
-            format: date-time
-            pattern: "^([1-9][0-9]{3})-(0[0-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])[T]([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])Z$"
-          example: 2024-11-18T23:20:19Z
-          description: Timestamp when the record was last updated retrieved from TGP Digital.
-      tags:
-        - Good records
-
-      summary: Get goods records
-
-      description: Helps read Good records
-      responses:
-        '200':
-          description: OK;   Request completed successfully
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#//schemas/UpdateTGPRecordResponseSchema'
-          headers:
-            X-Correlation-ID:
-              required: true
-              schema:
-                type: string
-              description: A unique id created at source, i.e. client to TGP Digital.
-        '400':
-          description: Bad Request; Incorrect request parameters provided.
-        '401':
-          description: Unauthorised; Credentials failed
-        '403':
-          description: Forbidden;   User was valid, but not allowed to perform this action
-        '404':
-          description: TGP data not found for the search criteria
-      security:
-        - userRestricted:
-            - trader-goods-profiles-service
-:
+components:
   schemas:
     CreateTGPRecordSchema:
       type: object
@@ -746,8 +535,8 @@ paths:
         - UKIMS_number
         - NIRMS_number
         - NIPHL_number
-        - last_created_date
-        - last_updated_date
+        - created_date
+        - updated_date
       type: object
       properties:
         id:
@@ -850,11 +639,11 @@ paths:
           type: string
           example: 6 S12345
           description: Northern Ireland Plant Health Label scheme registration number
-        last_created_date:
+        created_date:
           "$ref": "#/components/schemas/TGPRecordDateTime"
           example: 2024-11-18T23:20:19Z
           description: Timestamp when the record was last created in TGP Digital. This should use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
-        last_updated_date:
+        updated_date:
           "$ref": "#/components/schemas/TGPRecordDateTime"
           example: 2024-11-18T23:20:19Z
           description: Timestamp when the record was last updated in TGP Digital.  This should use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
@@ -876,8 +665,8 @@ paths:
         - UKIMS_number
         - NIRMS_number
         - NIPHL_number
-        - last_created_date
-        - last_updated_date
+        - created_date
+        - updated_date
       type: object
       properties:
         eori:
@@ -984,11 +773,11 @@ paths:
           type: string
           example: 6 S12345
           description: Northern Ireland Plant Health Label scheme registration number.
-        last_created_date:
+        created_date:
           "$ref": "#/components/schemas/TGPRecordDateTime"
           example: 2024-11-18T23:20:19Z
           description: Timestamp when the record was last created in TGP Digital.
-        last_updated_date:
+        updated_date:
           "$ref": "#/components/schemas/TGPRecordDateTime"
           example: 2024-11-18T23:20:19Z
           description: Timestamp when the record was last updated in TGP Digital.
