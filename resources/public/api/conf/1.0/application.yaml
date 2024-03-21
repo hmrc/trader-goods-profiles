@@ -615,7 +615,7 @@ components:
           example: GB1234567890
           description: EORI number of the user making the change, which may be the same or different to the eori.
         trader_ref:
-          type: stringvg hm,ewx4rd fgvhb
+          type: string
           example: BAN001001
           description: Unique product reference used by the trader to identify the goods. For example a Stock Keeping Unit (SKU) code.If the trader does not provide a trader_ref, the front end should duplicate the goods_description field and pass this as trader_ref.
         comcode:
