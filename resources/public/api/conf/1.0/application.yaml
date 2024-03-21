@@ -13,13 +13,13 @@ servers:
   - url: https://api.service.hmrc.gov.uk
     description: Production
 tags:
-  - name: Good records
-    description: Information relating to good records
+  - name: Goods records
+    description: Information relating to goods records
 paths:
   /customs/traders/goods-profiles/{eori}/records:
     post:
       tags:
-        - Good records
+        - Goods records
       summary: Create a goods record for a trader goods-profile
       description: Create a goods record for the good that is being moved.
       operationId: createTraderGoodsProfileRecord
@@ -132,7 +132,7 @@ paths:
           example: GB1234567890
           description: Identity of the trader as known to HMRC. In the UK this is the 17-character EORI number.
       tags:
-        - Good records
+        - Goods records
       summary: Update an existing trader goods record
       description: Update an existing TGP record
       requestBody:
@@ -208,7 +208,7 @@ paths:
           example: GB1234567890
           description: Identity of the trader as known to HMRC. In the UK this is the 17-character EORI number.
       tags:
-        - Good records
+        - Goods records
 
       summary: Remove a trader's goods record
 
@@ -293,9 +293,97 @@ paths:
             pattern: "^([1-9][0-9]{3})-(0[0-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])[T]([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])Z$"
           example: 2024-11-18T23:20:19Z
       tags:
-        - Good records
-      summary: Get good records
+        - Goods records
+      summary: Get good records by EORI and updated_since
       description: Helps read Good records
+      responses:
+        '200':
+          description: OK;   Request completed successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UpdateTGPRecordResponseSchema'
+          headers:
+            X-Correlation-ID:
+              required: true
+              schema:
+                type: string
+              description: A unique id created at source, i.e. client to TGP Digital.
+        '400':
+          description: Bad Request; Incorrect request parameters provided.
+        '401':
+          description: Unauthorised; Credentials failed
+        '403':
+          description: Forbidden;   User was valid, but not allowed to perform this action
+        '404':
+          description: TGP data not found for the search criteria
+      security:
+        - userRestricted:
+            - trader-goods-profiles
+  /customs/traders/goods-profiles/{eori}/records/{record_id}:
+    get:
+      parameters:
+        - in: header
+          name: Authorisation
+          schema:
+            type: string
+          required: true
+          description: An OAuth 2.0 Bearer Token.
+          example: Bearer 59fc92c1cdf0b8ef1f138a702effdbd2
+        - in: header
+          name: X-Forwarded-Host
+          required: true
+          schema:
+            type: string
+          description: The name or IP address of the application system that submitted the message.
+          example: TSS
+        - in: header
+          name: Date
+          required: true
+          schema:
+            type: string
+            format: date-time
+          description: The date and time that the message was originated(in "HTTP-date" format as defined by FRC 7231 Date/Time formats
+          example: Sun, 06 Nov 2023 08:49:37 GMT
+        - in: header
+          name: X-Client-ID
+          required: true
+          schema:
+            type: string
+          description: Identifier of calling system
+          example: TSS
+        - in: path
+          name: eori
+          required: true
+          schema:
+            type: string
+            minLength: 14
+            maxLength: 17
+          example: GB1234567890
+          description: Identity of the trader as known to HMRC. In the UK this is the 17-character EORI number.
+        - in: path
+          name: record_id
+          required: true
+          schema:
+            type: string
+            minLength: 14
+            maxLength: 17
+          example: 8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f
+          description: Identity of the trader as known to HMRC. In the UK this is the 17-character EORI number.
+        - in: query
+          name: updated_since
+          description: Date value, all records after which have to be retrieved from the backend; This should use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
+          schema:
+            type: string
+            format: date-time
+            pattern: "^([1-9][0-9]{3})-(0[0-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])[T]([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])Z$"
+          example: 2024-11-18T23:20:19Z
+      tags:
+        - Goods records
+      summary: Get good records by EORI and record_id
+      description: Helps read Good records by EORI and record_id
       responses:
         '200':
           description: OK;   Request completed successfully
@@ -334,6 +422,7 @@ components:
         - country_of_origin
         - category
         - comcode_effective_from_date
+        - assessment
       properties:
         eori:
           type: string
@@ -356,15 +445,7 @@ components:
           minLength: 6
           maxLength: 10
           example: 104101000
-          description: A code specific to goods that is internationally recognised. Can be 6, 8 or 10 digits.
-        accreditation_request:
-          type: string
-          description: Optional field but can be set to 'Accreditation requested' to submit a request to the HMRC Classification team who will check whether the provided commodity code is correct.
-          example: accreditation_requested
-          enum:
-            - null
-            - accreditation_requested
-            - accreditation_withdrawn
+          description: A code specific to goods that is internationally
         goods_description:
           type: string
           example: Organic bananas
@@ -380,16 +461,12 @@ components:
           format: int64
           minLength: 1
           maxLength: 1
-          example: 1
+          example: 3
           description: To be retrieved using the Online Trade Tariff API. The category of the goods based on applicable restrictions, prohibitions or any exemptions the trader may hold. This is an integer field with value 1, 2, or 3.
-        prohibition_restriction_doc_id:
-          type: string
-          example: 999L
-          description: To be retrieved using the Online Trade Tariff API. Trader should identify which prohibitions are applicable to their business.
-        prohibition_restriction_explanation:
-          type: string
-          example: CDS Waiver
-          description: To be retrieved using the Online Trade Tariff API. Trader should identify which prohibitions are applicable to their business.
+        assessments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Assessment'
         supplementary_unit:
           type: number
           example: 500
@@ -409,7 +486,7 @@ components:
       required:
         - eori
         - actor_id
-        - id
+        - record_id
         - comcode
         - goods_description
         - country_of_origin
@@ -428,10 +505,9 @@ components:
           maxLength: 17
           example: GB1234567890
           description: EORI number of the user making the change, which may be the same or different to the eori.
-        id:
-          type: integer
-          format: int64
-          example: 1
+        record_id:
+          type: string
+          example: 8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f
           description: Unique identifier of the record to be updated.
         trader_ref:
           type: string
@@ -443,18 +519,6 @@ components:
           maxLength: 10
           example: 104101000
           description: A code specific to goods that is internationally recognised. Can be 6, 8 or 10 digits.
-        accreditation_request:
-          type: string
-          description: Optional field but can be set to 'Accreditation requested' to submit a request to the HMRC Classification team who will check whether the provided commodity code is correct. If the current status is "accreditation requested" then "accreditation withdrawn" can be provided along with a withdrawal_reason to cancel the accreditation request.
-          example: accreditation_requested
-          enum:
-            - null
-            - accreditation_requested
-            - accreditation_withdrawn
-        accreditation_withdrawal_reason:
-          type: string
-          description: To be provided when accreditation_status has been set to "Null" from "Accreditation requested" which withdraws the accreditation request.
-          example: Advice received by webchat, no longer needed
         goods_description:
           type: string
           example: Organic bananas
@@ -470,16 +534,12 @@ components:
           format: int64
           minLength: 1
           maxLength: 1
-          example: 1
+          example: 3
           description: To be retrieved using the Online Trade Tariff API. The category of the goods based on applicable restrictions, prohibitions or any exemptions the trader may hold. This is an integer field with value 1, 2, or 3.
-        prohibition_restriction_doc_id:
-          type: string
-          example: 999L
-          description: To be retrieved using the Online Trade Tariff API. Trader should identify which prohibitions are applicable to their business.
-        prohibition_restriction_explanation:
-          type: string
-          example: CDS Waiver
-          description: To be retrieved using the Online Trade Tariff API. Trader should identify which prohibitions are applicable to their business.
+        assessments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Assessment'
         supplementary_unit:
           type: number
           example: 500
@@ -497,14 +557,13 @@ components:
     RemoveTGPRecordSchema:
       type: object
       required:
-        - id
+        - record_id
         - eori
         - actor_id
       properties:
-        id:
-          type: integer
-          format: int64
-          example: 1
+        record_id:
+          type: string
+          example: 8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f
           description: Unique identifier of the product record to be updated
         eori:
           type: string
@@ -520,7 +579,7 @@ components:
           description: EORI number of the user making the change, which may be the same or different to the eori.
     CreateTGPRecordResponseSchema:
       required:
-        - id
+        - record_id
         - eori
         - actor_id
         - trader_ref
@@ -539,10 +598,9 @@ components:
         - updated_date
       type: object
       properties:
-        id:
-          type: integer
-          format: int64
-          example: 1
+        record_id:
+          type: string
+          example: 8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f
           description: Primary key id of the record in TGP Digital.
         eori:
           type: string
@@ -557,7 +615,7 @@ components:
           example: GB1234567890
           description: EORI number of the user making the change, which may be the same or different to the eori.
         trader_ref:
-          type: string
+          type: stringvg hm,ewx4rd fgvhb
           example: BAN001001
           description: Unique product reference used by the trader to identify the goods. For example a Stock Keeping Unit (SKU) code.If the trader does not provide a trader_ref, the front end should duplicate the goods_description field and pass this as trader_ref.
         comcode:
@@ -566,13 +624,10 @@ components:
           maxLength: 10
           example: 104101000
           description: A code specific to goods that is internationally recognised. Can be 6, 8 or 10 digits.
-        accreditation_request:
+        accreditation_status:
           type: string
-          description: Optional field but can be set to 'Accreditation requested' to submit a request to the HMRC Classification team who will check whether the provided commodity code is correct.
-          enum:
-            - null
-            - accreditation_requested
-            - accreditation_withdrawn
+          description: Indicates the accreditation status of a record if the trader has requested that HMRC review their commodity code.
+          example: Not requested
         goods_description:
           type: string
           example: Organic bananas
@@ -582,22 +637,18 @@ components:
           minLength: 2
           maxLength: 2
           example: EC
-          description: Country where the product came from. This is a char field with 2 letters in it as per ISO 3166 standards. Ca.n also refer to CDS Appendix 13 - https://www.gov.uk/government/publications/country-codes-for-the-customs-declaration-service.
+          description: Country where the product came from. This is a char field with 2 letters in it as per ISO rc3166 standards. Ca.n also refer to CDS Appendix 13 - https://www.gov.uk/government/publications/country-codes-for-the-customs-declaration-service.
         category:
           type: integer
           format: int64
           minLength: 1
           maxLength: 1
-          example: 1
+          example: 3
           description: To be retrieved using the Online Trade Tariff API. The category of the goods based on applicable restrictions, prohibitions or any exemptions the trader may hold. This is an integer field with value 1, 2, or 3.
-        prohibition_restriction_doc_id:
-          type: string
-          example: 999L
-          description: To be retrieved using the Online Trade Tariff API. Trader should identify which prohibitions are applicable to their business.
-        prohibition_restriction_explanation:
-          type: string
-          example: CDS Waiver
-          description: To be retrieved using the Online Trade Tariff API. Trader should identify which prohibitions are applicable to their business.
+        assessments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Assessment'
         supplementary_unit:
           type: number
           example: 500
@@ -617,16 +668,29 @@ components:
           format: int64
           example: 1
           description: Version of the TGP record in TGP Digital.
-        state:
+        active:
           type: string
-          example: active
+          minLength: 1
+          maxLength: 1
+          example: Y
           description: Status of TGP record in TGP Digital.
-          enum:
-            - active
-            - inactive
         declarable:
-          type: boolean
-          description: Status of TGP record for declarations.
+          type: string
+          example: IMMI declarable
+          enum:
+            - IMMI declarable
+            - non IMMI declarable
+            - not declarable
+        to_review:
+          type: string
+          minLength: 1
+          maxLength: 1
+          example: Y
+          description: Set to true when there is an update to the record.For eg. commodity code change.
+        review_reason:
+          type: string
+          example: Commodity code changed.
+          description: Reason for a review requirement.
         UKIMS_number:
           type: string
           example: XIUKIM47699357400020231115081800
@@ -651,7 +715,7 @@ components:
       required:
         - eori
         - actor_id
-        - id
+        - record_id
         - comcode
         - goods_description
         - country_of_origin
@@ -681,10 +745,9 @@ components:
           maxLength: 17
           example: GB1234567890
           description: EORI number of the user making the change, which may be the same or different to the eori.
-        id:
-          type: integer
-          format: int64
-          example: 1
+        record_id:
+          type: string
+          example: 8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f
           description: Unique identifier of the record to be updated.
         trader_ref:
           type: string
@@ -696,10 +759,10 @@ components:
           maxLength: 10
           example: 104101000
           description: A code specific to goods that is internationally recognised. Can be 6, 8 or 10 digits.
-        accreditation_request:
+        accreditation_status:
           type: string
-          description: Optional field but can be set to 'Accreditation requested' to submit a request to the HMRC Classification team who will check whether the provided commodity code is correct. If the current status is "accreditation requested" then "accreditation withdrawn" can be provided along with a withdrawal_reason to cancel the accreditation request.
-          example: accreditation_requested
+          description: Indicates the accreditation status of a record if the trader has requested that HMRC review their commodity code.
+          example: Not requested
           enum:
             - null
             - accreditation_requested
@@ -723,16 +786,12 @@ components:
           format: int64
           minLength: 1
           maxLength: 1
-          example: 1
+          example: 3
           description: To be retrieved using the Online Trade Tariff API. The category of the goods based on applicable restrictions, prohibitions or any exemptions the trader may hold. This is an integer field with value 1, 2, or 3.
-        prohibition_restriction_doc_id:
-          type: string
-          example: 999L
-          description: To be retrieved using the Online Trade Tariff API. Trader should identify which prohibitions are applicable to their business.
-        prohibition_restriction_explanation:
-          type: string
-          example: CDS Waiver
-          description: To be retrieved using the Online Trade Tariff API. Trader should identify which prohibitions are applicable to their business.
+        assessments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Assessment'
         supplementary_unit:
           type: number
           example: 500
@@ -751,16 +810,30 @@ components:
           type: integer
           format: int64
           description: Version of the TGP record in TGP Digital.
-        state:
+          example: 1
+        active:
           type: string
-          example: active
+          minLength: 1
+          maxLength: 1
+          example: Y
           description: Status of TGP record in TGP Digital.
-          enum:
-            - active
-            - inactive
         declarable:
-          type: boolean
+          type: string
+          example: IMMI declarable
+          enum:
+            - IMMI declarable
+            - Non IMMI declarable
+            - not declarable
           description: Status of TGP record for declarations.
+        to_review:
+          type: string
+          minLength: 1
+          maxLength: 1
+          example: Y
+          description: Set to true when there is an update to the record.For eg. commodity code change.
+        review_reason:
+          type: string
+          example: Commodity code changed.
         UKIMS_number:
           type: string
           example: XIUKIM47699357400020231115081800
@@ -782,11 +855,15 @@ components:
           example: 2024-11-18T23:20:19Z
           description: Timestamp when the record was last updated in TGP Digital.
     RemoveTGPRecordResponse:
+      required:
+        - record_id
+        - status
+        - message
       type: object
       properties:
-        id:
-          type: integer
-          example: 1
+        record_id:
+          type: string
+          example: 8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f
           description: Primary key id of the record for the TGP record in TGP Digital
         status:
           type: string
@@ -796,10 +873,53 @@ components:
           type: string
           example: Good record successfully deactivated
           description: Message describing the status of the request.
+    Assessment:
+      required:
+        - assessment_id
+        - primary_category
+        - condition
+      type: object
+      properties:
+        assessment_id:
+          type: string
+          example: 8ce911dcd4911c785a4d886919c74485
+          description: The ID of the category assessment(s) retrieved from the OTT categorisation API
+        primary_category:
+          type: string
+          example: 1
+          description: The primary category of the assessment
+        condition:
+          $ref: '#/components/schemas/Condition'
+          description: A collection of data detailing the condition the trader meets to exempt the category assessment
+    Condition:
+      required:
+        - type
+        - condition_id
+        - condition_description
+      type: object
+      properties:
+        type:
+          type: string
+          example: Document code
+          enum:
+            - Document code
+        condition_id:
+          type: string
+          example: Y923
+          description: The ID/code of the condition as provided by the OTT categorisation API
+        condition_description:
+          type: string
+          example: Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law
+          description: The description of the condition as provided by the OTT categorisation API
+        condition_trader_text:
+          type: string
+          example: Excluded product
+          description: A free text statement provided by the trader if required in the CDS guidance
     TGPRecordDateTime:
       type: string
       pattern: "^([1-9][0-9]{3})-(0[0-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])[T]([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])Z$"
       example: 2024-11-18T23:20:19Z
+
   securitySchemes:
     userRestricted:
       type: oauth2
@@ -813,7 +933,7 @@ components:
           tokenUrl: https://api.service.hmrc.gov.uk/oauth/token
           refreshUrl: https://api.service.hmrc.gov.uk/oauth/refresh
           scopes:
-            trader-goods-profiles: Access all aspects of EMCS API
+            trader-goods-profiles: Access all aspects of TGP API
     applicationRestricted:
       type: oauth2
       description: HMRC supports OAuth 2.0 for authenticating application restricted
