@@ -15,6 +15,8 @@ servers:
 tags:
   - name: Goods records
     description: Information relating to goods records
+  - name: Traders profile
+    description: Information relating to traders profile
 paths:
   /customs/traders/goods-profiles/{eori}/records:
     post:
@@ -410,6 +412,81 @@ paths:
       security:
         - userRestricted:
             - trader-goods-profiles
+  /customs/traders/goods-profiles/{eori}:
+    put:
+      parameters:
+        - in: header
+          name: Authorisation
+          schema:
+            type: string
+          required: true
+          description: An OAuth 2.0 Bearer Token.
+          example: Bearer 59fc92c1cdf0b8ef1f138a702effdbd2
+        - in: header
+          name: X-Forwarded-Host
+          required: true
+          schema:
+            type: string
+          description: The name or IP address of the application system that submitted the message.
+          example: TSS
+        - in: header
+          name: Date
+          required: true
+          schema:
+            type: string
+            format: date-time
+          description: The date and time that the message was originated(in "HTTP-date" format as defined by FRC 7231 Date/Time formats
+          example: Sun, 06 Nov 2023 08:49:37 GMT
+        - in: header
+          name: X-Client-ID
+          required: true
+          schema:
+            type: string
+          description: Identifier of calling system
+          example: TSS
+        - in: path
+          name: eori
+          required: true
+          schema:
+            type: string
+            minLength: 14
+            maxLength: 17
+          example: GB1234567890
+          description: Identity of the trader as known to HMRC. In the UK this is the 17-character EORI number.
+      tags:
+        - Traders profile
+      summary: Maintain a trader's profile record
+      description: Maintain a trader's profile record
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MaintainProfileRecordSchema'
+        required: true
+      responses:
+        '200':
+          description: OK; Request completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaintainProfileRecordResponse'
+          headers:
+            X-Correlation-ID:
+              required: true
+              schema:
+                type: string
+              description: A unique id created at source, i.e. client to TGP Digital.
+        '400':
+          description: Bad Request; Incorrect request parameters provided.
+        '401':
+          description: Unauthorised; Credentials failed
+        '403':
+          description: Forbidden;   User was valid, but not allowed to perform this action
+        '404':
+          description: Maintain profile records not found to deactivate
+      security:
+        - userRestricted:
+            - trader-goods-profiles
 components:
   schemas:
     CreateTGPRecordSchema:
@@ -577,6 +654,36 @@ components:
           maxLength: 17
           example: GB1234567890
           description: EORI number of the user making the change, which may be the same or different to the eori.
+    MaintainProfileRecordSchema:
+      required:
+        - trader_eori
+        - UKIMS_number
+      type: object
+      properties:
+        trader_eori:
+          type: string
+          minLength: 14
+          maxLength: 17
+          example: GB1234567890
+          description: EORI number of the trader as known to HMRC. In the UK this starts GB or XI followed by 12 numbers.
+        actor_id:
+          type: string
+          minLength: 14
+          maxLength: 17
+          example: XI123456789012
+          description: EORI number of the user making the change, which may be the same or different to the trader_eori.
+        UKIMS_number:
+          type: string
+          example: XIUKIM47699357400020231115081800
+          description: UK Internal Market Scheme registration number
+        NIRMS_number:
+          type: string
+          example: RMS-GB-123456
+          description: Northern Ireland Retail Movement Scheme registration number
+        NIPHL_number:
+          type: string
+          example: 6 S12345
+          description: Northern Ireland Plant Health Label scheme registration number
     CreateTGPRecordResponseSchema:
       required:
         - record_id
@@ -873,6 +980,39 @@ components:
           type: string
           example: Good record successfully deactivated
           description: Message describing the status of the request.
+    MaintainProfileRecordResponse:
+      required:
+        - eori
+        - actor_id
+        - UKIMS_number
+        - NIRMS_number
+        - NIPHL_number
+      type: object
+      properties:
+        eori:
+          type: string
+          minLength: 14
+          maxLength: 17
+          example: GB1234567890
+          description: EORI number of the trader as known to HMRC. In the UK this starts GB or XI followed by 12 numbers.
+        actor_id:
+          type: string
+          minLength: 14
+          maxLength: 17
+          example: XI123456789012
+          description: EORI number of the user making the change, which may be the same or different to the trader_eori.
+        UKIMS_number:
+          type: string
+          example: XIUKIM47699357400020231115081800
+          description: UK Internal Market Scheme registration number
+        NIRMS_number:
+          type: string
+          example: RMS-GB-123456
+          description: Northern Ireland Retail Movement Scheme registration number
+        NIPHL_number:
+          type: string
+          example: 6 S12345
+          description: Northern Ireland Plant Health Label scheme registration number
     Assessment:
       required:
         - assessment_id
