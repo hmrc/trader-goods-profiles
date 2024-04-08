@@ -658,8 +658,6 @@ components:
       required:
         - trader_eori
         - UKIMS_number
-        - NIRMS_number
-        - NIPHL_number
       type: object
       properties:
         trader_eori:
