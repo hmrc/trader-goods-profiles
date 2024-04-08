@@ -15,8 +15,8 @@ servers:
 tags:
   - name: Goods records
     description: Information relating to goods records
-  - name: Maintain profile
-    description: Information relating to traders records
+  - name: Traders profile
+    description: Information relating to traders profile
 paths:
   /customs/traders/goods-profiles/{eori}/records:
     post:
@@ -454,7 +454,7 @@ paths:
           example: GB1234567890
           description: Identity of the trader as known to HMRC. In the UK this is the 17-character EORI number.
       tags:
-        - Maintain profile
+        - Traders profile
       summary: Maintain a trader's profile record
       description: Maintain a trader's profile record
       requestBody:
