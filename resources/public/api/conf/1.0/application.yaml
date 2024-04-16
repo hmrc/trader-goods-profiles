@@ -1,14 +1,14 @@
 openapi: 3.0.3
 info:
-  title: Trader Goods Profile External APIs - OpenAPI 3.0
-  version: 1.0.0
+  title: Trader Goods Profile
+  version: '1.0'
   description: |-
     Use the TGP API to submit trader goods-profile records to the Trader Goods
     Profile Service (TGP).
 
     The [Trader goods profile service
     guide](/guides/trader-goods-profile-service-guide/) contains a detailed
-    overview of v1.0.0 of the API.
+    overview of v1.0 of the API.
   contact: {}
 servers:
   - url: https://test-api.service.hmrc.gov.uk
@@ -29,7 +29,10 @@ paths:
       description: Create a goods record for the good that is being moved.
       operationId: createTraderGoodsProfileRecord
       parameters:
+        - $ref: '#/components/parameters/Content-Type'
+        - $ref: '#/components/parameters/Accept'
         - $ref: '#/components/parameters/xClientIdParam'
+        - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/eoriParam'
       requestBody:
         content:
@@ -55,195 +58,7 @@ paths:
           description: Forbidden;   User was valid, but not allowed to perform this action
       security:
         - userRestricted:
-            - trader-goods-profiles
-    patch:
-      parameters:
-        - $ref: '#/components/parameters/authorisationParam'
-        - $ref: '#/components/parameters/xFwdHostParam'
-        - $ref: '#/components/parameters/dateParam'
-        - $ref: '#/components/parameters/xClientIdParam'
-        - $ref: '#/components/parameters/eoriParam'
-      tags:
-        - Goods records
-      summary: Update an existing trader goods record
-      description: Update an existing TGP record
-      requestBody:
-        description: Update an existent TGP record
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateTGPRecordSchema'
-        required: true
-      responses:
-        '200':
-          description: OK;   Request completed successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UpdateTGPRecordResponseSchema'
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/xCorrelationIdHdr'
-        '400':
-          description: Bad Request; Incorrect request parameters provided.
-        '401':
-          description: Unauthorised; Credentials failed
-        '403':
-          description: Forbidden;   User was valid, but not allowed to perform this action
-        '404':
-          description: TGP record not found to update
-      security:
-        - userRestricted:
-            - trader-goods-profiles
-    put:
-      parameters:
-        - $ref: '#/components/parameters/authorisationParam'
-        - $ref: '#/components/parameters/xFwdHostParam'
-        - $ref: '#/components/parameters/dateParam'
-        - $ref: '#/components/parameters/xClientIdParam'
-        - $ref: '#/components/parameters/eoriParam'
-      tags:
-        - Goods records
-      summary: Remove a trader's goods record
-      description: Remove a Trader's goods record
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RemoveTGPRecordSchema'
-        required: true
-      responses:
-        '200':
-          description: OK;   Request completed successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RemoveTGPRecordResponse'
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/xCorrelationIdHdr'
-        '400':
-          description: Bad Request; Incorrect request parameters provided.
-        '401':
-          description: Unauthorised; Credentials failed
-        '403':
-          description: Forbidden;   User was valid, but not allowed to perform this action
-        '404':
-          description: Good records not found to deactivate
-      security:
-        - userRestricted:
-            - trader-goods-profiles
-    get:
-      parameters:
-        - $ref: '#/components/parameters/authorisationParam'
-        - $ref: '#/components/parameters/xFwdHostParam'
-        - $ref: '#/components/parameters/dateParam'
-        - $ref: '#/components/parameters/xClientIdParam'
-        - $ref: '#/components/parameters/eoriParam'
-        - $ref: '#/components/parameters/updatedSinceParam'
-      tags:
-        - Goods records
-      summary: Get good records by EORI and updatedSince
-      description: Helps read Good records
-      responses:
-        '200':
-          description: OK;   Request completed successfully
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/UpdateTGPRecordResponseSchema'
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/xCorrelationIdHdr'
-        '400':
-          description: Bad Request; Incorrect request parameters provided.
-        '401':
-          description: Unauthorised; Credentials failed
-        '403':
-          description: Forbidden;   User was valid, but not allowed to perform this action
-        '404':
-          description: TGP data not found for the search criteria
-      security:
-        - userRestricted:
-            - trader-goods-profiles
-  /customs/traders/goods-profiles/{eori}/records/{recordId}:
-    get:
-      parameters:
-        - $ref: '#/components/parameters/authorisationParam'
-        - $ref: '#/components/parameters/xFwdHostParam'
-        - $ref: '#/components/parameters/dateParam'
-        - $ref: '#/components/parameters/xClientIdParam'
-        - $ref: '#/components/parameters/eoriParam'
-        - $ref: '#/components/parameters/recordIdParam'
-        - $ref: '#/components/parameters/updatedSinceParam'
-      tags:
-        - Goods records
-      summary: Get good records by EORI and recordId
-      description: Helps read Good records by EORI and recordId
-      responses:
-        '200':
-          description: OK;   Request completed successfully
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/UpdateTGPRecordResponseSchema'
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/xCorrelationIdHdr'
-        '400':
-          description: Bad Request; Incorrect request parameters provided.
-        '401':
-          description: Unauthorised; Credentials failed
-        '403':
-          description: Forbidden;   User was valid, but not allowed to perform this action
-        '404':
-          description: TGP data not found for the search criteria
-      security:
-        - userRestricted:
-            - trader-goods-profiles
-  /customs/traders/goods-profiles/{eori}:
-    put:
-      parameters:
-        - $ref: '#/components/parameters/authorisationParam'
-        - $ref: '#/components/parameters/xFwdHostParam'
-        - $ref: '#/components/parameters/dateParam'
-        - $ref: '#/components/parameters/xClientIdParam'
-        - $ref: '#/components/parameters/eoriParam'
-      tags:
-        - Traders profile
-      summary: Maintain a trader's profile record
-      description: Maintain a trader's profile record
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/MaintainProfileRecordSchema'
-        required: true
-      responses:
-        '200':
-          description: OK; Request completed successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MaintainProfileRecordResponse'
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/xCorrelationIdHdr'
-        '400':
-          description: Bad Request; Incorrect request parameters provided.
-        '401':
-          description: Unauthorised; Credentials failed
-        '403':
-          description: Forbidden;   User was valid, but not allowed to perform this action
-        '404':
-          description: Maintain profile records not found to deactivate
-      security:
-        - userRestricted:
-            - trader-goods-profiles
+            - write:trader-goods-profiles
 components:
   schemas:
     CreateTGPRecordSchema:
@@ -279,73 +94,6 @@ components:
           $ref: '#/components/schemas/comcodeEffectiveFromDate'
         comcodeEffectiveToDate:
           $ref: '#/components/schemas/comcodeEffectiveToDate'
-    UpdateTGPRecordSchema:
-      type: object
-      required:
-        - eori
-        - actorId
-        - recordId
-        - comcode
-        - goodsDescription
-        - countryOfOrigin
-        - category
-        - comcodeEffectiveFromDate
-      properties:
-        eori:
-          $ref: '#/components/schemas/eori'
-        actorId:
-          $ref: '#/components/schemas/actorId'
-        recordId:
-          $ref: '#/components/schemas/recordId'
-        traderRef:
-          $ref: '#/components/schemas/traderRef'
-        comcode:
-          $ref: '#/components/schemas/comcode'
-        goodsDescription:
-          $ref: '#/components/schemas/goodsDescription'
-        countryOfOrigin:
-          $ref: '#/components/schemas/countryOfOrigin'
-        category:
-          $ref: '#/components/schemas/category'
-        assessments:
-          $ref: '#/components/schemas/assessments'
-        supplementaryUnit:
-          $ref: '#/components/schemas/supplementaryUnit'
-        measurementUnit:
-          $ref: '#/components/schemas/measurementUnit'
-        comcodeEffectiveFromDate:
-          $ref: '#/components/schemas/comcodeEffectiveFromDate'
-        comcodeEffectiveToDate:
-          $ref: '#/components/schemas/comcodeEffectiveToDate'
-    RemoveTGPRecordSchema:
-      type: object
-      required:
-        - recordId
-        - eori
-        - actorId
-      properties:
-        recordId:
-          $ref: '#/components/schemas/recordId'
-        eori:
-          $ref: '#/components/schemas/eori'
-        actorId:
-          $ref: '#/components/schemas/actorId'
-    MaintainProfileRecordSchema:
-      required:
-        - eori
-        - ukimsNumber
-      type: object
-      properties:
-        eori:
-          $ref: '#/components/schemas/eori'
-        actorId:
-          $ref: '#/components/schemas/actorId'
-        ukimsNumber:
-          $ref: '#/components/schemas/ukimsNumber'
-        nirmsNumber:
-          $ref: '#/components/schemas/nirmsNumber'
-        niphlNumber:
-          $ref: '#/components/schemas/niphlNumber'
     CreateTGPRecordResponseSchema:
       required:
         - recordId
@@ -415,118 +163,6 @@ components:
           $ref: '#/components/schemas/createdDateTime'
         updatedDateTime:
           $ref: '#/components/schemas/updatedDateTime'
-    UpdateTGPRecordResponseSchema:
-      required:
-        - eori
-        - actorId
-        - recordId
-        - comcode
-        - goodsDescription
-        - countryOfOrigin
-        - category
-        - supplementaryUnit
-        - measurementUnit
-        - comcodeEffectiveFromDate
-        - version
-        - state
-        - declarable
-        - ukimsNumber
-        - nirmsNumber
-        - niphlNumber
-        - createdDateTime
-        - updatedDateTime
-      type: object
-      properties:
-        eori:
-          $ref: '#/components/schemas/eori'
-        actorId:
-          $ref: '#/components/schemas/actorId'
-        recordId:
-          $ref: '#/components/schemas/recordId'
-        traderRef:
-          $ref: '#/components/schemas/traderRef'
-        comcode:
-          $ref: '#/components/schemas/comcode'
-        accreditationStatus:
-          $ref: '#/components/schemas/accreditationStatus'
-        accreditationWithdrawalReason:
-          type: string
-          description: >-
-            To be provided when accreditationStatus has been set to "Null" from
-            "Accreditation requested" which withdraws the accreditation request.
-          example: Advice received by webchat, no longer needed
-        goodsDescription:
-          $ref: '#/components/schemas/goodsDescription'
-        countryOfOrigin:
-          $ref: '#/components/schemas/countryOfOrigin'
-        category:
-          $ref: '#/components/schemas/category'
-        assessments:
-          $ref: '#/components/schemas/assessments'
-        supplementaryUnit:
-          $ref: '#/components/schemas/supplementaryUnit'
-        measurementUnit:
-          $ref: '#/components/schemas/measurementUnit'
-        comcodeEffectiveFromDate:
-          $ref: '#/components/schemas/comcodeEffectiveFromDate'
-        comcodeEffectiveToDate:
-          $ref: '#/components/schemas/comcodeEffectiveToDate'
-        version:
-          $ref: '#/components/schemas/version'
-        active:
-          $ref: '#/components/schemas/active'
-        declarable:
-          $ref: '#/components/schemas/declarable'
-        toReview:
-          $ref: '#/components/schemas/toReview'
-        reviewReason:
-          $ref: '#/components/schemas/reviewReason'
-        ukimsNumber:
-          $ref: '#/components/schemas/ukimsNumber'
-        nirmsNumber:
-          $ref: '#/components/schemas/nirmsNumber'
-        niphlNumber:
-          $ref: '#/components/schemas/niphlNumber'
-        createdDateTime:
-          $ref: '#/components/schemas/createdDateTime'
-        updatedDateTime:
-          $ref: '#/components/schemas/updatedDateTime'
-    RemoveTGPRecordResponse:
-      required:
-        - recordId
-        - status
-        - message
-      type: object
-      properties:
-        recordId:
-          $ref: '#/components/schemas/recordId'
-        status:
-          type: string
-          example: OK
-          description: Status of the request
-        message:
-          type: string
-          example: Good record successfully deactivated
-          description: Message describing the status of the request.
-    MaintainProfileRecordResponse:
-      required:
-        - eori
-        - actorId
-        - ukimsNumber
-        - nirmsNumber
-        - niphlNumber
-      type: object
-      properties:
-        eori:
-          $ref: '#/components/schemas/eori'
-        actorId:
-          $ref: '#/components/schemas/actorId'
-        ukimsNumber:
-          $ref: '#/components/schemas/ukimsNumber'
-        nirmsNumber:
-          $ref: '#/components/schemas/nirmsNumber'
-        niphlNumber:
-          $ref: '#/components/schemas/niphlNumber'
     recordId:
       type: string
       format: uuid
@@ -604,7 +240,7 @@ components:
         prohibitions, or any exemptions the trader may hold.
 
 
-        Valid Values 1,2,3
+        Valid values 1,2,3
     assessments:
       description: >-
         Array of category assessment data describing the measures which apply to
@@ -617,7 +253,8 @@ components:
       type: number
       example: 13
       description: >-
-        Supplementary units are used to provide quantity of goods. For example,
+        Supplementary units are sometimes needed on H8 declarations and provide
+        a quantity of goods in a specified unit of measurement. For example,
         13.
     measurementUnit:
       type: string
@@ -625,8 +262,9 @@ components:
       maxLength: 255
       example: Kilograms
       description: >-
-        Measurement units are used when an additional measurement unit is needed
-        on customs declarations.
+        Measurement units define the required unit of measure when a
+        supplementary unit is needed on an H8 declaration. Measurement units are defined in the 
+        [Trade Tariff commodities API](https://api.trade-tariff.service.gov.uk/reference-data.html#measurement-units)
     comcodeEffectiveFromDate:
       type: string
       format: date-time
@@ -639,7 +277,7 @@ components:
       type: string
       format: date-time
       pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$
-      example: 2023-01-01T00:00:00Z
+      example: 2028-01-01T00:00:00Z
       description: >-
         Date in the (OTT) when authorised usage of a commodity code expired or
         will expire.
@@ -667,7 +305,7 @@ components:
       minLength: 1
       maxLength: 100
       example: IMMI declarable
-      description: Status of TGP Product record for declarations.
+      description: Status of TGP Product record for H8 declarations.
     ukimsNumber:
       type: string
       minLength: 32
@@ -707,8 +345,8 @@ components:
           maxLength: 35
           example: a06846e9a5f61fa4ecf2c4e3b23631fc
           description: >-
-            The ID of the category assessment(s) retrieved from the OTT
-            categorisation API
+            The ID of the category assessment(s) retrieved from the 
+            [Trade Tariff Green Lanes API](https://api.trade-tariff.service.gov.uk/green-lanes.html#get-green-lanes-category-assessments)
         primaryCategory:
           type: integer
           example: 1
@@ -727,16 +365,16 @@ components:
           maxLength: 35
           example: certificate
           description: >-
-            The type of condition/exemption as provided by the OTT
-            categorisation API
+            The type of condition/exemption as provided by the 
+            [Trade Tariff Green Lanes API](https://api.trade-tariff.service.gov.uk/green-lanes.html#get-green-lanes-category-assessments)
         conditionId:
           type: string
           minLength: 1
           maxLength: 10
           example: Y923
           description: >-
-            The ID/code of the condition as provided by the OTT categorisation
-            API
+            The ID/code of the condition as provided by the 
+            [Trade Tariff Green Lanes API](https://api.trade-tariff.service.gov.uk/green-lanes.html#get-green-lanes-category-assessments)
         conditionDescription:
           type: string
           minLength: 1
@@ -745,8 +383,8 @@ components:
             Products not considered as waste according to Regulation (EC) No
             1013/2006 as retained in UK law
           description: >-
-            The description of the condition as provided by OTT categorisation
-            API
+            The description of the condition as provided by the 
+            [Trade Tariff Green Lanes API](https://api.trade-tariff.service.gov.uk/green-lanes.html#get-green-lanes-category-assessments)
         conditionTraderText:
           type: string
           minLength: 1
@@ -756,78 +394,47 @@ components:
             A free text statement provided by the trader if required in the CDS
             guidance
   parameters:
-    authorisationParam:
+    Content-Type:
+      name: Content-Type
       in: header
-      name: Authorisation
+      description: Specifies the format of the request body, which must be JSON.
+      required: true
       schema:
         type: string
+        example: application/json
+    Accept:
+      name: Accept
+      in: header
+      description: Specifies the response format and the [version](/api-documentation/docs/reference-guide#versioning) of the API to be used.
+      schema:
+        type: string
+        example: application/vnd.hmrc.1.0+json
       required: true
+    Authorization:
+      name: Authorization
+      in: header
       description: An OAuth 2.0 Bearer Token.
-      example: Bearer 59fc92c1cdf0b8ef1f138a702effdbd2
-    xFwdHostParam:
-      in: header
-      name: X-Forwarded-Host
-      required: true
       schema:
         type: string
-      description: >-
-        The name or IP address of the application system that submitted the
-        message.
-      example: TSS
-    dateParam:
-      in: header
-      name: Date
+        example: Bearer 59fc92c1cdf0b8ef1f138a702effdbd2
       required: true
-      schema:
-        type: string
-        format: date-time
-      description: >-
-        The date and time that the message was originated(in "HTTP-date" format
-        as defined by FRC 7231 Date/Time formats
-      example: Sun, 06 Nov 2023 08:49:37 GMT
     xClientIdParam:
       in: header
       name: X-Client-ID
       required: true
       schema:
         type: string
+        example: TSS
       description: Identifier of calling system
-      example: TSS
     eoriParam:
       in: path
       name: eori
       required: true
       schema:
         $ref: '#/components/schemas/eori'
-      example: GB123456789012
       description: >-
         Identity of the trader as known to HMRC. In the UK this is the 14-17
         character EORI number.
-    updatedSinceParam:
-      in: query
-      name: updatedSince
-      description: >-
-        Date value, all records after which have to be retrieved from the
-        backend; This should use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
-      schema:
-        type: string
-        format: date-time
-        pattern: >-
-          ^([1-9][0-9]{3})-(0[0-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])[T]([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])Z$
-      example: 2024-11-18T23:20:19Z
-    recordIdParam:
-      in: path
-      name: recordId
-      required: true
-      schema:
-        type: string
-        format: uuid
-        minLength: 14
-        maxLength: 17
-      example: 8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f
-      description: >-
-        Identity of the trader as known to HMRC. In the UK this is the
-        17-character EORI number.
   headers:
     xCorrelationIdHdr:
       description: A unique id created at source, i.e. client to TGP Digital.
@@ -850,7 +457,7 @@ components:
           tokenUrl: https://api.service.hmrc.gov.uk/oauth/token
           refreshUrl: https://api.service.hmrc.gov.uk/oauth/refresh
           scopes:
-            trader-goods-profiles: Access all aspects of TGP API
+            write:trader-goods-profiles: Access all aspects of TGP API
     applicationRestricted:
       type: oauth2
       description: >-
@@ -863,4 +470,4 @@ components:
         clientCredentials:
           tokenUrl: https://api.service.hmrc.gov.uk/oauth/token
           scopes:
-            trader-goods-profiles: Access traders' goods profile and record via the TGP API
+            write:trader-goods-profiles: Access traders' goods profile and record via the TGP API
