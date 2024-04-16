@@ -94,73 +94,6 @@ components:
           $ref: '#/components/schemas/comcodeEffectiveFromDate'
         comcodeEffectiveToDate:
           $ref: '#/components/schemas/comcodeEffectiveToDate'
-    UpdateTGPRecordSchema:
-      type: object
-      required:
-        - eori
-        - actorId
-        - recordId
-        - comcode
-        - goodsDescription
-        - countryOfOrigin
-        - category
-        - comcodeEffectiveFromDate
-      properties:
-        eori:
-          $ref: '#/components/schemas/eori'
-        actorId:
-          $ref: '#/components/schemas/actorId'
-        recordId:
-          $ref: '#/components/schemas/recordId'
-        traderRef:
-          $ref: '#/components/schemas/traderRef'
-        comcode:
-          $ref: '#/components/schemas/comcode'
-        goodsDescription:
-          $ref: '#/components/schemas/goodsDescription'
-        countryOfOrigin:
-          $ref: '#/components/schemas/countryOfOrigin'
-        category:
-          $ref: '#/components/schemas/category'
-        assessments:
-          $ref: '#/components/schemas/assessments'
-        supplementaryUnit:
-          $ref: '#/components/schemas/supplementaryUnit'
-        measurementUnit:
-          $ref: '#/components/schemas/measurementUnit'
-        comcodeEffectiveFromDate:
-          $ref: '#/components/schemas/comcodeEffectiveFromDate'
-        comcodeEffectiveToDate:
-          $ref: '#/components/schemas/comcodeEffectiveToDate'
-    RemoveTGPRecordSchema:
-      type: object
-      required:
-        - recordId
-        - eori
-        - actorId
-      properties:
-        recordId:
-          $ref: '#/components/schemas/recordId'
-        eori:
-          $ref: '#/components/schemas/eori'
-        actorId:
-          $ref: '#/components/schemas/actorId'
-    MaintainProfileRecordSchema:
-      required:
-        - eori
-        - ukimsNumber
-      type: object
-      properties:
-        eori:
-          $ref: '#/components/schemas/eori'
-        actorId:
-          $ref: '#/components/schemas/actorId'
-        ukimsNumber:
-          $ref: '#/components/schemas/ukimsNumber'
-        nirmsNumber:
-          $ref: '#/components/schemas/nirmsNumber'
-        niphlNumber:
-          $ref: '#/components/schemas/niphlNumber'
     CreateTGPRecordResponseSchema:
       required:
         - recordId
@@ -230,118 +163,6 @@ components:
           $ref: '#/components/schemas/createdDateTime'
         updatedDateTime:
           $ref: '#/components/schemas/updatedDateTime'
-    UpdateTGPRecordResponseSchema:
-      required:
-        - eori
-        - actorId
-        - recordId
-        - comcode
-        - goodsDescription
-        - countryOfOrigin
-        - category
-        - supplementaryUnit
-        - measurementUnit
-        - comcodeEffectiveFromDate
-        - version
-        - state
-        - declarable
-        - ukimsNumber
-        - nirmsNumber
-        - niphlNumber
-        - createdDateTime
-        - updatedDateTime
-      type: object
-      properties:
-        eori:
-          $ref: '#/components/schemas/eori'
-        actorId:
-          $ref: '#/components/schemas/actorId'
-        recordId:
-          $ref: '#/components/schemas/recordId'
-        traderRef:
-          $ref: '#/components/schemas/traderRef'
-        comcode:
-          $ref: '#/components/schemas/comcode'
-        accreditationStatus:
-          $ref: '#/components/schemas/accreditationStatus'
-        accreditationWithdrawalReason:
-          type: string
-          description: >-
-            To be provided when accreditationStatus has been set to "Null" from
-            "Accreditation requested" which withdraws the accreditation request.
-          example: Advice received by webchat, no longer needed
-        goodsDescription:
-          $ref: '#/components/schemas/goodsDescription'
-        countryOfOrigin:
-          $ref: '#/components/schemas/countryOfOrigin'
-        category:
-          $ref: '#/components/schemas/category'
-        assessments:
-          $ref: '#/components/schemas/assessments'
-        supplementaryUnit:
-          $ref: '#/components/schemas/supplementaryUnit'
-        measurementUnit:
-          $ref: '#/components/schemas/measurementUnit'
-        comcodeEffectiveFromDate:
-          $ref: '#/components/schemas/comcodeEffectiveFromDate'
-        comcodeEffectiveToDate:
-          $ref: '#/components/schemas/comcodeEffectiveToDate'
-        version:
-          $ref: '#/components/schemas/version'
-        active:
-          $ref: '#/components/schemas/active'
-        declarable:
-          $ref: '#/components/schemas/declarable'
-        toReview:
-          $ref: '#/components/schemas/toReview'
-        reviewReason:
-          $ref: '#/components/schemas/reviewReason'
-        ukimsNumber:
-          $ref: '#/components/schemas/ukimsNumber'
-        nirmsNumber:
-          $ref: '#/components/schemas/nirmsNumber'
-        niphlNumber:
-          $ref: '#/components/schemas/niphlNumber'
-        createdDateTime:
-          $ref: '#/components/schemas/createdDateTime'
-        updatedDateTime:
-          $ref: '#/components/schemas/updatedDateTime'
-    RemoveTGPRecordResponse:
-      required:
-        - recordId
-        - status
-        - message
-      type: object
-      properties:
-        recordId:
-          $ref: '#/components/schemas/recordId'
-        status:
-          type: string
-          example: OK
-          description: Status of the request
-        message:
-          type: string
-          example: Good record successfully deactivated
-          description: Message describing the status of the request.
-    MaintainProfileRecordResponse:
-      required:
-        - eori
-        - actorId
-        - ukimsNumber
-        - nirmsNumber
-        - niphlNumber
-      type: object
-      properties:
-        eori:
-          $ref: '#/components/schemas/eori'
-        actorId:
-          $ref: '#/components/schemas/actorId'
-        ukimsNumber:
-          $ref: '#/components/schemas/ukimsNumber'
-        nirmsNumber:
-          $ref: '#/components/schemas/nirmsNumber'
-        niphlNumber:
-          $ref: '#/components/schemas/niphlNumber'
     recordId:
       type: string
       format: uuid
@@ -597,27 +418,6 @@ components:
         type: string
         example: Bearer 59fc92c1cdf0b8ef1f138a702effdbd2
       required: true
-    xFwdHostParam:
-      in: header
-      name: X-Forwarded-Host
-      required: true
-      schema:
-        type: string
-        example: TSS
-      description: >-
-        The name or IP address of the application system that submitted the
-        message.
-    dateParam:
-      in: header
-      name: Date
-      required: true
-      schema:
-        type: string
-        format: date-time
-        example: Sun, 06 Nov 2023 08:49:37 GMT
-      description: >-
-        The date and time that the message was originated(in "HTTP-date" format
-        as defined by FRC 7231 Date/Time formats
     xClientIdParam:
       in: header
       name: X-Client-ID
@@ -635,31 +435,6 @@ components:
       description: >-
         Identity of the trader as known to HMRC. In the UK this is the 14-17
         character EORI number.
-    updatedSinceParam:
-      in: query
-      name: updatedSince
-      description: >-
-        Date value, all records after which have to be retrieved from the
-        backend; This should use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
-      schema:
-        type: string
-        format: date-time
-        pattern: >-
-          ^([1-9][0-9]{3})-(0[0-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])[T]([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])Z$
-        example: 2024-11-18T23:20:19Z
-    recordIdParam:
-      in: path
-      name: recordId
-      required: true
-      schema:
-        type: string
-        format: uuid
-        minLength: 14
-        maxLength: 17
-        example: 8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f
-      description: >-
-        Identity of the trader as known to HMRC. In the UK this is the
-        17-character EORI number.
   headers:
     xCorrelationIdHdr:
       description: A unique id created at source, i.e. client to TGP Digital.
