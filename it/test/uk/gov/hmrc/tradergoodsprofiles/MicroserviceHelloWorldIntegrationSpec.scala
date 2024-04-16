@@ -41,7 +41,6 @@ class MicroserviceHelloWorldIntegrationSpec extends PlaySpec
     }
 
     "return 401 for an unauthorised enrolment" in {
-
       val result: WSResponse = await(wsClient.url(s"http://localhost:$port/hello-world").get)
 
       result.status mustBe UNAUTHORIZED

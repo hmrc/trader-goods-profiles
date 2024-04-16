@@ -16,14 +16,28 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers.actions
 
+import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
+import play.api.mvc.BodyParsers
+import play.api.test.FakeRequest
+import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
+import uk.gov.hmrc.tradergoodsprofiles.models.auth.EnrolmentRequest
+
+import scala.concurrent.ExecutionContext
 
 class AuthActionSpec extends PlaySpec {
+  implicit val ec = ExecutionContext.Implicits.global
+
+  val authConnector: AuthConnector = mock[AuthConnector]
 
   "authorisation" should {
     "authorise an enrolment" in {
+      val authenticator = new AuthActionImpl(authConnector, stubMessagesControllerComponents(), mock[BodyParsers.Default])
 
-//      val authenticator = new AuthActionImpl()
+      authenticator.invokeBlock(FakeRequest(), )
     }
   }
+
+  def block(request: EnrolmentRequest) =  Future[Result]{}
 }
