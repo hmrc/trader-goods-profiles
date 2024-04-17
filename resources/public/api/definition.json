@@ -1,5 +1,10 @@
 {
   "scopes": [
+    {
+      "key": "trader-goods-profiles",
+      "name": "Trader Goods Profiles",
+      "description": "Allow full access to the Trader Goods Profiles public API"
+    }
   ],
   "api": {
     "name": "Trader Goods Profiles",
