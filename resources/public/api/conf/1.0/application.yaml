@@ -58,7 +58,7 @@ paths:
           description: Forbidden;   User was valid, but not allowed to perform this action
       security:
         - userRestricted:
-            - write:trader-goods-profiles
+            - trader-goods-profiles
 components:
   schemas:
     CreateTGPRecordSchema:
@@ -457,7 +457,7 @@ components:
           tokenUrl: https://api.service.hmrc.gov.uk/oauth/token
           refreshUrl: https://api.service.hmrc.gov.uk/oauth/refresh
           scopes:
-            write:trader-goods-profiles: Access all aspects of TGP API
+            trader-goods-profiles: Access all aspects of TGP API
     applicationRestricted:
       type: oauth2
       description: >-
@@ -470,4 +470,4 @@ components:
         clientCredentials:
           tokenUrl: https://api.service.hmrc.gov.uk/oauth/token
           scopes:
-            write:trader-goods-profiles: Access traders' goods profile and record via the TGP API
+            trader-goods-profiles: Access traders' goods profile and record via the TGP API
