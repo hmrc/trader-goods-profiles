@@ -59,6 +59,40 @@ paths:
       security:
         - userRestricted:
             - trader-goods-profiles
+    get:
+      tags:
+        - Goods records
+      summary: Get good records by EORI and optionally updatedSince or recordId
+      description: Gets a list of good records
+      operationId: getTraderGoodsProfileRecord
+      parameters:
+        - $ref: '#/components/parameters/Content-Type'
+        - $ref: '#/components/parameters/Accept'
+        - $ref: '#/components/parameters/xClientIdParam'
+        - $ref: '#/components/parameters/Authorization'
+        - $ref: '#/components/parameters/eoriParam'
+        - $ref: '#/components/parameters/updatedSinceParam'
+      responses:
+        '200':
+          description: OK;   Request completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateTGPRecordResponseSchema'
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/xCorrelationIdHdr'
+        '400':
+          description: Bad Request; Incorrect request parameters provided.
+        '401':
+          description: Unauthorised; Credentials failed
+        '403':
+          description: Forbidden;   User was valid, but not allowed to perform this action
+        '404':
+          description: TGP record not found to update
+      security:
+        - userRestricted:
+            - trader-goods-profiles
   /customs/traders/goods-profiles/{eori}/records/{recordId}:
     patch:
       tags:
@@ -80,6 +114,40 @@ paths:
             schema:
               $ref: '#/components/schemas/UpdateTGPRecordSchema'
         required: true
+      responses:
+        '200':
+          description: OK;   Request completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateTGPRecordResponseSchema'
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/xCorrelationIdHdr'
+        '400':
+          description: Bad Request; Incorrect request parameters provided.
+        '401':
+          description: Unauthorised; Credentials failed
+        '403':
+          description: Forbidden;   User was valid, but not allowed to perform this action
+        '404':
+          description: TGP record not found to update
+      security:
+        - userRestricted:
+            - trader-goods-profiles
+    get:
+      tags:
+        - Goods records
+      summary: Get a single good record
+      description: Gets a single good record
+      operationId: getSingleTraderGoodsProfileRecord
+      parameters:
+        - $ref: '#/components/parameters/Content-Type'
+        - $ref: '#/components/parameters/Accept'
+        - $ref: '#/components/parameters/xClientIdParam'
+        - $ref: '#/components/parameters/Authorization'
+        - $ref: '#/components/parameters/eoriParam'
+        - $ref: '#/components/parameters/recordParam'
       responses:
         '200':
           description: OK;   Request completed successfully
@@ -591,6 +659,18 @@ components:
       description: >-
         Identity of the trader as known to HMRC. In the UK this is the 14-17
         character EORI number.
+    updatedSinceParam:
+      in: query
+      name: updatedSince
+      description: >-
+        Date value, all records after which have to be retrieved from the
+        backend; This should use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
+      schema:
+        type: string
+        format: date-time
+        pattern: >-
+          ^([1-9][0-9]{3})-(0[0-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])[T]([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])Z$
+        example: 2024-11-18T23:20:19Z
     recordParam:
       in: path
       name: recordId
