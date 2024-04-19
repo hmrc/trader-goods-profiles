@@ -62,7 +62,7 @@ paths:
     get:
       tags:
         - Goods records
-      summary: Get good records by EORI and optionally updatedSince or recordId
+      summary: Get good records by EORI and optionally updatedSince, supports pagination
       description: Gets a list of good records
       operationId: getTraderGoodsProfileRecord
       parameters:
