@@ -59,6 +59,42 @@ paths:
       security:
         - userRestricted:
             - trader-goods-profiles
+    get:
+      tags:
+        - Goods records
+      summary: Get good records by EORI and optionally updatedSince, supports pagination
+      description: Gets a list of good records
+      operationId: getTraderGoodsProfileRecord
+      parameters:
+        - $ref: '#/components/parameters/Content-Type'
+        - $ref: '#/components/parameters/Accept'
+        - $ref: '#/components/parameters/xClientIdParam'
+        - $ref: '#/components/parameters/Authorization'
+        - $ref: '#/components/parameters/eoriParam'
+        - $ref: '#/components/parameters/updatedSinceParam'
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/sizeParam'
+      responses:
+        '200':
+          description: OK;   Request completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateTGPRecordResponseSchema'
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/xCorrelationIdHdr'
+        '400':
+          description: Bad Request; Incorrect request parameters provided.
+        '401':
+          description: Unauthorised; Credentials failed
+        '403':
+          description: Forbidden;   User was valid, but not allowed to perform this action
+        '404':
+          description: TGP record not found to update
+      security:
+        - userRestricted:
+            - trader-goods-profiles
   /customs/traders/goods-profiles/{eori}/records/{recordId}:
     patch:
       tags:
@@ -80,6 +116,40 @@ paths:
             schema:
               $ref: '#/components/schemas/UpdateTGPRecordSchema'
         required: true
+      responses:
+        '200':
+          description: OK;   Request completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateTGPRecordResponseSchema'
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/xCorrelationIdHdr'
+        '400':
+          description: Bad Request; Incorrect request parameters provided.
+        '401':
+          description: Unauthorised; Credentials failed
+        '403':
+          description: Forbidden;   User was valid, but not allowed to perform this action
+        '404':
+          description: TGP record not found to update
+      security:
+        - userRestricted:
+            - trader-goods-profiles
+    get:
+      tags:
+        - Goods records
+      summary: Get a single good record
+      description: Gets a single good record
+      operationId: getSingleTraderGoodsProfileRecord
+      parameters:
+        - $ref: '#/components/parameters/Content-Type'
+        - $ref: '#/components/parameters/Accept'
+        - $ref: '#/components/parameters/xClientIdParam'
+        - $ref: '#/components/parameters/Authorization'
+        - $ref: '#/components/parameters/eoriParam'
+        - $ref: '#/components/parameters/recordParam'
       responses:
         '200':
           description: OK;   Request completed successfully
@@ -549,6 +619,19 @@ components:
           description: >-
             A free text statement provided by the trader if required in the CDS
             guidance
+    page:
+      type: integer
+      minimum: 0
+      example: 1
+      description: >-
+        0 indexed page number
+    size:
+      type: integer
+      minimum: 0
+      maximum: 100000
+      example: 100
+      description: >-
+        Number of records per page to be requested
   parameters:
     Content-Type:
       name: Content-Type
@@ -591,6 +674,32 @@ components:
       description: >-
         Identity of the trader as known to HMRC. In the UK this is the 14-17
         character EORI number.
+    updatedSinceParam:
+      in: query
+      name: updatedSince
+      description: >-
+        Date value, all records after which have to be retrieved from the
+        backend; This should use standard ISO8601 format (yyyy-mm-dd hh:mm:ssZ).
+      schema:
+        type: string
+        format: date-time
+        pattern: >-
+          ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$
+        example: 2024-04-18T23:20:19Z
+    pageParam:
+      in: query
+      name: page
+      schema:
+        $ref: '#/components/schemas/page'
+      description: >-
+        The page number to fetch, defaults to 0
+    sizeParam:
+      in: query
+      name: size
+      schema:
+        $ref: '#/components/schemas/size'
+      description: >-
+        Number of records per page to be requested, default is 100000
     recordParam:
       in: path
       name: recordId
