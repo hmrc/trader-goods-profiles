@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers.actions
 
-import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.MockitoSugar.{reset, verify, when}
 import org.scalatest.BeforeAndAfterEach
@@ -28,12 +27,9 @@ import play.api.mvc.Results.{InternalServerError, Unauthorized}
 import play.api.mvc.{BodyParsers, Result, Results}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.auth.core.AffinityGroup.{Agent, Organisation}
-import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{affinityGroup, authorisedEnrolments}
-import uk.gov.hmrc.auth.core.syntax.retrieved.authSyntaxForRetrieved
-import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, Enrolments, InsufficientEnrolments}
+import uk.gov.hmrc.auth.core.{Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.ErrorResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.auth.EnrolmentRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
@@ -44,12 +40,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class AuthActionSpec
   extends PlaySpec
-  with BeforeAndAfterEach {
+    with AuthTestSupport
+    with BeforeAndAfterEach {
+
   implicit val ec = ExecutionContext.Implicits.global
 
-  private val authFetch = authorisedEnrolments and affinityGroup
   private val timestamp = Instant.now.truncatedTo(ChronoUnit.SECONDS)
-  private val authConnector: AuthConnector = mock[AuthConnector]
   private val dateTimeService = mock[DateTimeService]
 
   private val sut = new AuthActionImpl(
@@ -64,15 +60,13 @@ class AuthActionSpec
 
     reset(authConnector)
 
-    val retrieval = Enrolments(Set(Enrolment("HMRC-EMCS-ORG")))  and Some(Organisation)
-
-    when(authConnector.authorise(ArgumentMatchers.argThat((p: Predicate) => true), eqTo(authFetch))(any,any))
-      .thenReturn(Future.successful(retrieval))
     when(dateTimeService.timestamp).thenReturn(timestamp)
   }
 
   "authorisation" should {
     "authorise an enrolment" in {
+      withAuthorizedTrader
+
       val result = await(sut.invokeBlock(FakeRequest(), block))
 
       result.header.status mustBe OK
@@ -81,8 +75,7 @@ class AuthActionSpec
 
     "return unauthorized" when {
       "invalid enrolment" in {
-        when(authConnector.authorise(any, any)(any, any))
-          .thenReturn(Future.failed(InsufficientEnrolments()))
+        withUnauthorizedTrader(InsufficientEnrolments())
 
         val result = await(sut.invokeBlock(FakeRequest("GET", "/get"), block))
 
@@ -94,10 +87,7 @@ class AuthActionSpec
       }
 
       "affinity group is Agent" in {
-        val retrieval = Enrolments(Set(Enrolment("HMRC-EMCS-ORG")))  and Some(Agent)
-
-        when(authConnector.authorise(ArgumentMatchers.argThat((p: Predicate) => true), eqTo(authFetch))(any,any))
-          .thenReturn(Future.successful(retrieval))
+        unauthorizedAffinityGroup
 
         val result = await(sut.invokeBlock(FakeRequest("GET", "/get"), block))
 
@@ -110,18 +100,18 @@ class AuthActionSpec
     }
 
     "return internal server error when throwing" in {
-        when(authConnector.authorise(any, any)(any, any))
-          .thenReturn(Future.failed(new RuntimeException("unauthorised error")))
 
-        val result = await(sut.invokeBlock(FakeRequest("GET", "/get"), block))
+      withUnauthorizedTrader(new RuntimeException("unauthorised error"))
 
-        result mustBe InternalServerError(Json.toJson(ErrorResponse(
-          timestamp,
-          "Internal server error",
-          "Internal server error for /get with error unauthorised error"
-        )))
-      }
+      val result = await(sut.invokeBlock(FakeRequest("GET", "/get"), block))
+
+      result mustBe InternalServerError(Json.toJson(ErrorResponse(
+        timestamp,
+        "Internal server error",
+        "Internal server error for /get with error unauthorised error"
+      )))
     }
+  }
 
   def block(request: EnrolmentRequest[_]):  Future[Result] = Future.successful(Results.Ok)
 }
