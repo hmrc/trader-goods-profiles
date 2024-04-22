@@ -18,10 +18,18 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers.actions
 
 import com.google.inject.ImplementedBy
 import play.api.Logging
+import play.api.libs.json.Json
 import play.api.mvc._
-import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
+import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{affinityGroup, authorisedEnrolments}
+import uk.gov.hmrc.auth.core.retrieve.~
+import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisationException, AuthorisedFunctions, Enrolment}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
+import uk.gov.hmrc.tradergoodsprofiles.models.ErrorResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.auth.EnrolmentRequest
+import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,18 +38,48 @@ import scala.concurrent.{ExecutionContext, Future}
 class AuthActionImpl @Inject()
 (
   override val authConnector: AuthConnector,
+  dateTimeService: DateTimeService,
   cc: ControllerComponents,
   val parser: BodyParsers.Default
 )
 (implicit val ec: ExecutionContext)
   extends BackendController(cc) with AuthorisedFunctions with AuthAction with Logging {
 
-  override def invokeBlock[A](request: Request[A], block: EnrolmentRequest[A] => Future[Result]): Future[Result] = ???
+  private val fetch = authorisedEnrolments and affinityGroup
 
-  override protected def executionContext: ExecutionContext = ???
+  protected def executionContext: ExecutionContext = ec
+
+  override def invokeBlock[A](
+    request: Request[A],
+    block: EnrolmentRequest[A] => Future[Result]
+  ): Future[Result] = {
+
+    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
+    implicit val req: Request[A] = request
+
+    authorised(Enrolment("HMRC-CUS-ORG"))
+      .retrieve(fetch) {
+        case authorisedEnrolments ~ Some(Organisation) => block(EnrolmentRequest(request))
+      }.recover {
+      case error: AuthorisationException =>
+        logger.error(s"Unauthorised Exception for ${request.uri} with error ${error.reason}")
+
+        Unauthorized(Json.toJson(ErrorResponse(
+          dateTimeService.timestamp,
+          "Unauthorised",
+          s"Unauthorised Exception for ${request.uri} with error ${error.reason}"))
+        )
+      case ex: Throwable =>
+        logger.error(s"Unauthorised Exception for ${request.uri} with error ${ex.getMessage}", ex)
+
+        InternalServerError(Json.toJson(ErrorResponse(
+          dateTimeService.timestamp,
+          "Internal server error",
+          s"Unauthorised Exception for ${request.uri} with error ${ex.getMessage}"))
+        )
+    }
+  }
 }
 
 @ImplementedBy(classOf[AuthActionImpl])
-trait AuthAction extends ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest]{
-
-}
+trait AuthAction extends ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest]
