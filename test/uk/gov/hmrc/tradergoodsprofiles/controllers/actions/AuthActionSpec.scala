@@ -28,7 +28,7 @@ import play.api.mvc.Results.{InternalServerError, Unauthorized}
 import play.api.mvc.{BodyParsers, Result, Results}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
+import uk.gov.hmrc.auth.core.AffinityGroup.{Agent, Organisation}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{affinityGroup, authorisedEnrolments}
 import uk.gov.hmrc.auth.core.syntax.retrieved.authSyntaxForRetrieved
@@ -47,9 +47,11 @@ class AuthActionSpec
   with BeforeAndAfterEach {
   implicit val ec = ExecutionContext.Implicits.global
 
+  private val authFetch = authorisedEnrolments and affinityGroup
   private val timestamp = Instant.now.truncatedTo(ChronoUnit.SECONDS)
   private val authConnector: AuthConnector = mock[AuthConnector]
   private val dateTimeService = mock[DateTimeService]
+
   private val sut = new AuthActionImpl(
     authConnector,
     dateTimeService,
@@ -63,7 +65,7 @@ class AuthActionSpec
     reset(authConnector)
 
     val retrieval = Enrolments(Set(Enrolment("HMRC-EMCS-ORG")))  and Some(Organisation)
-    val authFetch = authorisedEnrolments and affinityGroup
+
     when(authConnector.authorise(ArgumentMatchers.argThat((p: Predicate) => true), eqTo(authFetch))(any,any))
       .thenReturn(Future.successful(retrieval))
     when(dateTimeService.timestamp).thenReturn(timestamp)
@@ -87,7 +89,22 @@ class AuthActionSpec
         result mustBe Unauthorized(Json.toJson(ErrorResponse(
           timestamp,
           "Unauthorised",
-          "Unauthorised Exception for /get with error Insufficient Enrolments"
+          "Unauthorised error for /get with error: Insufficient Enrolments"
+        )))
+      }
+
+      "affinity group is Agent" in {
+        val retrieval = Enrolments(Set(Enrolment("HMRC-EMCS-ORG")))  and Some(Agent)
+
+        when(authConnector.authorise(ArgumentMatchers.argThat((p: Predicate) => true), eqTo(authFetch))(any,any))
+          .thenReturn(Future.successful(retrieval))
+
+        val result = await(sut.invokeBlock(FakeRequest("GET", "/get"), block))
+
+        result mustBe Unauthorized(Json.toJson(ErrorResponse(
+          timestamp,
+          "Unauthorised",
+          "Unauthorised error for /get with error: Could not retrieve affinity group from Auth"
         )))
       }
     }
@@ -101,7 +118,7 @@ class AuthActionSpec
         result mustBe InternalServerError(Json.toJson(ErrorResponse(
           timestamp,
           "Internal server error",
-          "Unauthorised Exception for /get with error unauthorised error"
+          "Internal server error for /get with error unauthorised error"
         )))
       }
     }

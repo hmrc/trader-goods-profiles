@@ -20,7 +20,7 @@ import com.google.inject.ImplementedBy
 import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc._
-import uk.gov.hmrc.auth.core.AffinityGroup.Organisation
+import uk.gov.hmrc.auth.core.AffinityGroup.{Agent, Organisation}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{affinityGroup, authorisedEnrolments}
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisationException, AuthorisedFunctions, Enrolment}
@@ -32,6 +32,7 @@ import uk.gov.hmrc.tradergoodsprofiles.models.auth.EnrolmentRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
 
 import javax.inject.Inject
+import scala.concurrent.Future.successful
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -60,24 +61,34 @@ class AuthActionImpl @Inject()
     authorised(Enrolment("HMRC-CUS-ORG"))
       .retrieve(fetch) {
         case authorisedEnrolments ~ Some(Organisation) => block(EnrolmentRequest(request))
-      }.recover {
-      case error: AuthorisationException =>
-        logger.error(s"Unauthorised Exception for ${request.uri} with error ${error.reason}")
+        case _ ~ Some(Agent) =>
+          successful(handleUnauthorisedError("Could not retrieve affinity group from Auth"))
 
-        Unauthorized(Json.toJson(ErrorResponse(
-          dateTimeService.timestamp,
-          "Unauthorised",
-          s"Unauthorised Exception for ${request.uri} with error ${error.reason}"))
-        )
+      }.recover {
+      case error: AuthorisationException => handleUnauthorisedError(error.reason)
+
       case ex: Throwable =>
-        logger.error(s"Unauthorised Exception for ${request.uri} with error ${ex.getMessage}", ex)
+        logger.error(s"Internal server error for ${request.uri} with error ${ex.getMessage}", ex)
 
         InternalServerError(Json.toJson(ErrorResponse(
           dateTimeService.timestamp,
           "Internal server error",
-          s"Unauthorised Exception for ${request.uri} with error ${ex.getMessage}"))
+          s"Internal server error for ${request.uri} with error ${ex.getMessage}"))
         )
     }
+  }
+
+  private def handleUnauthorisedError[A](
+    errorMessage: String
+  )(implicit request: Request[A]): Result = {
+
+    logger.error(s"Unauthorised error for ${request.uri} with error $errorMessage")
+
+    Unauthorized(Json.toJson(ErrorResponse(
+      dateTimeService.timestamp,
+      "Unauthorised",
+      s"Unauthorised error for ${request.uri} with error: $errorMessage")
+    ))
   }
 }
 
