@@ -209,21 +209,16 @@ components:
     UpdateTGPRecordSchema:
       type: object
       required:
-        - eori
         - actorId
-        - recordId
+        - traderRef
         - comcode
         - goodsDescription
         - countryOfOrigin
         - category
         - comcodeEffectiveFromDate
       properties:
-        eori:
-          $ref: '#/components/schemas/eori'
         actorId:
           $ref: '#/components/schemas/actorId'
-        recordId:
-          $ref: '#/components/schemas/recordId'
         traderRef:
           $ref: '#/components/schemas/traderRef'
         comcode:
