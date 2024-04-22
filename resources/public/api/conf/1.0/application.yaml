@@ -46,7 +46,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateTGPRecordResponseSchema'
+                $ref: '#/components/schemas/TGPRecordResponseSchema'
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/xCorrelationIdHdr'
@@ -80,7 +80,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UpdateTGPRecordResponseSchema'
+                $ref: '#/components/schemas/GetTGPRecordResponseSchema'
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/xCorrelationIdHdr'
@@ -122,7 +122,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UpdateTGPRecordResponseSchema'
+                $ref: '#/components/schemas/TGPRecordResponseSchema'
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/xCorrelationIdHdr'
@@ -156,7 +156,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UpdateTGPRecordResponseSchema'
+                $ref: '#/components/schemas/TGPRecordResponseSchema'
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/xCorrelationIdHdr'
@@ -244,7 +244,7 @@ components:
           $ref: '#/components/schemas/comcodeEffectiveFromDate'
         comcodeEffectiveToDate:
           $ref: '#/components/schemas/comcodeEffectiveToDate'
-    CreateTGPRecordResponseSchema:
+    TGPRecordResponseSchema:
       required:
         - recordId
         - eori
@@ -313,82 +313,51 @@ components:
           $ref: '#/components/schemas/createdDateTime'
         updatedDateTime:
           $ref: '#/components/schemas/updatedDateTime'
-    UpdateTGPRecordResponseSchema:
+    GetTGPRecordResponseSchema:
       required:
-        - eori
-        - actorId
-        - recordId
-        - comcode
-        - goodsDescription
-        - countryOfOrigin
-        - category
-        - supplementaryUnit
-        - measurementUnit
-        - comcodeEffectiveFromDate
-        - version
-        - state
-        - declarable
-        - ukimsNumber
-        - nirmsNumber
-        - niphlNumber
-        - createdDateTime
-        - updatedDateTime
+        - records
+        - pagination
       type: object
       properties:
-        eori:
-          $ref: '#/components/schemas/eori'
-        actorId:
-          $ref: '#/components/schemas/actorId'
-        recordId:
-          $ref: '#/components/schemas/recordId'
-        traderRef:
-          $ref: '#/components/schemas/traderRef'
-        comcode:
-          $ref: '#/components/schemas/comcode'
-        accreditationStatus:
-          $ref: '#/components/schemas/accreditationStatus'
-        accreditationWithdrawalReason:
-          type: string
-          description: >-
-            To be provided when accreditationStatus has been set to "Withdrawn" from
-            "Withdraw Accreditation" which withdraws the accreditation request.
-          example: Advice received by webchat, no longer needed
-        goodsDescription:
-          $ref: '#/components/schemas/goodsDescription'
-        countryOfOrigin:
-          $ref: '#/components/schemas/countryOfOrigin'
-        category:
-          $ref: '#/components/schemas/category'
-        assessments:
-          $ref: '#/components/schemas/assessments'
-        supplementaryUnit:
-          $ref: '#/components/schemas/supplementaryUnit'
-        measurementUnit:
-          $ref: '#/components/schemas/measurementUnit'
-        comcodeEffectiveFromDate:
-          $ref: '#/components/schemas/comcodeEffectiveFromDate'
-        comcodeEffectiveToDate:
-          $ref: '#/components/schemas/comcodeEffectiveToDate'
-        version:
-          $ref: '#/components/schemas/version'
-        active:
-          $ref: '#/components/schemas/active'
-        declarable:
-          $ref: '#/components/schemas/declarable'
-        toReview:
-          $ref: '#/components/schemas/toReview'
-        reviewReason:
-          $ref: '#/components/schemas/reviewReason'
-        ukimsNumber:
-          $ref: '#/components/schemas/ukimsNumber'
-        nirmsNumber:
-          $ref: '#/components/schemas/nirmsNumber'
-        niphlNumber:
-          $ref: '#/components/schemas/niphlNumber'
-        createdDateTime:
-          $ref: '#/components/schemas/createdDateTime'
-        updatedDateTime:
-          $ref: '#/components/schemas/updatedDateTime'
+        records:
+          $ref: '#/components/schemas/recordsArray'
+        pagination:
+          $ref: '#/components/schemas/pagination'
+    recordsArray:
+      description: >-
+        An Array of records
+      type: array
+      items:
+        $ref: '#/components/schemas/TGPRecordResponseSchema'
+    pagination:
+      type: object
+      required:
+        - totalRecords
+        - currentPage
+        - totalPages
+        - nextPage
+        - previousPage
+      properties:
+        totalRecords:
+          type: integer
+          example: 250
+          description: The total number of records for this query
+        currentPage:
+          type: integer
+          example: 1
+          description: The current page number (0 indexed)
+        totalPages:
+          type: integer
+          example: 3
+          description: The total number of pages available
+        nextPage:
+          type: integer
+          example: 2
+          description: Number of the next page, null if on the last page
+        previousPage:
+          type: integer
+          example: 0
+          description: Number of the previous page, null if on the last page
     recordId:
       type: string
       format: uuid
