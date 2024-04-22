@@ -20,7 +20,6 @@ import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.MockitoSugar.when
 import org.scalatestplus.mockito.MockitoSugar.mock
-import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{affinityGroup, authorisedEnrolments}
 import uk.gov.hmrc.auth.core.retrieve.~
@@ -51,8 +50,9 @@ trait AuthTestSupport {
       .thenReturn(Future.successful(retrieval))
   }
 
-  def unauthorizedAffinityGroup: Unit = {
-    val retrieval = Enrolments(Set(enrolment)) and Some(Agent)
+  def authorizeWithAffinityGroup(affinityGrp: Option[AffinityGroup]): Unit = {
+    val retrieval = Enrolments(Set(enrolment)) and affinityGrp
+
     withAuthorization(retrieval)
   }
 

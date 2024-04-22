@@ -27,6 +27,7 @@ import play.api.mvc.Results.{InternalServerError, Unauthorized}
 import play.api.mvc.{BodyParsers, Result, Results}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.auth.core.AffinityGroup.{Agent, Individual}
 import uk.gov.hmrc.auth.core.{Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
@@ -64,8 +65,17 @@ class AuthActionSpec
   }
 
   "authorisation" should {
-    "authorise an enrolment" in {
+    "authorise an enrolment with affinitygroup as organisation" in {
       withAuthorizedTrader
+
+      val result = await(sut.invokeBlock(FakeRequest(), block))
+
+      result.header.status mustBe OK
+      verify(authConnector).authorise(eqTo(Enrolment("HMRC-CUS-ORG")), any)(any, any)
+    }
+
+    "authorise an enrolment with affinitygroup as Individual" in {
+      authorizeWithAffinityGroup(Some(Individual))
 
       val result = await(sut.invokeBlock(FakeRequest(), block))
 
@@ -87,7 +97,7 @@ class AuthActionSpec
       }
 
       "affinity group is Agent" in {
-        unauthorizedAffinityGroup
+        authorizeWithAffinityGroup(Some(Agent))
 
         val result = await(sut.invokeBlock(FakeRequest("GET", "/get"), block))
 

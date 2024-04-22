@@ -20,7 +20,7 @@ import com.google.inject.ImplementedBy
 import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc._
-import uk.gov.hmrc.auth.core.AffinityGroup.{Agent, Organisation}
+import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{affinityGroup, authorisedEnrolments}
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisationException, AuthorisedFunctions, Enrolment}
@@ -60,7 +60,7 @@ class AuthActionImpl @Inject()
 
     authorised(Enrolment("HMRC-CUS-ORG"))
       .retrieve(fetch) {
-        case authorisedEnrolments ~ Some(Organisation) => block(EnrolmentRequest(request))
+        case authorisedEnrolments ~ Some(affinityGroup) if affinityGroup != Agent => block(EnrolmentRequest(request))
         case _ ~ Some(Agent) =>
           successful(handleUnauthorisedError("Could not retrieve affinity group from Auth"))
 
