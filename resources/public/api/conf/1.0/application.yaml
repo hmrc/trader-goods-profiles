@@ -51,11 +51,13 @@ paths:
             X-Correlation-ID:
               $ref: '#/components/headers/xCorrelationIdHdr'
         '400':
-          description: Bad Request; Incorrect request parameters provided.
+          $ref: '#/components/responses/BadRequest'
         '401':
-          description: Unauthorised; Credentials failed
+          $ref: '#/components/responses/Unauthorized'
         '403':
           description: Forbidden;   User was valid, but not allowed to perform this action
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       security:
         - userRestricted:
             - trader-goods-profiles
@@ -87,11 +89,13 @@ paths:
         '400':
           description: Bad Request; Incorrect request parameters provided.
         '401':
-          description: Unauthorised; Credentials failed
+          $ref: '#/components/responses/Unauthorized'
         '403':
           description: Forbidden;   User was valid, but not allowed to perform this action
         '404':
           description: TGP record not found to update
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       security:
         - userRestricted:
             - trader-goods-profiles
@@ -127,13 +131,15 @@ paths:
             X-Correlation-ID:
               $ref: '#/components/headers/xCorrelationIdHdr'
         '400':
-          description: Bad Request; Incorrect request parameters provided.
+          $ref: '#/components/responses/BadRequest'
         '401':
-          description: Unauthorised; Credentials failed
+          $ref: '#/components/responses/Unauthorized'
         '403':
           description: Forbidden;   User was valid, but not allowed to perform this action
         '404':
           description: TGP record not found to update
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       security:
         - userRestricted:
             - trader-goods-profiles
@@ -163,16 +169,80 @@ paths:
         '400':
           description: Bad Request; Incorrect request parameters provided.
         '401':
-          description: Unauthorised; Credentials failed
+          $ref: '#/components/responses/Unauthorized'
         '403':
           description: Forbidden;   User was valid, but not allowed to perform this action
         '404':
           description: TGP record not found to update
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       security:
         - userRestricted:
             - trader-goods-profiles
 components:
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+              message:
+                type: string
+              errors:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Error'
+          example:
+            code: BAD_REQUEST
+            message: Bad request
+            errors:
+              - code: '005'
+                message: Missing or Invalid Header
+              - code: '011'
+                message: Missing or invalid mandatory request parameter
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CustomError'
+          example:
+            errorCode: UNAUTHORIZED
+            errorMessage: Unauthorized
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CustomError'
+          example:
+            errorCode: INTERNAL_SERVER_ERROR
+            errorMessage: Internal Server Error
   schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - code
+        - message
+    CustomError:
+      type: object
+      properties:
+        errorCode:
+          type: string
+        errorMessage:
+          type: string
+      required:
+        - errorCode
+        - errorMessage
     CreateTGPRecordSchema:
       type: object
       required:
