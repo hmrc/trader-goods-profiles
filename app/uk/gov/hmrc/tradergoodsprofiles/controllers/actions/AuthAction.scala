@@ -33,16 +33,17 @@ import uk.gov.hmrc.tradergoodsprofiles.models.ErrorResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.auth.EnrolmentRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future.successful
 import scala.concurrent.{ExecutionContext, Future}
 
-
+@Singleton
 class AuthActionImpl @Inject()
 (
   override val authConnector: AuthConnector,
   dateTimeService: DateTimeService,
   appConfig: AppConfig,
+  val bodyParser: BodyParsers.Default,
   cc: ControllerComponents,
   val parser: BodyParsers.Default
 )
@@ -51,56 +52,71 @@ class AuthActionImpl @Inject()
 
   private val fetch = authorisedEnrolments and affinityGroup
 
-  protected def executionContext: ExecutionContext = ec
 
-  override def invokeBlock[A](
-    request: Request[A],
-    block: EnrolmentRequest[A] => Future[Result]
-  ): Future[Result] = {
 
-    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
-    implicit val req: Request[A] = request
+  override def apply(eori: String): ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest] =
+    new ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest] {
 
-    authorised(Enrolment(gtpEnrolmentKey))
-      .retrieve(fetch) {
-        case authorisedEnrolments ~ Some(affinityGroup) if affinityGroup != Agent =>
-          validateIdentifier(authorisedEnrolments, block)
-        case _ ~ Some(Agent) =>
-          successful(handleUnauthorisedError(s"Invalid affinity group Agent from Auth"))
-        case _ =>
-          successful(handleUnauthorisedError("Invalid enrolment parameter from Auth"))
+      override val parser = bodyParser
+      protected def executionContext: ExecutionContext = ec
 
-      }.recover {
-      case error: AuthorisationException => handleUnauthorisedError(error.reason)
+      override def invokeBlock[A](
+                                   request: Request[A],
+                                   block: EnrolmentRequest[A] => Future[Result]
+                                 ): Future[Result] = {
 
-      case ex: Throwable =>
-        logger.error(s"Internal server error for ${request.uri} with error ${ex.getMessage}", ex)
+        implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
+        implicit val req: Request[A] = request
 
-        InternalServerError(Json.toJson(ErrorResponse(
-          dateTimeService.timestamp,
-          "Internal server error",
-          s"Internal server error for ${request.uri} with error ${ex.getMessage}"))
-        )
+        authorised(Enrolment(gtpEnrolmentKey))
+          .retrieve(fetch) {
+            case authorisedEnrolments ~ Some(affinityGroup) if affinityGroup != Agent =>
+              validateIdentifier(eori, authorisedEnrolments, block)
+            case _ ~ Some(Agent) =>
+              successful(handleUnauthorisedError(s"Invalid affinity group Agent from Auth"))
+            case _ =>
+              successful(handleUnauthorisedError("Invalid enrolment parameter from Auth"))
+
+          }.recover {
+          case error: AuthorisationException => handleUnauthorisedError(error.reason)
+
+          case ex: Throwable =>
+            logger.error(s"Internal server error for ${request.uri} with error ${ex.getMessage}", ex)
+
+            InternalServerError(Json.toJson(ErrorResponse(
+              dateTimeService.timestamp,
+              "INTERNAL_SERVER_ERROR",
+              s"Internal server error for ${request.uri} with error: ${ex.getMessage}"))
+            )
+        }
+      }
     }
-  }
 
 
   private def validateIdentifier[A](
+    eroiNumber: String,
     authorisedEnrolments: Enrolments,
     block: EnrolmentRequest[A] => Future[Result]
   )(implicit request: Request[A]): Future[Result] = {
+
     getIdentifierForGtpEnrolment(authorisedEnrolments) match {
-      case Some(_) => block(EnrolmentRequest(request))
-      case None => Future.successful(Forbidden("test"))
+      case Some(eroi) if eroi.value == eroiNumber  => block(EnrolmentRequest(request))
+      case _ => Future.successful(Forbidden(Json.toJson(ErrorResponse(
+        dateTimeService.timestamp,
+        "FORBIDDEN",
+        s"Supplied OAuth token not authorised to access data for given identifier(s) $eroiNumber"
+      ))))
     }
   }
 
   private def getIdentifierForGtpEnrolment[A](enrolments: Enrolments): Option[EnrolmentIdentifier] = {
-    enrolments
+    val t = enrolments
       .getEnrolment(gtpEnrolmentKey)
-      .fold[Option[EnrolmentIdentifier]](None)(
+
+      val o = t.fold[Option[EnrolmentIdentifier]](None)(
         e => e.getIdentifier(appConfig.tgpIdentifier)
       )
+    o
   }
 
   private def handleUnauthorisedError[A](
@@ -111,7 +127,7 @@ class AuthActionImpl @Inject()
 
     Unauthorized(Json.toJson(ErrorResponse(
       dateTimeService.timestamp,
-      "Unauthorised",
+      "UNAUTHORIZED",
       s"Unauthorised error for ${request.uri} with error: $errorMessage")
     ))
   }
@@ -123,4 +139,6 @@ object AuthAction  {
 }
 
 @ImplementedBy(classOf[AuthActionImpl])
-trait AuthAction extends ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest]
+trait AuthAction {
+  def apply(ern: String): ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest]
+}

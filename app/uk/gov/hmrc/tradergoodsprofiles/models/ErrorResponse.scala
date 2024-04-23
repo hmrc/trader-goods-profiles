@@ -22,8 +22,8 @@ import java.time.Instant
 
 case class ErrorResponse(
     timestamp: Instant,
-    errorMessage: String,
-    debugMessage: String
+    code: String,
+    message: String
 )
 
 object ErrorResponse {

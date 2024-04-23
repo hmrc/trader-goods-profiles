@@ -21,9 +21,9 @@ import org.mockito.MockitoSugar.{reset, verify, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
-import play.api.http.Status.{FORBIDDEN, OK}
+import play.api.http.Status.OK
 import play.api.libs.json.Json
-import play.api.mvc.Results.{InternalServerError, Unauthorized}
+import play.api.mvc.Results.{Forbidden, InternalServerError, Unauthorized}
 import play.api.mvc.{BodyParsers, Result, Results}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
@@ -49,12 +49,14 @@ class AuthActionSpec
 
   private val timestamp = Instant.now.truncatedTo(ChronoUnit.SECONDS)
   private val dateTimeService = mock[DateTimeService]
+  private val parser = mock[BodyParsers.Default]
   private val appConfig = mock[AppConfig]
 
   private val sut = new AuthActionImpl(
     authConnector,
     dateTimeService,
     appConfig,
+    parser,
     stubMessagesControllerComponents(),
     mock[BodyParsers.Default]
   )
@@ -72,7 +74,7 @@ class AuthActionSpec
     "authorise an enrolment with affinitygroup as organisation" in {
       withAuthorizedTrader
 
-      val result = await(sut.invokeBlock(FakeRequest(), block))
+      val result = await(sut.apply(eroiNumber).invokeBlock(FakeRequest(), block))
 
       result.header.status mustBe OK
       verify(authConnector).authorise(eqTo(Enrolment("HMRC-CUS-ORG")), any)(any, any)
@@ -81,7 +83,7 @@ class AuthActionSpec
     "authorise an enrolment with affinitygroup as Individual" in {
       authorizeWithAffinityGroup(Some(Individual))
 
-      val result = await(sut.invokeBlock(FakeRequest(), block))
+      val result = await(sut.apply(eroiNumber).invokeBlock(FakeRequest(), block))
 
       result.header.status mustBe OK
       verify(authConnector).authorise(eqTo(Enrolment("HMRC-CUS-ORG")), any)(any, any)
@@ -91,11 +93,11 @@ class AuthActionSpec
       "invalid enrolment" in {
         withUnauthorizedTrader(InsufficientEnrolments())
 
-        val result = await(sut.invokeBlock(FakeRequest("GET", "/get"), block))
+        val result = await(sut.apply(eroiNumber).invokeBlock(FakeRequest("GET", "/get"), block))
 
         result mustBe Unauthorized(Json.toJson(ErrorResponse(
           timestamp,
-          "Unauthorised",
+          "UNAUTHORIZED",
           "Unauthorised error for /get with error: Insufficient Enrolments"
         )))
       }
@@ -103,11 +105,11 @@ class AuthActionSpec
       "affinity group is Agent" in {
         authorizeWithAffinityGroup(Some(Agent))
 
-        val result = await(sut.invokeBlock(FakeRequest("GET", "/get"), block))
+        val result = await(sut.apply(eroiNumber).invokeBlock(FakeRequest("GET", "/get"), block))
 
         result mustBe Unauthorized(Json.toJson(ErrorResponse(
           timestamp,
-          "Unauthorised",
+          "UNAUTHORIZED",
           "Unauthorised error for /get with error: Invalid affinity group Agent from Auth"
         )))
       }
@@ -115,11 +117,11 @@ class AuthActionSpec
       "cannot find affinityGroup" in {
         authorizeWithAffinityGroup(None)
 
-        val result = await(sut.invokeBlock(FakeRequest("GET", "/get"), block))
+        val result = await(sut.apply(eroiNumber).invokeBlock(FakeRequest("GET", "/get"), block))
 
         result mustBe Unauthorized(Json.toJson(ErrorResponse(
           timestamp,
-          "Unauthorised",
+          "UNAUTHORIZED",
           "Unauthorised error for /get with error: Invalid enrolment parameter from Auth"
         )))
       }
@@ -129,23 +131,40 @@ class AuthActionSpec
 
       withUnauthorizedTrader(new RuntimeException("unauthorised error"))
 
-      val result = await(sut.invokeBlock(FakeRequest("GET", "/get"), block))
+      val result = await(sut.apply(eroiNumber).invokeBlock(FakeRequest("GET", "/get"), block))
 
       result mustBe InternalServerError(Json.toJson(ErrorResponse(
         timestamp,
-        "Internal server error",
-        "Internal server error for /get with error unauthorised error"
+        "INTERNAL_SERVER_ERROR",
+        "Internal server error for /get with error: unauthorised error"
       )))
     }
 
     "return forbidden if identifier is missing" in {
       withUnauthorizedEmptyIdentifier
 
-      val result = await(sut.invokeBlock(FakeRequest(), block))
+      val result = await(sut.apply(eroiNumber).invokeBlock(FakeRequest(), block))
 
-      result.header.status mustBe FORBIDDEN
+      result mustBe Forbidden(Json.toJson(
+        ErrorResponse(timestamp,
+          "FORBIDDEN",
+          s"Supplied OAuth token not authorised to access data for given identifier(s) $eroiNumber"))
+      )
+    }
+
+    "return forbidden if identifier is unauthorized" in {
+      withAuthorizedTrader
+
+      val result = await(sut.apply("any-roi").invokeBlock(FakeRequest(), block))
+
+      result mustBe Forbidden(Json.toJson(
+        ErrorResponse(timestamp,
+          "FORBIDDEN",
+          s"Supplied OAuth token not authorised to access data for given identifier(s) any-roi"))
+      )
     }
   }
 
-  def block(request: EnrolmentRequest[_]):  Future[Result] = Future.successful(Results.Ok)
+  def block(request: EnrolmentRequest[_]):  Future[Result] =
+    Future.successful(Results.Ok)
 }

@@ -34,7 +34,9 @@ trait AuthTestSupport {
 
   private val authFetch = authorisedEnrolments and affinityGroup
   protected val tgpIdentifierName = "tgpIdentifier"
-  private val enrolment = Enrolment("HMRC-CUS-ORG").withIdentifier(tgpIdentifierName, "GB000000000123")
+  protected val eroiNumber = "GB000000000123"
+  private val enrolmentKey = "HMRC-CUS-ORG"
+  private val enrolment = Enrolment(enrolmentKey).withIdentifier(tgpIdentifierName, eroiNumber)
 
 
   def withAuthorizedTrader: Unit = {
@@ -60,7 +62,7 @@ trait AuthTestSupport {
     when(authConnector.authorise(any, any)(any, any)).thenReturn(Future.failed(error))
 
   def withUnauthorizedEmptyIdentifier: Unit = {
-    val retrieval = Enrolments(Set(Enrolment("HMRC-CUS-ORG"))) and
+    val retrieval = Enrolments(Set(Enrolment(enrolmentKey))) and
       Some(AffinityGroup.Organisation)
 
     withAuthorization(retrieval)
