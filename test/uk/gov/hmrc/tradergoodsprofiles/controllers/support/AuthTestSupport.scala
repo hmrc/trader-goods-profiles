@@ -31,8 +31,10 @@ import scala.concurrent.Future
 trait AuthTestSupport {
 
   lazy val authConnector = mock[AuthConnector]
+
   private val authFetch = authorisedEnrolments and affinityGroup
-  private val enrolment = Enrolment("HMRC-EMCS-ORG")
+  protected val tgpIdentifierName = "tgpIdentifier"
+  private val enrolment = Enrolment("HMRC-CUS-ORG").withIdentifier(tgpIdentifierName, "GB000000000123")
 
 
   def withAuthorizedTrader: Unit = {
@@ -56,5 +58,12 @@ trait AuthTestSupport {
 
   def withUnauthorizedTrader(error: Throwable): Unit =
     when(authConnector.authorise(any, any)(any, any)).thenReturn(Future.failed(error))
+
+  def withUnauthorizedEmptyIdentifier: Unit = {
+    val retrieval = Enrolments(Set(Enrolment("HMRC-CUS-ORG"))) and
+      Some(AffinityGroup.Organisation)
+
+    withAuthorization(retrieval)
+  }
 
 }

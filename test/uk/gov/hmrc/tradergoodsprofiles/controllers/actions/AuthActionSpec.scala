@@ -21,7 +21,7 @@ import org.mockito.MockitoSugar.{reset, verify, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
-import play.api.http.Status.OK
+import play.api.http.Status.{FORBIDDEN, OK}
 import play.api.libs.json.Json
 import play.api.mvc.Results.{InternalServerError, Unauthorized}
 import play.api.mvc.{BodyParsers, Result, Results}
@@ -30,6 +30,7 @@ import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.AffinityGroup.{Agent, Individual}
 import uk.gov.hmrc.auth.core.{Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
+import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.ErrorResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.auth.EnrolmentRequest
@@ -48,10 +49,12 @@ class AuthActionSpec
 
   private val timestamp = Instant.now.truncatedTo(ChronoUnit.SECONDS)
   private val dateTimeService = mock[DateTimeService]
+  private val appConfig = mock[AppConfig]
 
   private val sut = new AuthActionImpl(
     authConnector,
     dateTimeService,
+    appConfig,
     stubMessagesControllerComponents(),
     mock[BodyParsers.Default]
   )
@@ -59,9 +62,10 @@ class AuthActionSpec
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(authConnector)
+    reset(authConnector, dateTimeService, appConfig)
 
     when(dateTimeService.timestamp).thenReturn(timestamp)
+    when(appConfig.tgpIdentifier).thenReturn(tgpIdentifierName)
   }
 
   "authorisation" should {
@@ -132,6 +136,14 @@ class AuthActionSpec
         "Internal server error",
         "Internal server error for /get with error unauthorised error"
       )))
+    }
+
+    "return forbidden if identifier is missing" in {
+      withUnauthorizedEmptyIdentifier
+
+      val result = await(sut.invokeBlock(FakeRequest(), block))
+
+      result.header.status mustBe FORBIDDEN
     }
   }
 

@@ -23,10 +23,11 @@ import play.api.mvc._
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{affinityGroup, authorisedEnrolments}
 import uk.gov.hmrc.auth.core.retrieve.~
-import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisationException, AuthorisedFunctions, Enrolment}
+import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisationException, AuthorisedFunctions, Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
+import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.AuthAction.gtpEnrolmentKey
 import uk.gov.hmrc.tradergoodsprofiles.models.ErrorResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.auth.EnrolmentRequest
@@ -41,6 +42,7 @@ class AuthActionImpl @Inject()
 (
   override val authConnector: AuthConnector,
   dateTimeService: DateTimeService,
+  appConfig: AppConfig,
   cc: ControllerComponents,
   val parser: BodyParsers.Default
 )
@@ -62,7 +64,7 @@ class AuthActionImpl @Inject()
     authorised(Enrolment(gtpEnrolmentKey))
       .retrieve(fetch) {
         case authorisedEnrolments ~ Some(affinityGroup) if affinityGroup != Agent =>
-          block(EnrolmentRequest(request))
+          validateIdentifier(authorisedEnrolments, block)
         case _ ~ Some(Agent) =>
           successful(handleUnauthorisedError(s"Invalid affinity group Agent from Auth"))
         case _ =>
@@ -80,6 +82,25 @@ class AuthActionImpl @Inject()
           s"Internal server error for ${request.uri} with error ${ex.getMessage}"))
         )
     }
+  }
+
+
+  private def validateIdentifier[A](
+    authorisedEnrolments: Enrolments,
+    block: EnrolmentRequest[A] => Future[Result]
+  )(implicit request: Request[A]): Future[Result] = {
+    getIdentifierForGtpEnrolment(authorisedEnrolments) match {
+      case Some(_) => block(EnrolmentRequest(request))
+      case None => Future.successful(Forbidden("test"))
+    }
+  }
+
+  private def getIdentifierForGtpEnrolment[A](enrolments: Enrolments): Option[EnrolmentIdentifier] = {
+    enrolments
+      .getEnrolment(gtpEnrolmentKey)
+      .fold[Option[EnrolmentIdentifier]](None)(
+        e => e.getIdentifier(appConfig.tgpIdentifier)
+      )
   }
 
   private def handleUnauthorisedError[A](

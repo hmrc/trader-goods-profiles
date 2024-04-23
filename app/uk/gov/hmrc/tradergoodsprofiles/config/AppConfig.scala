@@ -18,9 +18,13 @@ package uk.gov.hmrc.tradergoodsprofiles.config
 
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
-class AppConfig @Inject()(config: Configuration) {
+class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig) {
 
   val appName: String = config.get[String]("appName")
+
+  val tgpIdentifier = config.getOptional[String]("enrolment-config.tgp-enrolment-identifier")
+    .getOrElse("tgpFakeIdentifier")
 }
