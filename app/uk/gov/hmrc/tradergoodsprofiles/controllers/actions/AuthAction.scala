@@ -27,6 +27,7 @@ import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisationException, AuthorisedF
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
+import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.AuthAction.gtpEnrolmentKey
 import uk.gov.hmrc.tradergoodsprofiles.models.ErrorResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.auth.EnrolmentRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
@@ -58,11 +59,14 @@ class AuthActionImpl @Inject()
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
     implicit val req: Request[A] = request
 
-    authorised(Enrolment("HMRC-CUS-ORG"))
+    authorised(Enrolment(gtpEnrolmentKey))
       .retrieve(fetch) {
-        case authorisedEnrolments ~ Some(affinityGroup) if affinityGroup != Agent => block(EnrolmentRequest(request))
+        case authorisedEnrolments ~ Some(affinityGroup) if affinityGroup != Agent =>
+          block(EnrolmentRequest(request))
         case _ ~ Some(Agent) =>
-          successful(handleUnauthorisedError("Could not retrieve affinity group from Auth"))
+          successful(handleUnauthorisedError(s"Invalid affinity group Agent from Auth"))
+        case _ =>
+          successful(handleUnauthorisedError("Invalid enrolment parameter from Auth"))
 
       }.recover {
       case error: AuthorisationException => handleUnauthorisedError(error.reason)
@@ -90,6 +94,11 @@ class AuthActionImpl @Inject()
       s"Unauthorised error for ${request.uri} with error: $errorMessage")
     ))
   }
+}
+
+
+object AuthAction  {
+  val gtpEnrolmentKey = "HMRC-CUS-ORG"
 }
 
 @ImplementedBy(classOf[AuthActionImpl])

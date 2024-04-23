@@ -42,9 +42,7 @@ trait AuthTestSupport {
     withAuthorization(retrieval)
   }
 
-  def withAuthorization(
-    retrieval: Enrolments ~ Option[AffinityGroup]
-  ): Unit = {
+  def withAuthorization(retrieval: Enrolments ~ Option[AffinityGroup]): Unit = {
 
     when(authConnector.authorise(ArgumentMatchers.argThat((p: Predicate) => true), eqTo(authFetch))(any,any))
       .thenReturn(Future.successful(retrieval))

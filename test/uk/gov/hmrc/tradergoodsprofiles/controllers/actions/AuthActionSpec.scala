@@ -104,7 +104,19 @@ class AuthActionSpec
         result mustBe Unauthorized(Json.toJson(ErrorResponse(
           timestamp,
           "Unauthorised",
-          "Unauthorised error for /get with error: Could not retrieve affinity group from Auth"
+          "Unauthorised error for /get with error: Invalid affinity group Agent from Auth"
+        )))
+      }
+
+      "cannot find affinityGroup" in {
+        authorizeWithAffinityGroup(None)
+
+        val result = await(sut.invokeBlock(FakeRequest("GET", "/get"), block))
+
+        result mustBe Unauthorized(Json.toJson(ErrorResponse(
+          timestamp,
+          "Unauthorised",
+          "Unauthorised error for /get with error: Invalid enrolment parameter from Auth"
         )))
       }
     }
