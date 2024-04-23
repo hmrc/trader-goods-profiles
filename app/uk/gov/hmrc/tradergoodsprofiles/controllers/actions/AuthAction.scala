@@ -101,22 +101,26 @@ class AuthActionImpl @Inject()
 
     getIdentifierForGtpEnrolment(authorisedEnrolments) match {
       case Some(eroi) if eroi.value == eroiNumber  => block(EnrolmentRequest(request))
-      case _ => Future.successful(Forbidden(Json.toJson(ErrorResponse(
-        dateTimeService.timestamp,
-        "FORBIDDEN",
-        s"Supplied OAuth token not authorised to access data for given identifier(s) $eroiNumber"
-      ))))
+      case _ => handleForbiddenError(eroiNumber)
     }
   }
 
-  private def getIdentifierForGtpEnrolment[A](enrolments: Enrolments): Option[EnrolmentIdentifier] = {
-    val t = enrolments
-      .getEnrolment(gtpEnrolmentKey)
+  private def handleForbiddenError[A](eroiNumber: String)(implicit request: Request[A]): Future[Result] = {
+    logger.error(s"Forbidden error for ${request.uri}, eroi number $eroiNumber")
 
-      val o = t.fold[Option[EnrolmentIdentifier]](None)(
+    Future.successful(Forbidden(Json.toJson(ErrorResponse(
+      dateTimeService.timestamp,
+      "FORBIDDEN",
+      s"Supplied OAuth token not authorised to access data for given identifier(s) $eroiNumber"
+    ))))
+  }
+
+  private def getIdentifierForGtpEnrolment[A](enrolments: Enrolments): Option[EnrolmentIdentifier] = {
+    enrolments
+      .getEnrolment(gtpEnrolmentKey)
+      .fold[Option[EnrolmentIdentifier]](None)(
         e => e.getIdentifier(appConfig.tgpIdentifier)
       )
-    o
   }
 
   private def handleUnauthorisedError[A](
