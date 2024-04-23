@@ -156,7 +156,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TGPRecordResponseSchema'
+                $ref: '#/components/schemas/TGPGetRecordResponseSchema'
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/xCorrelationIdHdr'
@@ -308,6 +308,78 @@ components:
           $ref: '#/components/schemas/createdDateTime'
         updatedDateTime:
           $ref: '#/components/schemas/updatedDateTime'
+    TGPGetRecordResponseSchema:
+      required:
+        - recordId
+        - eori
+        - actorId
+        - traderRef
+        - comcode
+        - accreditationStatus
+        - goodsDescription
+        - countryOfOrigin
+        - category
+        - comcodeEffectiveFromDate
+        - version
+        - active
+        - toReview
+        - declarable
+        - ukimsNumber
+        - locked
+        - createdDateTime
+        - updatedDateTime
+      type: object
+      properties:
+        recordId:
+          $ref: '#/components/schemas/recordId'
+        eori:
+          $ref: '#/components/schemas/eori'
+        actorId:
+          $ref: '#/components/schemas/actorId'
+        traderRef:
+          $ref: '#/components/schemas/traderRef'
+        comcode:
+          $ref: '#/components/schemas/comcode'
+        accreditationStatus:
+          $ref: '#/components/schemas/accreditationStatus'
+        goodsDescription:
+          $ref: '#/components/schemas/goodsDescription'
+        countryOfOrigin:
+          $ref: '#/components/schemas/countryOfOrigin'
+        category:
+          $ref: '#/components/schemas/category'
+        assessments:
+          $ref: '#/components/schemas/assessments'
+        supplementaryUnit:
+          $ref: '#/components/schemas/supplementaryUnit'
+        measurementUnit:
+          $ref: '#/components/schemas/measurementUnit'
+        comcodeEffectiveFromDate:
+          $ref: '#/components/schemas/comcodeEffectiveFromDate'
+        comcodeEffectiveToDate:
+          $ref: '#/components/schemas/comcodeEffectiveToDate'
+        version:
+          $ref: '#/components/schemas/version'
+        active:
+          $ref: '#/components/schemas/active'
+        toReview:
+          $ref: '#/components/schemas/toReview'
+        reviewReason:
+          $ref: '#/components/schemas/reviewReason'
+        declarable:
+          $ref: '#/components/schemas/declarable'
+        ukimsNumber:
+          $ref: '#/components/schemas/ukimsNumber'
+        nirmsNumber:
+          $ref: '#/components/schemas/nirmsNumber'
+        niphlNumber:
+          $ref: '#/components/schemas/niphlNumber'
+        locked:
+          $ref: '#/components/schemas/locked'
+        createdDateTime:
+          $ref: '#/components/schemas/createdDateTime'
+        updatedDateTime:
+          $ref: '#/components/schemas/updatedDateTime'
     GetTGPRecordResponseSchema:
       required:
         - records
@@ -323,7 +395,7 @@ components:
         An Array of records
       type: array
       items:
-        $ref: '#/components/schemas/TGPRecordResponseSchema'
+        $ref: '#/components/schemas/TGPGetRecordResponseSchema'
     pagination:
       type: object
       required:
@@ -514,6 +586,10 @@ components:
       maxLength: 8
       example: 6 S12345
       description: Northern Ireland Plant Health Label scheme registration number
+    locked:
+      type: boolean
+      example: false
+      description: Whether the record is locked for updating due to the accreditationStatus
     createdDateTime:
       type: string
       format: date-time
