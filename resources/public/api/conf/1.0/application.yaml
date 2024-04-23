@@ -396,6 +396,71 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/TGPGetRecordResponseSchema'
+      example:
+        - recordId: 8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f
+          eori: GB123456789012
+          actorId: GB987654321098
+          traderRef: SKU123456
+          comcode: 123456,
+          accreditationStatus: Not Requested
+          goodsDescription: Bananas
+          countryOfOrigin: GB
+          category: 2
+          assessments:
+            assessmentId: a06846e9a5f61fa4ecf2c4e3b23631fc
+            primaryCategory: 1
+            condition:
+              type: certificate
+              conditionId: Y923
+              conditionDescription: Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law
+              conditionTraderText: Excluded product
+          supplementaryUnit: 13
+          measurementUnit: Kilograms
+          comcodeEffectiveFromDate: 2023-01-01T00:00:00Z
+          comcodeEffectiveToDate: 2028-01-01T00:00:00Z
+          version: 1
+          active: true
+          toReview: false
+          reviewReason: Commodity code changed
+          declarable: IMMI declarable
+          ukimsNumber: XIUKIM47699357400020231115081800
+          nirmsNumber: RMS-GB-123456
+          niphlNumber: 6 S12345
+          locked: false
+          createdDateTime: 2023-01-01T00:00:00Z
+          updatedDateTime: 2023-01-01T00:00:00Z
+        - recordId: cf57844a-b79a-425a-995d-2fb357330873
+          eori: GB123456789012
+          actorId: GB987654321098
+          traderRef: SKU123457
+          comcode: 123457
+          accreditationStatus: Not Requested
+          goodsDescription: Apples
+          countryOfOrigin: GB
+          category: 2
+          assessments:
+            assessmentId: a06846e9a5f61fa4ecf2c4e3b23631fc
+            primaryCategory: 1
+            condition:
+              type: certificate
+              conditionId: Y923
+              conditionDescription: Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law
+              conditionTraderText: Excluded product
+          supplementaryUnit: 13
+          measurementUnit: Kilograms
+          comcodeEffectiveFromDate: 2023-01-01T00:00:00Z
+          comcodeEffectiveToDate: 2028-01-01T00:00:00Z
+          version: 1
+          active: true
+          toReview: true
+          reviewReason: Commodity code changed
+          declarable: IMMI declarable
+          ukimsNumber: XIUKIM47699357400020231115081801
+          nirmsNumber: RMS-GB-123457
+          niphlNumber: 6 S12346
+          locked: false
+          createdDateTime: 2023-01-01T00:00:00Z
+          updatedDateTime: 2023-01-01T00:00:00Z
     pagination:
       type: object
       required:
