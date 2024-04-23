@@ -51,11 +51,13 @@ paths:
             X-Correlation-ID:
               $ref: '#/components/headers/xCorrelationIdHdr'
         '400':
-          description: Bad Request; Incorrect request parameters provided.
+          $ref: '#/components/responses/BadRequest'
         '401':
-          description: Unauthorised; Credentials failed
+          $ref: '#/components/responses/Unauthorized'
         '403':
           description: Forbidden;   User was valid, but not allowed to perform this action
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       security:
         - userRestricted:
             - trader-goods-profiles
@@ -87,11 +89,13 @@ paths:
         '400':
           description: Bad Request; Incorrect request parameters provided.
         '401':
-          description: Unauthorised; Credentials failed
+          $ref: '#/components/responses/Unauthorized'
         '403':
           description: Forbidden;   User was valid, but not allowed to perform this action
         '404':
           description: TGP record not found to update
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       security:
         - userRestricted:
             - trader-goods-profiles
@@ -127,13 +131,15 @@ paths:
             X-Correlation-ID:
               $ref: '#/components/headers/xCorrelationIdHdr'
         '400':
-          description: Bad Request; Incorrect request parameters provided.
+          $ref: '#/components/responses/BadRequest'
         '401':
-          description: Unauthorised; Credentials failed
+          $ref: '#/components/responses/Unauthorized'
         '403':
           description: Forbidden;   User was valid, but not allowed to perform this action
         '404':
           description: TGP record not found to update
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       security:
         - userRestricted:
             - trader-goods-profiles
@@ -163,16 +169,80 @@ paths:
         '400':
           description: Bad Request; Incorrect request parameters provided.
         '401':
-          description: Unauthorised; Credentials failed
+          $ref: '#/components/responses/Unauthorized'
         '403':
           description: Forbidden;   User was valid, but not allowed to perform this action
         '404':
           description: TGP record not found to update
+        '500':
+          $ref: '#/components/responses/InternalServerError'
       security:
         - userRestricted:
             - trader-goods-profiles
 components:
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+              message:
+                type: string
+              errors:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Error'
+          example:
+            code: BAD_REQUEST
+            message: Bad request
+            errors:
+              - code: '005'
+                message: Missing or Invalid Header
+              - code: '011'
+                message: Missing or invalid mandatory request parameter
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CustomError'
+          example:
+            errorCode: UNAUTHORIZED
+            errorMessage: Unauthorized
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CustomError'
+          example:
+            errorCode: INTERNAL_SERVER_ERROR
+            errorMessage: Internal Server Error
   schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - code
+        - message
+    CustomError:
+      type: object
+      properties:
+        errorCode:
+          type: string
+        errorMessage:
+          type: string
+      required:
+        - errorCode
+        - errorMessage
     CreateTGPRecordSchema:
       type: object
       required:
@@ -396,6 +466,71 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/TGPGetRecordResponseSchema'
+      example:
+        - recordId: 8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f
+          eori: GB123456789012
+          actorId: GB987654321098
+          traderRef: SKU123456
+          comcode: 123456,
+          accreditationStatus: Not Requested
+          goodsDescription: Bananas
+          countryOfOrigin: GB
+          category: 2
+          assessments:
+            assessmentId: a06846e9a5f61fa4ecf2c4e3b23631fc
+            primaryCategory: 1
+            condition:
+              type: certificate
+              conditionId: Y923
+              conditionDescription: Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law
+              conditionTraderText: Excluded product
+          supplementaryUnit: 13
+          measurementUnit: Kilograms
+          comcodeEffectiveFromDate: 2023-01-01T00:00:00Z
+          comcodeEffectiveToDate: 2028-01-01T00:00:00Z
+          version: 1
+          active: true
+          toReview: false
+          reviewReason: Commodity code changed
+          declarable: IMMI declarable
+          ukimsNumber: XIUKIM47699357400020231115081800
+          nirmsNumber: RMS-GB-123456
+          niphlNumber: 6 S12345
+          locked: false
+          createdDateTime: 2023-01-01T00:00:00Z
+          updatedDateTime: 2023-01-01T00:00:00Z
+        - recordId: cf57844a-b79a-425a-995d-2fb357330873
+          eori: GB123456789012
+          actorId: GB987654321098
+          traderRef: SKU123457
+          comcode: 123457
+          accreditationStatus: Not Requested
+          goodsDescription: Apples
+          countryOfOrigin: GB
+          category: 2
+          assessments:
+            assessmentId: a06846e9a5f61fa4ecf2c4e3b23631fc
+            primaryCategory: 1
+            condition:
+              type: certificate
+              conditionId: Y923
+              conditionDescription: Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law
+              conditionTraderText: Excluded product
+          supplementaryUnit: 13
+          measurementUnit: Kilograms
+          comcodeEffectiveFromDate: 2023-01-01T00:00:00Z
+          comcodeEffectiveToDate: 2028-01-01T00:00:00Z
+          version: 1
+          active: true
+          toReview: true
+          reviewReason: Commodity code changed
+          declarable: IMMI declarable
+          ukimsNumber: XIUKIM47699357400020231115081801
+          nirmsNumber: RMS-GB-123457
+          niphlNumber: 6 S12346
+          locked: false
+          createdDateTime: 2023-01-01T00:00:00Z
+          updatedDateTime: 2023-01-01T00:00:00Z
     pagination:
       type: object
       required:
