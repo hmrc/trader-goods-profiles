@@ -18,19 +18,18 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers.actions
 
 import com.google.inject.ImplementedBy
 import play.api.Logging
-import play.api.libs.json.Json
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{affinityGroup, authorisedEnrolments}
 import uk.gov.hmrc.auth.core.retrieve.~
-import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisationException, AuthorisedFunctions, Enrolment, EnrolmentIdentifier, Enrolments}
+import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.AuthAction.gtpEnrolmentKey
-import uk.gov.hmrc.tradergoodsprofiles.models.ErrorResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.auth.EnrolmentRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.{ForbiddenError, ServerError, UnauthorisedError}
 import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
 
 import javax.inject.{Inject, Singleton}
@@ -52,8 +51,6 @@ class AuthActionImpl @Inject()
 
   private val fetch = authorisedEnrolments and affinityGroup
 
-
-
   override def apply(eori: String): ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest] =
     new ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest] {
 
@@ -61,9 +58,9 @@ class AuthActionImpl @Inject()
       protected def executionContext: ExecutionContext = ec
 
       override def invokeBlock[A](
-                                   request: Request[A],
-                                   block: EnrolmentRequest[A] => Future[Result]
-                                 ): Future[Result] = {
+        request: Request[A],
+        block: EnrolmentRequest[A] => Future[Result]
+      ): Future[Result] = {
 
         implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
         implicit val req: Request[A] = request
@@ -79,19 +76,19 @@ class AuthActionImpl @Inject()
 
           }.recover {
           case error: AuthorisationException => handleUnauthorisedError(error.reason)
-
-          case ex: Throwable =>
-            logger.error(s"Internal server error for ${request.uri} with error ${ex.getMessage}", ex)
-
-            InternalServerError(Json.toJson(ErrorResponse(
-              dateTimeService.timestamp,
-              "INTERNAL_SERVER_ERROR",
-              s"Internal server error for ${request.uri} with error: ${ex.getMessage}"))
-            )
+          case ex: Throwable => handleException(request, ex)
         }
       }
     }
 
+  private def handleException[A](request: Request[A], ex: Throwable): Result = {
+    logger.error(s"Internal server error for ${request.uri} with error ${ex.getMessage}", ex)
+
+    ServerError(
+      dateTimeService.timestamp,
+      s"Internal server error for ${request.uri} with error: ${ex.getMessage}"
+    ).toResult
+  }
 
   private def validateIdentifier[A](
     eroiNumber: String,
@@ -100,7 +97,7 @@ class AuthActionImpl @Inject()
   )(implicit request: Request[A]): Future[Result] = {
 
     getIdentifierForGtpEnrolment(authorisedEnrolments) match {
-      case Some(eroi) if eroi.value == eroiNumber  => block(EnrolmentRequest(request))
+      case Some(identifier) if identifier.value == eroiNumber  => block(EnrolmentRequest(request))
       case _ => handleForbiddenError(eroiNumber)
     }
   }
@@ -108,11 +105,10 @@ class AuthActionImpl @Inject()
   private def handleForbiddenError[A](eroiNumber: String)(implicit request: Request[A]): Future[Result] = {
     logger.error(s"Forbidden error for ${request.uri}, eroi number $eroiNumber")
 
-    Future.successful(Forbidden(Json.toJson(ErrorResponse(
+    Future.successful(ForbiddenError(
       dateTimeService.timestamp,
-      "FORBIDDEN",
       s"Supplied OAuth token not authorised to access data for given identifier(s) $eroiNumber"
-    ))))
+    ).toResult)
   }
 
   private def getIdentifierForGtpEnrolment[A](enrolments: Enrolments): Option[EnrolmentIdentifier] = {
@@ -129,11 +125,10 @@ class AuthActionImpl @Inject()
 
     logger.error(s"Unauthorised error for ${request.uri} with error $errorMessage")
 
-    Unauthorized(Json.toJson(ErrorResponse(
+    UnauthorisedError(
       dateTimeService.timestamp,
-      "UNAUTHORIZED",
-      s"Unauthorised error for ${request.uri} with error: $errorMessage")
-    ))
+      s"Unauthorised error for ${request.uri} with error: $errorMessage"
+    ).toResult
   }
 }
 
