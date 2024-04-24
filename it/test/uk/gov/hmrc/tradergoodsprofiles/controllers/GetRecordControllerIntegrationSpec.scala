@@ -44,7 +44,7 @@ class GetRecordControllerIntegrationSpec
   private lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
   private lazy val dateTimeService = mock[DateTimeService]
   private lazy val timestamp = Instant.now
-  private val url = s"http://localhost:$port/goods-profiles/$eroiNumber/records"
+  private val url = s"http://localhost:$port/goods-profiles/$eoriNumber/records"
 
 
   override lazy val app: Application = {
@@ -77,7 +77,7 @@ class GetRecordControllerIntegrationSpec
     "authorise an enrolment with multiple identifier" in {
       val enrolment = Enrolment(enrolmentKey)
         .withIdentifier(tgpIdentifierName, "GB000000000122")
-        .withIdentifier(tgpIdentifierName, eroiNumber)
+        .withIdentifier(tgpIdentifierName, eoriNumber)
 
       withAuthorizedTrader(enrolment)
 
@@ -133,7 +133,7 @@ class GetRecordControllerIntegrationSpec
       result.json mustBe Json.obj(
         "timestamp" -> timestamp,
         "code" -> "FORBIDDEN",
-        "message" -> s"Supplied OAuth token not authorised to access data for given identifier(s) $eroiNumber"
+        "message" -> s"Supplied OAuth token not authorised to access data for given identifier(s) $eoriNumber"
       )
     }
 

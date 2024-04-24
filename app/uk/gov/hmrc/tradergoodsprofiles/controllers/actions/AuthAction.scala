@@ -91,23 +91,23 @@ class AuthActionImpl @Inject()
   }
 
   private def validateIdentifier[A](
-    eroiNumber: String,
-    authorisedEnrolments: Enrolments,
-    block: EnrolmentRequest[A] => Future[Result]
+                                     eoriNumber: String,
+                                     authorisedEnrolments: Enrolments,
+                                     block: EnrolmentRequest[A] => Future[Result]
   )(implicit request: Request[A]): Future[Result] = {
 
     val eoriNumbers = getIdentifierForGtpEnrolment(authorisedEnrolments)
 
-    if(eoriNumbers.contains(eroiNumber)) block(EnrolmentRequest(request))
-    else handleForbiddenError(eroiNumber)
+    if(eoriNumbers.contains(eoriNumber)) block(EnrolmentRequest(request))
+    else handleForbiddenError(eoriNumber)
   }
 
-  private def handleForbiddenError[A](eroiNumber: String)(implicit request: Request[A]): Future[Result] = {
-    logger.error(s"Forbidden error for ${request.uri}, eroi number $eroiNumber")
+  private def handleForbiddenError[A](eoriNumber: String)(implicit request: Request[A]): Future[Result] = {
+    logger.error(s"Forbidden error for ${request.uri}, eroi number $eoriNumber")
 
     Future.successful(ForbiddenError(
       dateTimeService.timestamp,
-      s"Supplied OAuth token not authorised to access data for given identifier(s) $eroiNumber"
+      s"Supplied OAuth token not authorised to access data for given identifier(s) $eoriNumber"
     ).toResult)
   }
 
@@ -118,8 +118,7 @@ class AuthActionImpl @Inject()
         e.identifiers.filter(i => i.key.equalsIgnoreCase(appConfig.tgpIdentifier))
       )
       .map(_.value)
-      .toSet
-      .toSeq
+      .distinct
   }
 
   private def handleUnauthorisedError[A](

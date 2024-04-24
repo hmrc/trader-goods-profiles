@@ -72,7 +72,7 @@ class AuthActionSpec
     "authorise an enrolment with affinitygroup as organisation" in {
       withAuthorizedTrader
 
-      val result = await(sut.apply(eroiNumber).invokeBlock(FakeRequest(), block))
+      val result = await(sut.apply(eoriNumber).invokeBlock(FakeRequest(), block))
 
       result.header.status mustBe OK
       verify(authConnector).authorise(eqTo(Enrolment("HMRC-CUS-ORG")), any)(any, any)
@@ -81,11 +81,11 @@ class AuthActionSpec
     "authorise an enrolment with multiple identifier" in {
       val enrolment = Enrolment(enrolmentKey)
         .withIdentifier(tgpIdentifierName, "GB000000000122")
-        .withIdentifier(tgpIdentifierName, eroiNumber)
+        .withIdentifier(tgpIdentifierName, eoriNumber)
 
       withAuthorizedTrader(enrolment)
 
-      val result = await(sut.apply(eroiNumber).invokeBlock(FakeRequest(), block))
+      val result = await(sut.apply(eoriNumber).invokeBlock(FakeRequest(), block))
 
       result.header.status mustBe OK
       verify(authConnector).authorise(eqTo(Enrolment("HMRC-CUS-ORG")), any)(any, any)
@@ -94,7 +94,7 @@ class AuthActionSpec
     "authorise an enrolment with affinitygroup as Individual" in {
       authorizeWithAffinityGroup(Some(Individual))
 
-      val result = await(sut.apply(eroiNumber).invokeBlock(FakeRequest(), block))
+      val result = await(sut.apply(eoriNumber).invokeBlock(FakeRequest(), block))
 
       result.header.status mustBe OK
       verify(authConnector).authorise(eqTo(Enrolment("HMRC-CUS-ORG")), any)(any, any)
@@ -104,7 +104,7 @@ class AuthActionSpec
       "invalid enrolment" in {
         withUnauthorizedTrader(InsufficientEnrolments())
 
-        val result = sut.apply(eroiNumber).invokeBlock(FakeRequest("GET", "/get"), block)
+        val result = sut.apply(eoriNumber).invokeBlock(FakeRequest("GET", "/get"), block)
 
         status(result) mustBe UNAUTHORIZED
         contentAsJson(result) mustBe Json.obj(
@@ -117,7 +117,7 @@ class AuthActionSpec
       "affinity group is Agent" in {
         authorizeWithAffinityGroup(Some(Agent))
 
-        val result = sut.apply(eroiNumber).invokeBlock(FakeRequest("GET", "/get"), block)
+        val result = sut.apply(eoriNumber).invokeBlock(FakeRequest("GET", "/get"), block)
 
         status(result) mustBe UNAUTHORIZED
         contentAsJson(result) mustBe Json.obj(
@@ -130,7 +130,7 @@ class AuthActionSpec
       "cannot find affinityGroup" in {
         authorizeWithAffinityGroup(None)
 
-        val result = sut.apply(eroiNumber).invokeBlock(FakeRequest("GET", "/get"), block)
+        val result = sut.apply(eoriNumber).invokeBlock(FakeRequest("GET", "/get"), block)
 
         status(result) mustBe UNAUTHORIZED
         contentAsJson(result) mustBe Json.obj(
@@ -145,7 +145,7 @@ class AuthActionSpec
 
       withUnauthorizedTrader(new RuntimeException("unauthorised error"))
 
-      val result = sut.apply(eroiNumber).invokeBlock(FakeRequest("GET", "/get"), block)
+      val result = sut.apply(eoriNumber).invokeBlock(FakeRequest("GET", "/get"), block)
 
       status(result) mustBe INTERNAL_SERVER_ERROR
       contentAsJson(result) mustBe Json.obj(
@@ -158,13 +158,13 @@ class AuthActionSpec
     "return forbidden if identifier is missing" in {
       withUnauthorizedEmptyIdentifier
 
-      val result: Future[Result] = sut.apply(eroiNumber).invokeBlock(FakeRequest(), block)
+      val result: Future[Result] = sut.apply(eoriNumber).invokeBlock(FakeRequest(), block)
 
       status(result) mustBe FORBIDDEN
       contentAsJson(result) mustBe Json.obj(
         "timestamp" -> timestamp,
         "code" -> "FORBIDDEN",
-        "message" -> s"Supplied OAuth token not authorised to access data for given identifier(s) $eroiNumber"
+        "message" -> s"Supplied OAuth token not authorised to access data for given identifier(s) $eoriNumber"
       )
     }
 
