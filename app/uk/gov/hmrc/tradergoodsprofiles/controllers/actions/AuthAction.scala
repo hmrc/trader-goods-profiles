@@ -98,7 +98,8 @@ class AuthActionImpl @Inject()
 
     getIdentifierForGtpEnrolment(authorisedEnrolments) match {
       case Some(identifier) if identifier.value == eroiNumber  => block(EnrolmentRequest(request))
-      case _ => handleForbiddenError(eroiNumber)
+      case _ =>
+        handleForbiddenError(eroiNumber)
     }
   }
 
