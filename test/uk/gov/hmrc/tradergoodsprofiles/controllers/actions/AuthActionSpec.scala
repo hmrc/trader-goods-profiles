@@ -78,6 +78,19 @@ class AuthActionSpec
       verify(authConnector).authorise(eqTo(Enrolment("HMRC-CUS-ORG")), any)(any, any)
     }
 
+    "authorise an enrolment with multiple identifier" in {
+      val enrolment = Enrolment(enrolmentKey)
+        .withIdentifier(tgpIdentifierName, "GB000000000122")
+        .withIdentifier(tgpIdentifierName, eroiNumber)
+
+      withAuthorizedTrader(enrolment)
+
+      val result = await(sut.apply(eroiNumber).invokeBlock(FakeRequest(), block))
+
+      result.header.status mustBe OK
+      verify(authConnector).authorise(eqTo(Enrolment("HMRC-CUS-ORG")), any)(any, any)
+    }
+
     "authorise an enrolment with affinitygroup as Individual" in {
       authorizeWithAffinityGroup(Some(Individual))
 
@@ -97,7 +110,7 @@ class AuthActionSpec
         contentAsJson(result) mustBe Json.obj(
           "timestamp" -> timestamp,
           "code" -> "UNAUTHORIZED",
-          "message" -> "Unauthorised error for /get with error: Insufficient Enrolments"
+          "message" -> "Unauthorised exception for /get with error: Insufficient Enrolments"
         )
       }
 
@@ -110,7 +123,7 @@ class AuthActionSpec
         contentAsJson(result) mustBe Json.obj(
           "timestamp" -> timestamp,
           "code" -> "UNAUTHORIZED",
-          "message" -> "Unauthorised error for /get with error: Invalid affinity group Agent from Auth"
+          "message" -> "Unauthorised exception for /get with error: Invalid affinity group Agent from Auth"
         )
       }
 
@@ -123,7 +136,7 @@ class AuthActionSpec
         contentAsJson(result) mustBe Json.obj(
           "timestamp" -> timestamp,
           "code" -> "UNAUTHORIZED",
-          "message" -> "Unauthorised error for /get with error: Invalid enrolment parameter from Auth"
+          "message" -> "Unauthorised exception for /get with error: Invalid enrolment parameter from Auth"
         )
       }
     }

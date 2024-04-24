@@ -29,7 +29,7 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
-import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
+import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
 
@@ -74,6 +74,17 @@ class GetRecordControllerIntegrationSpec
 
     }
 
+    "authorise an enrolment with multiple identifier" in {
+      val enrolment = Enrolment(enrolmentKey)
+        .withIdentifier(tgpIdentifierName, "GB000000000122")
+        .withIdentifier(tgpIdentifierName, eroiNumber)
+
+      withAuthorizedTrader(enrolment)
+
+      val result = await(wsClient.url(url).get())
+
+      result.status mustBe OK
+    }
     "return Unauthorised when invalid enrolment" in {
       withUnauthorizedTrader(InsufficientEnrolments())
 
@@ -83,7 +94,7 @@ class GetRecordControllerIntegrationSpec
       result.json mustBe Json.obj(
         "timestamp" -> timestamp,
         "code" -> "UNAUTHORIZED",
-        "message" -> "Unauthorised error for /goods-profiles/GB000000000123/records with error: Insufficient Enrolments"
+        "message" -> "Unauthorised exception for /goods-profiles/GB000000000123/records with error: Insufficient Enrolments"
       )
     }
 
@@ -96,7 +107,7 @@ class GetRecordControllerIntegrationSpec
       result.json mustBe Json.obj(
         "timestamp" -> timestamp,
         "code" -> "UNAUTHORIZED",
-        "message" -> "Unauthorised error for /goods-profiles/GB000000000123/records with error: Invalid affinity group Agent from Auth"
+        "message" -> "Unauthorised exception for /goods-profiles/GB000000000123/records with error: Invalid affinity group Agent from Auth"
       )
     }
 
@@ -109,7 +120,7 @@ class GetRecordControllerIntegrationSpec
       result.json mustBe Json.obj(
         "timestamp" -> timestamp,
         "code" -> "UNAUTHORIZED",
-        "message" -> "Unauthorised error for /goods-profiles/GB000000000123/records with error: Invalid enrolment parameter from Auth"
+        "message" -> "Unauthorised exception for /goods-profiles/GB000000000123/records with error: Invalid enrolment parameter from Auth"
       )
     }
 

@@ -96,11 +96,10 @@ class AuthActionImpl @Inject()
     block: EnrolmentRequest[A] => Future[Result]
   )(implicit request: Request[A]): Future[Result] = {
 
-    getIdentifierForGtpEnrolment(authorisedEnrolments) match {
-      case Some(identifier) if identifier.value == eroiNumber  => block(EnrolmentRequest(request))
-      case _ =>
-        handleForbiddenError(eroiNumber)
-    }
+    val eoriNumbers = getIdentifierForGtpEnrolment(authorisedEnrolments)
+
+    if(eoriNumbers.contains(eroiNumber)) block(EnrolmentRequest(request))
+    else handleForbiddenError(eroiNumber)
   }
 
   private def handleForbiddenError[A](eroiNumber: String)(implicit request: Request[A]): Future[Result] = {
@@ -112,23 +111,26 @@ class AuthActionImpl @Inject()
     ).toResult)
   }
 
-  private def getIdentifierForGtpEnrolment[A](enrolments: Enrolments): Option[EnrolmentIdentifier] = {
+  private def getIdentifierForGtpEnrolment[A](enrolments: Enrolments): Seq[String] = {
     enrolments
       .getEnrolment(gtpEnrolmentKey)
-      .fold[Option[EnrolmentIdentifier]](None)(
-        e => e.getIdentifier(appConfig.tgpIdentifier)
+      .fold[Seq[EnrolmentIdentifier]](Seq.empty)(e =>
+        e.identifiers.filter(i => i.key.equalsIgnoreCase(appConfig.tgpIdentifier))
       )
+      .map(_.value)
+      .toSet
+      .toSeq
   }
 
   private def handleUnauthorisedError[A](
     errorMessage: String
   )(implicit request: Request[A]): Result = {
 
-    logger.error(s"Unauthorised error for ${request.uri} with error $errorMessage")
+    logger.error(s"Unauthorised exception for ${request.uri} with error $errorMessage")
 
     UnauthorisedError(
       dateTimeService.timestamp,
-      s"Unauthorised error for ${request.uri} with error: $errorMessage"
+      s"Unauthorised exception for ${request.uri} with error: $errorMessage"
     ).toResult
   }
 }
