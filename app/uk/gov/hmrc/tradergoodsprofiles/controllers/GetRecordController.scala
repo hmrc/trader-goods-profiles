@@ -16,19 +16,25 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
-import controllers.Assets
-import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.AuthAction
+
+import javax.inject.{Inject, Singleton}
 
 @Singleton
-class DocumentationController @Inject() (assets: Assets, cc: ControllerComponents) extends BackendController(cc) {
+class GetRecordController @Inject()
+(
+  authAction: AuthAction,
+  cc: ControllerComponents,
+)
+extends BackendController(cc) {
 
-  def definition(): Action[AnyContent] = {
-    assets.at("/public/api", "definition.json")
+  def get(eori: String): Action[AnyContent] = {
+    authAction(eori) {
+      //todo: This is wip.
+      Ok("Good job, you have been successfully authenticate. Under Implementation")
+    }
   }
 
-  def specification(version: String, file: String): Action[AnyContent] = {
-    assets.at(s"/public/api/conf/$version", file)
-  }
 }

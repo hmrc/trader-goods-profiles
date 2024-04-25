@@ -14,14 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.tradergoodsprofiles.config
+package uk.gov.hmrc.tradergoodsprofiles.models.auth
 
-import com.google.inject.AbstractModule
+import play.api.mvc.{Request, WrappedRequest}
 
-class Module extends AbstractModule {
-
-  override def configure(): Unit = {
-
-    bind(classOf[AppConfig]).asEagerSingleton()
-  }
-}
+case class EnrolmentRequest[A](
+  request: Request[A]
+) extends WrappedRequest[A](request)

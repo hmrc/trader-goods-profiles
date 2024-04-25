@@ -14,14 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.tradergoodsprofiles.config
+package uk.gov.hmrc.tradergoodsprofiles.services
 
-import com.google.inject.AbstractModule
+import com.google.inject.ImplementedBy
 
-class Module extends AbstractModule {
+import java.time.Instant
 
-  override def configure(): Unit = {
 
-    bind(classOf[AppConfig]).asEagerSingleton()
-  }
+class DateTimeServiceImpl extends DateTimeService {
+  override def timestamp: Instant = Instant.now
+}
+
+@ImplementedBy(classOf[DateTimeServiceImpl])
+trait DateTimeService {
+  def timestamp: Instant
 }
