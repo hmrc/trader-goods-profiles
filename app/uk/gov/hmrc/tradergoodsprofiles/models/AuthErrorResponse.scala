@@ -31,9 +31,7 @@ trait AuthErrorResponse {
   def toResult: Result
 }
 
-case class ForbiddenError(
-  timestamp: Instant,
-  message: String) extends AuthErrorResponse {
+case class ForbiddenError(timestamp: Instant, message: String) extends AuthErrorResponse {
   override val code: String = "FORBIDDEN"
 
   def toResult: Result = Forbidden(Json.toJson(ForbiddenError(timestamp, message)))
@@ -46,12 +44,10 @@ object ForbiddenError {
     (JsPath \ "timestamp").write[Instant] and
       (JsPath \ "code").write[String] and
       (JsPath \ "message").write[String]
-    )(e => (e.timestamp,  e.code, e.message))
+  )(e => (e.timestamp, e.code, e.message))
 }
 
-case class UnauthorisedError(
-  timestamp: Instant,
-  message: String) extends AuthErrorResponse {
+case class UnauthorisedError(timestamp: Instant, message: String) extends AuthErrorResponse {
   override val code: String = "UNAUTHORIZED"
 
   def toResult: Result = Unauthorized(Json.toJson(UnauthorisedError(timestamp, message)))
@@ -64,12 +60,10 @@ object UnauthorisedError {
     (JsPath \ "timestamp").write[Instant] and
       (JsPath \ "code").write[String] and
       (JsPath \ "message").write[String]
-    )(e => (e.timestamp,  e.code, e.message))
+  )(e => (e.timestamp, e.code, e.message))
 }
 
-case class ServerError(
-  timestamp: Instant,
-  message: String) extends AuthErrorResponse {
+case class ServerError(timestamp: Instant, message: String) extends AuthErrorResponse {
   override val code: String = "INTERNAL_SERVER_ERROR"
 
   def toResult: Result = InternalServerError(Json.toJson(ServerError(timestamp, message)))
@@ -82,5 +76,5 @@ object ServerError {
     (JsPath \ "timestamp").write[Instant] and
       (JsPath \ "code").write[String] and
       (JsPath \ "message").write[String]
-    )(e => (e.timestamp,  e.code, e.message))
+  )(e => (e.timestamp, e.code, e.message))
 }

@@ -24,16 +24,14 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 
-
 class DocumentationIntegrationSpec extends PlaySpec with GuiceOneServerPerSuite {
 
   lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
-  override def fakeApplication(): Application = {
+  override def fakeApplication(): Application =
     GuiceApplicationBuilder()
       .configure("metrics.enabled" -> false)
       .build()
-  }
 
   "get" should {
     "return the definition specification" in {

@@ -20,7 +20,6 @@ import com.google.inject.ImplementedBy
 
 import java.time.Instant
 
-
 class DateTimeServiceImpl extends DateTimeService {
   override def timestamp: Instant = Instant.now
 }

@@ -38,17 +38,14 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuthActionSpec
-  extends PlaySpec
-    with AuthTestSupport
-    with BeforeAndAfterEach {
+class AuthActionSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEach {
 
   implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
 
-  private val timestamp = Instant.now.truncatedTo(ChronoUnit.SECONDS)
+  private val timestamp       = Instant.now.truncatedTo(ChronoUnit.SECONDS)
   private val dateTimeService = mock[DateTimeService]
-  private val parser = mock[BodyParsers.Default]
-  private val appConfig = mock[AppConfig]
+  private val parser          = mock[BodyParsers.Default]
+  private val appConfig       = mock[AppConfig]
 
   private val sut = new AuthActionImpl(
     authConnector,
@@ -109,8 +106,8 @@ class AuthActionSpec
         status(result) mustBe UNAUTHORIZED
         contentAsJson(result) mustBe Json.obj(
           "timestamp" -> timestamp,
-          "code" -> "UNAUTHORIZED",
-          "message" -> "Unauthorised exception for /get with error: Insufficient Enrolments"
+          "code"      -> "UNAUTHORIZED",
+          "message"   -> "Unauthorised exception for /get with error: Insufficient Enrolments"
         )
       }
 
@@ -122,8 +119,8 @@ class AuthActionSpec
         status(result) mustBe UNAUTHORIZED
         contentAsJson(result) mustBe Json.obj(
           "timestamp" -> timestamp,
-          "code" -> "UNAUTHORIZED",
-          "message" -> "Unauthorised exception for /get with error: Invalid affinity group Agent from Auth"
+          "code"      -> "UNAUTHORIZED",
+          "message"   -> "Unauthorised exception for /get with error: Invalid affinity group Agent from Auth"
         )
       }
 
@@ -135,8 +132,8 @@ class AuthActionSpec
         status(result) mustBe UNAUTHORIZED
         contentAsJson(result) mustBe Json.obj(
           "timestamp" -> timestamp,
-          "code" -> "UNAUTHORIZED",
-          "message" -> "Unauthorised exception for /get with error: Invalid enrolment parameter from Auth"
+          "code"      -> "UNAUTHORIZED",
+          "message"   -> "Unauthorised exception for /get with error: Invalid enrolment parameter from Auth"
         )
       }
     }
@@ -150,8 +147,8 @@ class AuthActionSpec
       status(result) mustBe INTERNAL_SERVER_ERROR
       contentAsJson(result) mustBe Json.obj(
         "timestamp" -> timestamp,
-        "code" -> "INTERNAL_SERVER_ERROR",
-        "message" -> "Internal server error for /get with error: unauthorised error"
+        "code"      -> "INTERNAL_SERVER_ERROR",
+        "message"   -> "Internal server error for /get with error: unauthorised error"
       )
     }
 
@@ -163,8 +160,8 @@ class AuthActionSpec
       status(result) mustBe FORBIDDEN
       contentAsJson(result) mustBe Json.obj(
         "timestamp" -> timestamp,
-        "code" -> "FORBIDDEN",
-        "message" -> s"Supplied OAuth token not authorised to access data for given identifier(s) $eoriNumber"
+        "code"      -> "FORBIDDEN",
+        "message"   -> s"Supplied OAuth token not authorised to access data for given identifier(s) $eoriNumber"
       )
     }
 
@@ -176,12 +173,12 @@ class AuthActionSpec
       status(result) mustBe FORBIDDEN
       contentAsJson(result) mustBe Json.obj(
         "timestamp" -> timestamp,
-        "code" -> "FORBIDDEN",
-        "message" -> s"Supplied OAuth token not authorised to access data for given identifier(s) any-roi"
+        "code"      -> "FORBIDDEN",
+        "message"   -> s"Supplied OAuth token not authorised to access data for given identifier(s) any-roi"
       )
     }
   }
 
-  def block(request: EnrolmentRequest[_]):  Future[Result] =
+  def block(request: EnrolmentRequest[_]): Future[Result] =
     Future.successful(Results.Ok)
 }

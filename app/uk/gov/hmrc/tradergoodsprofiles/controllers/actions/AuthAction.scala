@@ -37,24 +37,27 @@ import scala.concurrent.Future.successful
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class AuthActionImpl @Inject()
-(
+class AuthActionImpl @Inject() (
   override val authConnector: AuthConnector,
   dateTimeService: DateTimeService,
   appConfig: AppConfig,
   val bodyParser: BodyParsers.Default,
   cc: ControllerComponents,
   val parser: BodyParsers.Default
-)
-(implicit val ec: ExecutionContext)
-  extends BackendController(cc) with AuthorisedFunctions with AuthAction with Logging {
+)(implicit val ec: ExecutionContext)
+    extends BackendController(cc)
+    with AuthorisedFunctions
+    with AuthAction
+    with Logging {
 
   private val fetch = authorisedEnrolments and affinityGroup
 
-  override def apply(eori: String): ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest] =
+  override def apply(
+    eori: String
+  ): ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest] =
     new ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest] {
 
-      override val parser = bodyParser
+      override val parser                              = bodyParser
       protected def executionContext: ExecutionContext = ec
 
       override def invokeBlock[A](
@@ -63,21 +66,22 @@ class AuthActionImpl @Inject()
       ): Future[Result] = {
 
         implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
-        implicit val req: Request[A] = request
+        implicit val req: Request[A]   = request
 
         authorised(Enrolment(gtpEnrolmentKey))
           .retrieve(fetch) {
             case authorisedEnrolments ~ Some(affinityGroup) if affinityGroup != Agent =>
               validateIdentifier(eori, authorisedEnrolments, block)
-            case _ ~ Some(Agent) =>
+            case _ ~ Some(Agent)                                                      =>
               successful(handleUnauthorisedError(s"Invalid affinity group Agent from Auth"))
-            case _ =>
+            case _                                                                    =>
               successful(handleUnauthorisedError("Invalid enrolment parameter from Auth"))
 
-          }.recover {
-          case error: AuthorisationException => handleUnauthorisedError(error.reason)
-          case ex: Throwable => handleException(request, ex)
-        }
+          }
+          .recover {
+            case error: AuthorisationException => handleUnauthorisedError(error.reason)
+            case ex: Throwable                 => handleException(request, ex)
+          }
       }
     }
 
@@ -91,27 +95,29 @@ class AuthActionImpl @Inject()
   }
 
   private def validateIdentifier[A](
-                                     eoriNumber: String,
-                                     authorisedEnrolments: Enrolments,
-                                     block: EnrolmentRequest[A] => Future[Result]
+    eoriNumber: String,
+    authorisedEnrolments: Enrolments,
+    block: EnrolmentRequest[A] => Future[Result]
   )(implicit request: Request[A]): Future[Result] = {
 
     val eoriNumbers = getIdentifierForGtpEnrolment(authorisedEnrolments)
 
-    if(eoriNumbers.contains(eoriNumber)) block(EnrolmentRequest(request))
+    if (eoriNumbers.contains(eoriNumber)) block(EnrolmentRequest(request))
     else handleForbiddenError(eoriNumber)
   }
 
   private def handleForbiddenError[A](eoriNumber: String)(implicit request: Request[A]): Future[Result] = {
     logger.error(s"Forbidden error for ${request.uri}, eori number $eoriNumber")
 
-    Future.successful(ForbiddenError(
-      dateTimeService.timestamp,
-      s"Supplied OAuth token not authorised to access data for given identifier(s) $eoriNumber"
-    ).toResult)
+    Future.successful(
+      ForbiddenError(
+        dateTimeService.timestamp,
+        s"Supplied OAuth token not authorised to access data for given identifier(s) $eoriNumber"
+      ).toResult
+    )
   }
 
-  private def getIdentifierForGtpEnrolment[A](enrolments: Enrolments): Seq[String] = {
+  private def getIdentifierForGtpEnrolment[A](enrolments: Enrolments): Seq[String] =
     enrolments
       .getEnrolment(gtpEnrolmentKey)
       .fold[Seq[EnrolmentIdentifier]](Seq.empty)(e =>
@@ -119,7 +125,6 @@ class AuthActionImpl @Inject()
       )
       .map(_.value)
       .distinct
-  }
 
   private def handleUnauthorisedError[A](
     errorMessage: String
@@ -134,8 +139,7 @@ class AuthActionImpl @Inject()
   }
 }
 
-
-object AuthAction  {
+object AuthAction {
   val gtpEnrolmentKey = "HMRC-CUS-ORG"
 }
 

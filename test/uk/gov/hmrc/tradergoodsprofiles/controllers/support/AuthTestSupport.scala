@@ -32,12 +32,11 @@ trait AuthTestSupport {
 
   lazy val authConnector: AuthConnector = mock[AuthConnector]
 
-  private val authFetch = authorisedEnrolments and affinityGroup
+  private val authFetch           = authorisedEnrolments and affinityGroup
   protected val tgpIdentifierName = "tgpFakeIdentifier"
-  protected val eoriNumber = "GB000000000123"
-  protected val enrolmentKey = "HMRC-CUS-ORG"
-  private val enrolment = Enrolment(enrolmentKey).withIdentifier(tgpIdentifierName, eoriNumber)
-
+  protected val eoriNumber        = "GB000000000123"
+  protected val enrolmentKey      = "HMRC-CUS-ORG"
+  private val enrolment           = Enrolment(enrolmentKey).withIdentifier(tgpIdentifierName, eoriNumber)
 
   def withAuthorizedTrader(): Unit = {
     val retrieval = Enrolments(Set(enrolment)) and
@@ -53,11 +52,9 @@ trait AuthTestSupport {
     withAuthorization(retrieval)
   }
 
-  def withAuthorization(retrieval: Enrolments ~ Option[AffinityGroup]): Unit = {
-
-    when(authConnector.authorise(ArgumentMatchers.argThat((p: Predicate) => true), eqTo(authFetch))(any,any))
+  def withAuthorization(retrieval: Enrolments ~ Option[AffinityGroup]): Unit =
+    when(authConnector.authorise(ArgumentMatchers.argThat((p: Predicate) => true), eqTo(authFetch))(any, any))
       .thenReturn(Future.successful(retrieval))
-  }
 
   def authorizeWithAffinityGroup(affinityGrp: Option[AffinityGroup]): Unit = {
     val retrieval = Enrolments(Set(enrolment)) and affinityGrp

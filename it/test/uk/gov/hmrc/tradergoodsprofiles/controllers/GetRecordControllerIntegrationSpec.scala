@@ -36,26 +36,23 @@ import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
 import java.time.Instant
 
 class GetRecordControllerIntegrationSpec
-  extends PlaySpec
+    extends PlaySpec
     with GuiceOneServerPerSuite
     with AuthTestSupport
     with BeforeAndAfterEach {
 
   private lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
-  private lazy val dateTimeService = mock[DateTimeService]
-  private lazy val timestamp = Instant.now
-  private val url = s"http://localhost:$port/$eoriNumber/records"
+  private lazy val dateTimeService    = mock[DateTimeService]
+  private lazy val timestamp          = Instant.now
+  private val url                     = s"http://localhost:$port/$eoriNumber/records"
 
-
-  override lazy val app: Application = {
-
+  override lazy val app: Application =
     GuiceApplicationBuilder()
       .overrides(
         bind[AuthConnector].to(authConnector),
         bind[DateTimeService].to(dateTimeService)
       )
       .build()
-  }
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -93,8 +90,8 @@ class GetRecordControllerIntegrationSpec
       result.status mustBe UNAUTHORIZED
       result.json mustBe Json.obj(
         "timestamp" -> timestamp,
-        "code" -> "UNAUTHORIZED",
-        "message" -> "Unauthorised exception for /GB000000000123/records with error: Insufficient Enrolments"
+        "code"      -> "UNAUTHORIZED",
+        "message"   -> "Unauthorised exception for /GB000000000123/records with error: Insufficient Enrolments"
       )
     }
 
@@ -106,8 +103,8 @@ class GetRecordControllerIntegrationSpec
       result.status mustBe UNAUTHORIZED
       result.json mustBe Json.obj(
         "timestamp" -> timestamp,
-        "code" -> "UNAUTHORIZED",
-        "message" -> "Unauthorised exception for /GB000000000123/records with error: Invalid affinity group Agent from Auth"
+        "code"      -> "UNAUTHORIZED",
+        "message"   -> "Unauthorised exception for /GB000000000123/records with error: Invalid affinity group Agent from Auth"
       )
     }
 
@@ -119,8 +116,8 @@ class GetRecordControllerIntegrationSpec
       result.status mustBe UNAUTHORIZED
       result.json mustBe Json.obj(
         "timestamp" -> timestamp,
-        "code" -> "UNAUTHORIZED",
-        "message" -> "Unauthorised exception for /GB000000000123/records with error: Invalid enrolment parameter from Auth"
+        "code"      -> "UNAUTHORIZED",
+        "message"   -> "Unauthorised exception for /GB000000000123/records with error: Invalid enrolment parameter from Auth"
       )
     }
 
@@ -132,8 +129,8 @@ class GetRecordControllerIntegrationSpec
       result.status mustBe FORBIDDEN
       result.json mustBe Json.obj(
         "timestamp" -> timestamp,
-        "code" -> "FORBIDDEN",
-        "message" -> s"Supplied OAuth token not authorised to access data for given identifier(s) $eoriNumber"
+        "code"      -> "FORBIDDEN",
+        "message"   -> s"Supplied OAuth token not authorised to access data for given identifier(s) $eoriNumber"
       )
     }
 
@@ -145,8 +142,8 @@ class GetRecordControllerIntegrationSpec
       result.status mustBe FORBIDDEN
       result.json mustBe Json.obj(
         "timestamp" -> timestamp,
-        "code" -> "FORBIDDEN",
-        "message" -> s"Supplied OAuth token not authorised to access data for given identifier(s) wrongEoriNumber"
+        "code"      -> "FORBIDDEN",
+        "message"   -> s"Supplied OAuth token not authorised to access data for given identifier(s) wrongEoriNumber"
       )
     }
 
@@ -158,8 +155,8 @@ class GetRecordControllerIntegrationSpec
       result.status mustBe INTERNAL_SERVER_ERROR
       result.json mustBe Json.obj(
         "timestamp" -> timestamp,
-        "code" -> "INTERNAL_SERVER_ERROR",
-        "message" -> "Internal server error for /GB000000000123/records with error: runtime exception"
+        "code"      -> "INTERNAL_SERVER_ERROR",
+        "message"   -> "Internal server error for /GB000000000123/records with error: runtime exception"
       )
     }
   }
