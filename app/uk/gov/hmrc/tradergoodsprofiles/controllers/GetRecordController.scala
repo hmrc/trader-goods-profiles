@@ -23,18 +23,15 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.AuthAction
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class GetRecordController @Inject()
-(
+class GetRecordController @Inject() (
   authAction: AuthAction,
-  cc: ControllerComponents,
-)
-extends BackendController(cc) {
+  cc: ControllerComponents
+) extends BackendController(cc) {
 
-  def get(eori: String): Action[AnyContent] = {
+  def get(eori: String): Action[AnyContent] =
     authAction(eori) {
       //todo: This is wip.
       Ok("Good job, you have been successfully authenticate. Under Implementation")
     }
-  }
 
 }
