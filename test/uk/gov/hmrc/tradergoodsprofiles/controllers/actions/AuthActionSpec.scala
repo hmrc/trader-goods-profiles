@@ -43,7 +43,7 @@ class AuthActionSpec
     with AuthTestSupport
     with BeforeAndAfterEach {
 
-  implicit val ec = ExecutionContext.Implicits.global
+  implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
 
   private val timestamp = Instant.now.truncatedTo(ChronoUnit.SECONDS)
   private val dateTimeService = mock[DateTimeService]
@@ -70,7 +70,7 @@ class AuthActionSpec
 
   "authorisation" should {
     "authorise an enrolment with affinitygroup as organisation" in {
-      withAuthorizedTrader
+      withAuthorizedTrader()
 
       val result = await(sut.apply(eoriNumber).invokeBlock(FakeRequest(), block))
 
@@ -156,7 +156,7 @@ class AuthActionSpec
     }
 
     "return forbidden if identifier is missing" in {
-      withUnauthorizedEmptyIdentifier
+      withUnauthorizedEmptyIdentifier()
 
       val result: Future[Result] = sut.apply(eoriNumber).invokeBlock(FakeRequest(), block)
 
@@ -169,7 +169,7 @@ class AuthActionSpec
     }
 
     "return forbidden if identifier is unauthorized" in {
-      withAuthorizedTrader
+      withAuthorizedTrader()
 
       val result = sut.apply("any-roi").invokeBlock(FakeRequest(), block)
 

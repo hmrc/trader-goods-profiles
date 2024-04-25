@@ -66,7 +66,7 @@ class GetRecordControllerIntegrationSpec
   }
   "GET record" should {
     "return 200" in {
-      withAuthorizedTrader
+      withAuthorizedTrader()
 
       val result = await(wsClient.url(url).get())
 
@@ -125,7 +125,7 @@ class GetRecordControllerIntegrationSpec
     }
 
     "return forbidden if identifier does not exist" in {
-      withUnauthorizedEmptyIdentifier
+      withUnauthorizedEmptyIdentifier()
 
       val result = await(wsClient.url(url).get())
 
@@ -138,7 +138,7 @@ class GetRecordControllerIntegrationSpec
     }
 
     "return forbidden if identifier is not authorised" in {
-      withAuthorizedTrader
+      withAuthorizedTrader()
 
       val result = await(wsClient.url(s"http://localhost:$port/wrongEoriNumber/records").get())
 
