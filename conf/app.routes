@@ -1,4 +1,4 @@
 # microservice specific routes
 
 
-GET     /:eori/records   uk.gov.hmrc.tradergoodsprofiles.controllers.GetRecordController.get(eori: String)
+GET     /:eori/records/:recordId   uk.gov.hmrc.tradergoodsprofiles.controllers.GetRecordsController.getRecord(eori: String, recordId: String)
