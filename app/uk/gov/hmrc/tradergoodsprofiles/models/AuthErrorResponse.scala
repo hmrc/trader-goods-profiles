@@ -31,7 +31,9 @@ trait AuthErrorResponse {
   def toResult: Result
 }
 
-case class ForbiddenError(timestamp: Instant, message: String) extends AuthErrorResponse {
+case class ForbiddenError(
+  timestamp: Instant,
+  message: String) extends AuthErrorResponse {
   override val code: String = "FORBIDDEN"
 
   def toResult: Result = Forbidden(Json.toJson(ForbiddenError(timestamp, message)))
