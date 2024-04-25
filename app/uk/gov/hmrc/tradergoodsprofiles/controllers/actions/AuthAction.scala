@@ -103,7 +103,7 @@ class AuthActionImpl @Inject()
   }
 
   private def handleForbiddenError[A](eoriNumber: String)(implicit request: Request[A]): Future[Result] = {
-    logger.error(s"Forbidden error for ${request.uri}, eroi number $eoriNumber")
+    logger.error(s"Forbidden error for ${request.uri}, eori number $eoriNumber")
 
     Future.successful(ForbiddenError(
       dateTimeService.timestamp,

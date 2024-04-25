@@ -44,7 +44,7 @@ class GetRecordControllerIntegrationSpec
   private lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
   private lazy val dateTimeService = mock[DateTimeService]
   private lazy val timestamp = Instant.now
-  private val url = s"http://localhost:$port/goods-profiles/$eoriNumber/records"
+  private val url = s"http://localhost:$port/$eoriNumber/records"
 
 
   override lazy val app: Application = {
@@ -94,7 +94,7 @@ class GetRecordControllerIntegrationSpec
       result.json mustBe Json.obj(
         "timestamp" -> timestamp,
         "code" -> "UNAUTHORIZED",
-        "message" -> "Unauthorised exception for /goods-profiles/GB000000000123/records with error: Insufficient Enrolments"
+        "message" -> "Unauthorised exception for /GB000000000123/records with error: Insufficient Enrolments"
       )
     }
 
@@ -107,7 +107,7 @@ class GetRecordControllerIntegrationSpec
       result.json mustBe Json.obj(
         "timestamp" -> timestamp,
         "code" -> "UNAUTHORIZED",
-        "message" -> "Unauthorised exception for /goods-profiles/GB000000000123/records with error: Invalid affinity group Agent from Auth"
+        "message" -> "Unauthorised exception for /GB000000000123/records with error: Invalid affinity group Agent from Auth"
       )
     }
 
@@ -120,7 +120,7 @@ class GetRecordControllerIntegrationSpec
       result.json mustBe Json.obj(
         "timestamp" -> timestamp,
         "code" -> "UNAUTHORIZED",
-        "message" -> "Unauthorised exception for /goods-profiles/GB000000000123/records with error: Invalid enrolment parameter from Auth"
+        "message" -> "Unauthorised exception for /GB000000000123/records with error: Invalid enrolment parameter from Auth"
       )
     }
 
@@ -140,7 +140,7 @@ class GetRecordControllerIntegrationSpec
     "return forbidden if identifier is not authorised" in {
       withAuthorizedTrader
 
-      val result = await(wsClient.url(s"http://localhost:$port/goods-profiles/wrongEoriNumber/records").get())
+      val result = await(wsClient.url(s"http://localhost:$port/wrongEoriNumber/records").get())
 
       result.status mustBe FORBIDDEN
       result.json mustBe Json.obj(
@@ -159,7 +159,7 @@ class GetRecordControllerIntegrationSpec
       result.json mustBe Json.obj(
         "timestamp" -> timestamp,
         "code" -> "INTERNAL_SERVER_ERROR",
-        "message" -> "Internal server error for /goods-profiles/GB000000000123/records with error: runtime exception"
+        "message" -> "Internal server error for /GB000000000123/records with error: runtime exception"
       )
     }
   }
