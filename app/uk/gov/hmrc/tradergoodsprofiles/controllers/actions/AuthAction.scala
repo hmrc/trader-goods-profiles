@@ -29,7 +29,7 @@ import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.AuthAction.gtpEnrolmentKey
 import uk.gov.hmrc.tradergoodsprofiles.models.auth.EnrolmentRequest
-import uk.gov.hmrc.tradergoodsprofiles.models.{ForbiddenError, ServerError, UnauthorisedError}
+import uk.gov.hmrc.tradergoodsprofiles.models.{ForbiddenErrorResponse, ServerErrorResponse, UnauthorisedErrorResponse}
 import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
 
 import javax.inject.{Inject, Singleton}
@@ -57,7 +57,7 @@ class AuthActionImpl @Inject() (
   ): ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest] =
     new ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest] {
 
-      override val parser                              = bodyParser
+      override val parser = bodyParser
       protected def executionContext: ExecutionContext = ec
 
       override def invokeBlock[A](
@@ -72,9 +72,9 @@ class AuthActionImpl @Inject() (
           .retrieve(fetch) {
             case authorisedEnrolments ~ Some(affinityGroup) if affinityGroup != Agent =>
               validateIdentifier(eori, authorisedEnrolments, block)
-            case _ ~ Some(Agent)                                                      =>
+            case _ ~ Some(Agent) =>
               successful(handleUnauthorisedError(s"Invalid affinity group Agent from Auth"))
-            case _                                                                    =>
+            case _ =>
               successful(handleUnauthorisedError("Invalid enrolment parameter from Auth"))
 
           }
@@ -88,7 +88,7 @@ class AuthActionImpl @Inject() (
   private def handleException[A](request: Request[A], ex: Throwable): Result = {
     logger.error(s"Internal server error for ${request.uri} with error ${ex.getMessage}", ex)
 
-    ServerError(
+    ServerErrorResponse(
       dateTimeService.timestamp,
       s"Internal server error for ${request.uri} with error: ${ex.getMessage}"
     ).toResult
@@ -110,7 +110,7 @@ class AuthActionImpl @Inject() (
     logger.error(s"Forbidden error for ${request.uri}, eori number $eoriNumber")
 
     Future.successful(
-      ForbiddenError(
+      ForbiddenErrorResponse(
         dateTimeService.timestamp,
         s"Supplied OAuth token not authorised to access data for given identifier(s) $eoriNumber"
       ).toResult
@@ -132,7 +132,7 @@ class AuthActionImpl @Inject() (
 
     logger.error(s"Unauthorised exception for ${request.uri} with error $errorMessage")
 
-    UnauthorisedError(
+    UnauthorisedErrorResponse(
       dateTimeService.timestamp,
       s"Unauthorised exception for ${request.uri} with error: $errorMessage"
     ).toResult
@@ -145,5 +145,5 @@ object AuthAction {
 
 @ImplementedBy(classOf[AuthActionImpl])
 trait AuthAction {
-  def apply(ern: String): ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest]
+  def apply(eori: String): ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest]
 }

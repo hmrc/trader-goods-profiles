@@ -36,7 +36,7 @@ object FakeAuth {
                                      block: EnrolmentRequest[A] => Future[Result]
                                    ): Future[Result] = {
 
-          Future.successful(Results.Ok)
+          block(EnrolmentRequest(request))
         }
       }
     }

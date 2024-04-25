@@ -22,7 +22,7 @@ import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
-import play.api.http.Status.{FORBIDDEN, INTERNAL_SERVER_ERROR, OK, UNAUTHORIZED}
+import play.api.http.Status.{BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR, OK, UNAUTHORIZED}
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
@@ -90,7 +90,7 @@ class GetRecordsControllerIntegrationSpec
     "return Unauthorised when invalid enrolment" in {
       withUnauthorizedTrader(InsufficientEnrolments())
 
-      val result = await(wsClient.url(url).get())
+      val result = await(wsClient.url(s"http://localhost:$port/$eoriNumber/records/$recordId").get())
 
       result.status mustBe UNAUTHORIZED
       result.json mustBe Json.obj(
@@ -163,6 +163,20 @@ class GetRecordsControllerIntegrationSpec
         "code" -> "INTERNAL_SERVER_ERROR",
         "message" -> s"Internal server error for /$eoriNumber/records/$recordId with error: runtime exception"
       )
+    }
+
+    "return an BAD_REQUEST (400) if recordId is invalid" in {
+      withAuthorizedTrader()
+
+      val result = await(wsClient.url(s"http://localhost:$port/$eoriNumber/records/abcdfg-12gt").get())
+
+      result.status mustBe BAD_REQUEST
+      result.json mustBe Json.obj(
+        "timestamp" -> timestamp,
+        "code" -> "INVALID_RECORD_ID_PARAMETER",
+        "message" -> s"Invalid record ID supplied for eori $eoriNumber"
+      )
+
     }
   }
 }
