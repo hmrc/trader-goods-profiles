@@ -143,6 +143,43 @@ paths:
       security:
         - userRestricted:
             - trader-goods-profiles
+    put:
+      parameters:
+        - $ref: '#/components/parameters/Content-Type'
+        - $ref: '#/components/parameters/Accept'
+        - $ref: '#/components/parameters/xClientIdParam'
+        - $ref: '#/components/parameters/Authorization'
+        - $ref: '#/components/parameters/eoriParam'
+        - $ref: '#/components/parameters/recordParam'
+      tags:
+        - Goods records
+      summary: Remove a trader's goods record
+      description: Remove a Trader's goods record
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoveTGPRecordSchema'
+        required: true
+      responses:
+        '200':
+          description: OK;   Request completed successfully
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/xCorrelationIdHdr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Forbidden;   User was valid, but not allowed to perform this action
+        '404':
+          description: Good records not found to deactivate
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - userRestricted:
+            - trader-goods-profiles
     get:
       tags:
         - Goods records
@@ -309,6 +346,13 @@ components:
           $ref: '#/components/schemas/comcodeEffectiveFromDate'
         comcodeEffectiveToDate:
           $ref: '#/components/schemas/comcodeEffectiveToDate'
+    RemoveTGPRecordSchema:
+      type: object
+      required:
+        - actorId
+      properties:
+        actorId:
+          $ref: '#/components/schemas/actorId'
     TGPRecordResponseSchema:
       required:
         - recordId
