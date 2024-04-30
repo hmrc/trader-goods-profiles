@@ -73,9 +73,17 @@ class AuthActionImpl @Inject() (
             case authorisedEnrolments ~ Some(affinityGroup) if affinityGroup != Agent =>
               validateIdentifier(eori, authorisedEnrolments, block)
             case _ ~ Some(Agent)                                                      =>
-              successful(handleUnauthorisedError(s"Invalid affinity group Agent from Auth"))
+              successful(
+                handleInvalidAffinityGroup(
+                  s"Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'"
+                )
+              )
             case _                                                                    =>
-              successful(handleUnauthorisedError("Invalid enrolment parameter from Auth"))
+              successful(
+                handleInvalidAffinityGroup(
+                  "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'"
+                )
+              )
 
           }
           .recover {
@@ -125,6 +133,18 @@ class AuthActionImpl @Inject() (
       )
       .map(_.value)
       .distinct
+
+  private def handleInvalidAffinityGroup[A](
+    errorMessage: String
+  )(implicit request: Request[A]): Result = {
+
+    logger.error(s"Unauthorised exception for ${request.uri} with error $errorMessage")
+
+    UnauthorisedError(
+      dateTimeService.timestamp,
+      errorMessage
+    ).toResult
+  }
 
   private def handleUnauthorisedError[A](
     errorMessage: String

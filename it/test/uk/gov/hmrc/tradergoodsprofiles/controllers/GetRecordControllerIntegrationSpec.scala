@@ -104,7 +104,7 @@ class GetRecordControllerIntegrationSpec
       result.json mustBe Json.obj(
         "timestamp" -> timestamp,
         "code"      -> "UNAUTHORIZED",
-        "message"   -> "The details signed in do not have a Trader Goods Profile"
+        "message"   -> "Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'"
       )
     }
 
@@ -117,7 +117,7 @@ class GetRecordControllerIntegrationSpec
       result.json mustBe Json.obj(
         "timestamp" -> timestamp,
         "code"      -> "UNAUTHORIZED",
-        "message"   -> "The details signed in do not have a Trader Goods Profile"
+        "message"   -> "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'"
       )
     }
 
