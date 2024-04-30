@@ -56,13 +56,39 @@ class GetRecordsControllerSpec extends PlaySpec with AuthTestSupport with Before
       status(result) mustBe OK
     }
 
-    "send a request" in {
-      val recordId = UUID.randomUUID().toString
-
-      val result = sut.getRecord(eoriNumber, recordId)(FakeRequest())
-    }
-
     "return an error" when {
+      "eori is blank" in {
+        val recordId = UUID.randomUUID().toString
+
+        val result = sut.getRecord(" ", recordId)(FakeRequest())
+
+        status(result) mustBe BAD_REQUEST
+      }
+
+      "eori is null" in {
+        val recordId = UUID.randomUUID().toString
+
+        val result = sut.getRecord(null, recordId)(FakeRequest())
+
+        status(result) mustBe BAD_REQUEST
+      }
+
+      "eori is less than 14 characters" in {
+        val recordId = UUID.randomUUID().toString
+
+        val result = sut.getRecord("1234", recordId)(FakeRequest())
+
+        status(result) mustBe BAD_REQUEST
+      }
+
+      "eori is greater than 17 characters" in {
+        val recordId = UUID.randomUUID().toString
+
+        val result = sut.getRecord("12341234123412341234", recordId)(FakeRequest())
+
+        status(result) mustBe BAD_REQUEST
+      }
+
       "recordId is not a UUID" in {
         val result = sut.getRecord(eoriNumber, "1234-abc")(FakeRequest())
 

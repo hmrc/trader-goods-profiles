@@ -22,7 +22,6 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.AuthAction
 import uk.gov.hmrc.tradergoodsprofiles.models.InvalidRecordIdErrorResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
 
-import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
@@ -36,7 +35,7 @@ class GetRecordsController @Inject() (
 
   def getRecord(eori: String, recordId: String): Action[AnyContent] =
     authAction(eori).async { implicit request =>
-      Try(UUID.fromString(recordId)) match {
+      validateInput(eori) match {
         case Success(value) =>
           Future.successful(Ok("Good job, you have been successfully authenticate. Under Implementation"))
         case Failure(_)     =>
@@ -49,4 +48,10 @@ class GetRecordsController @Inject() (
       }
     }
 
+  private def validateParameters(eori: String, recordId: String) =
+    !eori.isBlank
+//  || eori.nonEmpty || eori.length >= 14 || eori.length <= 17 || Try(UUID.fromString(recordId)).isSuccess
+
+  private def validateInput(eori: String): Try[Unit] =
+    Try(require(!eori.isBlank || eori.length >= 14))
 }
