@@ -112,7 +112,7 @@ class AuthActionImpl @Inject() (
     Future.successful(
       ForbiddenError(
         dateTimeService.timestamp,
-        s"Supplied OAuth token not authorised to access data for given identifier(s) $eoriNumber"
+        s"This EORI number is incorrect"
       ).toResult
     )
   }
@@ -134,7 +134,7 @@ class AuthActionImpl @Inject() (
 
     UnauthorisedError(
       dateTimeService.timestamp,
-      s"Unauthorised exception for ${request.uri} with error: $errorMessage"
+      s"The details signed in do not have a Trader Goods Profile"
     ).toResult
   }
 }

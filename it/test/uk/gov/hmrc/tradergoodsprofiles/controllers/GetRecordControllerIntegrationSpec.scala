@@ -91,7 +91,7 @@ class GetRecordControllerIntegrationSpec
       result.json mustBe Json.obj(
         "timestamp" -> timestamp,
         "code"      -> "UNAUTHORIZED",
-        "message"   -> "Unauthorised exception for /GB000000000123/records with error: Insufficient Enrolments"
+        "message"   -> "The details signed in do not have a Trader Goods Profile"
       )
     }
 
@@ -104,7 +104,7 @@ class GetRecordControllerIntegrationSpec
       result.json mustBe Json.obj(
         "timestamp" -> timestamp,
         "code"      -> "UNAUTHORIZED",
-        "message"   -> "Unauthorised exception for /GB000000000123/records with error: Invalid affinity group Agent from Auth"
+        "message"   -> "The details signed in do not have a Trader Goods Profile"
       )
     }
 
@@ -117,7 +117,7 @@ class GetRecordControllerIntegrationSpec
       result.json mustBe Json.obj(
         "timestamp" -> timestamp,
         "code"      -> "UNAUTHORIZED",
-        "message"   -> "Unauthorised exception for /GB000000000123/records with error: Invalid enrolment parameter from Auth"
+        "message"   -> "The details signed in do not have a Trader Goods Profile"
       )
     }
 
@@ -130,7 +130,7 @@ class GetRecordControllerIntegrationSpec
       result.json mustBe Json.obj(
         "timestamp" -> timestamp,
         "code"      -> "FORBIDDEN",
-        "message"   -> s"Supplied OAuth token not authorised to access data for given identifier(s) $eoriNumber"
+        "message"   -> s"This EORI number is incorrect"
       )
     }
 
@@ -143,7 +143,7 @@ class GetRecordControllerIntegrationSpec
       result.json mustBe Json.obj(
         "timestamp" -> timestamp,
         "code"      -> "FORBIDDEN",
-        "message"   -> s"Supplied OAuth token not authorised to access data for given identifier(s) wrongEoriNumber"
+        "message"   -> s"This EORI number is incorrect"
       )
     }
 
