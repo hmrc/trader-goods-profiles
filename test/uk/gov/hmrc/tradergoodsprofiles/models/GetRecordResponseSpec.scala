@@ -1,0 +1,110 @@
+package uk.gov.hmrc.tradergoodsprofiles.models
+
+import org.scalatestplus.play.PlaySpec
+import play.api.libs.json.{JsObject, JsResult, Json}
+
+import java.time.Instant
+
+class GetRecordResponseSpec extends PlaySpec {
+
+  private val getRecordResponse = createGetRecordResponse
+
+  "toJson" should {
+    "convert Object to json" in {
+      Json.toJson(getRecordResponse) mustBe GetRecordResponseAsJson
+    }
+  }
+
+  "fromJson" should {
+    "convert json to object" in {
+      val result: JsResult[GetRecordResponse] = GetRecordResponseAsJson.validate[GetRecordResponse]
+
+      result.isSuccess mustBe true
+      result.get mustBe getRecordResponse
+    }
+  }
+
+  "return an error" when {
+    "deserialising a join to object" in {
+      val invalidGetRecordResponseJson = GetRecordResponseAsJson - "eori"
+
+      invalidGetRecordResponseJson.validate[GetRecordResponse].isError mustBe true
+    }
+  }
+
+  private def GetRecordResponseAsJson: JsObject = {
+    Json.obj(
+      "recordId" -> "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f",
+      "eori" -> "GB123456789012",
+      "actorId" -> "GB987654321098",
+      "traderRef" -> "SKU123456",
+      "comcode" -> "123456",
+      "accreditationStatus" -> "Not Requested",
+      "goodsDescription" -> "Bananas",
+      "countryOfOrigin" -> "GB",
+      "category" -> 2,
+      "assessments" -> Json.arr(
+        Json.obj(
+          "assessmentId" -> "a06846e9a5f61fa4ecf2c4e3b23631fc",
+          "primaryCategory" -> 1,
+          "condition" -> Json.obj(
+            "type" -> "certificate",
+            "conditionId" -> "Y923",
+            "conditionDescription" -> "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
+            "conditionTraderText" -> "Excluded product"
+          ))),
+      "supplementaryUnit" -> 13,
+      "measurementUnit" -> "Kilograms",
+      "comcodeEffectiveFromDate" -> "2023-01-01T00:00:00Z",
+      "comcodeEffectiveToDate" -> "2028-01-01T00:00:00Z",
+      "version" -> 1,
+      "active" -> true,
+      "toReview" -> false,
+      "reviewReason" -> "Commodity code changed",
+      "declarable" -> "IMMI declarable",
+      "ukimsNumber" -> "XIUKIM47699357400020231115081800",
+      "nirmsNumber" -> "RMS-GB-123456",
+      "niphlNumber" -> "6 S12345",
+      "locked" -> false,
+      "createdDateTime" -> "2023-01-01T00:00:00Z",
+      "updatedDateTime" -> "2023-01-01T00:00:00Z"
+    )
+  }
+
+  private def createGetRecordResponse = {
+    val conditon = Condition(
+      "certificate",
+      "Y923",
+      "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
+      "Excluded product"
+    )
+    val assessment = Assessment("a06846e9a5f61fa4ecf2c4e3b23631fc", 1, conditon)
+    GetRecordResponse(
+      "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f",
+      "GB123456789012",
+      "GB987654321098",
+      "SKU123456",
+      "123456",
+      "Not Requested",
+      "Bananas",
+      "GB",
+      2,
+      Some(Seq(assessment)),
+      Some(13),
+      Some("Kilograms"),
+      Instant.parse("2023-01-01T00:00:00Z"),
+      Some(Instant.parse("2028-01-01T00:00:00Z")),
+      1,
+      true,
+      false,
+      Some("Commodity code changed"),
+      "IMMI declarable",
+      "XIUKIM47699357400020231115081800",
+      "RMS-GB-123456",
+      "6 S12345",
+      false,
+      Instant.parse("2023-01-01T00:00:00Z"),
+      Instant.parse("2023-01-01T00:00:00Z")
+    )
+  }
+}

@@ -30,13 +30,11 @@ import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
 import java.time.Instant
 import java.util.UUID
 
-class GetRecordsControllerSpec extends PlaySpec
- with AuthTestSupport
- with BeforeAndAfterEach {
+class GetRecordsControllerSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEach {
 
-  private val timestamp = Instant.parse("2024-01-12T12:12:12Z")
+  private val timestamp       = Instant.parse("2024-01-12T12:12:12Z")
   private val dateTimeService = mock[DateTimeService]
-  private val sut = new GetRecordsController(
+  private val sut             = new GetRecordsController(
     new FakeSuccessAuthAction(),
     dateTimeService,
     stubControllerComponents()
@@ -48,16 +46,20 @@ class GetRecordsControllerSpec extends PlaySpec
     reset(dateTimeService)
     when(dateTimeService.timestamp).thenReturn(timestamp)
   }
+
   "getRecord" should {
     "return 200" in {
-
       val recordId = UUID.randomUUID().toString
-
 
       val result = sut.getRecord(eoriNumber, recordId)(FakeRequest())
 
       status(result) mustBe OK
+    }
 
+    "send a request" in {
+      val recordId = UUID.randomUUID().toString
+
+      val result = sut.getRecord(eoriNumber, recordId)(FakeRequest())
     }
 
     "return an error" when {

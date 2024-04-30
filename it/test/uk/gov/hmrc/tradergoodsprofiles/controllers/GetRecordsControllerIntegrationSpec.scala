@@ -16,8 +16,10 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
+import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.ok
 import org.mockito.MockitoSugar.{reset, when}
-import org.scalatest.BeforeAndAfterEach
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
@@ -32,6 +34,7 @@ import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
+import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
 
 import java.time.Instant
 import java.util.UUID
@@ -40,7 +43,9 @@ class GetRecordsControllerIntegrationSpec
   extends PlaySpec
     with GuiceOneServerPerSuite
     with AuthTestSupport
-    with BeforeAndAfterEach {
+    with WireMockServerSpec
+    with BeforeAndAfterEach
+    with BeforeAndAfterAll {
 
   private lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
   private lazy val dateTimeService = mock[DateTimeService]
@@ -50,6 +55,8 @@ class GetRecordsControllerIntegrationSpec
   private val url = s"http://localhost:$port/$eoriNumber/records/$recordId"
 
   override lazy val app: Application = {
+    wireMock.start()
+    WireMock.configureFor(wireHost, wireMock.port())
 
     GuiceApplicationBuilder()
       .overrides(
@@ -66,6 +73,17 @@ class GetRecordsControllerIntegrationSpec
 
     when(dateTimeService.timestamp).thenReturn(timestamp)
   }
+
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    wireMock.resetAll()
+  }
+
+  override def afterAll(): Unit = {
+    super.afterAll()
+    wireMock.stop()
+  }
+
   "GET record" should {
     "return 200" in {
       withAuthorizedTrader()
@@ -74,6 +92,22 @@ class GetRecordsControllerIntegrationSpec
 
       result.status mustBe OK
 
+    }
+
+    "return a record" in {
+      withAuthorizedTrader()
+
+      wireMock.stubFor(
+        WireMock.get(s"/$eoriNumber/records/$recordId")
+          .willReturn(
+            ok()
+              .withBody(routerResponse.toString())
+          )
+      )
+
+      val result = await(wsClient.url(s"http://localhost:$port/$eoriNumber/records/$recordId").get())
+
+      result.json mustBe routerResponse
     }
 
     "authorise an enrolment with multiple identifier" in {
@@ -176,7 +210,46 @@ class GetRecordsControllerIntegrationSpec
         "code" -> "INVALID_RECORD_ID_PARAMETER",
         "message" -> s"Invalid record ID supplied for eori $eoriNumber"
       )
-
     }
+  }
+
+  private def routerResponse = {
+    Json.obj(
+      "eori" -> "GB1234567890",
+      "actorId" -> "GB1234567890",
+      "recordId" -> "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f",
+      "traderRef" -> "BAN001001",
+      "comcode" -> "104101000",
+      "accreditationRequest" -> "Not requested",
+      "goodsDescription" -> "Organic bananas",
+      "countryOfOrigin" -> "EC",
+      "category" -> 3,
+      "assessments" -> Json.arr(
+        Json.obj(
+          "assessmentId" -> "abc123",
+          "primaryCategory" -> "1",
+          "condition" -> Json.obj(
+            "type" -> "abc123",
+            "conditionId" -> "Y923",
+            "conditionDescription" -> "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
+            "conditionTraderText" -> "Excluded product"
+          ))),
+      "supplementaryUnit" -> 500,
+      "measurementUnit" -> "square meters(m^2)",
+      "comcodeEffectiveFromDate" -> "2024-11-18T23:20:19Z",
+      "comcodeEffectiveToDate" -> "",
+      "version" -> 1,
+      "active" -> true,
+      "toReview" -> false,
+      "reviewReason" -> null,
+      "declarable" -> "IMMI declarable",
+      "ukimsNumber" -> "XIUKIM47699357400020231115081800",
+      "nirmsNumber" -> "RMS-GB-123456",
+      "niphlNumber" -> "6 S12345",
+      "locked" -> false,
+      "srcSystemName" -> "CDAP",
+    "createdDateTime" -> "2024-11-18T23:20:19Z",
+    "updatedDateTime" -> "2024-11-18T23:20:19Z"
+    )
   }
 }
