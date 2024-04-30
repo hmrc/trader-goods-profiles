@@ -34,7 +34,7 @@ class GetRecordsController @Inject() (
   cc: ControllerComponents
 ) extends BackendController(cc) {
 
-  def getRecord(eori: String, recordId: String): Action[AnyContent] =
+  def getRecord(eori: String, recordId: String): Action[AnyContent]    =
     authAction(eori).async { implicit request =>
       validateInput(eori, recordId) match {
         case Success(value) =>
@@ -48,11 +48,13 @@ class GetRecordsController @Inject() (
           )
       }
     }
-
-  private def validateInput(eori: String, recordId: String): Try[String] = {
-    if (Option(eori).forall(_.isEmpty) || eori.isBlank || eori == null || Try(UUID.fromString(recordId)).isFailure) Failure(new IllegalArgumentException())
-    else if (eori.length > 17 || eori.length < 14) Failure(new IllegalArgumentException())
-    else Success(s"Input is valid: $eori")
-  }
+  private def validateInput(eori: String, recordId: String): Try[Unit] =
+    Try(
+      require(
+        !eori.isBlank && eori.nonEmpty && (eori.length >= 14 && eori.length <= 17) && Try(
+          UUID.fromString(recordId)
+        ).isSuccess
+      )
+    )
 
 }
