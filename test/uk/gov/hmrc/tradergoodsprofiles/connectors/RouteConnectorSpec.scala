@@ -20,7 +20,7 @@ import org.scalatestplus.play.PlaySpec
 
 class RouteConnectorSpec extends PlaySpec {
 
-  private val sut = new RouteConnector()
+  private val sut = new RouterConnector()
 
   "get" should {
     "return 200" in {

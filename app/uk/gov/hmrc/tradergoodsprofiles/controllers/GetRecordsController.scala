@@ -20,7 +20,7 @@ import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.AuthAction
 import uk.gov.hmrc.tradergoodsprofiles.models.InvalidRecordIdErrorResponse
-import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
+import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, RouterService}
 
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
@@ -31,6 +31,7 @@ import scala.util.{Failure, Success, Try}
 class GetRecordsController @Inject() (
   authAction: AuthAction,
   dateTimeService: DateTimeService,
+  routerService: RouterService,
   cc: ControllerComponents
 ) extends BackendController(cc) {
 
@@ -39,6 +40,8 @@ class GetRecordsController @Inject() (
       validateInput(eori, recordId) match {
         case Success(value) =>
           Future.successful(Ok("Good job, you have been successfully authenticate. Under Implementation"))
+          val result = routerService.send(eori, recordId) {}
+
         case Failure(_)     =>
           Future.successful(
             InvalidRecordIdErrorResponse(

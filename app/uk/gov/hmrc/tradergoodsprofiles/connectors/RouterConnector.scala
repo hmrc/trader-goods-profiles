@@ -21,7 +21,7 @@ import uk.gov.hmrc.tradergoodsprofiles.models.GetRecordResponse
 
 import scala.concurrent.Future
 
-class RouteConnector {
-  def get(): Future[Either[Result, GetRecordResponse]] = ???
+class RouterConnector {
+  def get(eori: String, recordId: String): Future[Either[Result, GetRecordResponse]] = ???
 
 }
