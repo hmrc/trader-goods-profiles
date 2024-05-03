@@ -144,6 +144,11 @@ paths:
         - userRestricted:
             - trader-goods-profiles
     put:
+      tags:
+        - Goods records
+      summary: Remove a trader's goods record
+      description: Remove a Trader's goods record
+      operationId: removeTraderGoodsProfileRecord
       parameters:
         - $ref: '#/components/parameters/Content-Type'
         - $ref: '#/components/parameters/Accept'
@@ -151,10 +156,6 @@ paths:
         - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/eoriParam'
         - $ref: '#/components/parameters/recordParam'
-      tags:
-        - Goods records
-      summary: Remove a trader's goods record
-      description: Remove a Trader's goods record
       requestBody:
         content:
           application/json:
@@ -211,6 +212,43 @@ paths:
           description: Forbidden;   User was valid, but not allowed to perform this action
         '404':
           description: TGP record not found to update
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - userRestricted:
+            - trader-goods-profiles
+  /customs/traders/goods-profiles/{eori}/records/{recordId}/accreditations:
+    post:
+      tags:
+        - Goods records
+      summary: // TODO
+      description: // TODO
+      operationId: createTraderGoodsProfileRecordAccreditation
+      parameters:
+        - $ref: '#/components/parameters/Content-Type'
+        - $ref: '#/components/parameters/Accept'
+        - $ref: '#/components/parameters/xClientIdParam'
+        - $ref: '#/components/parameters/Authorization'
+        - $ref: '#/components/parameters/eoriParam'
+        - $ref: '#/components/parameters/recordParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTGPRecordAccreditationSchema'
+        required: true
+      responses:
+        '201':
+          description: // TODO
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/xCorrelationIdHdr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Forbidden;   User was valid, but not allowed to perform this action
         '500':
           $ref: '#/components/responses/InternalServerError'
       security:
@@ -353,6 +391,19 @@ components:
       properties:
         actorId:
           $ref: '#/components/schemas/actorId'
+    CreateTGPRecordAccreditationSchema:
+      type: object
+      required:
+        - actorId
+        - requestorName
+        - requestorEmail
+      properties:
+        actorId:
+          $ref: '#/components/schemas/actorId'
+        requestorName:
+          $ref: '#/components/schemas/requestorName'
+        requestorEmail:
+          $ref: '#/components/schemas/requestorEmail'
     TGPRecordResponseSchema:
       required:
         - recordId
@@ -611,34 +662,34 @@ components:
       description: ID of the record for the TGP Product in the TGP Core database (UUID)
     eori:
       type: string
+      pattern: ^[A-Z]{2}\d{12,15}$
       minLength: 14
       maxLength: 17
       example: GB123456789012
       description: >-
-        Identity of the trader as known to HMRC. In the UK this is the 14-17
-        character EORI number.
+        The traders' EORI number. The first 2 letters are the country code, like GB or XI, followed by 12 or 15 digits.
     actorId:
       type: string
+      pattern: ^[A-Z]{2}\d{12,15}$
       minLength: 14
       maxLength: 17
       example: GB987654321098
       description: >-
-        EORI number of the user making the change, which may be different to the
-        trader.
+        EORI number of the user making the change. This may be different to the eori. The first 2 letters are the country code, like GB or XI followed by 12 or 15 digits.
     traderRef:
       type: string
       minLength: 1
       maxLength: 512
       example: SKU123456
       description: >-
-        Unique product reference used by the trader to identify the goods. For
-        example a Stock Keeping Unit (SKU) code.
+        Unique product reference traders use to identify the goods. For example a Stock Keeping Unit (SKU) code. If the trader does not provide a traderRef, the front end should duplicate the goodsDescription field and pass this as traderRef.
     comcode:
       type: string
       minLength: 6
       maxLength: 10
       example: 123456
-      description: A code specific to goods that is internationally recognised.
+      description: >-
+        A code specific to goods that is internationally recognised. Can be 6, 8 or 10 digits.
     accreditationStatus:
       type: string
       minLength: 1
@@ -661,32 +712,29 @@ components:
       maxLength: 512
       example: Bananas
       description: >-
-        Description of the goods using terminology that is familiar to the
-        trader. For example, Bananas or T-Shirts.
+        A description of the goods that the trader can choose. This field does not need to be unique.
     countryOfOrigin:
       type: string
+      pattern: ^[A-Z]{2}$
       minLength: 2
       maxLength: 2
       example: GB
       description: >-
-        Country where the product came from. This is a char field with 2 letters
-        in it as per ISO 3166 standards.
+        Country where the product came from. This is a char field with 2 letters in it as per ISO 3166 standards. Can also refer to CDS Appendix 13 - <https://www.gov.uk/government/publications/country-codes-for-the-customs-declaration-service>
     category:
       type: integer
       minimum: 1
       maximum: 3
       example: 2
       description: >-
-        The category of the goods based on applicable restrictions,
-        prohibitions, or any exemptions the trader may hold.
-
-
-        Valid values 1,2,3
+        To be retrieved using the Online Trade Tariff API. The category of the goods based on applicable restrictions, prohibitions or any exemptions the trader may hold.
+      enum:
+        - 1
+        - 2
+        - 3
     assessments:
       description: >-
-        Array of category assessment data describing the measures which apply to
-        the trader's movement of goods, and how the trader is exempt (if
-        applicable).
+        Array of category assessment data describing the measures which apply to the trader's movement of goods, and how the trader is exempt (if applicable).
       type: array
       items:
         $ref: '#/components/schemas/Assessment'
@@ -712,75 +760,103 @@ components:
       pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$
       example: 2023-01-01T00:00:00Z
       description: >-
-        Date in the (OTT) when authorised usage of a commodity code came into
-        effect.
+        Date in the Online Tariff Tool (OTT) when authorised usage of a commodity code came into effect.
     comcodeEffectiveToDate:
       type: string
       format: date-time
       pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$
       example: 2028-01-01T00:00:00Z
       description: >-
-        Date in the (OTT) when authorised usage of a commodity code expired or
-        will expire.
+        Date in the OTT when authorised usage of a commodity code expired or will expire.
     version:
       type: integer
       format: int64
-      description: Version of the TGP Product
+      description: >-
+        Version of the TGP record.
       example: 1
     active:
       type: boolean
       example: true
-      description: Status of the TGP Product
+      description: >-
+        Status of the TGP record.
     toReview:
       type: boolean
       example: false
-      description: Notification of whether the trader needs to review the record
+      description: >-
+        Notification of whether the trader needs to review the record
     reviewReason:
       type: string
       minLength: 1
       maxLength: 512
       example: Commodity code changed
-      description: Reason for toReview being true
+      description: >-
+        Reason for toReview being true
     declarable:
       type: string
       minLength: 1
       maxLength: 100
       example: IMMI declarable
-      description: Status of TGP Product record for H8 declarations.
+      description: >-
+        Status of TGP Product record for H8 declarations.
+      enum:
+        - IMMI ready
+        - not ready for IMMI
+        - not ready for use
     ukimsNumber:
       type: string
       minLength: 32
       maxLength: 32
       example: XIUKIM47699357400020231115081800
-      description: UK Internal Market Scheme registration number
+      description: >-
+        The traders' UK Internal Market Scheme registration number.
     nirmsNumber:
       type: string
       minLength: 13
       maxLength: 13
       example: RMS-GB-123456
-      description: Northern Ireland Retail Movement Scheme registration number
+      description: >-
+        The traders' Northern Ireland Retail Movement Scheme registration number.
     niphlNumber:
       type: string
       minLength: 8
       maxLength: 8
       example: 6 S12345
-      description: Northern Ireland Plant Health Label scheme registration number
+      description: >-
+        The traders' Northern Ireland Plant Health Label scheme registration number.
     locked:
       type: boolean
       example: false
-      description: Whether the record is locked for updating due to the accreditationStatus
+      description: >-
+        Whether the record is locked for updating due to the accreditationStatus
     createdDateTime:
       type: string
       format: date-time
       pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$
       example: 2023-01-01T00:00:00Z
-      description: Timestamp when the record was  created in B&T TGP Core database
+      description: >-
+        Timestamp when the record was created.
     updatedDateTime:
       type: string
       format: date-time
       pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$
       example: 2023-01-01T00:00:00Z
-      description: Timestamp when the record was  last updated in B&T TGP Core database
+      description: >-
+        Timestamp when the record was last updated.
+    requestorName:
+      type: string
+      minLength: 1
+      maxLength: 70
+      example: Mr. Phil Edwards
+      description: >-
+        The name of the user requesting advice from HMRC.
+    requestorEmail:
+      type: string
+      format: email
+      minLength: 3
+      maxLength: 254
+      example: Phil.Edwards@gmail.com
+      description: >-
+        The name of the user requesting advice from HMRC.
     Assessment:
       type: object
       properties:
@@ -800,8 +876,7 @@ components:
           $ref: '#/components/schemas/Condition'
     Condition:
       description: >-
-        A collection of data detailing the condition the trader meets to exempt
-        the category assessment
+        A collection of data detailing the condition the trader meets to exempt the category assessment
       type: object
       properties:
         type:
@@ -836,8 +911,7 @@ components:
           maxLength: 512
           example: Excluded product
           description: >-
-            A free text statement provided by the trader if required in the CDS
-            guidance
+            A free text statement provided by the trader if required in the CDS guidance
     page:
       type: integer
       minimum: 0
