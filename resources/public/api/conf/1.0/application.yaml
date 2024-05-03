@@ -25,7 +25,7 @@ paths:
     post:
       tags:
         - Goods records
-      summary: Create a goods record for a trader goods-profile
+      summary: Create a goods record for a Trader Goods Profile
       description: Create a goods record for the good that is being moved.
       operationId: createTraderGoodsProfileRecord
       parameters:
@@ -184,8 +184,8 @@ paths:
     get:
       tags:
         - Goods records
-      summary: Get a single good record
-      description: Gets a single good record
+      summary: Get a single goods record
+      description: Get a single goods record
       operationId: getSingleTraderGoodsProfileRecord
       parameters:
         - $ref: '#/components/parameters/Content-Type'
@@ -221,8 +221,8 @@ paths:
     post:
       tags:
         - Goods records
-      summary: // TODO
-      description: // TODO
+      summary: Ask HMRC for advice if a commodity code is correct
+      description: Ask HMRC for advice if a commodity code is correct
       operationId: createTraderGoodsProfileRecordAccreditation
       parameters:
         - $ref: '#/components/parameters/Content-Type'
@@ -239,7 +239,7 @@ paths:
         required: true
       responses:
         '201':
-          description: // TODO
+          description: TGP record was successfully submitted for advice
           headers:
             X-Correlation-ID:
               $ref: '#/components/headers/xCorrelationIdHdr'
@@ -720,7 +720,7 @@ components:
       maxLength: 2
       example: GB
       description: >-
-        Country where the product came from. This is a char field with 2 letters in it as per ISO 3166 standards. Can also refer to CDS Appendix 13 - <https://www.gov.uk/government/publications/country-codes-for-the-customs-declaration-service>
+        Country where the product came from. This is a char field with 2 letters in it as per ISO 3166 standards. You can also refer to CDS Appendix 13 [Country codes for the Customs Declaration Service](https://www.gov.uk/government/publications/country-codes-for-the-customs-declaration-service).
     category:
       type: integer
       minimum: 1
@@ -742,18 +742,14 @@ components:
       type: number
       example: 13
       description: >-
-        Supplementary units are sometimes needed on H8 declarations and provide
-        a quantity of goods in a specified unit of measurement. For example,
-        13.
+        Supplementary units are sometimes needed on H8 declarations and provide a quantity of goods in a specified unit of measurement.
     measurementUnit:
       type: string
       minLength: 1
       maxLength: 255
       example: Kilograms
       description: >-
-        Measurement units define the required unit of measure when a
-        supplementary unit is needed on an H8 declaration. Measurement units are defined in the 
-        [Trade Tariff commodities API](https://api.trade-tariff.service.gov.uk/reference-data.html#measurement-units)
+        Measurement units define the required unit of measure when a supplementary unit is needed on an H8 declaration. Measurement units are defined in the [Trade Tariff commodities API measurement documentation.](https://api.trade-tariff.service.gov.uk/reference-data.html#measurement-units)
     comcodeEffectiveFromDate:
       type: string
       format: date-time
@@ -783,21 +779,26 @@ components:
       type: boolean
       example: false
       description: >-
-        Notification of whether the trader needs to review the record
+        The state of the record and if the trader needs to review it.
     reviewReason:
       type: string
       minLength: 1
       maxLength: 512
       example: Commodity code changed
       description: >-
-        Reason for toReview being true
+        Commodity code expiry:
+        The commodity code has expired. You'll need to change the commodity code and categorise the goods.
+        
+        
+        Measures change:
+        The restrictions have changed or there may be new restrictions. You need to categorise the record.
     declarable:
       type: string
       minLength: 1
       maxLength: 100
       example: IMMI declarable
       description: >-
-        Status of TGP Product record for H8 declarations.
+        Status of TGP record for H8 declarations.
       enum:
         - IMMI ready
         - not ready for IMMI
