@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.connectors
 
+import uk.gov.hmrc.http.HttpReads.Implicits._
 import play.api.Logging
 import play.api.http.{HeaderNames, MimeTypes}
 import uk.gov.hmrc.http.client.HttpClientV2
