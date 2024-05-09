@@ -17,7 +17,7 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock.ok
+import com.github.tomakehurst.wiremock.client.WireMock._
 import org.mockito.MockitoSugar.{reset, when}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar.mock
@@ -32,7 +32,6 @@ import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, GetRecordResponseSupport}
@@ -58,6 +57,7 @@ class GetRecordsControllerIntegrationSpec
   private val recordId = UUID.randomUUID().toString
 
   private val url = s"http://localhost:$port/$eoriNumber/records/$recordId"
+  private val routerUrl = s"/trader-goods-profiles-router/$eoriNumber/records/$recordId"
 
   override lazy val app: Application = {
     wireMock.start()
@@ -96,7 +96,7 @@ class GetRecordsControllerIntegrationSpec
       withAuthorizedTrader()
       stubRouterRequest(Json.toJson(createGetRecordResponse(eoriNumber, recordId, timestamp)))
 
-      val result = await(wsClient.url(url).get())
+      val result = getRecordAndWait()
 
       result.status mustBe OK
 
@@ -108,12 +108,15 @@ class GetRecordsControllerIntegrationSpec
 
       stubRouterRequest(routerResponse)
 
-      implicit val hc = HeaderCarrier()
-        .withExtraHeaders("X-Client-Id" -> "clientId")
-
-      val result = await(wsClient.url(s"http://localhost:$port/$eoriNumber/records/$recordId").get())
+      val result = getRecordAndWait()
 
       result.json mustBe routerResponse
+
+      withClue("should add the right headers") {
+        verify(getRequestedFor(urlEqualTo(routerUrl))
+          .withHeader("X-Client-Id", equalTo("clientId"))
+        );
+      }
     }
 
     "authorise an enrolment with multiple identifier" in {
@@ -123,7 +126,7 @@ class GetRecordsControllerIntegrationSpec
 
       withAuthorizedTrader(enrolment)
 
-      val result = await(wsClient.url(url).get())
+      val result = getRecordAndWait()
 
       result.status mustBe OK
     }
@@ -131,7 +134,7 @@ class GetRecordsControllerIntegrationSpec
     "return Unauthorised when invalid enrolment" in {
       withUnauthorizedTrader(InsufficientEnrolments())
 
-      val result = await(wsClient.url(s"http://localhost:$port/$eoriNumber/records/$recordId").get())
+      val result = getRecordAndWait()
 
       result.status mustBe UNAUTHORIZED
       result.json mustBe createExpectedJson(
@@ -143,7 +146,7 @@ class GetRecordsControllerIntegrationSpec
     "return Unauthorised when affinityGroup is Agent" in {
       authorizeWithAffinityGroup(Some(Agent))
 
-      val result = await(wsClient.url(url).get())
+      val result = getRecordAndWait()
 
       result.status mustBe UNAUTHORIZED
       result.json mustBe createExpectedJson(
@@ -155,7 +158,7 @@ class GetRecordsControllerIntegrationSpec
     "return Unauthorised when affinityGroup empty" in {
       authorizeWithAffinityGroup(None)
 
-      val result = await(wsClient.url(url).get())
+      val result = getRecordAndWait()
 
       result.status mustBe UNAUTHORIZED
       result.json mustBe createExpectedJson(
@@ -167,7 +170,7 @@ class GetRecordsControllerIntegrationSpec
     "return forbidden if identifier does not exist" in {
       withUnauthorizedEmptyIdentifier()
 
-      val result = await(wsClient.url(url).get())
+      val result = getRecordAndWait()
 
       result.status mustBe FORBIDDEN
       result.json mustBe createExpectedJson(
@@ -179,7 +182,7 @@ class GetRecordsControllerIntegrationSpec
     "return forbidden if identifier is not authorised" in {
       withAuthorizedTrader()
 
-      val result = await(wsClient.url(s"http://localhost:$port/wrongEoriNumber/records/$recordId").get())
+      val result = getRecordAndWait(s"http://localhost:$port/wrongEoriNumber/records/$recordId")
 
       result.status mustBe FORBIDDEN
       result.json mustBe createExpectedJson(
@@ -191,7 +194,7 @@ class GetRecordsControllerIntegrationSpec
     "return internal server error if auth throw" in {
       withUnauthorizedTrader(new RuntimeException("runtime exception"))
 
-      val result = await(wsClient.url(url).get())
+      val result = getRecordAndWait()
 
       result.status mustBe INTERNAL_SERVER_ERROR
       result.json mustBe createExpectedJson(
@@ -203,7 +206,7 @@ class GetRecordsControllerIntegrationSpec
     "return an BAD_REQUEST (400) if recordId is invalid" in {
       withAuthorizedTrader()
 
-      val result = await(wsClient.url(s"http://localhost:$port/$eoriNumber/records/abcdfg-12gt").get())
+      val result = getRecordAndWait(s"http://localhost:$port/$eoriNumber/records/abcdfg-12gt")
 
       result.status mustBe BAD_REQUEST
       result.json mustBe createExpectedJson(
@@ -211,6 +214,12 @@ class GetRecordsControllerIntegrationSpec
         "Invalid record ID supplied for eori number provided"
       )
     }
+  }
+
+  private def getRecordAndWait(url: String = url) = {
+    await(wsClient.url(url)
+      .withHttpHeaders("X-Client-Id" -> "clientId")
+      .get())
   }
 
   private def createExpectedJson(code: String, message: String): Any = {
@@ -223,7 +232,7 @@ class GetRecordsControllerIntegrationSpec
 
   private def stubRouterRequest(routerResponse: JsValue) = {
     wireMock.stubFor(
-      WireMock.get(s"/trader-goods-profiles-router/$eoriNumber/records/$recordId")
+      WireMock.get(routerUrl)
         .willReturn(
           ok()
             .withBody(routerResponse.toString())
