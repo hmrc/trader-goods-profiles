@@ -23,7 +23,7 @@ import play.api.libs.json._
 import play.api.mvc.Result
 import play.api.mvc.Results.Status
 import uk.gov.hmrc.http.HttpReads.is2xx
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.models.GetRecordResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.ServerErrorResponse
@@ -38,35 +38,52 @@ trait RouterService {
   def getRecord(eori: String, recordId: String)(implicit hc: HeaderCarrier): EitherT[Future, Result, GetRecordResponse]
 }
 
-class RouterServiceImpl @Inject()(
+class RouterServiceImpl @Inject() (
   routerConnector: RouterConnector,
   dateTimeService: DateTimeService
-) (implicit ec: ExecutionContext) extends RouterService with Logging {
+)(implicit ec: ExecutionContext)
+    extends RouterService
+    with Logging {
 
-  def getRecord(eori: String, recordId: String)(implicit hc: HeaderCarrier): EitherT[Future, Result, GetRecordResponse] = {
-
+  def getRecord(eori: String, recordId: String)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Result, GetRecordResponse] =
     EitherT(
-      routerConnector.get(eori, recordId)
+      routerConnector
+        .get(eori, recordId)
         .map {
-          case Right(value) if is2xx(value.status) => jsonAs[GetRecordResponse](value)
-          case Right(value)  => Left(Status(value.status)(value.json))
-          case Left(error) => Left(error)
+          case value if is2xx(value.status) => jsonAs[GetRecordResponse](value)
+          case value                        => Left(Status(value.status)(value.body))
+        }
+        .recover { case UpstreamErrorResponse(message, status, _, _) =>
+          Left(Status(status)(message))
         }
     )
-  }
 
-
-  private def jsonAs[T](response: HttpResponse)(implicit  reads: Reads[T], tt: TypeTag[T]) = {
+  private def jsonAs[T](response: HttpResponse)(implicit reads: Reads[T], tt: TypeTag[T]) =
     Try(Json.parse(response.body)) match {
-      case Success(value) => value.validate[T] match {
-        case JsSuccess(v, _) => Right(v)
-        case JsError(_) =>
-          logger.error(s"[RouterServiceImpl] - Response body could not be read as type ${typeOf[T]}")
-          Left(ServerErrorResponse(dateTimeService.timestamp, s"Response body could not be read as type ${typeOf[T]}").toResult)
-      }
+      case Success(value)     =>
+        value.validate[T] match {
+          case JsSuccess(v, _) => Right(v)
+          case JsError(_)      =>
+            logger.error(s"[RouterServiceImpl] - Response body could not be read as type ${typeOf[T]}")
+            Left(
+              ServerErrorResponse(
+                dateTimeService.timestamp,
+                s"Response body could not be read as type ${typeOf[T]}"
+              ).toResult
+            )
+        }
       case Failure(exception) =>
-        logger.error(s"[RouterServiceImpl] - Response body could not be parsed as JSON, body: ${response.body}", exception)
-        Left(ServerErrorResponse(dateTimeService.timestamp, s"Response body could not be parsed as JSON, body: ${response.body}").toResult)
+        logger.error(
+          s"[RouterServiceImpl] - Response body could not be parsed as JSON, body: ${response.body}",
+          exception
+        )
+        Left(
+          ServerErrorResponse(
+            dateTimeService.timestamp,
+            s"Response body could not be parsed as JSON, body: ${response.body}"
+          ).toResult
+        )
     }
-  }
 }

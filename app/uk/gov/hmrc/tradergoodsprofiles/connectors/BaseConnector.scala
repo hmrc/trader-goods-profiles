@@ -36,6 +36,5 @@ trait BaseConnector {
         case Some(header) => requestBuilder.setHeader(header)
         case None         => requestBuilder
       }
-
   }
 }

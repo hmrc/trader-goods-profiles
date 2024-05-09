@@ -18,35 +18,28 @@ package uk.gov.hmrc.tradergoodsprofiles.connectors
 
 import play.api.Logging
 import play.api.http.{HeaderNames, MimeTypes}
-import play.api.mvc.Result
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.ServerErrorResponse
-import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class RouterConnector @Inject()
-(
+class RouterConnector @Inject() (
   httpClient: HttpClientV2,
-  appConfig: AppConfig,
-  dateTimeService: DateTimeService
-)(implicit ec: ExecutionContext) extends BaseConnector with Logging {
-  def get(eori: String, recordId: String)(implicit hc: HeaderCarrier): Future[Either[Result, HttpResponse]] = {
+  appConfig: AppConfig
+)(implicit ec: ExecutionContext)
+    extends BaseConnector
+    with Logging {
+  def get(eori: String, recordId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
 
     val url = appConfig.routerUrl.withPath(routerRoute(eori, recordId))
 
-    httpClient.get(url"$url")
-      .setHeader(HeaderNames.CONTENT_TYPE     -> MimeTypes.JSON)
+    httpClient
+      .get(url"$url")
+      .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       .withClientId
       .execute[HttpResponse]
-      .map { response => Right(response) }
-      .recover{
-        case ex: Throwable =>
-          logger.error(s"[RouterConnector] - Error getting record for eori number $eori and record ID $recordId, with message ${ex.getMessage}", ex)
-          Left(ServerErrorResponse(dateTimeService.timestamp, ex.getMessage).toResult)
-      }
+      .map(response => response)
   }
 }
