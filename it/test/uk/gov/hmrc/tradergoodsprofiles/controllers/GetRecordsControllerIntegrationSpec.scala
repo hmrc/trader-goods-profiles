@@ -99,7 +99,6 @@ class GetRecordsControllerIntegrationSpec
       val result = getRecordAndWait()
 
       result.status mustBe OK
-
     }
 
     "return a record" in {
@@ -114,8 +113,9 @@ class GetRecordsControllerIntegrationSpec
 
       withClue("should add the right headers") {
         verify(getRequestedFor(urlEqualTo(routerUrl))
+          .withHeader("Content-Type", equalTo("application/json"))
           .withHeader("X-Client-Id", equalTo("clientId"))
-        );
+        )
       }
     }
 
