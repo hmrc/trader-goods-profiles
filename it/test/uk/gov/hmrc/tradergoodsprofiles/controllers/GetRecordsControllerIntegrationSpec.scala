@@ -58,6 +58,7 @@ class GetRecordsControllerIntegrationSpec
 
   private val url = s"http://localhost:$port/$eoriNumber/records/$recordId"
   private val routerUrl = s"/trader-goods-profiles-router/$eoriNumber/records/$recordId"
+  private val routerResponse = Json.toJson(createGetRecordResponse(eoriNumber, recordId, timestamp))
 
   override lazy val app: Application = {
     wireMock.start()
@@ -77,7 +78,7 @@ class GetRecordsControllerIntegrationSpec
     super.beforeEach()
 
     reset(authConnector)
-
+    stubRouterRequest(routerResponse)
     when(dateTimeService.timestamp).thenReturn(timestamp)
   }
 
@@ -94,7 +95,6 @@ class GetRecordsControllerIntegrationSpec
   "GET record" should {
     "return 200" in {
       withAuthorizedTrader()
-      stubRouterRequest(Json.toJson(createGetRecordResponse(eoriNumber, recordId, timestamp)))
 
       val result = getRecordAndWait()
 
@@ -102,10 +102,7 @@ class GetRecordsControllerIntegrationSpec
     }
 
     "return a record" in {
-      val routerResponse = Json.toJson(createGetRecordResponse(eoriNumber, recordId, timestamp))
       withAuthorizedTrader()
-
-      stubRouterRequest(routerResponse)
 
       val result = getRecordAndWait()
 
@@ -119,6 +116,19 @@ class GetRecordsControllerIntegrationSpec
       }
     }
 
+    "return an error if router return an error" in {
+      withAuthorizedTrader()
+      stubRouterRequest(404, Json.obj(
+        "correlationId" -> "correlationId",
+        "code" -> "NOT_FOUND",
+        "message" -> "Not found"
+      ))
+
+      val result = getRecordAndWait()
+
+      result.status mustBe NOT_FOUND
+
+    }
     "authorise an enrolment with multiple identifier" in {
       val enrolment = Enrolment(enrolmentKey)
         .withIdentifier(tgpIdentifierName, "GB000000000122")
@@ -236,6 +246,17 @@ class GetRecordsControllerIntegrationSpec
         .willReturn(
           ok()
             .withBody(routerResponse.toString())
+        )
+    )
+  }
+
+  private def stubRouterRequest(status: Int, errorResponse: JsValue) = {
+    wireMock.stubFor(
+      WireMock.get(routerUrl)
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withBody(errorResponse.toString())
         )
     )
   }

@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.connectors
 
-import io.lemonlabs.uri.UrlPath
 import play.api.Logging
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.mvc.Result
@@ -50,10 +49,4 @@ class RouterConnector @Inject()
           Left(ServerErrorResponse(dateTimeService.timestamp, ex.getMessage).toResult)
       }
   }
-
-  def routerRoute(eoriNumber: String, recordId: String): UrlPath =
-    UrlPath.parse(
-      s"trader-goods-profiles-router/$eoriNumber/records/$recordId"
-    )
-
 }

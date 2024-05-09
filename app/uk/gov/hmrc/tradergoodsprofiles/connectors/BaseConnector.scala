@@ -16,11 +16,19 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.connectors
 
+import io.lemonlabs.uri.UrlPath
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.client.RequestBuilder
 import uk.gov.hmrc.tradergoodsprofiles.config.Constants
 
 trait BaseConnector {
+
+  val routerBaseRoute: String = "/trader-goods-profiles-router"
+
+  def routerRoute(eoriNumber: String, recordId: String): UrlPath =
+    UrlPath.parse(
+      s"$routerBaseRoute/$eoriNumber/records/$recordId"
+    )
 
   implicit class HttpResponseHelpers(requestBuilder: RequestBuilder) {
     def withClientId(implicit hc: HeaderCarrier): RequestBuilder =
