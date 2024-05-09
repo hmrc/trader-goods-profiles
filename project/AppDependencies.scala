@@ -6,8 +6,9 @@ object AppDependencies {
   private val catsVersion          = "2.6.1"
 
   val compile = Seq(
-    "uk.gov.hmrc" %% "bootstrap-backend-play-30" % bootstrapVersion,
-  "org.typelevel"    %% "cats-core"                       % catsVersion
+    "uk.gov.hmrc"     %% "bootstrap-backend-play-30"      % bootstrapVersion,
+    "org.typelevel"   %% "cats-core"                      % catsVersion,
+    "io.lemonlabs"    %% "scala-uri"                      % "4.0.3",
   )
 
   val test = Seq(

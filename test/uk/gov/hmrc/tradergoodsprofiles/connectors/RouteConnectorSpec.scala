@@ -16,17 +16,84 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.connectors
 
+import io.lemonlabs.uri.{Url, UrlPath}
+import org.mockito.ArgumentMatchersSugar.{any, eqTo}
+import org.mockito.MockitoSugar.{reset, verify, when}
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.{BeforeAndAfterEach, EitherValues}
+import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
+import play.api.http.{HeaderNames, MimeTypes}
+import play.api.libs.json.Json
+import play.api.mvc.Results.InternalServerError
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
+import uk.gov.hmrc.tradergoodsprofiles.config.{AppConfig, Constants}
+import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
 
-class RouteConnectorSpec extends PlaySpec {
+import java.time.Instant
+import scala.concurrent.{ExecutionContext, Future}
 
-  private val sut = new RouterConnector()
+
+class RouteConnectorSpec
+  extends PlaySpec
+    with ScalaFutures
+    with EitherValues
+    with BeforeAndAfterEach {
+
+  implicit val ec: ExecutionContext = ExecutionContext.global
+  implicit val hc: HeaderCarrier = HeaderCarrier(otherHeaders = Seq(Constants.XClientIdHeader -> "clientId"))
+
+  private val httpClient = mock[HttpClientV2]
+  private val appConfig = mock[AppConfig]
+  private val requestBuilder = mock[RequestBuilder]
+  private val dateTimeService = mock[DateTimeService]
+  private val timestamp = Instant.parse("2024-05-12T12:15:15.456321Z")
+
+  private val sut = new RouterConnector(httpClient, appConfig, dateTimeService)
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+
+    reset(httpClient, appConfig, dateTimeService)
+    when(appConfig.routerUrl).thenReturn(Url.parse("http://localhost:23123"))
+    when(httpClient.get(any)(any)).thenReturn(requestBuilder)
+    when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
+    when(requestBuilder.execute).thenReturn(Future.successful(HttpResponse(200, "message")))
+    when(dateTimeService.timestamp).thenReturn(timestamp)
+  }
 
   "get" should {
+    "send a request with the right url" in {
+
+      await(sut.get("eoriNumber", "recordId")(hc))
+
+      val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/eoriNumber/records/recordId")
+      verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
+      verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+      verify(requestBuilder).setHeader("X-Client-Id" -> "clientId")
+      verify(requestBuilder).execute
+    }
+
     "return 200" in {
-      val result = sut.get()
+      val result = await(sut.get("eoriNumber", "recordId"))
 
+      result.value.status mustBe OK
+    }
 
+    "return 500 when httpClient throw" in {
+      when(requestBuilder.execute).thenReturn(Future.failed(new RuntimeException("error")))
+
+      val result = await(sut.get("eoriNumber", "recordId"))
+
+      result.left.value.header.status mustBe INTERNAL_SERVER_ERROR
+      result.left.value mustBe InternalServerError(Json.obj(
+        "timestamp" -> "2024-05-12T12:15:15Z",
+        "code" -> "INTERNAL_SERVER_ERROR",
+        "message" -> "error"
+      ))
     }
   }
 }

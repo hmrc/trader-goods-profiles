@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.tradergoodsprofiles.support
+package uk.gov.hmrc.tradergoodsprofiles.connectors
 
-import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.client.RequestBuilder
+import uk.gov.hmrc.tradergoodsprofiles.config.Constants
 
-trait WireMockServerSpec {
+trait BaseConnector {
 
-  val wireHost = "localhost"
-  implicit lazy val wireMock: WireMockServer = new WireMockServer(options().dynamicPort())
+  implicit class HttpResponseHelpers(requestBuilder: RequestBuilder) {
+    def withClientId(implicit hc: HeaderCarrier): RequestBuilder =
+      hc.headers(Seq(Constants.XClientIdHeader)).headOption match {
+        case Some(header) => requestBuilder.setHeader(header)
+        case None         => requestBuilder
+      }
 
-  def configureServices: Map[String, Any] = {
-    Map(
-      "microservice.services.trader-goods-profiles-router.host" -> wireHost,
-      "microservice.services.trader-goods-profiles-router.port" -> wireMock.port(),
-    )
   }
-
 }

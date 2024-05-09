@@ -16,16 +16,19 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import cats.data.EitherT
+import cats.implicits._
+import play.api.libs.json.Json
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.AuthAction
-import uk.gov.hmrc.tradergoodsprofiles.models.InvalidRecordIdErrorResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.InvalidRecordIdErrorResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, RouterService}
 
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 @Singleton
 class GetRecordsController @Inject() (
@@ -33,30 +36,31 @@ class GetRecordsController @Inject() (
   dateTimeService: DateTimeService,
   routerService: RouterService,
   cc: ControllerComponents
-) extends BackendController(cc) {
+)(implicit ec: ExecutionContext)
+  extends BackendController(cc) {
 
-  def getRecord(eori: String, recordId: String): Action[AnyContent]    =
+  def getRecord(eori: String, recordId: String): Action[AnyContent] = {
     authAction(eori).async { implicit request =>
-      validateInput(eori, recordId) match {
-        case Success(value) =>
-          Future.successful(Ok("Good job, you have been successfully authenticate. Under Implementation"))
-          val result = routerService.send(eori, recordId) {}
 
-        case Failure(_)     =>
-          Future.successful(
-            InvalidRecordIdErrorResponse(
-              dateTimeService.timestamp,
-              s"Invalid record ID supplied for eori $eori"
-            ).toResult
-          )
+      val result = for {
+        _ <- validateRecordId(recordId)
+        record <- routerService.getRecord(eori, recordId)
+      } yield {
+        Ok(Json.toJson(record))
       }
+
+      result.merge
     }
-  private def validateInput(eori: String, recordId: String): Try[Unit] =
-    Try(
-      require(
-        !eori.isBlank && eori.nonEmpty && (eori.length >= 14 && eori.length <= 17) && Try(
-          UUID.fromString(recordId)
-        ).isSuccess
+  }
+
+
+  private def validateRecordId(recordId: String): EitherT[Future, Result, String] =
+    EitherT.fromEither[Future](
+      Try(UUID.fromString(recordId).toString).toEither.left.map(_ =>
+        InvalidRecordIdErrorResponse(
+          dateTimeService.timestamp,
+          "Invalid record ID supplied for eori number provided"
+        ).toResult
       )
     )
 

@@ -18,7 +18,8 @@ package uk.gov.hmrc.tradergoodsprofiles.services
 
 import com.google.inject.ImplementedBy
 
-import java.time.Instant
+import java.time.format.DateTimeFormatter
+import java.time.{Instant, ZoneOffset, ZonedDateTime}
 
 class DateTimeServiceImpl extends DateTimeService {
   override def timestamp: Instant = Instant.now
@@ -27,4 +28,15 @@ class DateTimeServiceImpl extends DateTimeService {
 @ImplementedBy(classOf[DateTimeServiceImpl])
 trait DateTimeService {
   def timestamp: Instant
+}
+
+object DateTimeService {
+  implicit class DateTimeFormat(val dateTime: Instant) extends AnyVal {
+
+    implicit def asStringSeconds: String = {
+      ZonedDateTime
+        .ofInstant(dateTime, ZoneOffset.UTC)
+        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX"))
+    }
+  }
 }

@@ -24,15 +24,18 @@ import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
-import play.api.http.Status.{BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR, OK, UNAUTHORIZED}
+import play.api.http.Status._
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.test.HttpClientV2Support
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, GetRecordResponseSupport}
 import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
 import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
 
@@ -42,14 +45,16 @@ import java.util.UUID
 class GetRecordsControllerIntegrationSpec
   extends PlaySpec
     with GuiceOneServerPerSuite
+    with HttpClientV2Support
     with AuthTestSupport
     with WireMockServerSpec
+    with GetRecordResponseSupport
     with BeforeAndAfterEach
     with BeforeAndAfterAll {
 
   private lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
   private lazy val dateTimeService = mock[DateTimeService]
-  private lazy val timestamp = Instant.now
+  private lazy val timestamp = Instant.parse("2024-06-08T12:12:12.456789Z")
   private val recordId = UUID.randomUUID().toString
 
   private val url = s"http://localhost:$port/$eoriNumber/records/$recordId"
@@ -59,9 +64,11 @@ class GetRecordsControllerIntegrationSpec
     WireMock.configureFor(wireHost, wireMock.port())
 
     GuiceApplicationBuilder()
+      .configure(configureServices)
       .overrides(
         bind[AuthConnector].to(authConnector),
-        bind[DateTimeService].to(dateTimeService)
+        bind[DateTimeService].to(dateTimeService),
+        bind[HttpClientV2].to(httpClientV2)
       )
       .build()
   }
@@ -87,6 +94,7 @@ class GetRecordsControllerIntegrationSpec
   "GET record" should {
     "return 200" in {
       withAuthorizedTrader()
+      stubRouterRequest(Json.toJson(createGetRecordResponse(eoriNumber, recordId, timestamp)))
 
       val result = await(wsClient.url(url).get())
 
@@ -95,15 +103,13 @@ class GetRecordsControllerIntegrationSpec
     }
 
     "return a record" in {
+      val routerResponse = Json.toJson(createGetRecordResponse(eoriNumber, recordId, timestamp))
       withAuthorizedTrader()
 
-      wireMock.stubFor(
-        WireMock.get(s"/$eoriNumber/records/$recordId")
-          .willReturn(
-            ok()
-              .withBody(routerResponse.toString())
-          )
-      )
+      stubRouterRequest(routerResponse)
+
+      implicit val hc = HeaderCarrier()
+        .withExtraHeaders("X-Client-Id" -> "clientId")
 
       val result = await(wsClient.url(s"http://localhost:$port/$eoriNumber/records/$recordId").get())
 
@@ -121,16 +127,16 @@ class GetRecordsControllerIntegrationSpec
 
       result.status mustBe OK
     }
+
     "return Unauthorised when invalid enrolment" in {
       withUnauthorizedTrader(InsufficientEnrolments())
 
       val result = await(wsClient.url(s"http://localhost:$port/$eoriNumber/records/$recordId").get())
 
       result.status mustBe UNAUTHORIZED
-      result.json mustBe Json.obj(
-        "timestamp" -> timestamp,
-        "code" -> "UNAUTHORIZED",
-        "message" -> s"Unauthorised exception for /$eoriNumber/records/$recordId with error: Insufficient Enrolments"
+      result.json mustBe createExpectedJson(
+        "UNAUTHORIZED",
+        s"Unauthorised exception for /$eoriNumber/records/$recordId with error: Insufficient Enrolments"
       )
     }
 
@@ -140,10 +146,9 @@ class GetRecordsControllerIntegrationSpec
       val result = await(wsClient.url(url).get())
 
       result.status mustBe UNAUTHORIZED
-      result.json mustBe Json.obj(
-        "timestamp" -> timestamp,
-        "code" -> "UNAUTHORIZED",
-        "message" -> s"Unauthorised exception for /$eoriNumber/records/$recordId with error: Invalid affinity group Agent from Auth"
+      result.json mustBe createExpectedJson(
+        "UNAUTHORIZED",
+        s"Unauthorised exception for /$eoriNumber/records/$recordId with error: Invalid affinity group Agent from Auth"
       )
     }
 
@@ -153,10 +158,9 @@ class GetRecordsControllerIntegrationSpec
       val result = await(wsClient.url(url).get())
 
       result.status mustBe UNAUTHORIZED
-      result.json mustBe Json.obj(
-        "timestamp" -> timestamp,
-        "code" -> "UNAUTHORIZED",
-        "message" -> s"Unauthorised exception for /$eoriNumber/records/$recordId with error: Invalid enrolment parameter from Auth"
+      result.json mustBe createExpectedJson(
+        "UNAUTHORIZED",
+        s"Unauthorised exception for /$eoriNumber/records/$recordId with error: Invalid enrolment parameter from Auth"
       )
     }
 
@@ -166,10 +170,9 @@ class GetRecordsControllerIntegrationSpec
       val result = await(wsClient.url(url).get())
 
       result.status mustBe FORBIDDEN
-      result.json mustBe Json.obj(
-        "timestamp" -> timestamp,
-        "code" -> "FORBIDDEN",
-        "message" -> s"Supplied OAuth token not authorised to access data for given identifier(s) $eoriNumber"
+      result.json mustBe createExpectedJson(
+        "FORBIDDEN",
+        s"Supplied OAuth token not authorised to access data for given identifier(s) $eoriNumber"
       )
     }
 
@@ -179,10 +182,9 @@ class GetRecordsControllerIntegrationSpec
       val result = await(wsClient.url(s"http://localhost:$port/wrongEoriNumber/records/$recordId").get())
 
       result.status mustBe FORBIDDEN
-      result.json mustBe Json.obj(
-        "timestamp" -> timestamp,
-        "code" -> "FORBIDDEN",
-        "message" -> s"Supplied OAuth token not authorised to access data for given identifier(s) wrongEoriNumber"
+      result.json mustBe createExpectedJson(
+        "FORBIDDEN",
+        "Supplied OAuth token not authorised to access data for given identifier(s) wrongEoriNumber"
       )
     }
 
@@ -192,10 +194,9 @@ class GetRecordsControllerIntegrationSpec
       val result = await(wsClient.url(url).get())
 
       result.status mustBe INTERNAL_SERVER_ERROR
-      result.json mustBe Json.obj(
-        "timestamp" -> timestamp,
-        "code" -> "INTERNAL_SERVER_ERROR",
-        "message" -> s"Internal server error for /$eoriNumber/records/$recordId with error: runtime exception"
+      result.json mustBe createExpectedJson(
+        "INTERNAL_SERVER_ERROR",
+        s"Internal server error for /$eoriNumber/records/$recordId with error: runtime exception"
       )
     }
 
@@ -205,51 +206,28 @@ class GetRecordsControllerIntegrationSpec
       val result = await(wsClient.url(s"http://localhost:$port/$eoriNumber/records/abcdfg-12gt").get())
 
       result.status mustBe BAD_REQUEST
-      result.json mustBe Json.obj(
-        "timestamp" -> timestamp,
-        "code" -> "INVALID_RECORD_ID_PARAMETER",
-        "message" -> s"Invalid record ID supplied for eori $eoriNumber"
+      result.json mustBe createExpectedJson(
+        "INVALID_RECORD_ID_PARAMETER",
+        "Invalid record ID supplied for eori number provided"
       )
     }
   }
 
-  private def routerResponse = {
+  private def createExpectedJson(code: String, message: String): Any = {
     Json.obj(
-      "eori" -> "GB1234567890",
-      "actorId" -> "GB1234567890",
-      "recordId" -> "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f",
-      "traderRef" -> "BAN001001",
-      "comcode" -> "104101000",
-      "accreditationRequest" -> "Not requested",
-      "goodsDescription" -> "Organic bananas",
-      "countryOfOrigin" -> "EC",
-      "category" -> 3,
-      "assessments" -> Json.arr(
-        Json.obj(
-          "assessmentId" -> "abc123",
-          "primaryCategory" -> "1",
-          "condition" -> Json.obj(
-            "type" -> "abc123",
-            "conditionId" -> "Y923",
-            "conditionDescription" -> "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
-            "conditionTraderText" -> "Excluded product"
-          ))),
-      "supplementaryUnit" -> 500,
-      "measurementUnit" -> "square meters(m^2)",
-      "comcodeEffectiveFromDate" -> "2024-11-18T23:20:19Z",
-      "comcodeEffectiveToDate" -> "",
-      "version" -> 1,
-      "active" -> true,
-      "toReview" -> false,
-      "reviewReason" -> null,
-      "declarable" -> "IMMI declarable",
-      "ukimsNumber" -> "XIUKIM47699357400020231115081800",
-      "nirmsNumber" -> "RMS-GB-123456",
-      "niphlNumber" -> "6 S12345",
-      "locked" -> false,
-      "srcSystemName" -> "CDAP",
-    "createdDateTime" -> "2024-11-18T23:20:19Z",
-    "updatedDateTime" -> "2024-11-18T23:20:19Z"
+      "timestamp" -> "2024-06-08T12:12:12Z",
+      "code" -> code,
+      "message" -> message
+    )
+  }
+
+  private def stubRouterRequest(routerResponse: JsValue) = {
+    wireMock.stubFor(
+      WireMock.get(s"/trader-goods-profiles-router/$eoriNumber/records/$recordId")
+        .willReturn(
+          ok()
+            .withBody(routerResponse.toString())
+        )
     )
   }
 }

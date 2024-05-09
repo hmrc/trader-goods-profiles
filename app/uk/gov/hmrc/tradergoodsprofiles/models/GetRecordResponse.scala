@@ -20,10 +20,10 @@ import play.api.libs.json.{JsError, JsObject, JsPath, JsResult, JsSuccess, JsVal
 
 import java.time.Instant
 
-case class GetRecordResponse (
-  recordId: String,
+case class GetRecordResponse(
   eori: String,
   actorId: String,
+  recordId: String,
   traderRef: String,
   comcode: String,
   accreditationStatus: String,
@@ -44,6 +44,7 @@ case class GetRecordResponse (
   nirmsNumber: String,
   niphlNumber: String,
   locked: Boolean,
+  srcSystemName: String,
   createdDateTime: Instant,
   updatedDateTime: Instant
                              )
@@ -54,9 +55,9 @@ object GetRecordResponse {
     override def writes(o: GetRecordResponse): JsObject = {
 
       val fields = Seq(
-        "recordId" -> Json.toJson(o.recordId),
         "eori" -> Json.toJson(o.eori),
         "actorId" -> Json.toJson(o.actorId),
+        "recordId" -> Json.toJson(o.recordId),
         "traderRef" -> Json.toJson(o.traderRef),
         "comcode" -> Json.toJson(o.comcode),
         "accreditationStatus" -> Json.toJson(o.accreditationStatus),
@@ -77,6 +78,7 @@ object GetRecordResponse {
         "nirmsNumber" -> Json.toJson(o.nirmsNumber),
         "niphlNumber" -> Json.toJson(o.niphlNumber),
         "locked" -> Json.toJson(o.locked),
+        "srcSystemName" -> Json.toJson(o.srcSystemName),
         "createdDateTime" -> Json.toJson(o.createdDateTime),
         "updatedDateTime" -> Json.toJson(o.updatedDateTime)
       )
@@ -132,14 +134,15 @@ object GetRecordResponse {
       val nirmsNumber = read[String]("nirmsNumber")
       val niphlNumber = read[String]("niphlNumber")
       val locked = read[Boolean]("locked")
+      val srcSystemName = read[String]("srcSystemName")
       val createdDateTime = read[Instant]("createdDateTime")
       val updatedDateTime = read[Instant]("updatedDateTime")
 
       val errors = Seq[JsResult[_]](
-        recordId, eori, actorId, traderRef, comcode, accreditationStatus, goodsDescription, countryOfOrigin,
+        eori, actorId, recordId, traderRef, comcode, accreditationStatus, goodsDescription, countryOfOrigin,
         category, assessments, supplementaryUnit, measurementUnit, comcodeEffectiveFromDate, comcodeEffectiveToDate,
         version, active, toReview, reviewReason, declarable, ukimsNumber, nirmsNumber,
-        niphlNumber, locked, createdDateTime, updatedDateTime
+        niphlNumber, locked, srcSystemName, createdDateTime, updatedDateTime
       ).collect {
         case JsError(values) => values
       }.flatten
@@ -147,11 +150,11 @@ object GetRecordResponse {
       if (errors.isEmpty) {
         try {
           JsSuccess(new GetRecordResponse(
-            recordId.get, eori.get, actorId.get, traderRef.get, comcode.get, accreditationStatus.get, goodsDescription.get,
+            eori.get, actorId.get, recordId.get, traderRef.get, comcode.get, accreditationStatus.get, goodsDescription.get,
             countryOfOrigin.get, category.get, assessments.get, supplementaryUnit.get, measurementUnit.get,
             comcodeEffectiveFromDate.get, comcodeEffectiveToDate.get, version.get, active.get, toReview.get,
             reviewReason.get, declarable.get, ukimsNumber.get, nirmsNumber.get, niphlNumber.get, locked.get,
-            createdDateTime.get, updatedDateTime.get
+            srcSystemName.get, createdDateTime.get, updatedDateTime.get
           ))
         } catch {
           case e: IllegalArgumentException =>

@@ -29,7 +29,7 @@ import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.AuthAction.gtpEnrolmentKey
 import uk.gov.hmrc.tradergoodsprofiles.models.auth.EnrolmentRequest
-import uk.gov.hmrc.tradergoodsprofiles.models.{ForbiddenErrorResponse, ServerErrorResponse, UnauthorisedErrorResponse}
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ForbiddenErrorResponse, ServerErrorResponse, UnauthorisedErrorResponse}
 import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
 
 import javax.inject.{Inject, Singleton}

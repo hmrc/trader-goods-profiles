@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.config
 
+import io.lemonlabs.uri.Url
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -28,4 +29,6 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   val tgpIdentifier = config
     .getOptional[String]("enrolment-config.tgp-enrolment-identifier")
     .getOrElse("tgpFakeIdentifier")
+
+  val routerUrl                          = Url.parse(servicesConfig.baseUrl("trader-goods-profiles-router"))
 }

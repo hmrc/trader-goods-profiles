@@ -1,51 +1,72 @@
+/*
+ * Copyright 2024 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package uk.gov.hmrc.tradergoodsprofiles.services
 
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject}
 import play.api.Logging
-import play.api.http.Status.{BAD_REQUEST, CONFLICT}
-import play.api.libs.json.{JsSuccess, Json}
-import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
+import play.api.libs.json._
+import play.api.mvc.Result
+import play.api.mvc.Results.Status
+import uk.gov.hmrc.http.HttpReads.is2xx
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.PresentationError.StandardError
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.{RouterError}
+import uk.gov.hmrc.tradergoodsprofiles.models.GetRecordResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.ServerErrorResponse
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
-import scala.util.control.NonFatal
+import scala.reflect.runtime.universe.{TypeTag, typeOf}
+import scala.util.{Failure, Success, Try}
 
 @ImplementedBy(classOf[RouterServiceImpl])
 trait RouterService {
 
-  def send(eori: String, recordId: String)(implicit
-    ec: ExecutionContext,
-    hc: HeaderCarrier
-  ): EitherT[Future, RouterError, "ViaTGPRouter"]
+  def getRecord(eori: String, recordId: String)(implicit hc: HeaderCarrier): EitherT[Future, Result, GetRecordResponse]
 }
-class RouterServiceImpl @Inject() (routerConnector: RouterConnector) extends RouterService with Logging {
 
-  override def send(eori: String, recordId: String)(implicit
-    ec: ExecutionContext,
-    hc: HeaderCarrier
-  ): EitherT[Future, RouterError, "ViaTGPRouter"] =
+class RouterServiceImpl @Inject()(
+  routerConnector: RouterConnector,
+  dateTimeService: DateTimeService
+) (implicit ec: ExecutionContext) extends RouterService with Logging {
+
+  def getRecord(eori: String, recordId: String)(implicit hc: HeaderCarrier): EitherT[Future, Result, GetRecordResponse] = {
+
     EitherT(
-      routerConnector
-        .get(eori, recordId)
-        .map(result => Right(result))
-        .recover {
-          case UpstreamErrorResponse(message, BAD_REQUEST, _, _) => Left(determineError(message))
-          case NonFatal(e)                                       =>
-            logger.error(s"Unable to send to EIS : ${e.getMessage}", e)
-            Left(RouterError.UnexpectedError(thr = Some(e)))
+      routerConnector.get(eori, recordId)
+        .map {
+          case Right(value) if is2xx(value.status) => jsonAs[GetRecordResponse](value)
+          case Right(value)  => Left(Status(value.status)(value.json))
+          case Left(error) => Left(error)
         }
     )
+  }
 
-  private def determineError(message: String): RouterError =
-    Try(Json.parse(message))
-      .map(_.validate[StandardError])
-      .map {
-        case JsSuccess(value: StandardError, _) => RouterError.GetFailedTGPError(value.message, value.code)
-        case _                                  => RouterError.UnexpectedError()
+
+  private def jsonAs[T](response: HttpResponse)(implicit  reads: Reads[T], tt: TypeTag[T]) = {
+    Try(Json.parse(response.body)) match {
+      case Success(value) => value.validate[T] match {
+        case JsSuccess(v, _) => Right(v)
+        case JsError(_) =>
+          logger.error(s"[RouterServiceImpl] - Response body could not be read as type ${typeOf[T]}")
+          Left(ServerErrorResponse(dateTimeService.timestamp, s"Response body could not be read as type ${typeOf[T]}").toResult)
       }
-      .getOrElse(RouterError.UnexpectedError())
+      case Failure(exception) =>
+        logger.error(s"[RouterServiceImpl] - Response body could not be parsed as JSON, body: ${response.body}", exception)
+        Left(ServerErrorResponse(dateTimeService.timestamp, s"Response body could not be parsed as JSON, body: ${response.body}").toResult)
+    }
+  }
 }
