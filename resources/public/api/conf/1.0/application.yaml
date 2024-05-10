@@ -31,7 +31,6 @@ paths:
       parameters:
         - $ref: '#/components/parameters/Content-Type'
         - $ref: '#/components/parameters/Accept'
-        - $ref: '#/components/parameters/xClientIdParam'
         - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/eoriParam'
       requestBody:
@@ -70,7 +69,6 @@ paths:
       parameters:
         - $ref: '#/components/parameters/Content-Type'
         - $ref: '#/components/parameters/Accept'
-        - $ref: '#/components/parameters/xClientIdParam'
         - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/eoriParam'
         - $ref: '#/components/parameters/updatedSinceParam'
@@ -109,7 +107,6 @@ paths:
       parameters:
         - $ref: '#/components/parameters/Content-Type'
         - $ref: '#/components/parameters/Accept'
-        - $ref: '#/components/parameters/xClientIdParam'
         - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/eoriParam'
         - $ref: '#/components/parameters/recordParam'
@@ -152,7 +149,6 @@ paths:
       parameters:
         - $ref: '#/components/parameters/Content-Type'
         - $ref: '#/components/parameters/Accept'
-        - $ref: '#/components/parameters/xClientIdParam'
         - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/eoriParam'
         - $ref: '#/components/parameters/recordParam'
@@ -190,7 +186,6 @@ paths:
       parameters:
         - $ref: '#/components/parameters/Content-Type'
         - $ref: '#/components/parameters/Accept'
-        - $ref: '#/components/parameters/xClientIdParam'
         - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/eoriParam'
         - $ref: '#/components/parameters/recordParam'
@@ -227,7 +222,6 @@ paths:
       parameters:
         - $ref: '#/components/parameters/Content-Type'
         - $ref: '#/components/parameters/Accept'
-        - $ref: '#/components/parameters/xClientIdParam'
         - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/eoriParam'
         - $ref: '#/components/parameters/recordParam'
@@ -951,14 +945,6 @@ components:
         type: string
         example: Bearer 59fc92c1cdf0b8ef1f138a702effdbd2
       required: true
-    xClientIdParam:
-      in: header
-      name: X-Client-ID
-      required: true
-      schema:
-        type: string
-        example: TSS
-      description: Identifier of calling system
     eoriParam:
       in: path
       name: eori
@@ -966,8 +952,7 @@ components:
       schema:
         $ref: '#/components/schemas/eori'
       description: >-
-        Identity of the trader as known to HMRC. In the UK this is the 14-17
-        character EORI number.
+        The traders' EORI number. The first 2 letters are the country code, like GB or XI, followed by 12 or 15 digits.
     updatedSinceParam:
       in: query
       name: updatedSince
