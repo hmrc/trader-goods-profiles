@@ -33,12 +33,11 @@ class MetricsSupportSpec extends AsyncWordSpecLike {
 
   trait MockHasMetrics {
     self: MetricsSupport =>
-    val timerContext                                  = mock[Timer.Context]
-    val timer                                         = mock[Timer]
-    val successCounter                                = mock[Counter]
-    val failureCounter                                = mock[Counter]
-    val histogram                                     = mock[Histogram]
-    override lazy val metricsRegistry: MetricRegistry = mock[MetricRegistry]
+    val timerContext   = mock[Timer.Context]
+    val timer          = mock[Timer]
+    val successCounter = mock[Counter]
+    val failureCounter = mock[Counter]
+    val histogram      = mock[Histogram]
     when(metricsRegistry.timer(anyString())) thenReturn timer
     when(metricsRegistry.counter(endsWith("success-counter"))) thenReturn successCounter
     when(metricsRegistry.counter(endsWith("failed-counter"))) thenReturn failureCounter
@@ -47,11 +46,15 @@ class MetricsSupportSpec extends AsyncWordSpecLike {
     when(timerContext.stop()) thenReturn 0L
   }
 
+  private val metricsRegistry: MetricRegistry = mock[MetricRegistry]
+
   private val metricName = "test-metrics"
-  class TestMetricsSupport @Inject() extends MetricsSupport with MockHasMetrics
+  class TestMetricsSupport @Inject() (override val metricsRegistry: MetricRegistry)
+      extends MetricsSupport
+      with MockHasMetrics
 
   def withTestMetrics[A](test: TestMetricsSupport => A): A =
-    test(new TestMetricsSupport)
+    test(new TestMetricsSupport(metricsRegistry))
 
   "withMetricsTimerAsync" should {
     "start a timer and increment a counter for a successful future" in withTestMetrics { metrics =>

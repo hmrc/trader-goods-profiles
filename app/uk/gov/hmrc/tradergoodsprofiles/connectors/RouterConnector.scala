@@ -16,21 +16,25 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.connectors
 
-import uk.gov.hmrc.http.HttpReads.Implicits._
+import com.codahale.metrics.MetricRegistry
 import play.api.Logging
 import play.api.http.{HeaderNames, MimeTypes}
+import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
+import uk.gov.hmrc.tradergoodsprofiles.metrics.MetricsSupport
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class RouterConnector @Inject() (
   httpClient: HttpClientV2,
-  appConfig: AppConfig
+  appConfig: AppConfig,
+  override val metricsRegistry: MetricRegistry
 )(implicit ec: ExecutionContext)
     extends BaseConnector
+    with MetricsSupport
     with Logging {
   def get(eori: String, recordId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
 

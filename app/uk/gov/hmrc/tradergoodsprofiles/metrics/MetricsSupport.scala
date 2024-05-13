@@ -24,7 +24,7 @@ import scala.util.control.NonFatal
 
 trait MetricsSupport {
 
-  lazy val metricsRegistry: MetricRegistry = new MetricRegistry
+  val metricsRegistry: MetricRegistry
 
   def histo(metricKey: String) =
     metricsRegistry.histogram(metricKey)
