@@ -46,7 +46,8 @@ class RouteConnectorSpec extends PlaySpec with ScalaFutures with EitherValues wi
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(httpClient, appConfig)
+    reset(httpClient, appConfig, requestBuilder)
+
     when(appConfig.routerUrl).thenReturn(Url.parse("http://localhost:23123"))
     when(httpClient.get(any)(any)).thenReturn(requestBuilder)
     when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
@@ -55,6 +56,13 @@ class RouteConnectorSpec extends PlaySpec with ScalaFutures with EitherValues wi
   }
 
   "get" should {
+
+    "return 200" in {
+      val result = await(sut.get("eoriNumber", "recordId"))
+
+      result.status mustBe OK
+    }
+
     "send a request with the right url" in {
 
       await(sut.get("eoriNumber", "recordId")(hc))
@@ -66,10 +74,5 @@ class RouteConnectorSpec extends PlaySpec with ScalaFutures with EitherValues wi
       verify(requestBuilder).execute(any, any)
     }
 
-    "return 200" in {
-      val result = await(sut.get("eoriNumber", "recordId"))
-
-      result.status mustBe OK
-    }
   }
 }
