@@ -27,7 +27,7 @@ import play.api.Application
 import play.api.http.Status._
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
@@ -35,14 +35,17 @@ import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, GetRecordResponseSupport}
+import uk.gov.hmrc.tradergoodsprofiles.models.GetRecordResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
 import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
 
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.UUID
+import scala.reflect.runtime.universe.typeOf
 
 class GetRecordsControllerIntegrationSpec
-  extends PlaySpec
+    extends PlaySpec
     with GuiceOneServerPerSuite
     with HttpClientV2Support
     with AuthTestSupport
@@ -52,12 +55,12 @@ class GetRecordsControllerIntegrationSpec
     with BeforeAndAfterAll {
 
   private lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
-  private lazy val dateTimeService = mock[DateTimeService]
-  private lazy val timestamp = Instant.parse("2024-06-08T12:12:12.456789Z")
-  private val recordId = UUID.randomUUID().toString
+  private lazy val dateTimeService    = mock[DateTimeService]
+  private lazy val timestamp          = Instant.parse("2024-06-08T12:12:12.456789Z")
+  private val recordId                = UUID.randomUUID().toString
 
-  private val url = s"http://localhost:$port/$eoriNumber/records/$recordId"
-  private val routerUrl = s"/trader-goods-profiles-router/$eoriNumber/records/$recordId"
+  private val url            = s"http://localhost:$port/$eoriNumber/records/$recordId"
+  private val routerUrl      = s"/trader-goods-profiles-router/$eoriNumber/records/$recordId"
   private val routerResponse = Json.toJson(createGetRecordResponse(eoriNumber, recordId, timestamp))
 
   override lazy val app: Application = {
@@ -78,7 +81,7 @@ class GetRecordsControllerIntegrationSpec
     super.beforeEach()
 
     reset(authConnector)
-    stubRouterRequest(routerResponse)
+    stubRouterRequest(200, routerResponse.toString())
     when(dateTimeService.timestamp).thenReturn(timestamp)
   }
 
@@ -109,24 +112,28 @@ class GetRecordsControllerIntegrationSpec
       result.json mustBe routerResponse
 
       withClue("should add the right headers") {
-        verify(getRequestedFor(urlEqualTo(routerUrl))
-          .withHeader("Content-Type", equalTo("application/json"))
-          .withHeader("X-Client-Id", equalTo("clientId"))
+        verify(
+          getRequestedFor(urlEqualTo(routerUrl))
+            .withHeader("Content-Type", equalTo("application/json"))
+            .withHeader("X-Client-ID", equalTo("clientId"))
         )
       }
     }
 
     "return an error if router return an error" in {
       withAuthorizedTrader()
-      stubRouterRequest(404, Json.obj(
+      val routerResponse = Json.obj(
         "correlationId" -> "correlationId",
-        "code" -> "NOT_FOUND",
-        "message" -> "Not found"
-      ))
+        "code"          -> "NOT_FOUND",
+        "message"       -> "Not found"
+      )
+
+      stubRouterRequest(404, routerResponse.toString())
 
       val result = getRecordAndWait()
 
       result.status mustBe NOT_FOUND
+      result.json mustBe routerResponse + ("timestamp" -> Json.toJson(timestamp.truncatedTo(ChronoUnit.SECONDS)))
 
     }
     "authorise an enrolment with multiple identifier" in {
@@ -224,40 +231,60 @@ class GetRecordsControllerIntegrationSpec
         "Invalid record ID supplied for eori number provided"
       )
     }
+
+    "return an error if API return an error with non json message" in {
+      withAuthorizedTrader()
+      stubRouterRequest(404, "error")
+
+      val result = getRecordAndWait()
+
+      result.status mustBe INTERNAL_SERVER_ERROR
+      result.json mustBe Json.obj(
+        "timestamp" -> timestamp.truncatedTo(ChronoUnit.SECONDS),
+        "code"      -> "INTERNAL_SERVER_ERROR",
+        "message"   -> "Response body could not be parsed as JSON, body: error"
+      )
+    }
+
+    "return an error if json cannot be deserialized to the router message" in {
+      withAuthorizedTrader()
+      stubRouterRequest(200, "{}")
+
+      val result = getRecordAndWait()
+
+      result.status mustBe INTERNAL_SERVER_ERROR
+      result.json mustBe Json.obj(
+        "timestamp" -> timestamp.truncatedTo(ChronoUnit.SECONDS),
+        "code"      -> "INTERNAL_SERVER_ERROR",
+        "message"   -> s"Response body could not be read as type ${typeOf[GetRecordResponse]}"
+      )
+    }
+
   }
 
-  private def getRecordAndWait(url: String = url) = {
-    await(wsClient.url(url)
-      .withHttpHeaders("X-Client-Id" -> "clientId")
-      .get())
-  }
+  private def getRecordAndWait(url: String = url) =
+    await(
+      wsClient
+        .url(url)
+        .withHttpHeaders("X-Client-Id" -> "clientId")
+        .get()
+    )
 
-  private def createExpectedJson(code: String, message: String): Any = {
+  private def createExpectedJson(code: String, message: String): Any =
     Json.obj(
       "timestamp" -> "2024-06-08T12:12:12Z",
-      "code" -> code,
-      "message" -> message
+      "code"      -> code,
+      "message"   -> message
     )
-  }
 
-  private def stubRouterRequest(routerResponse: JsValue) = {
+  private def stubRouterRequest(status: Int, errorResponse: String) =
     wireMock.stubFor(
-      WireMock.get(routerUrl)
-        .willReturn(
-          ok()
-            .withBody(routerResponse.toString())
-        )
-    )
-  }
-
-  private def stubRouterRequest(status: Int, errorResponse: JsValue) = {
-    wireMock.stubFor(
-      WireMock.get(routerUrl)
+      WireMock
+        .get(routerUrl)
         .willReturn(
           aResponse()
             .withStatus(status)
-            .withBody(errorResponse.toString())
+            .withBody(errorResponse)
         )
     )
-  }
 }

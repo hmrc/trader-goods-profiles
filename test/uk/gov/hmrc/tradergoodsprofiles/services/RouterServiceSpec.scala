@@ -30,6 +30,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.GetRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.GetRecordResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.RouterError
 
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
@@ -109,16 +110,40 @@ class RouterServiceSpec
         }
       }
 
-      "routerConnector return an error" ignore {
-        val routerErrorResponse = createInternalServerErrorResult("internal server error")
-//        when(connector.get(any, any)(any))
-//          .thenReturn(HttpResponse)
+      "add timestamp to router error" in {
+        when(connector.get(any, any)(any))
+          .thenReturn(Future.successful(createHttpResponse(500, "INTERNAL_SERVER_ERROR")))
 
         val result = sut.getRecord("eori", "recordId")
 
         whenReady(result.value) {
-          _.left.value mustBe routerErrorResponse
+          _.left.value mustBe InternalServerError(
+            Json.obj(
+              "correlationId" -> "correlationId",
+              "code"          -> "INTERNAL_SERVER_ERROR",
+              "message"       -> "any message",
+              "timestamp"     -> timestamp
+            )
+          )
         }
+      }
+
+      "routerConnector return an exception" in {
+        when(connector.get(any, any)(any))
+          .thenReturn(Future.failed(new RuntimeException("error")))
+
+        val result = sut.getRecord("eori", "recordId")
+
+        whenReady(result.value) {
+          _.left.value mustBe InternalServerError(
+            Json.obj(
+              "timestamp"     -> timestamp,
+              "code"          -> "INTERNAL_SERVER_ERROR",
+              "message"       -> s"Could not retrieve record for eori number eori and record ID recordId"
+            )
+          )
+        }
+
       }
 
       val table = Table(
@@ -137,7 +162,7 @@ class RouterServiceSpec
         ) =>
           s"$description" in {
             when(connector.get(any, any)(any))
-              .thenReturn(Future.successful(HttpResponse(status, Json.obj("code" -> code), Map.empty)))
+              .thenReturn(Future.successful(createHttpResponse(status, code)))
 
             val result = sut.getRecord("eori", "recordId")
 
@@ -157,4 +182,7 @@ class RouterServiceSpec
         "message"   -> message
       )
     )
+
+  private def createHttpResponse(status: Int, code: String) =
+    HttpResponse(status, Json.toJson(RouterError("correlationId", code, "any message")), Map.empty)
 }

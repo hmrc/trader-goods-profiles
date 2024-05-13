@@ -17,5 +17,5 @@
 package uk.gov.hmrc.tradergoodsprofiles.config
 
 object Constants {
-  val XClientIdHeader = "X-Client-Id"
+  val XClientIdHeader = "X-Client-ID"
 }

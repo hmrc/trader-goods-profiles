@@ -37,22 +37,17 @@ class GetRecordsController @Inject() (
   routerService: RouterService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
-  extends BackendController(cc) {
+    extends BackendController(cc) {
 
-  def getRecord(eori: String, recordId: String): Action[AnyContent] = {
+  def getRecord(eori: String, recordId: String): Action[AnyContent] =
     authAction(eori).async { implicit request =>
-
       val result = for {
-        _ <- validateRecordId(recordId)
+        _      <- validateRecordId(recordId)
         record <- routerService.getRecord(eori, recordId)
-      } yield {
-        Ok(Json.toJson(record))
-      }
+      } yield Ok(Json.toJson(record))
 
       result.merge
     }
-  }
-
 
   private def validateRecordId(recordId: String): EitherT[Future, Result, String] =
     EitherT.fromEither[Future](

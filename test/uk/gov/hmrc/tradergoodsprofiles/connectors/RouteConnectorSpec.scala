@@ -41,7 +41,6 @@ class RouteConnectorSpec extends PlaySpec with ScalaFutures with EitherValues wi
   private val appConfig      = mock[AppConfig]
   private val requestBuilder = mock[RequestBuilder]
 
-
   private val sut = new RouterConnector(httpClient, appConfig)
 
   override def beforeEach(): Unit = {
@@ -51,7 +50,7 @@ class RouteConnectorSpec extends PlaySpec with ScalaFutures with EitherValues wi
     when(appConfig.routerUrl).thenReturn(Url.parse("http://localhost:23123"))
     when(httpClient.get(any)(any)).thenReturn(requestBuilder)
     when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
-    when(requestBuilder.execute[HttpResponse](any,any))
+    when(requestBuilder.execute[HttpResponse](any, any))
       .thenReturn(Future.successful(HttpResponse(200, "message")))
   }
 
@@ -63,7 +62,7 @@ class RouteConnectorSpec extends PlaySpec with ScalaFutures with EitherValues wi
       val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/eoriNumber/records/recordId")
       verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-      verify(requestBuilder).setHeader("X-Client-Id"            -> "clientId")
+      verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
       verify(requestBuilder).execute(any, any)
     }
 

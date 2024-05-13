@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,34 +16,33 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.models.errors
 
-import play.api.libs.functional.syntax.toFunctionalBuilderOps
-import play.api.libs.json.{Reads, __}
+import play.api.libs.json.{JsPath, Json, Reads, Writes}
+import play.api.libs.functional.syntax._
+import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService.DateTimeFormat
 
-sealed trait RouterError
+import java.time.Instant
+
+case class RouterError(
+  correlationId: String,
+  code: String,
+  message: String,
+  timestamp: Option[Instant] = None
+)
 
 object RouterError {
+  implicit val read: Reads[RouterError] = Json.reads[RouterError]
 
-  case class UnexpectedError(thr: Option[Throwable] = None) extends RouterError
-  case class GetFailedTGPError(message: String, code: ErrorCode) extends RouterError
-
-}
-
-object PresentationError {
-  val MessageFieldName = "message"
-  val CodeFieldName    = "code"
-
-  implicit val standardErrorReads: Reads[StandardError] =
+  implicit val write: Writes[RouterError] = (
+    (JsPath \ "correlationId").write[String] and
+      (JsPath \ "code").write[String] and
+      (JsPath \ "message").write[String] and
+      (JsPath \ "timestamp").writeOptionWithNull[String]
+  )(e =>
     (
-      (__ \ MessageFieldName).read[String] and
-        (__ \ CodeFieldName).read[ErrorCode]
-    )(StandardError.apply _)
-
-  sealed abstract class PresentationError extends Product with Serializable {
-    def message: String
-
-    def code: ErrorCode
-  }
-
-  case class StandardError(message: String, code: ErrorCode) extends PresentationError
-
+      e.correlationId,
+      e.code,
+      e.message,
+      e.timestamp.fold(Some(Instant.now.asStringSeconds))(o => Some(o.asStringSeconds))
+    )
+  )
 }

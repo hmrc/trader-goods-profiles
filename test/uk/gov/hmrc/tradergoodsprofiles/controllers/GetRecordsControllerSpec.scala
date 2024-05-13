@@ -36,17 +36,17 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext
 
 class GetRecordsControllerSpec
-  extends PlaySpec
+    extends PlaySpec
     with AuthTestSupport
     with GetRecordResponseSupport
     with BeforeAndAfterEach {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
-  private val recordId = UUID.randomUUID().toString
+  private val recordId        = UUID.randomUUID().toString
   private val timestamp       = Instant.parse("2024-01-12T12:12:12Z")
   private val dateTimeService = mock[DateTimeService]
-  private val routerService = mock[RouterService]
+  private val routerService   = mock[RouterService]
   private val sut             = new GetRecordsController(
     new FakeSuccessAuthAction(),
     dateTimeService,
@@ -59,7 +59,7 @@ class GetRecordsControllerSpec
 
     reset(dateTimeService, routerService)
     when(dateTimeService.timestamp).thenReturn(timestamp)
-    when(routerService.getRecord(any,any)(any))
+    when(routerService.getRecord(any, any)(any))
       .thenReturn(EitherT.fromEither(Right(createGetRecordResponse(eoriNumber, recordId, timestamp))))
   }
 
@@ -85,8 +85,8 @@ class GetRecordsControllerSpec
         status(result) mustBe BAD_REQUEST
         contentAsJson(result) mustBe Json.obj(
           "timestamp" -> timestamp,
-          "code" -> "INVALID_RECORD_ID_PARAMETER",
-          "message" -> "Invalid record ID supplied for eori number provided"
+          "code"      -> "INVALID_RECORD_ID_PARAMETER",
+          "message"   -> "Invalid record ID supplied for eori number provided"
         )
       }
 
@@ -96,8 +96,8 @@ class GetRecordsControllerSpec
         status(result) mustBe BAD_REQUEST
         contentAsJson(result) mustBe Json.obj(
           "timestamp" -> timestamp,
-          "code" -> "INVALID_RECORD_ID_PARAMETER",
-          "message" -> "Invalid record ID supplied for eori number provided"
+          "code"      -> "INVALID_RECORD_ID_PARAMETER",
+          "message"   -> "Invalid record ID supplied for eori number provided"
         )
       }
 
@@ -107,15 +107,14 @@ class GetRecordsControllerSpec
         status(result) mustBe BAD_REQUEST
         contentAsJson(result) mustBe Json.obj(
           "timestamp" -> timestamp,
-          "code" -> "INVALID_RECORD_ID_PARAMETER",
-          "message" -> "Invalid record ID supplied for eori number provided"
+          "code"      -> "INVALID_RECORD_ID_PARAMETER",
+          "message"   -> "Invalid record ID supplied for eori number provided"
         )
       }
 
       "routerService return an error" in {
         val expectedJson = Json.obj(
-          "timestamp" -> timestamp,
-          "code" -> "INTERNAL_SERVER_ERROR",
+          "code"    -> "INTERNAL_SERVER_ERROR",
           "message" -> s"internal server error"
         )
 
