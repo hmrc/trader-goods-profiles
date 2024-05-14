@@ -19,7 +19,7 @@ package uk.gov.hmrc.tradergoodsprofiles.models.errors
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.mvc.Result
-import play.api.mvc.Results.{BadRequest, Forbidden, InternalServerError, NotAcceptable, Unauthorized}
+import play.api.mvc.Results.{BadRequest, Forbidden, InternalServerError, Unauthorized}
 import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService.DateTimeFormat
 
 import java.time.Instant
@@ -103,7 +103,7 @@ case class InvalidHeaderErrorResponse(
 ) extends ErrorResponse {
   override val code: String = "INVALID_HEADER_PARAMETERS"
 
-  def toResult: Result = NotAcceptable(Json.toJson(InvalidHeaderErrorResponse(timestamp, message)))
+  def toResult: Result = Forbidden(Json.toJson(InvalidHeaderErrorResponse(timestamp, message)))
 }
 
 object InvalidHeaderErrorResponse {
