@@ -93,8 +93,10 @@ class RouterServiceImpl @Inject() (
       case Success(value)     =>
         value.validate[T] match {
           case JsSuccess(v, _) => Right(v)
-          case JsError(_)      =>
-            logger.error(s"[RouterServiceImpl] - Response body could not be read as type ${typeOf[T]}")
+          case JsError(error)  =>
+            logger.error(
+              s"[RouterServiceImpl] - Response body could not be read as type ${typeOf[T]}, error ${error.toString()}"
+            )
             Left(
               ServerErrorResponse(
                 dateTimeService.timestamp,
