@@ -20,6 +20,7 @@ import com.codahale.metrics.{Counter, MetricRegistry, Timer}
 import io.lemonlabs.uri.{Url, UrlPath}
 import org.mockito.ArgumentMatchers.endsWith
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
+import org.mockito.Mockito.RETURNS_DEEP_STUBS
 import org.mockito.MockitoSugar.{reset, verify, when}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, EitherValues}
@@ -43,17 +44,16 @@ class RouteConnectorSpec extends PlaySpec with ScalaFutures with EitherValues wi
   private val appConfig                       = mock[AppConfig]
   private val requestBuilder                  = mock[RequestBuilder]
   private val timerContext                    = mock[Timer.Context]
-  private val timer                           = mock[Timer]
   private val successCounter                  = mock[Counter]
   private val failureCounter                  = mock[Counter]
-  private val metricsRegistry: MetricRegistry = mock[MetricRegistry]
+  private val metricsRegistry: MetricRegistry = mock[MetricRegistry](RETURNS_DEEP_STUBS)
 
   private val sut = new RouterConnector(httpClient, appConfig, metricsRegistry)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(httpClient, appConfig, requestBuilder)
+    reset(httpClient, appConfig, requestBuilder, metricsRegistry, timerContext)
 
     when(appConfig.routerUrl).thenReturn(Url.parse("http://localhost:23123"))
     when(httpClient.get(any)(any)).thenReturn(requestBuilder)
@@ -61,10 +61,9 @@ class RouteConnectorSpec extends PlaySpec with ScalaFutures with EitherValues wi
     when(requestBuilder.execute[HttpResponse](any, any))
       .thenReturn(Future.successful(HttpResponse(200, "message")))
 
-    when(metricsRegistry.timer(any)) thenReturn timer
     when(metricsRegistry.counter(endsWith("success-counter"))) thenReturn successCounter
     when(metricsRegistry.counter(endsWith("failed-counter"))) thenReturn failureCounter
-    when(timer.time()) thenReturn timerContext
+    when(metricsRegistry.timer(any).time()) thenReturn timerContext
     when(timerContext.stop()) thenReturn 0L
   }
 
@@ -87,8 +86,8 @@ class RouteConnectorSpec extends PlaySpec with ScalaFutures with EitherValues wi
       verify(requestBuilder).execute(any, any)
 
       withClue("process the response within a timer") {
-        verify(metricsRegistry).timer(eqTo("tgp.getrecord.connector.timer"))
-        verify(metricsRegistry.timer(eqTo("emcs.submission.connector.timer"))).time()
+        verify(metricsRegistry).timer(eqTo("tgp.getrecord.connector-timer"))
+        verify(metricsRegistry.timer(eqTo("emcs.submission.connector-timer"))).time()
         verify(timerContext).stop()
       }
     }

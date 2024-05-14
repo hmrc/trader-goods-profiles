@@ -36,15 +36,15 @@ class RouterConnector @Inject() (
     extends BaseConnector
     with MetricsSupport
     with Logging {
-  def get(eori: String, recordId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
+  def get(eori: String, recordId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+    withMetricsTimerAsync("tgp.getrecord.connector") { _ =>
+      val url = appConfig.routerUrl.withPath(routerRoute(eori, recordId))
 
-    val url = appConfig.routerUrl.withPath(routerRoute(eori, recordId))
-
-    httpClient
-      .get(url"$url")
-      .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-      .withClientId
-      .execute[HttpResponse]
-      .map(response => response)
-  }
+      httpClient
+        .get(url"$url")
+        .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+        .withClientId
+        .execute[HttpResponse]
+        .map(response => response)
+    }
 }
