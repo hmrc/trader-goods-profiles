@@ -19,7 +19,7 @@ package uk.gov.hmrc.tradergoodsprofiles.models.errors
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.mvc.Result
-import play.api.mvc.Results.{BadRequest, Forbidden, InternalServerError, Unauthorized}
+import play.api.mvc.Results.{BadRequest, Forbidden, InternalServerError, NotAcceptable, Unauthorized}
 import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService.DateTimeFormat
 
 import java.time.Instant
@@ -32,9 +32,7 @@ sealed trait ErrorResponse {
   def toResult: Result
 }
 
-case class ForbiddenErrorResponse(
-  timestamp: Instant,
-  message: String) extends ErrorResponse {
+case class ForbiddenErrorResponse(timestamp: Instant, message: String) extends ErrorResponse {
   override val code: String = "FORBIDDEN"
 
   def toResult: Result = Forbidden(Json.toJson(ForbiddenErrorResponse(timestamp, message)))
@@ -50,9 +48,7 @@ object ForbiddenErrorResponse {
   )(e => (e.timestamp.asStringSeconds, e.code, e.message))
 }
 
-case class UnauthorisedErrorResponse(
-  timestamp: Instant,
-  message: String) extends ErrorResponse {
+case class UnauthorisedErrorResponse(timestamp: Instant, message: String) extends ErrorResponse {
   override val code: String = "UNAUTHORIZED"
 
   def toResult: Result = Unauthorized(Json.toJson(UnauthorisedErrorResponse(timestamp, message)))
@@ -68,9 +64,7 @@ object UnauthorisedErrorResponse {
   )(e => (e.timestamp.asStringSeconds, e.code, e.message))
 }
 
-case class ServerErrorResponse(
-  timestamp: Instant,
-  message: String) extends ErrorResponse {
+case class ServerErrorResponse(timestamp: Instant, message: String) extends ErrorResponse {
   override val code: String = "INTERNAL_SERVER_ERROR"
 
   def toResult: Result =
@@ -84,12 +78,10 @@ object ServerErrorResponse {
     (JsPath \ "timestamp").write[String] and
       (JsPath \ "code").write[String] and
       (JsPath \ "message").write[String]
-    )(e => (e.timestamp.asStringSeconds, e.code, e.message))
+  )(e => (e.timestamp.asStringSeconds, e.code, e.message))
 }
 
-case class InvalidRecordIdErrorResponse(
-  timestamp: Instant,
-  message: String) extends ErrorResponse {
+case class InvalidRecordIdErrorResponse(timestamp: Instant, message: String) extends ErrorResponse {
   override val code: String = "INVALID_RECORD_ID_PARAMETER"
 
   def toResult: Result = BadRequest(Json.toJson(InvalidRecordIdErrorResponse(timestamp, message)))
@@ -99,6 +91,25 @@ object InvalidRecordIdErrorResponse {
   implicit val read: Reads[InvalidRecordIdErrorResponse] = Json.reads[InvalidRecordIdErrorResponse]
 
   implicit val write: Writes[InvalidRecordIdErrorResponse] = (
+    (JsPath \ "timestamp").write[String] and
+      (JsPath \ "code").write[String] and
+      (JsPath \ "message").write[String]
+  )(e => (e.timestamp.asStringSeconds, e.code, e.message))
+}
+
+case class InvalidHeaderErrorResponse(
+  timestamp: Instant,
+  message: String
+) extends ErrorResponse {
+  override val code: String = "INVALID_HEADER_PARAMETERS"
+
+  def toResult: Result = NotAcceptable(Json.toJson(InvalidHeaderErrorResponse(timestamp, message)))
+}
+
+object InvalidHeaderErrorResponse {
+  implicit val read: Reads[InvalidHeaderErrorResponse] = Json.reads[InvalidHeaderErrorResponse]
+
+  implicit val write: Writes[InvalidHeaderErrorResponse] = (
     (JsPath \ "timestamp").write[String] and
       (JsPath \ "code").write[String] and
       (JsPath \ "message").write[String]
