@@ -280,8 +280,9 @@ components:
           schema:
             $ref: '#/components/schemas/CustomError'
           example:
-            errorCode: UNAUTHORIZED
-            errorMessage: Unauthorized
+            timestamp: "2024-06-08T12:12:12Z"
+            code: UNAUTHORIZED
+            message: Unauthorized
     InternalServerError:
       description: Internal Server Error
       content:
@@ -289,8 +290,9 @@ components:
           schema:
             $ref: '#/components/schemas/CustomError'
           example:
-            errorCode: INTERNAL_SERVER_ERROR
-            errorMessage: Internal Server Error
+            timestamp: "2024-06-08T12:12:12Z"
+            code: INTERNAL_SERVER_ERROR
+            message: Internal Server Error
   schemas:
     Error:
       type: object
@@ -300,18 +302,22 @@ components:
         message:
           type: string
       required:
+        - timestamp
         - code
         - message
     CustomError:
       type: object
       properties:
-        errorCode:
+        timestamp:
           type: string
-        errorMessage:
+        code:
+          type: string
+        message:
           type: string
       required:
-        - errorCode
-        - errorMessage
+        - timestamp
+        - code
+        - message
     CreateTGPRecordSchema:
       type: object
       required:
