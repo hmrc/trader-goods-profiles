@@ -33,7 +33,7 @@ class HealthEndpointIntegrationSpec
     with ScalaFutures
     with IntegrationPatience
     with GuiceOneServerPerSuite
-      with HttpClientV2Support {
+    with HttpClientV2Support {
 
   private val wsClient = app.injector.instanceOf[WSClient]
   private val baseUrl  = s"http://localhost:$port"

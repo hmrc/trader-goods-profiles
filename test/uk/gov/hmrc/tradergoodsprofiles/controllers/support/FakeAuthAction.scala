@@ -25,20 +25,19 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object FakeAuth {
   class FakeSuccessAuthAction extends AuthAction {
-    override def apply(eori: String): ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest] = {
+    override def apply(
+      eori: String
+    ): ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest] =
       new ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest] {
 
-        override val parser = mock[BodyParsers.Default]
+        override val parser: BodyParsers.Default = mock[BodyParsers.Default]
         protected def executionContext: ExecutionContext = ExecutionContext.global
 
         override def invokeBlock[A](
-                                     request: Request[A],
-                                     block: EnrolmentRequest[A] => Future[Result]
-                                   ): Future[Result] = {
-
+          request: Request[A],
+          block: EnrolmentRequest[A] => Future[Result]
+        ): Future[Result] =
           block(EnrolmentRequest(request))
-        }
       }
-    }
   }
 }

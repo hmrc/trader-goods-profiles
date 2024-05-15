@@ -26,8 +26,8 @@ trait GetRecordResponseSupport {
     eori: String,
     recordId: String,
     timestamp: Instant
-  ) = {
-    val condition   = Condition(
+  ): GetRecordResponse = {
+    val condition  = Condition(
       "certificate",
       "Y923",
       "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",

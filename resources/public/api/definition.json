@@ -10,7 +10,9 @@
     "name": "Trader Goods Profiles",
     "description": "The externally facing API for the TGP service",
     "context": "customs/traders/goods-profiles",
-    "categories": ["CUSTOMS"],
+    "categories": [
+      "CUSTOMS"
+    ],
     "versions": [
       {
         "version": "1.0",

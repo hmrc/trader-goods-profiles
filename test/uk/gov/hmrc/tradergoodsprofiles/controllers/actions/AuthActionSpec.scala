@@ -38,17 +38,14 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuthActionSpec
-  extends PlaySpec
-    with AuthTestSupport
-    with BeforeAndAfterEach {
+class AuthActionSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEach {
 
   implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
 
-  private val timestamp = Instant.now.truncatedTo(ChronoUnit.SECONDS)
+  private val timestamp       = Instant.now.truncatedTo(ChronoUnit.SECONDS)
   private val dateTimeService = mock[DateTimeService]
-  private val parser = mock[BodyParsers.Default]
-  private val appConfig = mock[AppConfig]
+  private val parser          = mock[BodyParsers.Default]
+  private val appConfig       = mock[AppConfig]
 
   private val sut = new AuthActionImpl(
     authConnector,

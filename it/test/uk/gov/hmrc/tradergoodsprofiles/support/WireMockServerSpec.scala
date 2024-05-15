@@ -21,14 +21,13 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 
 trait WireMockServerSpec {
 
-  val wireHost = "localhost"
+  val wireHost                               = "localhost"
   implicit lazy val wireMock: WireMockServer = new WireMockServer(options().dynamicPort())
 
-  def configureServices: Map[String, Any] = {
+  def configureServices: Map[String, Any] =
     Map(
       "microservice.services.trader-goods-profiles-router.host" -> wireHost,
-      "microservice.services.trader-goods-profiles-router.port" -> wireMock.port(),
+      "microservice.services.trader-goods-profiles-router.port" -> wireMock.port()
     )
-  }
 
 }

@@ -9,7 +9,7 @@ info:
     The [Trader goods profile service
     guide](/guides/trader-goods-profile-service-guide/) contains a detailed
     overview of v1.0 of the API.
-  contact: {}
+  contact: { }
 servers:
   - url: https://test-api.service.hmrc.gov.uk
     description: Sandbox

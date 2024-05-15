@@ -137,9 +137,9 @@ class RouterServiceSpec
         whenReady(result.value) {
           _.left.value mustBe InternalServerError(
             Json.obj(
-              "timestamp"     -> timestamp,
-              "code"          -> "INTERNAL_SERVER_ERROR",
-              "message"       -> s"Could not retrieve record for eori number eori and record ID recordId"
+              "timestamp" -> timestamp,
+              "code"      -> "INTERNAL_SERVER_ERROR",
+              "message"   -> s"Could not retrieve record for eori number eori and record ID recordId"
             )
           )
         }

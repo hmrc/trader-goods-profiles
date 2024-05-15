@@ -22,9 +22,9 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.support.GetRecordResponseSupp
 
 import java.time.Instant
 
-class GetRecordResponseSpec extends PlaySpec with GetRecordResponseSupport{
+class GetRecordResponseSpec extends PlaySpec with GetRecordResponseSupport {
 
-  private val timestamp = Instant.parse("2023-01-01T00:00:00Z")
+  private val timestamp         = Instant.parse("2023-01-01T00:00:00Z")
   private val getRecordResponse = createGetRecordResponse(
     "GB123456789012",
     "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f",
@@ -56,7 +56,7 @@ class GetRecordResponseSpec extends PlaySpec with GetRecordResponseSupport{
 
   private def GetRecordResponseAsJson: JsObject =
     Json.obj(
-      "eori"              -> "GB123456789012",
+      "eori"                     -> "GB123456789012",
       "actorId"                  -> "GB123456789012",
       "recordId"                 -> "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f",
       "traderRef"                -> "SKU123456",

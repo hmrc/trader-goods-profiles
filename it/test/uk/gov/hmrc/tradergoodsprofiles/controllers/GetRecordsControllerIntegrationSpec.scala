@@ -156,7 +156,7 @@ class GetRecordsControllerIntegrationSpec
       result.status mustBe UNAUTHORIZED
       result.json mustBe createExpectedJson(
         "UNAUTHORIZED",
-        s"Unauthorised exception for /$eoriNumber/records/$recordId with error: Insufficient Enrolments"
+        s"The details signed in do not have a Trader Goods Profile"
       )
     }
 
@@ -168,7 +168,7 @@ class GetRecordsControllerIntegrationSpec
       result.status mustBe UNAUTHORIZED
       result.json mustBe createExpectedJson(
         "UNAUTHORIZED",
-        s"Unauthorised exception for /$eoriNumber/records/$recordId with error: Invalid affinity group Agent from Auth"
+        s"Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'"
       )
     }
 
@@ -180,7 +180,7 @@ class GetRecordsControllerIntegrationSpec
       result.status mustBe UNAUTHORIZED
       result.json mustBe createExpectedJson(
         "UNAUTHORIZED",
-        s"Unauthorised exception for /$eoriNumber/records/$recordId with error: Invalid enrolment parameter from Auth"
+        "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'"
       )
     }
 
@@ -192,7 +192,7 @@ class GetRecordsControllerIntegrationSpec
       result.status mustBe FORBIDDEN
       result.json mustBe createExpectedJson(
         "FORBIDDEN",
-        s"Supplied OAuth token not authorised to access data for given identifier(s) $eoriNumber"
+        "This EORI number is incorrect"
       )
     }
 
@@ -204,7 +204,7 @@ class GetRecordsControllerIntegrationSpec
       result.status mustBe FORBIDDEN
       result.json mustBe createExpectedJson(
         "FORBIDDEN",
-        "Supplied OAuth token not authorised to access data for given identifier(s) wrongEoriNumber"
+        "This EORI number is incorrect"
       )
     }
 
