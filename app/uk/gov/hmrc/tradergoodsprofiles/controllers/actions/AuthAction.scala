@@ -57,7 +57,7 @@ class AuthActionImpl @Inject() (
   ): ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest] =
     new ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest] {
 
-      override val parser = bodyParser
+      override val parser                              = bodyParser
       protected def executionContext: ExecutionContext = ec
 
       override def invokeBlock[A](
@@ -72,13 +72,13 @@ class AuthActionImpl @Inject() (
           .retrieve(fetch) {
             case authorisedEnrolments ~ Some(affinityGroup) if affinityGroup != Agent =>
               validateIdentifier(eori, authorisedEnrolments, block)
-            case _ ~ Some(Agent) =>
+            case _ ~ Some(Agent)                                                      =>
               successful(
                 handleInvalidAffinityGroup(
                   s"Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'"
                 )
               )
-            case _ =>
+            case _                                                                    =>
               successful(
                 handleInvalidAffinityGroup(
                   "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'"
@@ -140,7 +140,7 @@ class AuthActionImpl @Inject() (
 
     logger.error(s"Unauthorised exception for ${request.uri} with error $errorMessage")
 
-    UnauthorisedError(
+    UnauthorisedErrorResponse(
       dateTimeService.timestamp,
       errorMessage
     ).toResult
