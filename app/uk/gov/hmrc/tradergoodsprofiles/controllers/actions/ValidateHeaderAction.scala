@@ -19,6 +19,7 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers.actions
 import cats.data.EitherT
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.mvc.{ActionFilter, Request, Result}
+import uk.gov.hmrc.tradergoodsprofiles.config.Constants
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.InvalidHeaderErrorResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
 
@@ -35,6 +36,7 @@ class ValidateHeaderAction @Inject() (datetimeService: DateTimeService)(implicit
     val result = for {
       _ <- validateAcceptHeader(request)
       _ <- validateContentTypeHeader(request)
+      _ <- validateClientIdHeader(request)
     } yield None
 
     result.merge
@@ -63,4 +65,14 @@ class ValidateHeaderAction @Inject() (datetimeService: DateTimeService)(implicit
       )
     )
 
+  private def validateClientIdHeader(request: Request[_]): EitherT[Future, Option[Result], Unit] =
+    EitherT.fromOption(
+      request.headers.get(Constants.XClientIdHeader) match {
+        case Some(_) => Some(())
+        case _       => None
+      },
+      Some(
+        InvalidHeaderErrorResponse(datetimeService.timestamp, "X-Client-ID header is missing").toResult
+      )
+    )
 }

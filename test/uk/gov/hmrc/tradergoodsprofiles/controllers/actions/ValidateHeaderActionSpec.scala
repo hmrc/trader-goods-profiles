@@ -48,7 +48,8 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
       "accept header is valid" in {
         val request = FakeRequest().withHeaders(
           "Accept"       -> "application/vnd.hmrc.1.0+json",
-          "Content-Type" -> "application/json"
+          "Content-Type" -> "application/json",
+          "X-Client-ID"  -> "some client ID"
         )
         val result  = await(sut.filter(request))
 
@@ -58,21 +59,30 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
 
     "return a forbidden" when {
       "accept header is missing" in {
-        val request = FakeRequest().withHeaders("Content-Type" -> "application/json")
+        val request = FakeRequest().withHeaders("Content-Type" -> "application/json", "X-Client-ID" -> "some client ID")
         val result  = await(sut.filter(request))
         result.value mustBe Forbidden(createExpectedJson("Accept header is missing or invalid"))
       }
 
       "content type header is missing" in {
-        val request = FakeRequest().withHeaders("Accept" -> "application/vnd.hmrc.1.0+json")
+        val request =
+          FakeRequest().withHeaders("Accept" -> "application/vnd.hmrc.1.0+json", "X-Client-ID" -> "some client ID")
         val result  = await(sut.filter(request))
         result.value mustBe Forbidden(createExpectedJson("Content-Type header is missing or invalid"))
+      }
+
+      "client ID header is missing" in {
+        val request =
+          FakeRequest().withHeaders("Accept" -> "application/vnd.hmrc.1.0+json", "Content-Type" -> "application/json")
+        val result  = await(sut.filter(request))
+        result.value mustBe Forbidden(createExpectedJson("X-Client-ID header is missing"))
       }
 
       "accept header is the incorrect format" in {
         val request = FakeRequest().withHeaders(
           "Accept"       -> "the wrong format",
-          "Content-Type" -> "application/json"
+          "Content-Type" -> "application/json",
+          "X-Client-ID"  -> "some client ID"
         )
         val result  = await(sut.filter(request))
 
@@ -82,7 +92,8 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
       "content type header is the incorrect format" in {
         val request = FakeRequest().withHeaders(
           "Accept"       -> "application/vnd.hmrc.1.0+json",
-          "Content-Type" -> "the wrong format"
+          "Content-Type" -> "the wrong format",
+          "X-Client-ID"  -> "some client ID"
         )
         val result  = await(sut.filter(request))
 

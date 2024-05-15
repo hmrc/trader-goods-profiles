@@ -44,9 +44,10 @@ class GetRecordsControllerSpec
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
-  val request                 = FakeRequest().withHeaders(
+  private val request         = FakeRequest().withHeaders(
     "Accept"       -> "application/vnd.hmrc.1.0+json",
-    "Content-Type" -> "application/json"
+    "Content-Type" -> "application/json",
+    "X-Client-ID"  -> "some client ID"
   )
   private val recordId        = UUID.randomUUID().toString
   private val timestamp       = Instant.parse("2024-01-12T12:12:12Z")
