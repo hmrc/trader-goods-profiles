@@ -33,10 +33,9 @@ trait DateTimeService {
 object DateTimeService {
   implicit class DateTimeFormat(val dateTime: Instant) extends AnyVal {
 
-    implicit def asStringSeconds: String = {
+    implicit def asStringSeconds: String =
       ZonedDateTime
         .ofInstant(dateTime, ZoneOffset.UTC)
         .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX"))
-    }
   }
 }

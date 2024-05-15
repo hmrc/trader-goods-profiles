@@ -30,5 +30,5 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
     .getOptional[String]("enrolment-config.tgp-enrolment-identifier")
     .getOrElse("tgpFakeIdentifier")
 
-  val routerUrl                          = Url.parse(servicesConfig.baseUrl("trader-goods-profiles-router"))
+  val routerUrl = Url.parse(servicesConfig.baseUrl("trader-goods-profiles-router"))
 }
