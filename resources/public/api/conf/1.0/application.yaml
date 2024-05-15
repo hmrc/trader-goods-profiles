@@ -206,7 +206,7 @@ paths:
         '403':
           description: Forbidden;   User was valid, but not allowed to perform this action
         '404':
-          description: TGP record not found to update
+          $ref: '#/components/responses/NotFoundError'
         '500':
           $ref: '#/components/responses/InternalServerError'
       security:
@@ -278,11 +278,22 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/CustomError'
+            $ref: '#/components/schemas/Error'
           example:
             timestamp: "2024-06-08T12:12:12Z"
             code: UNAUTHORIZED
             message: Unauthorized
+    NotFoundError:
+      description: TGP record not found to update
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CustomError'
+          example:
+            correlationId: "83a2d4a9-c053-437b-b717-07b89dff288e"
+            timestamp: "2024-06-08T12:12:12Z"
+            code: NOT_FOUND
+            message: Nor Found Error
     InternalServerError:
       description: Internal Server Error
       content:
@@ -290,6 +301,7 @@ components:
           schema:
             $ref: '#/components/schemas/CustomError'
           example:
+            correlationId: "83a2d4a9-c053-437b-b717-07b89dff288e"
             timestamp: "2024-06-08T12:12:12Z"
             code: INTERNAL_SERVER_ERROR
             message: Internal Server Error
@@ -297,6 +309,8 @@ components:
     Error:
       type: object
       properties:
+        timestamp:
+          type: string
         code:
           type: string
         message:
@@ -308,6 +322,8 @@ components:
     CustomError:
       type: object
       properties:
+        correlationId:
+          type: string
         timestamp:
           type: string
         code:
