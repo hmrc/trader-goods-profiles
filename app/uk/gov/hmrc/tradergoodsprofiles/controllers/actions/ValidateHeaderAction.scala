@@ -17,6 +17,7 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers.actions
 
 import cats.data.EitherT
+import play.api.Logging
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.mvc.{ActionFilter, Request, Result}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.InvalidHeaderErrorResponse
@@ -26,7 +27,8 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class ValidateHeaderAction @Inject() (datetimeService: DateTimeService)(implicit ec: ExecutionContext)
-    extends ActionFilter[Request] {
+    extends ActionFilter[Request]
+    with Logging {
 
   override val executionContext: ExecutionContext = ec
 
@@ -41,11 +43,27 @@ class ValidateHeaderAction @Inject() (datetimeService: DateTimeService)(implicit
       isValidContentTypeHeader  = contentTypeHeader.equals(MimeTypes.JSON)
     } yield (isValidAcceptHeaderFormat, isValidContentTypeHeader) match {
       case (true, true) => None
-      case _            => Some(InvalidHeaderErrorResponse(datetimeService.timestamp, "Invalid Header").toResult)
+      case _            =>
+        val message: String =
+          getErrorMessage(acceptHeader, contentTypeHeader, isValidAcceptHeaderFormat, isValidContentTypeHeader)
+        logger.error(s"[ValidateHeaderAction] - Error: $message")
+        Some(InvalidHeaderErrorResponse(datetimeService.timestamp, message).toResult)
     }
 
     result.merge
   }
+
+  private def getErrorMessage(
+    acceptHeader: String,
+    contentTypeHeader: String,
+    isValidAcceptHeaderFormat: Boolean,
+    isValidContentTypeHeader: Boolean
+  ): String =
+    (isValidAcceptHeaderFormat, isValidContentTypeHeader) match {
+      case (false, false) => "invalid Headers format"
+      case (false, _)     => s"Accept header '$acceptHeader' is invalid"
+      case _              => s"${HeaderNames.CONTENT_TYPE} header '$contentTypeHeader' is invalid"
+    }
 
   private def validateAcceptHeader(request: Request[_]): EitherT[Future, Option[Result], String] =
     EitherT.fromOption(

@@ -208,6 +208,43 @@ class GetRecordsControllerIntegrationSpec
       )
     }
 
+    "return forbidden when Accept header is invalid" in {
+      withAuthorizedTrader()
+
+      val headers = Seq("X-Client-Id" -> "clientId", "Content-Type" -> "application/json")
+      val result  = getRecordAndWait(url, headers: _*)
+
+      result.status mustBe FORBIDDEN
+      result.json mustBe createExpectedJson("INVALID_HEADER_PARAMETERS", "Accept header '*/*' is invalid")
+    }
+
+    "return forbidden when Content-Type header is missing" in {
+      withAuthorizedTrader()
+
+      val headers = Seq("X-Client-Id" -> "clientId", "Accept" -> "application/vnd.hmrc.1.0+json")
+      val result  = getRecordAndWait(url, headers: _*)
+
+      result.status mustBe FORBIDDEN
+      result.json mustBe createExpectedJson("INVALID_HEADER_PARAMETERS", "The Content-Type header is missing")
+    }
+
+    "return forbidden when Content-Type header is not the right format" in {
+      withAuthorizedTrader()
+
+      val headers = Seq(
+        "X-Client-Id"  -> "clientId",
+        "Accept"       -> "application/vnd.hmrc.1.0+json",
+        "Content-Type" -> "application/xml"
+      )
+      val result  = getRecordAndWait(url, headers: _*)
+
+      result.status mustBe FORBIDDEN
+      result.json mustBe createExpectedJson(
+        "INVALID_HEADER_PARAMETERS",
+        "Content-Type header 'application/xml' is invalid"
+      )
+    }
+
     "return internal server error if auth throw" in {
       withUnauthorizedTrader(new RuntimeException("runtime exception"))
 
@@ -266,7 +303,19 @@ class GetRecordsControllerIntegrationSpec
     await(
       wsClient
         .url(url)
-        .withHttpHeaders("X-Client-Id" -> "clientId")
+        .withHttpHeaders(
+          "X-Client-Id"  -> "clientId",
+          "Accept"       -> "application/vnd.hmrc.1.0+json",
+          "Content-Type" -> "application/json"
+        )
+        .get()
+    )
+
+  private def getRecordAndWait(url: String, headers: (String, String)*) =
+    await(
+      wsClient
+        .url(url)
+        .withHttpHeaders(headers: _*)
         .get()
     )
 

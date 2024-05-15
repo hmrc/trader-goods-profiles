@@ -76,7 +76,7 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
         )
         val result  = await(sut.filter(request))
 
-        result.value mustBe Forbidden(createExpectedJson("Invalid Header"))
+        result.value mustBe Forbidden(createExpectedJson("Accept header 'the wrong format' is invalid"))
       }
 
       "content type header is the incorrect format" in {
@@ -86,7 +86,7 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
         )
         val result  = await(sut.filter(request))
 
-        result.value mustBe Forbidden(createExpectedJson("Invalid Header"))
+        result.value mustBe Forbidden(createExpectedJson("Content-Type header 'the wrong format' is invalid"))
       }
     }
   }

@@ -27,6 +27,7 @@ import play.api.libs.json.Json
 import play.api.mvc.Results.InternalServerError
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, GetRecordResponseSupport}
 import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, RouterService}
@@ -43,12 +44,17 @@ class GetRecordsControllerSpec
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
+  val request                 = FakeRequest().withHeaders(
+    "Accept"       -> "application/vnd.hmrc.1.0+json",
+    "Content-Type" -> "application/json"
+  )
   private val recordId        = UUID.randomUUID().toString
   private val timestamp       = Instant.parse("2024-01-12T12:12:12Z")
   private val dateTimeService = mock[DateTimeService]
   private val routerService   = mock[RouterService]
   private val sut             = new GetRecordsController(
     new FakeSuccessAuthAction(),
+    new ValidateHeaderAction(dateTimeService),
     dateTimeService,
     routerService,
     stubControllerComponents()
@@ -65,13 +71,13 @@ class GetRecordsControllerSpec
 
   "getRecord" should {
     "return 200" in {
-      val result = sut.getRecord(eoriNumber, recordId)(FakeRequest())
+      val result = sut.getRecord(eoriNumber, recordId)(request)
 
       status(result) mustBe OK
     }
 
     "get the record from router" in {
-      val result = sut.getRecord(eoriNumber, recordId)(FakeRequest())
+      val result = sut.getRecord(eoriNumber, recordId)(request)
 
       status(result) mustBe OK
       verify(routerService).getRecord(eqTo(eoriNumber), eqTo(recordId))(any)
@@ -80,7 +86,7 @@ class GetRecordsControllerSpec
     "return an error" when {
 
       "recordId is not a UUID" in {
-        val result = sut.getRecord(eoriNumber, "1234-abc")(FakeRequest())
+        val result = sut.getRecord(eoriNumber, "1234-abc")(request)
 
         status(result) mustBe BAD_REQUEST
         contentAsJson(result) mustBe Json.obj(
@@ -91,7 +97,7 @@ class GetRecordsControllerSpec
       }
 
       "recordId is null" in {
-        val result = sut.getRecord(eoriNumber, null)(FakeRequest())
+        val result = sut.getRecord(eoriNumber, null)(request)
 
         status(result) mustBe BAD_REQUEST
         contentAsJson(result) mustBe Json.obj(
@@ -102,7 +108,7 @@ class GetRecordsControllerSpec
       }
 
       "recordId is empty" in {
-        val result = sut.getRecord(eoriNumber, " ")(FakeRequest())
+        val result = sut.getRecord(eoriNumber, " ")(request)
 
         status(result) mustBe BAD_REQUEST
         contentAsJson(result) mustBe Json.obj(
@@ -121,7 +127,7 @@ class GetRecordsControllerSpec
         when(routerService.getRecord(any, any)(any))
           .thenReturn(EitherT.fromEither(Left(InternalServerError(expectedJson))))
 
-        val result = sut.getRecord(eoriNumber, recordId)(FakeRequest())
+        val result = sut.getRecord(eoriNumber, recordId)(request)
 
         status(result) mustBe INTERNAL_SERVER_ERROR
         contentAsJson(result) mustBe expectedJson

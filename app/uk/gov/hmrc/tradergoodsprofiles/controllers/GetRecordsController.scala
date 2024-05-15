@@ -21,7 +21,7 @@ import cats.implicits._
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.AuthAction
+import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.InvalidRecordIdErrorResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, RouterService}
 
@@ -33,6 +33,7 @@ import scala.util.Try
 @Singleton
 class GetRecordsController @Inject() (
   authAction: AuthAction,
+  validateHeaderAction: ValidateHeaderAction,
   dateTimeService: DateTimeService,
   routerService: RouterService,
   cc: ControllerComponents
@@ -40,7 +41,7 @@ class GetRecordsController @Inject() (
     extends BackendController(cc) {
 
   def getRecord(eori: String, recordId: String): Action[AnyContent] =
-    authAction(eori).async { implicit request =>
+    (authAction(eori) andThen validateHeaderAction).async { implicit request =>
       val result = for {
         _      <- validateRecordId(recordId)
         record <- routerService.getRecord(eori, recordId)
