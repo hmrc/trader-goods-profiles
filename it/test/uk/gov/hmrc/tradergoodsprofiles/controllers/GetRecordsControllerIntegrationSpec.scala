@@ -215,7 +215,7 @@ class GetRecordsControllerIntegrationSpec
       val result  = getRecordAndWait(url, headers: _*)
 
       result.status mustBe FORBIDDEN
-      result.json mustBe createExpectedJson("INVALID_HEADER_PARAMETERS", "Accept header '*/*' is invalid")
+      result.json mustBe createExpectedJson("INVALID_HEADER_PARAMETERS", "Accept header is missing or invalid")
     }
 
     "return forbidden when Content-Type header is missing" in {
@@ -225,7 +225,10 @@ class GetRecordsControllerIntegrationSpec
       val result  = getRecordAndWait(url, headers: _*)
 
       result.status mustBe FORBIDDEN
-      result.json mustBe createExpectedJson("INVALID_HEADER_PARAMETERS", "The Content-Type header is missing")
+      result.json mustBe createExpectedJson(
+        "INVALID_HEADER_PARAMETERS",
+        "Content-Type header is missing or invalid"
+      )
     }
 
     "return forbidden when Content-Type header is not the right format" in {
@@ -241,7 +244,7 @@ class GetRecordsControllerIntegrationSpec
       result.status mustBe FORBIDDEN
       result.json mustBe createExpectedJson(
         "INVALID_HEADER_PARAMETERS",
-        "Content-Type header 'application/xml' is invalid"
+        "Content-Type header is missing or invalid"
       )
     }
 

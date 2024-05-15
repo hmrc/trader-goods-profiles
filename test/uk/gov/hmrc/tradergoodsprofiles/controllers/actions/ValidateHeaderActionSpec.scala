@@ -60,13 +60,13 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
       "accept header is missing" in {
         val request = FakeRequest().withHeaders("Content-Type" -> "application/json")
         val result  = await(sut.filter(request))
-        result.value mustBe Forbidden(createExpectedJson("The accept header is missing"))
+        result.value mustBe Forbidden(createExpectedJson("Accept header is missing or invalid"))
       }
 
       "content type header is missing" in {
         val request = FakeRequest().withHeaders("Accept" -> "application/vnd.hmrc.1.0+json")
         val result  = await(sut.filter(request))
-        result.value mustBe Forbidden(createExpectedJson("The Content-Type header is missing"))
+        result.value mustBe Forbidden(createExpectedJson("Content-Type header is missing or invalid"))
       }
 
       "accept header is the incorrect format" in {
@@ -76,7 +76,7 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
         )
         val result  = await(sut.filter(request))
 
-        result.value mustBe Forbidden(createExpectedJson("Accept header 'the wrong format' is invalid"))
+        result.value mustBe Forbidden(createExpectedJson("Accept header is missing or invalid"))
       }
 
       "content type header is the incorrect format" in {
@@ -86,7 +86,7 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
         )
         val result  = await(sut.filter(request))
 
-        result.value mustBe Forbidden(createExpectedJson("Content-Type header 'the wrong format' is invalid"))
+        result.value mustBe Forbidden(createExpectedJson("Content-Type header is missing or invalid"))
       }
     }
   }
