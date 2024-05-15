@@ -30,7 +30,7 @@ object FakeAuth {
     ): ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest] =
       new ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest] {
 
-        override val parser: BodyParsers.Default = mock[BodyParsers.Default]
+        override val parser: BodyParsers.Default         = mock[BodyParsers.Default]
         protected def executionContext: ExecutionContext = ExecutionContext.global
 
         override def invokeBlock[A](
