@@ -257,8 +257,9 @@ paths:
         - $ref: '#/components/parameters/eoriParam'
       tags:
         - Traders profile
-      summary: Maintain a trader's profile record
-      description: Maintain a trader's profile record
+      summary: Maintain a trader's goods profile
+      description: Update a trader's goods profile
+      operationId: updateTraderGoodsProfile
       requestBody:
         content:
           application/json:
@@ -477,12 +478,9 @@ components:
           $ref: '#/components/schemas/requestorEmail'
     MaintainProfileRecordSchema:
       required:
-        - eori
         - ukimsNumber
       type: object
       properties:
-        eori:
-          $ref: '#/components/schemas/eori'
         actorId:
           $ref: '#/components/schemas/actorId'
         ukimsNumber:
