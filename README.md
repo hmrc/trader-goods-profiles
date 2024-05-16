@@ -14,6 +14,59 @@ Trader Goods Profiles service.
 These APIs provide endpoints for various operations related to goods traders and profiles. Developers can utilize these
 endpoints to retrieve, create, update, and delete trader profiles, as well as perform other relevant actions.
 
+### Test the API locally
+
+Notice: You can use the run_local.sh script file to load all needed services and start the trader-goods-profiles service.
+#### Start the services
+* Open a terminal window, type the below command and press enter. This will load locally all the services necessary for testing :
+
+    ```
+    sm2 --start AUTH_LOGIN_API \
+    AUTH_LOGIN_STUB \
+    AUTH \
+    USER_DETAILS \
+    ASSETS_FRONTEND_2 \
+    IDENTITY_VERIFICATION \
+    TRADER_GOODS_PROFILES_STUBS \
+    TRADER_GOODS_PROFILES_ROUTER 
+    ```
+
+#### Generate an access token
+* Use the [Auth wizard](https://www.development.tax.service.gov.uk/auth-login-stub/gg-sign-in)
+  * Fill the following details:
+    <br><br>
+
+    **Redirect Url**: http://localhost:9949/auth-login-stub/session <br>
+    **Affinity Group**: Organisation or Individual<br>
+    **Enrolment Key**: HMRC-CUS-ORG <br>
+    **Identifier Name**: EORINumber <br>
+    **Identifier Value**: GB123456789001 (or any thing else similer). Refer to the service guide to get a list of EROI 
+  number suitable for test or look at the stubs [README.md file](https://github.com/hmrc/trader-goods-profiles-stubs/blob/main/README.md)
+    <br><br>
+* Press submit. This will redirect to a new page showing an access token.
+* Copy the Bearer token
+
+#### Send a request with Postman
+
+You can use Postman for tests for now. But there are plan to replace this which I don't know when it will be.
+
+In Postman
+ 
+* Create a request (GET, POST, PUT, PATCH) depending  what endpoint you want to test. For a list of endpoint available
+    refer to the [API Specification](https://github.com/hmrc/trader-goods-profiles/blob/main/resources/public/api/conf/1.0/application.yaml)
+* In the header add the following header:
+    ```aidl
+    Accept: application/vnd.api+json
+    X-Client-ID: <any thing>
+    ```
+
+**Notes:** Add the moment we only check if the X-Client-ID is present and do not do any validation
+
+* In the Authorization tab select **Bearer Token** as **Auth Type** 
+* Add the access token create on [this step](#generate-an-access-token) 
+* Add the right url
+* Send the request.
+
 ### Communication with EIS
 
 The Trader Goods Profiles system communicates with the Enterprise Integration Service (EIS) via the Trader Goods
