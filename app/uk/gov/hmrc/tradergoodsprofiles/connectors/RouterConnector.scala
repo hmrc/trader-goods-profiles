@@ -45,6 +45,5 @@ class RouterConnector @Inject() (
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
         .withClientId
         .execute[HttpResponse]
-        .map(response => response)
     }
 }

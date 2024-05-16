@@ -42,12 +42,10 @@ class GetRecordsController @Inject() (
 
   def getRecord(eori: String, recordId: String): Action[AnyContent] =
     (authAction(eori) andThen validateHeaderAction).async { implicit request =>
-      val result = for {
+      (for {
         _      <- validateRecordId(recordId)
         record <- routerService.getRecord(eori, recordId)
-      } yield Ok(Json.toJson(record))
-
-      result.merge
+      } yield Ok(Json.toJson(record))).merge
     }
 
   private def validateRecordId(recordId: String): EitherT[Future, Result, String] =

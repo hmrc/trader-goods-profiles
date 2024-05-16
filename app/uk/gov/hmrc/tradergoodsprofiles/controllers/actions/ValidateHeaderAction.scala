@@ -30,6 +30,7 @@ class ValidateHeaderAction @Inject() (datetimeService: DateTimeService)(implicit
     extends ActionFilter[Request] {
 
   override val executionContext: ExecutionContext = ec
+  private lazy val pattern                        = """^application/vnd[.]{1}hmrc[.]{1}1{1}[.]0[+]{1}json$""".r
 
   override def filter[A](request: Request[A]): Future[Option[Result]] = {
 
@@ -42,9 +43,7 @@ class ValidateHeaderAction @Inject() (datetimeService: DateTimeService)(implicit
     result.merge
   }
 
-  private def validateAcceptHeader(request: Request[_]): EitherT[Future, Option[Result], Unit] = {
-    val pattern = """^application/vnd[.]{1}hmrc[.]{1}1{1}[.]0[+]{1}json$""".r
-
+  private def validateAcceptHeader(request: Request[_]): EitherT[Future, Option[Result], Unit] =
     EitherT.fromOption(
       request.headers.get(HeaderNames.ACCEPT) match {
         case Some(header) if pattern.matches(header) => Some(())
@@ -52,7 +51,6 @@ class ValidateHeaderAction @Inject() (datetimeService: DateTimeService)(implicit
       },
       Some(InvalidHeaderErrorResponse(datetimeService.timestamp, "Accept header is missing or invalid").toResult)
     )
-  }
 
   private def validateContentTypeHeader(request: Request[_]): EitherT[Future, Option[Result], Unit] =
     EitherT.fromOption(

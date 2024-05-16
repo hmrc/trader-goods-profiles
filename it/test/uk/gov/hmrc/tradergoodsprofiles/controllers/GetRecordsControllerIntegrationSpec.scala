@@ -211,7 +211,7 @@ class GetRecordsControllerIntegrationSpec
     "return forbidden when Accept header is invalid" in {
       withAuthorizedTrader()
 
-      val headers = Seq("X-Client-Id" -> "clientId", "Content-Type" -> "application/json")
+      val headers = Seq("X-Client-ID" -> "clientId", "Content-Type" -> "application/json")
       val result  = getRecordAndWait(url, headers: _*)
 
       result.status mustBe FORBIDDEN
@@ -221,7 +221,7 @@ class GetRecordsControllerIntegrationSpec
     "return forbidden when Content-Type header is missing" in {
       withAuthorizedTrader()
 
-      val headers = Seq("X-Client-Id" -> "clientId", "Accept" -> "application/vnd.hmrc.1.0+json")
+      val headers = Seq("X-Client-ID" -> "clientId", "Accept" -> "application/vnd.hmrc.1.0+json")
       val result  = getRecordAndWait(url, headers: _*)
 
       result.status mustBe FORBIDDEN
@@ -235,7 +235,7 @@ class GetRecordsControllerIntegrationSpec
       withAuthorizedTrader()
 
       val headers = Seq(
-        "X-Client-Id"  -> "clientId",
+        "X-Client-ID"  -> "clientId",
         "Accept"       -> "application/vnd.hmrc.1.0+json",
         "Content-Type" -> "application/xml"
       )
@@ -307,7 +307,7 @@ class GetRecordsControllerIntegrationSpec
       wsClient
         .url(url)
         .withHttpHeaders(
-          "X-Client-Id"  -> "clientId",
+          "X-Client-ID"  -> "clientId",
           "Accept"       -> "application/vnd.hmrc.1.0+json",
           "Content-Type" -> "application/json"
         )
