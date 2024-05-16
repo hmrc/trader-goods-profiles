@@ -2,3 +2,4 @@
 
 
 GET     /:eori/records/:recordId   uk.gov.hmrc.tradergoodsprofiles.controllers.GetRecordsController.getRecord(eori: String, recordId: String)
+POST    /:eori/records             uk.gov.hmrc.tradergoodsprofiles.controllers.CreateRecordController.createRecord(eori: String)
