@@ -19,11 +19,13 @@ package uk.gov.hmrc.tradergoodsprofiles.connectors
 import com.codahale.metrics.MetricRegistry
 import play.api.Logging
 import play.api.http.{HeaderNames, MimeTypes}
+import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.metrics.MetricsSupport
+import uk.gov.hmrc.tradergoodsprofiles.models.CreateRecordRequest
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -43,6 +45,18 @@ class RouterConnector @Inject() (
       httpClient
         .get(url"$url")
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+        .withClientId
+        .execute[HttpResponse]
+    }
+
+  def post(eori: String, createRecordRequest: CreateRecordRequest)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+    withMetricsTimerAsync("tgp.createrecord.connector") { _ =>
+      val url      = appConfig.routerUrl.withPath(routerCreateRoute(eori))
+      val jsonData = Json.toJson(createRecordRequest)
+      httpClient
+        .post(url"$url")
+        .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+        .withBody(jsonData)
         .withClientId
         .execute[HttpResponse]
     }
