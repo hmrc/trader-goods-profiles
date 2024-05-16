@@ -14,17 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.tradergoodsprofiles.config
+package uk.gov.hmrc.tradergoodsprofiles.support
 
-import io.lemonlabs.uri.Url
-import javax.inject.{Inject, Singleton}
-import play.api.Configuration
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 
-@Singleton
-class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) {
+trait WireMockServerSpec {
 
-  val appName: String = config.get[String]("appName")
+  val wireHost                               = "localhost"
+  implicit lazy val wireMock: WireMockServer = new WireMockServer(options().dynamicPort())
 
-  val routerUrl = Url.parse(servicesConfig.baseUrl("trader-goods-profiles-router"))
+  def configureServices: Map[String, Any] =
+    Map(
+      "microservice.services.trader-goods-profiles-router.host" -> wireHost,
+      "microservice.services.trader-goods-profiles-router.port" -> wireMock.port()
+    )
+
 }

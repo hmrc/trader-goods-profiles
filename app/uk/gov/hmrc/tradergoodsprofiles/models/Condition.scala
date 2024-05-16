@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.tradergoodsprofiles.config
+package uk.gov.hmrc.tradergoodsprofiles.models
 
-import io.lemonlabs.uri.Url
-import javax.inject.{Inject, Singleton}
-import play.api.Configuration
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import play.api.libs.json.{Json, OFormat}
 
-@Singleton
-class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) {
+case class Condition(
+  `type`: String,
+  conditionId: String,
+  conditionDescription: String,
+  conditionTraderText: String
+)
 
-  val appName: String = config.get[String]("appName")
-
-  val routerUrl = Url.parse(servicesConfig.baseUrl("trader-goods-profiles-router"))
+object Condition {
+  implicit val format: OFormat[Condition] = Json.format[Condition]
 }

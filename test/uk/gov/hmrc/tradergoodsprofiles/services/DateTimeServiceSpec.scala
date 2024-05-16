@@ -16,26 +16,24 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.services
 
-import com.google.inject.ImplementedBy
+import org.scalatestplus.play.PlaySpec
+import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService.DateTimeFormat
 
-import java.time.format.DateTimeFormatter
-import java.time.{Instant, ZoneOffset, ZonedDateTime}
+import java.time.Instant
 
-class DateTimeServiceImpl extends DateTimeService {
-  override def timestamp: Instant = Instant.now
-}
+class DateTimeServiceSpec extends PlaySpec {
 
-@ImplementedBy(classOf[DateTimeServiceImpl])
-trait DateTimeService {
-  def timestamp: Instant
-}
+  "asStringSeconds" should {
+    "return time in seconds" when {
+      "time is in seconds" in {
+        val dateTime = Instant.parse("2023-02-03T05:06:07Z")
+        dateTime.asStringSeconds mustBe "2023-02-03T05:06:07Z"
+      }
 
-object DateTimeService {
-  implicit class DateTimeFormat(val dateTime: Instant) extends AnyVal {
-
-    implicit def asStringSeconds: String =
-      ZonedDateTime
-        .ofInstant(dateTime, ZoneOffset.UTC)
-        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssX"))
+      "time is in centi nano seconds" in {
+        val dateTime = Instant.parse("2023-02-03T05:06:07.124562Z")
+        dateTime.asStringSeconds mustBe "2023-02-03T05:06:07Z"
+      }
+    }
   }
 }

@@ -29,7 +29,6 @@ import play.api.test.Helpers.{await, contentAsJson, defaultAwaitTimeout, status}
 import uk.gov.hmrc.auth.core.AffinityGroup.{Agent, Individual}
 import uk.gov.hmrc.auth.core.{Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
-import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.auth.EnrolmentRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
@@ -45,12 +44,10 @@ class AuthActionSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEa
   private val timestamp       = Instant.now.truncatedTo(ChronoUnit.SECONDS)
   private val dateTimeService = mock[DateTimeService]
   private val parser          = mock[BodyParsers.Default]
-  private val appConfig       = mock[AppConfig]
 
   private val sut = new AuthActionImpl(
     authConnector,
     dateTimeService,
-    appConfig,
     parser,
     stubMessagesControllerComponents(),
     mock[BodyParsers.Default]
@@ -59,10 +56,9 @@ class AuthActionSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEa
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(authConnector, dateTimeService, appConfig)
+    reset(authConnector, dateTimeService)
 
     when(dateTimeService.timestamp).thenReturn(timestamp)
-    when(appConfig.tgpIdentifier).thenReturn(tgpIdentifierName)
   }
 
   "authorisation" should {

@@ -16,15 +16,6 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.config
 
-import io.lemonlabs.uri.Url
-import javax.inject.{Inject, Singleton}
-import play.api.Configuration
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-
-@Singleton
-class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) {
-
-  val appName: String = config.get[String]("appName")
-
-  val routerUrl = Url.parse(servicesConfig.baseUrl("trader-goods-profiles-router"))
+object Constants {
+  val XClientIdHeader = "X-Client-ID"
 }

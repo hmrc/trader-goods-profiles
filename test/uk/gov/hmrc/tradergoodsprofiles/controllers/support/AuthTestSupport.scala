@@ -33,7 +33,7 @@ trait AuthTestSupport {
   lazy val authConnector: AuthConnector = mock[AuthConnector]
 
   private val authFetch           = authorisedEnrolments and affinityGroup
-  protected val tgpIdentifierName = "tgpFakeIdentifier"
+  protected val tgpIdentifierName = "EORINumber"
   protected val eoriNumber        = "GB000000000123"
   protected val enrolmentKey      = "HMRC-CUS-ORG"
   private val enrolment           = Enrolment(enrolmentKey).withIdentifier(tgpIdentifierName, eoriNumber)
