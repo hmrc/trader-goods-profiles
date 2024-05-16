@@ -248,6 +248,46 @@ paths:
       security:
         - userRestricted:
             - trader-goods-profiles
+  /customs/traders/goods-profiles/{eori}:
+    put:
+      parameters:
+        - $ref: '#/components/parameters/Content-Type'
+        - $ref: '#/components/parameters/Accept'
+        - $ref: '#/components/parameters/Authorization'
+        - $ref: '#/components/parameters/eoriParam'
+      tags:
+        - Traders profile
+      summary: Maintain a trader's profile record
+      description: Maintain a trader's profile record
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MaintainProfileRecordSchema'
+        required: true
+      responses:
+        '200':
+          description: OK; Request completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaintainProfileRecordResponse'
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/xCorrelationIdHdr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Forbidden;   User was valid, but not allowed to perform this action
+        '404':
+          description: Maintain profile records not found to deactivate
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - userRestricted:
+            - trader-goods-profiles
 components:
   responses:
     BadRequest:
@@ -398,6 +438,22 @@ components:
           $ref: '#/components/schemas/requestorName'
         requestorEmail:
           $ref: '#/components/schemas/requestorEmail'
+    MaintainProfileRecordSchema:
+      required:
+        - eori
+        - ukimsNumber
+      type: object
+      properties:
+        eori:
+          $ref: '#/components/schemas/eori'
+        actorId:
+          $ref: '#/components/schemas/actorId'
+        ukimsNumber:
+          $ref: '#/components/schemas/ukimsNumber'
+        nirmsNumber:
+          $ref: '#/components/schemas/nirmsNumber'
+        niphlNumber:
+          $ref: '#/components/schemas/niphlNumber'
     TGPRecordResponseSchema:
       required:
         - recordId
@@ -649,6 +705,25 @@ components:
           type: integer
           example: 0
           description: Number of the previous page, null if on the last page
+    MaintainProfileRecordResponse:
+      required:
+        - eori
+        - actorId
+        - ukimsNumber
+        - nirmsNumber
+        - niphlNumber
+      type: object
+      properties:
+        eori:
+          $ref: '#/components/schemas/eori'
+        actorId:
+          $ref: '#/components/schemas/actorId'
+        ukimsNumber:
+          $ref: '#/components/schemas/ukimsNumber'
+        nirmsNumber:
+          $ref: '#/components/schemas/nirmsNumber'
+        niphlNumber:
+          $ref: '#/components/schemas/niphlNumber'
     recordId:
       type: string
       format: uuid
