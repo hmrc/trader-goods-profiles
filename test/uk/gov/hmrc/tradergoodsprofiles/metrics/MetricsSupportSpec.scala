@@ -38,17 +38,18 @@ class MetricsSupportSpec extends AsyncWordSpecLike {
     val successCounter = mock[Counter]
     val failureCounter = mock[Counter]
     val histogram      = mock[Histogram]
-    when(metricsRegistry.timer(anyString())) thenReturn timer
-    when(metricsRegistry.counter(endsWith("success-counter"))) thenReturn successCounter
-    when(metricsRegistry.counter(endsWith("failed-counter"))) thenReturn failureCounter
-    when(metricsRegistry.histogram(anyString())) thenReturn histogram
+    val metricsRegistry: MetricRegistry
+    when(this.metricsRegistry.timer(anyString())) thenReturn timer
+    when(this.metricsRegistry.counter(endsWith("success-counter"))) thenReturn successCounter
+    when(this.metricsRegistry.counter(endsWith("failed-counter"))) thenReturn failureCounter
+    when(this.metricsRegistry.histogram(anyString())) thenReturn histogram
     when(timer.time()) thenReturn timerContext
     when(timerContext.stop()) thenReturn 0L
   }
 
   private val metricsRegistry: MetricRegistry = mock[MetricRegistry]
+  private val metricName                      = "test-metrics"
 
-  private val metricName = "test-metrics"
   class TestMetricsSupport @Inject() (override val metricsRegistry: MetricRegistry)
       extends MetricsSupport
       with MockHasMetrics

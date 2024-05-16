@@ -20,14 +20,13 @@ import com.google.inject.ImplementedBy
 import play.api.Logging
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
+import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{affinityGroup, authorisedEnrolments}
 import uk.gov.hmrc.auth.core.retrieve.~
-import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
-import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
-import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.AuthAction.gtpEnrolmentKey
+import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.AuthAction.{gtpEnrolmentKey, gtpIdentifierKey}
 import uk.gov.hmrc.tradergoodsprofiles.models.auth.EnrolmentRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ForbiddenErrorResponse, ServerErrorResponse, UnauthorisedErrorResponse}
 import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
@@ -40,7 +39,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class AuthActionImpl @Inject() (
   override val authConnector: AuthConnector,
   dateTimeService: DateTimeService,
-  appConfig: AppConfig,
   val bodyParser: BodyParsers.Default,
   cc: ControllerComponents,
   val parser: BodyParsers.Default
@@ -129,7 +127,7 @@ class AuthActionImpl @Inject() (
     enrolments
       .getEnrolment(gtpEnrolmentKey)
       .fold[Seq[EnrolmentIdentifier]](Seq.empty)(e =>
-        e.identifiers.filter(i => i.key.equalsIgnoreCase(appConfig.tgpIdentifier))
+        e.identifiers.filter(i => i.key.equalsIgnoreCase(gtpIdentifierKey))
       )
       .map(_.value)
       .distinct
@@ -160,7 +158,8 @@ class AuthActionImpl @Inject() (
 }
 
 object AuthAction {
-  val gtpEnrolmentKey = "HMRC-CUS-ORG"
+  val gtpEnrolmentKey  = "HMRC-CUS-ORG"
+  val gtpIdentifierKey = "EORINumber"
 }
 
 @ImplementedBy(classOf[AuthActionImpl])
