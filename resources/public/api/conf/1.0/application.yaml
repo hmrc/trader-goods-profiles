@@ -128,7 +128,7 @@ paths:
             X-Correlation-ID:
               $ref: '#/components/headers/xCorrelationIdHdr'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          $ref: '#/components/responses/UpdateBadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -250,6 +250,43 @@ paths:
             - trader-goods-profiles
 components:
   responses:
+    UpdateBadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+              message:
+                type: string
+              errors:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Error'
+          examples:
+            traderRefNotUnique:
+              value:
+                code: BAD_REQUEST
+                message: Bad request
+                errors:
+                  - code: '005'
+                    message: traderRef is not unique for all the provided traderEori goods records
+            recordIsLocked:
+              value:
+                code: BAD_REQUEST
+                message: Bad request
+                errors:
+                  - code: '027'
+                    message: Record is locked and cannot be updated until accreditation request withdrawn.
+            recordIsAlreadyDeactivated:
+              value:
+                code: BAD_REQUEST
+                message: Bad request
+                errors:
+                  - code: '031'
+                    message: A deactivated record cannot be updated.
     BadRequest:
       description: Bad Request
       content:
