@@ -78,7 +78,7 @@ class RouterServiceImpl @Inject() (
   ): EitherT[Future, Result, CreateRecordResponse] =
     EitherT(
       routerConnector
-        .post(eori, createRequest)
+        .post(createRequest)
         .map { httpResponse =>
           httpResponse.status match {
             case status if is2xx(status) =>

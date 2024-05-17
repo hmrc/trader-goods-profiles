@@ -49,9 +49,9 @@ class RouterConnector @Inject() (
         .execute[HttpResponse]
     }
 
-  def post(eori: String, createRecordRequest: CreateRecordRequest)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+  def post(createRecordRequest: CreateRecordRequest)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.createrecord.connector") { _ =>
-      val url      = appConfig.routerUrl.withPath(routerCreateRoute(eori))
+      val url      = appConfig.routerUrl.withPath(routerCreateRoute())
       val jsonData = Json.toJson(createRecordRequest)
       httpClient
         .post(url"$url")

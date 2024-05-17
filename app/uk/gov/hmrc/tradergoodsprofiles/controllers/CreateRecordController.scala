@@ -47,11 +47,13 @@ class CreateRecordController @Inject() (
             }.toMap
             Future.successful(BadRequest(Json.obj("error" -> "Invalid JSON", "details" -> errorMessages)))
           },
-          createRequest =>
-            routerService.createRecord(eori, createRequest).value.map {
+          createRequest => {
+            val requestWithEori = createRequest.copy(eori = eori)
+            routerService.createRecord(eori, requestWithEori).value.map {
               case Right(recordResponse) => Created(Json.toJson(recordResponse))
               case Left(errorResult)     => errorResult
             }
+          }
         )
     }
 }
