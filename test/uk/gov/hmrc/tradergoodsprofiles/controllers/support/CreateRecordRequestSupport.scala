@@ -23,6 +23,7 @@ import java.time.Instant
 trait CreateRecordRequestSupport {
 
   def createCreateRecordRequest(
+    eori: String = "GB123456789012",
     actorId: String = "GB987654321098",
     traderRef: String = "SKU123456",
     comcode: Int = 123456,
@@ -42,6 +43,7 @@ trait CreateRecordRequestSupport {
     )
     val assessment = Assessment("a06846e9a5f61fa4ecf2c4e3b23631fc", 1, condition)
     CreateRecordRequest(
+      eori,
       actorId,
       traderRef,
       comcode,

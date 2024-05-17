@@ -21,6 +21,7 @@ import play.api.libs.json.{Json, OFormat}
 import java.time.Instant
 
 case class CreateRecordRequest(
+  eori: String,
   actorId: String,
   traderRef: String,
   comcode: Int,
