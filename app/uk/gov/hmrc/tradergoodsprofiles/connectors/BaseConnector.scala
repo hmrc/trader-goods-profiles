@@ -30,9 +30,9 @@ trait BaseConnector {
       s"$routerBaseRoute/$eoriNumber/records/$recordId"
     )
 
-  def routerCreateRoute(eoriNumber: String): UrlPath =
+  def routerCreateRoute(): UrlPath =
     UrlPath.parse(
-      s"$routerBaseRoute/$eoriNumber/records/" // TODO: Verify router endpoint
+      s"$routerBaseRoute/records"
     )
 
   implicit class HttpResponseHelpers(requestBuilder: RequestBuilder) {
