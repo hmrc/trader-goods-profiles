@@ -22,7 +22,7 @@ import java.time.Instant
 
 trait APICreateRecordRequestSupport {
 
-  def createCreateRecordRequest(
+  def createAPICreateRecordRequest(
     actorId: String = "GB987654321098",
     traderRef: String = "SKU123456",
     comcode: Int = 123456,

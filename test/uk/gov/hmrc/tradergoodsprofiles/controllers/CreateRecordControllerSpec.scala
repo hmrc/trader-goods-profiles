@@ -73,7 +73,7 @@ class CreateRecordControllerSpec
 
   "createRecord" should {
     "return 201 when the record is successfully created" in {
-      val createRequest = createCreateRecordRequest()
+      val createRequest = createAPICreateRecordRequest()
 
       val result = sut.createRecord(eoriNumber)(request.withBody(Json.toJson(createRequest)))
 
