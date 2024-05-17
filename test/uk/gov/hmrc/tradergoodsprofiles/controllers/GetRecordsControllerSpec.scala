@@ -30,7 +30,7 @@ import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubCo
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.response.GetRecordResponseSupport
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.GetRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, RouterService}
 
 import java.time.Instant

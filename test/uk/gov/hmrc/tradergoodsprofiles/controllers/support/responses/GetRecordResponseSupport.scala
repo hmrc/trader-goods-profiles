@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.tradergoodsprofiles.controllers.support.response
+package uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses
 
 import uk.gov.hmrc.tradergoodsprofiles.models.{Assessment, Condition, GetRecordResponse}
 

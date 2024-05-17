@@ -28,9 +28,9 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.request.APICreateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.response.CreateRecordResponseSupport
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.APICreateRecordRequestSupport
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, RouterService}
 
 import java.time.Instant

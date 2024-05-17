@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.tradergoodsprofiles.controllers.support.request
+package uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests
 
 import uk.gov.hmrc.tradergoodsprofiles.models.{APICreateRecordRequest, Assessment, Condition}
 

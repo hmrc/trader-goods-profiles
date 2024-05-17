@@ -35,7 +35,7 @@ import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.response.GetRecordResponseSupport
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.GetRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.GetRecordResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
 import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
