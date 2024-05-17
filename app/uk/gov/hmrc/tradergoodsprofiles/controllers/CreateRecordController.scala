@@ -20,7 +20,7 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.models.CreateRecordRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.{APICreateRecordRequest, RouterCreateRecordRequest}
 import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, RouterService}
 
 import javax.inject.{Inject, Singleton}
@@ -39,7 +39,7 @@ class CreateRecordController @Inject() (
   def createRecord(eori: String): Action[JsValue] =
     (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
       request.body
-        .validate[CreateRecordRequest]
+        .validate[APICreateRecordRequest]
         .fold(
           errors => {
             val errorMessages = errors.map { case (path, validationErrors) =>
@@ -48,11 +48,28 @@ class CreateRecordController @Inject() (
             Future.successful(BadRequest(Json.obj("error" -> "Invalid JSON", "details" -> errorMessages)))
           },
           createRequest => {
-            val requestWithEori = createRequest.copy(eori = eori)
-            routerService.createRecord(eori, requestWithEori).value.map {
-              case Right(recordResponse) => Created(Json.toJson(recordResponse))
-              case Left(errorResult)     => errorResult
-            }
+            val routerCreateRecordRequest = RouterCreateRecordRequest(
+              eori = eori,
+              createRequest.actorId,
+              createRequest.traderRef,
+              createRequest.comcode,
+              createRequest.goodsDescription,
+              createRequest.countryOfOrigin,
+              createRequest.category,
+              createRequest.assessments,
+              createRequest.supplementaryUnit,
+              createRequest.measurementUnit,
+              createRequest.comcodeEffectiveFromDate,
+              createRequest.comcodeEffectiveToDate
+            )
+            routerService
+              .createRecord(eori, routerCreateRecordRequest)
+              .value
+              .map {
+                case Right(recordResponse) => Created(Json.toJson(recordResponse))
+                case Left(errorResult)     => errorResult
+              }
+
           }
         )
     }

@@ -25,7 +25,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.metrics.MetricsSupport
-import uk.gov.hmrc.tradergoodsprofiles.models.CreateRecordRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.{APICreateRecordRequest, RouterCreateRecordRequest}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -49,7 +49,7 @@ class RouterConnector @Inject() (
         .execute[HttpResponse]
     }
 
-  def post(createRecordRequest: CreateRecordRequest)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+  def post(createRecordRequest: RouterCreateRecordRequest)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.createrecord.connector") { _ =>
       val url      = appConfig.routerUrl.withPath(routerCreateRoute())
       val jsonData = Json.toJson(createRecordRequest)

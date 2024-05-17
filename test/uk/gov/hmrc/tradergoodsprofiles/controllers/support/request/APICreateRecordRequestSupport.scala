@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.tradergoodsprofiles.controllers.support
+package uk.gov.hmrc.tradergoodsprofiles.controllers.support.request
 
-import uk.gov.hmrc.tradergoodsprofiles.models.{Assessment, Condition, CreateRecordRequest}
+import uk.gov.hmrc.tradergoodsprofiles.models.{APICreateRecordRequest, Assessment, Condition}
 
 import java.time.Instant
 
-trait CreateRecordRequestSupport {
+trait APICreateRecordRequestSupport {
 
   def createCreateRecordRequest(
-    eori: String = "GB123456789012",
     actorId: String = "GB987654321098",
     traderRef: String = "SKU123456",
     comcode: Int = 123456,
@@ -34,7 +33,7 @@ trait CreateRecordRequestSupport {
     measurementUnit: String = "Kilograms",
     comcodeEffectiveFromDate: Instant = Instant.parse("2023-01-01T00:00:00Z"),
     comcodeEffectiveToDate: Instant = Instant.parse("2028-01-01T00:00:00Z")
-  ): CreateRecordRequest = {
+  ): APICreateRecordRequest = {
     val condition  = Condition(
       "certificate",
       "Y923",
@@ -42,8 +41,7 @@ trait CreateRecordRequestSupport {
       "Excluded product"
     )
     val assessment = Assessment("a06846e9a5f61fa4ecf2c4e3b23631fc", 1, condition)
-    CreateRecordRequest(
-      eori,
+    APICreateRecordRequest(
       actorId,
       traderRef,
       comcode,

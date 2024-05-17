@@ -20,8 +20,7 @@ import play.api.libs.json.{Json, OFormat}
 
 import java.time.Instant
 
-case class CreateRecordRequest(
-  eori: String,
+case class APICreateRecordRequest(
   actorId: String,
   traderRef: String,
   comcode: Int,
@@ -35,6 +34,6 @@ case class CreateRecordRequest(
   comcodeEffectiveToDate: Instant
 )
 
-object CreateRecordRequest {
-  implicit val format: OFormat[CreateRecordRequest] = Json.format[CreateRecordRequest]
+object APICreateRecordRequest {
+  implicit val format: OFormat[APICreateRecordRequest] = Json.format[APICreateRecordRequest]
 }
