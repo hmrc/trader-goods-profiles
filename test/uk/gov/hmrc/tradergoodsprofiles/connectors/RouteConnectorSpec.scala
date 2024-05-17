@@ -92,4 +92,29 @@ class RouteConnectorSpec extends PlaySpec with ScalaFutures with EitherValues wi
       }
     }
   }
+  "remove" should {
+
+    "return 200" in {
+      val result = await(sut.put("eoriNumber", "recordId"))
+
+      result.status mustBe OK
+    }
+
+    "send a request with the right url" in {
+
+      await(sut.put("eoriNumber", "recordId")(hc))
+
+      val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/eoriNumber/records/recordId")
+      verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
+      verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+      verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
+      verify(requestBuilder).execute(any, any)
+
+      withClue("process the response within a timer") {
+        verify(metricsRegistry).timer(eqTo("tgp.getrecord.connector-timer"))
+        verify(metricsRegistry.timer(eqTo("emcs.submission.connector-timer"))).time()
+        verify(timerContext).stop()
+      }
+    }
+  }
 }
