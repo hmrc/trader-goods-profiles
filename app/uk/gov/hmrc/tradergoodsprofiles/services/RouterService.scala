@@ -125,7 +125,7 @@ class RouterServiceImpl @Inject() (
   ): EitherT[Future, Result, Unit] =
     EitherT(
       routerConnector
-        .put(eoriNumber, recordId)
+        .put(eoriNumber, recordId, actorId)
         .map {
           case httpResponse if is2xx(httpResponse.status) => Right(())
           case httpResponse                               => Left(handleError(httpResponse.body, httpResponse.status, eoriNumber, recordId))

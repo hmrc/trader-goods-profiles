@@ -47,14 +47,16 @@ class RouterConnector @Inject() (
         .execute[HttpResponse]
     }
 
-  def put(eori: String, recordId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+  def put(eori: String, recordId: String, actorId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.removerecord.connector") { _ =>
       val url = appConfig.routerUrl.withPath(routerRoute(eori, recordId))
 
       httpClient
         .put(url"$url")
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+        .withBody(actorId)
         .withClientId
         .execute[HttpResponse]
     }
+
 }
