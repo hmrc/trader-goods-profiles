@@ -19,6 +19,7 @@ package uk.gov.hmrc.tradergoodsprofiles.connectors
 import com.codahale.metrics.MetricRegistry
 import play.api.Logging
 import play.api.http.{HeaderNames, MimeTypes}
+import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
@@ -54,8 +55,8 @@ class RouterConnector @Inject() (
       httpClient
         .put(url"$url")
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-        .withBody(actorId)
         .withClientId
+        .withBody(Json.obj("actorId" -> actorId))
         .execute[HttpResponse]
     }
 

@@ -19,7 +19,6 @@ package uk.gov.hmrc.tradergoodsprofiles.services
 import cats.data.EitherT
 import com.google.inject.{ImplementedBy, Inject}
 import play.api.Logging
-import play.api.http.Status.OK
 import play.api.libs.json._
 import play.api.mvc.Result
 import play.api.mvc.Results.Status

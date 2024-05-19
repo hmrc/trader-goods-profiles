@@ -28,6 +28,7 @@ import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status.OK
 import play.api.http.{HeaderNames, MimeTypes}
+import play.api.libs.json.Json
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
@@ -57,7 +58,9 @@ class RouteConnectorSpec extends PlaySpec with ScalaFutures with EitherValues wi
 
     when(appConfig.routerUrl).thenReturn(Url.parse("http://localhost:23123"))
     when(httpClient.get(any)(any)).thenReturn(requestBuilder)
+    when(httpClient.put(any)(any)).thenReturn(requestBuilder)
     when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
+    when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
     when(requestBuilder.execute[HttpResponse](any, any))
       .thenReturn(Future.successful(HttpResponse(200, "message")))
 
@@ -96,20 +99,20 @@ class RouteConnectorSpec extends PlaySpec with ScalaFutures with EitherValues wi
   "remove" should {
 
     "return 200" in {
-      val sut = new RouterConnector(when(httpClient.get(any)(any)).thenReturn(requestBuilder), appConfig, metricsRegistry)
       val result = await(sut.put("eoriNumber", "recordId", "actorId"))
 
       result.status mustBe OK
     }
 
-    "send a request with the right url" in {
+    "send a PUT request with the right url and body" in {
 
       await(sut.put("eoriNumber", "recordId", "actorId")(hc))
 
       val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/eoriNumber/records/recordId")
-      verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
+      verify(httpClient).put(eqTo(url"$expectedUrl"))(any)
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
+      verify(requestBuilder).withBody(Json.obj("actorId" -> "actorId"))
       verify(requestBuilder).execute(any, any)
 
       withClue("process the response within a timer") {
@@ -118,7 +121,5 @@ class RouteConnectorSpec extends PlaySpec with ScalaFutures with EitherValues wi
         verify(timerContext).stop()
       }
     }
-
-
   }
 }
