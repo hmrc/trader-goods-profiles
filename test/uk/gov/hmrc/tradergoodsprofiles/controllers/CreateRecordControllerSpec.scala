@@ -22,13 +22,14 @@ import org.mockito.MockitoSugar.{reset, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
-import play.api.http.Status.CREATED
+import play.api.http.Status.{BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR}
 import play.api.libs.json.Json
+import play.api.mvc.Results.InternalServerError
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.APICreateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, RouterService}
@@ -79,6 +80,35 @@ class CreateRecordControllerSpec
 
       status(result) mustBe CREATED
       contentAsJson(result) mustBe Json.toJson(createCreateRecordResponse(recordId, eoriNumber, timestamp))
+    }
+
+    "return 400 when invalid JSON is provided" in {
+      val invalidJsonRequest = Json.obj(
+        "invalidField" -> "invalidValue"
+      )
+
+      val result = sut.createRecord(eoriNumber)(request.withBody(invalidJsonRequest))
+
+      status(result) mustBe BAD_REQUEST
+      (contentAsJson(result) \ "error").as[String] mustBe "Invalid JSON"
+    }
+
+    "return 500 when the router service returns an error" in {
+      val createRequest = createAPICreateRecordRequest()
+
+      val expectedJson = Json.obj(
+        "timestamp" -> timestamp,
+        "code"      -> "INTERNAL_SERVER_ERROR",
+        "message"   -> "Sorry, the service is unavailable. You'll be able to use the service later"
+      )
+
+      when(routerService.createRecord(any, any)(any))
+        .thenReturn(EitherT.leftT(InternalServerError(expectedJson)))
+
+      val result = sut.createRecord(eoriNumber)(request.withBody(Json.toJson(createRequest)))
+
+      status(result) mustBe INTERNAL_SERVER_ERROR
+      contentAsJson(result) mustBe expectedJson
     }
   }
 }

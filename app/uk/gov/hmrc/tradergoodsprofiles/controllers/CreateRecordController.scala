@@ -16,11 +16,14 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
+import cats.data.EitherT
+import cats.implicits._
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, ControllerComponents}
+import play.api.mvc.{Action, ControllerComponents, Result}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.models.{APICreateRecordRequest, RouterCreateRecordRequest}
+import uk.gov.hmrc.tradergoodsprofiles.models.{APICreateRecordRequest, CreateRecordResponse, RouterCreateRecordRequest}
 import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, RouterService}
 
 import javax.inject.{Inject, Singleton}
@@ -47,30 +50,31 @@ class CreateRecordController @Inject() (
             }.toMap
             Future.successful(BadRequest(Json.obj("error" -> "Invalid JSON", "details" -> errorMessages)))
           },
-          createRequest => {
-            val routerCreateRecordRequest = RouterCreateRecordRequest(
-              eori = eori,
-              createRequest.actorId,
-              createRequest.traderRef,
-              createRequest.comcode,
-              createRequest.goodsDescription,
-              createRequest.countryOfOrigin,
-              createRequest.category,
-              createRequest.assessments,
-              createRequest.supplementaryUnit,
-              createRequest.measurementUnit,
-              createRequest.comcodeEffectiveFromDate,
-              createRequest.comcodeEffectiveToDate
-            )
-            routerService
-              .createRecord(eori, routerCreateRecordRequest)
-              .value
-              .map {
-                case Right(recordResponse) => Created(Json.toJson(recordResponse))
-                case Left(errorResult)     => errorResult
-              }
-
-          }
+          createRequest =>
+            (for {
+              response <- createRecordRequestForRouter(eori, createRequest)
+            } yield Created(Json.toJson(response))).merge
         )
     }
+
+  private def createRecordRequestForRouter(
+    eori: String,
+    createRequest: APICreateRecordRequest
+  )(implicit hc: HeaderCarrier): EitherT[Future, Result, CreateRecordResponse] = {
+    val routerCreateRecordRequest = RouterCreateRecordRequest(
+      eori = eori,
+      createRequest.actorId,
+      createRequest.traderRef,
+      createRequest.comcode,
+      createRequest.goodsDescription,
+      createRequest.countryOfOrigin,
+      createRequest.category,
+      createRequest.assessments,
+      createRequest.supplementaryUnit,
+      createRequest.measurementUnit,
+      createRequest.comcodeEffectiveFromDate,
+      createRequest.comcodeEffectiveToDate
+    )
+    routerService.createRecord(eori, routerCreateRecordRequest)
+  }
 }
