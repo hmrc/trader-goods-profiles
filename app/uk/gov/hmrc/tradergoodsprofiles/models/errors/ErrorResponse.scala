@@ -110,7 +110,7 @@ object InvalidActorIdErrorResponse {
     (JsPath \ "timestamp").write[String] and
       (JsPath \ "code").write[String] and
       (JsPath \ "message").write[String]
-    )(e => (e.timestamp.asStringSeconds, e.code, e.message))
+  )(e => (e.timestamp.asStringSeconds, e.code, e.message))
 }
 
 case class InvalidHeaderErrorResponse(

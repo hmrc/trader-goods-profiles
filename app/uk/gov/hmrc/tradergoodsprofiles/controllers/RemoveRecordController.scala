@@ -19,7 +19,7 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers
 import cats.data.EitherT
 import cats.implicits.toBifunctorOps
 import play.api.libs.json.Format.GenericFormat
-import play.api.libs.json.{JsError, JsValue, Json}
+import play.api.libs.json.JsValue
 import play.api.mvc.{Action, ControllerComponents, Request, Result}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
