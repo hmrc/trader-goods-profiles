@@ -43,18 +43,13 @@ class RemoveRecordController @Inject() (
     extends BackendController(cc) {
   def removeRecord(eori: String, recordId: String): Action[JsValue] =
     (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
-      removeRecordRequest(request).value.flatMap {
-        case Right(removeRecordRequest) =>
-          val result = for {
-            _ <- validateRecordId(recordId)
-            _ <- routerService.removeRecord(eori, recordId, removeRecordRequest.actorId)
-          } yield Ok
+      val result = for {
+        removeRecordRequest <- removeRecordRequest(request)
+        _                   <- validateRecordId(recordId)
+        _                   <- routerService.removeRecord(eori, recordId, removeRecordRequest.actorId)
+      } yield Ok
 
-          result.valueOrF(Future.successful)
-
-        case Left(errorResult) =>
-          Future.successful(errorResult)
-      }
+      result.merge
     }
 
   private def removeRecordRequest(
