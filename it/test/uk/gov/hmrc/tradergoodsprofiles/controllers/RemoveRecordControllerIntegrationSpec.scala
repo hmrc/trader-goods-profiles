@@ -92,7 +92,7 @@ class RemoveRecordControllerIntegrationSpec
     wireMock.stop()
   }
 
-  "GET record" should {
+  "remove record" should {
     "return 200" in {
       withAuthorizedTrader()
       val result = await(
@@ -109,7 +109,7 @@ class RemoveRecordControllerIntegrationSpec
 
     }
 
-    "return a record" in {
+    "return 200 with the headers" in {
       withAuthorizedTrader()
 
       val result = await(

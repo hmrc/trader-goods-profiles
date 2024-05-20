@@ -17,8 +17,8 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import cats.data.EitherT
-import org.mockito.ArgumentMatchersSugar.any
-import org.mockito.MockitoSugar.{reset, when}
+import org.mockito.ArgumentMatchersSugar.{any, eqTo}
+import org.mockito.MockitoSugar.{reset, verify, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
@@ -87,12 +87,12 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
       status(result) mustBe OK
     }
 
-//    "remove the record from router" in {
-//      val result = sut.removeRecord(eoriNumber, recordId)(request)
-//
-//      status(result) mustBe OK
-//      verify(routerService).removeRecord(eqTo(eoriNumber), eqTo(recordId),"GB098765432112")(any)
-//    }
+    "remove the record from router" in {
+      val result = sut.removeRecord(eoriNumber, recordId)(request)
+
+      status(result) mustBe OK
+      verify(routerService).removeRecord(eqTo(eoriNumber), eqTo(recordId), eqTo("GB098765432112"))(any)
+    }
 
     "return an error" when {
 
