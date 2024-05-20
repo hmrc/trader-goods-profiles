@@ -73,5 +73,4 @@ class RemoveRecordController @Inject() (
         ).toResult
       )
     )
-
 }
