@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
-import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
 import org.mockito.MockitoSugar.{reset, when}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
@@ -27,10 +26,10 @@ import play.api.Application
 import play.api.http.Status._
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
@@ -63,13 +62,13 @@ class CreateRecordControllerIntegrationSpec
 
   override protected val eoriNumber: String = "GB123456789012"
   private val url                           = s"http://localhost:$port/customs/traders/goods-profiles/$eoriNumber/records"
-  private val routerUrl                     = "/trader-goods-profiles-router/records"
+  private val routerUrl                     = s"/trader-goods-profiles-router/$eoriNumber/records"
   private val requestBody                   = Json.toJson(createAPICreateRecordRequest())
   private val expectedResponse              = Json.toJson(createCreateRecordResponse(recordId, eoriNumber, timestamp))
 
   override lazy val app: Application = {
     wireMock.start()
-    WireMock.configureFor(wireHost, wireMock.port())
+    configureFor(wireHost, wireMock.port())
 
     GuiceApplicationBuilder()
       .configure(configureServices)
@@ -118,7 +117,7 @@ class CreateRecordControllerIntegrationSpec
     }
   }
 
-  private def createRecordAndWait() =
+  private def createRecordAndWait(requestBody: JsValue = requestBody) =
     await(
       wsClient
         .url(url)
@@ -132,8 +131,7 @@ class CreateRecordControllerIntegrationSpec
 
   private def stubRouterRequest(status: Int, responseBody: String) =
     wireMock.stubFor(
-      WireMock
-        .post(urlEqualTo(routerUrl))
+      post(urlEqualTo(routerUrl))
         .willReturn(
           aResponse()
             .withStatus(status)
