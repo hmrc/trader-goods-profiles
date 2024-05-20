@@ -22,7 +22,6 @@ import java.time.Instant
 
 trait RouterCreateRecordRequestSupport {
 
-  // TODO: Might not need that
   def createRouterCreateRecordRequest(
     eori: String = "GB123456789012",
     actorId: String = "GB987654321098",
