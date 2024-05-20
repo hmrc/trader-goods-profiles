@@ -87,6 +87,12 @@ case class InvalidRecordIdErrorResponse(timestamp: Instant, message: String) ext
   def toResult: Result = BadRequest(Json.toJson(InvalidRecordIdErrorResponse(timestamp, message)))
 }
 
+case class InvalidActorIdErrorResponse(timestamp: Instant, message: String) extends ErrorResponse {
+  override val code: String = "INVALID_ACTOR_ID_PARAMETER"
+
+  def toResult: Result = BadRequest(Json.toJson(InvalidActorIdErrorResponse(timestamp, message)))
+}
+
 object InvalidRecordIdErrorResponse {
   implicit val read: Reads[InvalidRecordIdErrorResponse] = Json.reads[InvalidRecordIdErrorResponse]
 
@@ -95,6 +101,16 @@ object InvalidRecordIdErrorResponse {
       (JsPath \ "code").write[String] and
       (JsPath \ "message").write[String]
   )(e => (e.timestamp.asStringSeconds, e.code, e.message))
+}
+
+object InvalidActorIdErrorResponse {
+  implicit val read: Reads[InvalidActorIdErrorResponse] = Json.reads[InvalidActorIdErrorResponse]
+
+  implicit val write: Writes[InvalidActorIdErrorResponse] = (
+    (JsPath \ "timestamp").write[String] and
+      (JsPath \ "code").write[String] and
+      (JsPath \ "message").write[String]
+    )(e => (e.timestamp.asStringSeconds, e.code, e.message))
 }
 
 case class InvalidHeaderErrorResponse(

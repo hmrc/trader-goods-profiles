@@ -24,7 +24,7 @@ import play.api.mvc.{Action, ControllerComponents, Request, Result}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
 import uk.gov.hmrc.tradergoodsprofiles.models.RemoveRecordRequest
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.InvalidRecordIdErrorResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.{InvalidActorIdErrorResponse, InvalidRecordIdErrorResponse}
 import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, RouterService}
 
 import java.util.UUID
@@ -57,10 +57,15 @@ class RemoveRecordController @Inject() (
       }
     }
 
-  private def removeRecordRequest(request: Request[JsValue]): EitherT[Future, Result, RemoveRecordRequest] =
+  private def removeRecordRequest(
+    request: Request[JsValue]
+  )(implicit ec: ExecutionContext): EitherT[Future, Result, RemoveRecordRequest] =
     EitherT.fromEither(
       request.body.validate[RemoveRecordRequest].asEither.leftMap { errors =>
-        BadRequest(Json.obj("message" -> "Invalid request body", "errors" -> JsError.toJson(errors)))
+        InvalidActorIdErrorResponse(
+          dateTimeService.timestamp,
+          "Missing or invalid mandatory request parameter"
+        ).toResult
       }
     )
 

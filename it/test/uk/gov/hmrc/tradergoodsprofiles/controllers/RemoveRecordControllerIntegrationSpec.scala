@@ -233,6 +233,27 @@ class RemoveRecordControllerIntegrationSpec
       result.json mustBe createExpectedJson("INVALID_HEADER_PARAMETERS", "X-Client-ID header is missing")
     }
 
+    "return BadRequest for invalid request body" in {
+      withAuthorizedTrader()
+      val emptyJsonBody = Json.obj()
+      val result        = await(
+        wsClient
+          .url(url)
+          .withHttpHeaders(
+            "X-Client-ID"  -> "clientId",
+            "Accept"       -> "application/vnd.hmrc.1.0+json",
+            "Content-Type" -> "application/json"
+          )
+          .put(emptyJsonBody)
+      )
+
+      result.status mustBe BAD_REQUEST
+      result.json mustBe createExpectedJson(
+        "INVALID_ACTOR_ID_PARAMETER",
+        "Missing or invalid mandatory request parameter"
+      )
+
+    }
     "return forbidden when Accept header is invalid" in {
       withAuthorizedTrader()
 
