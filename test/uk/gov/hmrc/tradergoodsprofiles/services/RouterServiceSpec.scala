@@ -28,9 +28,10 @@ import play.api.mvc.Result
 import play.api.mvc.Results.InternalServerError
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.GetRecordResponseSupport
-import uk.gov.hmrc.tradergoodsprofiles.models.GetRecordResponse
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.RouterCreateRecordRequestSupport
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.{CreateRecordResponseSupport, GetRecordResponseSupport}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.RouterError
+import uk.gov.hmrc.tradergoodsprofiles.models.{CreateRecordResponse, GetRecordResponse}
 
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
@@ -39,6 +40,8 @@ import scala.reflect.runtime.universe.typeOf
 class RouterServiceSpec
     extends PlaySpec
     with GetRecordResponseSupport
+    with CreateRecordResponseSupport
+    with RouterCreateRecordRequestSupport
     with ScalaFutures
     with EitherValues
     with IntegrationPatience
@@ -49,6 +52,7 @@ class RouterServiceSpec
 
   private val connector       = mock[RouterConnector]
   private val recordResponse  = createGetRecordResponse("GB123456789012", "recordId", Instant.now)
+  private val createResponse  = createCreateRecordResponse("recordId", "GB123456789012", Instant.now)
   private val dateTimeService = mock[DateTimeService]
   private val timestamp       = Instant.parse("2024-12-05T12:12:45Z")
 
@@ -165,6 +169,135 @@ class RouterServiceSpec
               .thenReturn(Future.successful(createHttpResponse(status, code)))
 
             val result = sut.getRecord("eori", "recordId")
+
+            whenReady(result.value) {
+              _.left.value.header.status mustBe expectedResult
+            }
+          }
+      }
+    }
+  }
+
+  "createRecord" should {
+    "create a record" in {
+      val createRequest = createRouterCreateRecordRequest()
+
+      when(connector.post(any)(any))
+        .thenReturn(Future.successful(HttpResponse(201, Json.toJson(createResponse), Map.empty)))
+
+      val result = sut.createRecord("GB123456789012", createRequest)
+
+      whenReady(result.value) { _ =>
+        verify(connector).post(eqTo(createRequest))(any)
+      }
+    }
+
+    "return CreateRecordResponse" in {
+      val createRequest = createRouterCreateRecordRequest()
+
+      when(connector.post(any)(any))
+        .thenReturn(Future.successful(HttpResponse(201, Json.toJson(createResponse), Map.empty)))
+
+      val result = sut.createRecord("GB123456789012", createRequest)
+
+      whenReady(result.value)(_.value mustBe createResponse)
+    }
+
+    "return an error" when {
+      "cannot parse the response" in {
+        val createRequest = createRouterCreateRecordRequest()
+
+        when(connector.post(any)(any))
+          .thenReturn(Future.successful(HttpResponse(201, Json.obj(), Map.empty)))
+
+        val result = sut.createRecord("GB123456789012", createRequest)
+
+        whenReady(result.value) {
+          _.left.value mustBe InternalServerError(
+            Json.obj(
+              "timestamp" -> timestamp,
+              "code"      -> "INTERNAL_SERVER_ERROR",
+              "message"   -> s"Response body could not be read as type ${typeOf[CreateRecordResponse]}"
+            )
+          )
+        }
+      }
+
+      "cannot parse the response as Json" in {
+        val createRequest = createRouterCreateRecordRequest()
+
+        when(connector.post(any)(any))
+          .thenReturn(Future.successful(HttpResponse(201, "error")))
+
+        val result = sut.createRecord("GB123456789012", createRequest)
+
+        whenReady(result.value) {
+          _.left.value mustBe createInternalServerErrorResult(
+            s"Response body could not be parsed as JSON, body: error"
+          )
+        }
+      }
+
+      "add timestamp to router error" in {
+        val createRequest = createRouterCreateRecordRequest()
+
+        when(connector.post(any)(any))
+          .thenReturn(Future.successful(createHttpResponse(500, "INTERNAL_SERVER_ERROR")))
+
+        val result = sut.createRecord("GB123456789012", createRequest)
+
+        whenReady(result.value) {
+          _.left.value mustBe InternalServerError(
+            Json.obj(
+              "correlationId" -> "correlationId",
+              "code"          -> "INTERNAL_SERVER_ERROR",
+              "message"       -> "any message",
+              "timestamp"     -> timestamp
+            )
+          )
+        }
+      }
+
+      "routerConnector return an exception" in {
+        val createRequest = createRouterCreateRecordRequest()
+
+        when(connector.post(any)(any))
+          .thenReturn(Future.failed(new RuntimeException("error")))
+
+        val result = sut.createRecord("GB123456789012", createRequest)
+
+        whenReady(result.value) {
+          _.left.value mustBe InternalServerError(
+            Json.obj(
+              "timestamp" -> timestamp,
+              "code"      -> "INTERNAL_SERVER_ERROR",
+              "message"   -> s"Could not create record due to an internal error"
+            )
+          )
+        }
+      }
+
+      val table = Table(
+        ("description", "status", "expectedResult", "code"),
+        ("return bad request", 400, 400, "BAD_REQUEST"),
+        ("return Forbidden", 403, 403, "FORBIDDEN"),
+        ("return Not Found", 404, 404, "NOT_FOUND")
+      )
+
+      forAll(table) {
+        (
+          description: String,
+          status: Int,
+          expectedResult: Int,
+          code: String
+        ) =>
+          s"$description" in {
+            val createRequest = createRouterCreateRecordRequest()
+
+            when(connector.post(any)(any))
+              .thenReturn(Future.successful(createHttpResponse(status, code)))
+
+            val result = sut.createRecord("GB123456789012", createRequest)
 
             whenReady(result.value) {
               _.left.value.header.status mustBe expectedResult
