@@ -82,15 +82,132 @@ class CreateRecordControllerSpec
       contentAsJson(result) mustBe Json.toJson(createCreateRecordResponse(recordId, eoriNumber, timestamp))
     }
 
-    "return 400 when invalid JSON is provided" in {
+    "return 400 when actorId is missing" in {
       val invalidJsonRequest = Json.obj(
-        "invalidField" -> "invalidValue"
+        "traderRef"                -> "SKU123456",
+        "comcode"                  -> 123456,
+        "goodsDescription"         -> "Bananas",
+        "countryOfOrigin"          -> "GB",
+        "category"                 -> 2,
+        "comcodeEffectiveFromDate" -> "2023-01-01T00:00:00Z"
       )
 
       val result = sut.createRecord(eoriNumber)(request.withBody(invalidJsonRequest))
 
       status(result) mustBe BAD_REQUEST
-      (contentAsJson(result) \ "error").as[String] mustBe "Invalid JSON"
+
+      (contentAsJson(result) \ "code").as[String] mustBe "INVALID JSON"
+
+      val errorMessage = (contentAsJson(result) \ "message" \ "obj.actorId").as[String]
+      errorMessage mustBe "error.path.missing"
+    }
+
+    "return 400 when traderRef is missing" in {
+      val invalidJsonRequest = Json.obj(
+        "actorId"                  -> "GB987654321098",
+        "comcode"                  -> 123456,
+        "goodsDescription"         -> "Bananas",
+        "countryOfOrigin"          -> "GB",
+        "category"                 -> 2,
+        "comcodeEffectiveFromDate" -> "2023-01-01T00:00:00Z"
+      )
+
+      val result = sut.createRecord(eoriNumber)(request.withBody(invalidJsonRequest))
+
+      status(result) mustBe BAD_REQUEST
+      (contentAsJson(result) \ "code").as[String] mustBe "INVALID JSON"
+      val errorMessage = (contentAsJson(result) \ "message" \ "obj.traderRef").as[String]
+      errorMessage mustBe "error.path.missing"
+    }
+
+    "return 400 when comcode is missing" in {
+      val invalidJsonRequest = Json.obj(
+        "actorId"                  -> "GB987654321098",
+        "traderRef"                -> "SKU123456",
+        "goodsDescription"         -> "Bananas",
+        "countryOfOrigin"          -> "GB",
+        "category"                 -> 2,
+        "comcodeEffectiveFromDate" -> "2023-01-01T00:00:00Z"
+      )
+
+      val result = sut.createRecord(eoriNumber)(request.withBody(invalidJsonRequest))
+
+      status(result) mustBe BAD_REQUEST
+      (contentAsJson(result) \ "code").as[String] mustBe "INVALID JSON"
+      val errorMessage = (contentAsJson(result) \ "message" \ "obj.comcode").as[String]
+      errorMessage mustBe "error.path.missing"
+    }
+
+    "return 400 when goodsDescription is missing" in {
+      val invalidJsonRequest = Json.obj(
+        "actorId"                  -> "GB987654321098",
+        "traderRef"                -> "SKU123456",
+        "comcode"                  -> 123456,
+        "countryOfOrigin"          -> "GB",
+        "category"                 -> 2,
+        "comcodeEffectiveFromDate" -> "2023-01-01T00:00:00Z"
+      )
+
+      val result = sut.createRecord(eoriNumber)(request.withBody(invalidJsonRequest))
+
+      status(result) mustBe BAD_REQUEST
+      (contentAsJson(result) \ "code").as[String] mustBe "INVALID JSON"
+      val errorMessage = (contentAsJson(result) \ "message" \ "obj.goodsDescription").as[String]
+      errorMessage mustBe "error.path.missing"
+    }
+
+    "return 400 when countryOfOrigin is missing" in {
+      val invalidJsonRequest = Json.obj(
+        "actorId"                  -> "GB987654321098",
+        "traderRef"                -> "SKU123456",
+        "comcode"                  -> 123456,
+        "goodsDescription"         -> "Bananas",
+        "category"                 -> 2,
+        "comcodeEffectiveFromDate" -> "2023-01-01T00:00:00Z"
+      )
+
+      val result = sut.createRecord(eoriNumber)(request.withBody(invalidJsonRequest))
+
+      status(result) mustBe BAD_REQUEST
+      (contentAsJson(result) \ "code").as[String] mustBe "INVALID JSON"
+      val errorMessage = (contentAsJson(result) \ "message" \ "obj.countryOfOrigin").as[String]
+      errorMessage mustBe "error.path.missing"
+    }
+
+    "return 400 when category is missing" in {
+      val invalidJsonRequest = Json.obj(
+        "actorId"                  -> "GB987654321098",
+        "traderRef"                -> "SKU123456",
+        "comcode"                  -> 123456,
+        "goodsDescription"         -> "Bananas",
+        "countryOfOrigin"          -> "GB",
+        "comcodeEffectiveFromDate" -> "2023-01-01T00:00:00Z"
+      )
+
+      val result = sut.createRecord(eoriNumber)(request.withBody(invalidJsonRequest))
+
+      status(result) mustBe BAD_REQUEST
+      (contentAsJson(result) \ "code").as[String] mustBe "INVALID JSON"
+      val errorMessage = (contentAsJson(result) \ "message" \ "obj.category").as[String]
+      errorMessage mustBe "error.path.missing"
+    }
+
+    "return 400 when comcodeEffectiveFromDate is missing" in {
+      val invalidJsonRequest = Json.obj(
+        "actorId"          -> "GB987654321098",
+        "traderRef"        -> "SKU123456",
+        "comcode"          -> 123456,
+        "goodsDescription" -> "Bananas",
+        "countryOfOrigin"  -> "GB",
+        "category"         -> 2
+      )
+
+      val result = sut.createRecord(eoriNumber)(request.withBody(invalidJsonRequest))
+
+      status(result) mustBe BAD_REQUEST
+      (contentAsJson(result) \ "code").as[String] mustBe "INVALID JSON"
+      val errorMessage = (contentAsJson(result) \ "message" \ "obj.comcodeEffectiveFromDate").as[String]
+      errorMessage mustBe "error.path.missing"
     }
 
     "return 500 when the router service returns an error" in {
