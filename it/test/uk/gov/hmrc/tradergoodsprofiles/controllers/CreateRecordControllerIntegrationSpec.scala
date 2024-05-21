@@ -29,7 +29,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
@@ -60,11 +60,10 @@ class CreateRecordControllerIntegrationSpec
   private lazy val timestamp          = Instant.parse("2024-06-08T12:12:12.456789Z")
   private val recordId                = UUID.randomUUID().toString
 
-  override protected val eoriNumber: String = "GB123456789012"
-  private val url                           = s"http://localhost:$port/customs/traders/goods-profiles/$eoriNumber/records"
-  private val routerUrl                     = s"/trader-goods-profiles-router/$eoriNumber/records"
-  private val requestBody                   = Json.toJson(createAPICreateRecordRequest())
-  private val expectedResponse              = Json.toJson(createCreateRecordResponse(recordId, eoriNumber, timestamp))
+  private val url              = s"http://localhost:$port/$eoriNumber/records"
+  private val routerUrl        = s"/trader-goods-profiles-router/records"
+  private val requestBody      = Json.toJson(createAPICreateRecordRequest())
+  private val expectedResponse = Json.toJson(createCreateRecordResponse(recordId, eoriNumber, timestamp))
 
   override lazy val app: Application = {
     wireMock.start()
@@ -115,7 +114,66 @@ class CreateRecordControllerIntegrationSpec
         )
       }
     }
+
+    "return BadRequest for invalid request body" in {
+      withAuthorizedTrader()
+      val invalidRequestBody = Json.obj()
+
+      val result = createRecordAndWait(invalidRequestBody)
+
+      result.status mustBe BAD_REQUEST
+      result.json mustBe Json.obj(
+        "code"    -> "INVALID JSON",
+        "message" -> Json.obj(
+          "obj.comcode"                  -> "error.path.missing",
+          "obj.comcodeEffectiveFromDate" -> "error.path.missing",
+          "obj.actorId"                  -> "error.path.missing",
+          "obj.traderRef"                -> "error.path.missing",
+          "obj.goodsDescription"         -> "error.path.missing",
+          "obj.category"                 -> "error.path.missing",
+          "obj.countryOfOrigin"          -> "error.path.missing"
+        )
+      )
+    }
+
+    "return Forbidden when X-Client-ID header is missing" in {
+      withAuthorizedTrader()
+
+      val result = createRecordAndWaitWithoutClientIdHeader()
+
+      result.status mustBe FORBIDDEN
+      result.json mustBe Json.obj(
+        "timestamp" -> "2024-06-08T12:12:12Z",
+        "code"      -> "INVALID_HEADER_PARAMETERS",
+        "message"   -> "X-Client-ID header is missing"
+      )
+    }
+
+    "return Forbidden when EORI number is not authorized" in {
+      withAuthorizedTrader(enrolment = Enrolment("OTHER-ENROLMENT-KEY"))
+
+      val result = createRecordAndWait()
+
+      result.status mustBe FORBIDDEN
+      result.json mustBe Json.obj(
+        "timestamp" -> "2024-06-08T12:12:12Z",
+        "code"      -> "FORBIDDEN",
+        "message"   -> "This EORI number is incorrect"
+      )
+    }
+
   }
+
+  private def createRecordAndWaitWithoutClientIdHeader() =
+    await(
+      wsClient
+        .url(url)
+        .withHttpHeaders(
+          "Accept"       -> "application/vnd.hmrc.1.0+json",
+          "Content-Type" -> "application/json"
+        )
+        .post(requestBody)
+    )
 
   private def createRecordAndWait(requestBody: JsValue = requestBody) =
     await(
