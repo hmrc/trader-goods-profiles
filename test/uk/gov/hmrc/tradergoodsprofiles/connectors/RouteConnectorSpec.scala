@@ -34,6 +34,7 @@ import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.{AppConfig, Constants}
 
+import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
 
 class RouteConnectorSpec extends PlaySpec with ScalaFutures with EitherValues with BeforeAndAfterEach {
@@ -48,6 +49,7 @@ class RouteConnectorSpec extends PlaySpec with ScalaFutures with EitherValues wi
   private val successCounter                  = mock[Counter]
   private val failureCounter                  = mock[Counter]
   private val metricsRegistry: MetricRegistry = mock[MetricRegistry](RETURNS_DEEP_STUBS)
+  private val timestamp                        = Instant.parse("2024-05-12T12:15:15.456321Z")
 
   private val sut = new RouterConnector(httpClient, appConfig, metricsRegistry)
 
@@ -95,7 +97,6 @@ class RouteConnectorSpec extends PlaySpec with ScalaFutures with EitherValues wi
       }
     }
   }
-
   "remove" should {
 
     "return 200" in {

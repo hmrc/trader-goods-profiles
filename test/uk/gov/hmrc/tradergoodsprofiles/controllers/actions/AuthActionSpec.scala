@@ -33,15 +33,12 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.auth.EnrolmentRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
-import java.time.Instant
-import java.time.temporal.ChronoUnit
 import scala.concurrent.{ExecutionContext, Future}
 
 class AuthActionSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEach {
 
   implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
 
-  private val timestamp     = Instant.now.truncatedTo(ChronoUnit.SECONDS)
   private val uuidService   = mock[UuidService]
   private val parser        = mock[BodyParsers.Default]
   private val correlationId = "d677693e-9981-4ee3-8574-654981ebe606"
@@ -102,9 +99,9 @@ class AuthActionSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEa
 
         status(result) mustBe UNAUTHORIZED
         contentAsJson(result) mustBe Json.obj(
-          "timestamp" -> timestamp,
-          "code"      -> "UNAUTHORIZED",
-          "message"   -> "The details signed in do not have a Trader Goods Profile"
+          "correlationId" -> correlationId,
+          "code"          -> "UNAUTHORIZED",
+          "message"       -> "The details signed in do not have a Trader Goods Profile"
         )
       }
 
@@ -115,9 +112,9 @@ class AuthActionSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEa
 
         status(result) mustBe UNAUTHORIZED
         contentAsJson(result) mustBe Json.obj(
-          "timestamp" -> timestamp,
-          "code"      -> "UNAUTHORIZED",
-          "message"   -> "Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'"
+          "correlationId" -> correlationId,
+          "code"          -> "UNAUTHORIZED",
+          "message"       -> "Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'"
         )
       }
 
@@ -128,9 +125,9 @@ class AuthActionSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEa
 
         status(result) mustBe UNAUTHORIZED
         contentAsJson(result) mustBe Json.obj(
-          "timestamp" -> timestamp,
-          "code"      -> "UNAUTHORIZED",
-          "message"   -> "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'"
+          "correlationId" -> correlationId,
+          "code"          -> "UNAUTHORIZED",
+          "message"       -> "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'"
         )
       }
     }
@@ -143,9 +140,9 @@ class AuthActionSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEa
 
       status(result) mustBe INTERNAL_SERVER_ERROR
       contentAsJson(result) mustBe Json.obj(
-        "timestamp" -> timestamp,
-        "code"      -> "INTERNAL_SERVER_ERROR",
-        "message"   -> "Internal server error for /get with error: unauthorised error"
+        "correlationId" -> correlationId,
+        "code"          -> "INTERNAL_SERVER_ERROR",
+        "message"       -> "Internal server error for /get with error: unauthorised error"
       )
     }
 
@@ -156,9 +153,9 @@ class AuthActionSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEa
 
       status(result) mustBe FORBIDDEN
       contentAsJson(result) mustBe Json.obj(
-        "timestamp" -> timestamp,
-        "code"      -> "FORBIDDEN",
-        "message"   -> s"This EORI number is incorrect"
+        "correlationId" -> correlationId,
+        "code"          -> "FORBIDDEN",
+        "message"       -> s"EORI number is incorrect"
       )
     }
 
@@ -169,9 +166,9 @@ class AuthActionSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEa
 
       status(result) mustBe FORBIDDEN
       contentAsJson(result) mustBe Json.obj(
-        "timestamp" -> timestamp,
-        "code"      -> "FORBIDDEN",
-        "message"   -> s"This EORI number is incorrect"
+        "correlationId" -> correlationId,
+        "code"          -> "FORBIDDEN",
+        "message"       -> s"EORI number is incorrect"
       )
     }
   }

@@ -32,12 +32,12 @@ trait BaseConnector {
 
   def routerRouteGetRecords(
     eoriNumber: String,
-    lastUpdatedDate: Option[String],
-    page: Option[Int],
-    size: Option[Int]
+    lastUpdatedDate: Option[String]= None,
+    page: Option[Int]= None,
+    size: Option[Int]= None
   ): UrlPath =
     UrlPath.parse(
-      s"$routerBaseRoute/$eoriNumber?$lastUpdatedDate&$page&$size"
+      s"$routerBaseRoute/$eoriNumber?lastUpdatedDate=$lastUpdatedDate&page=$page&size=$size"
     )
 
   implicit class HttpResponseHelpers(requestBuilder: RequestBuilder) {

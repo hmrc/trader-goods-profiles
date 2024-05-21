@@ -35,7 +35,7 @@ import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
-import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
+import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, UuidService}
 import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
 
 import java.time.Instant
@@ -52,9 +52,9 @@ class RemoveRecordControllerIntegrationSpec
     with BeforeAndAfterAll {
 
   private lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
-  private lazy val dateTimeService    = mock[DateTimeService]
-  private lazy val timestamp          = Instant.parse("2024-06-08T12:12:12.456789Z")
   private val recordId                = UUID.randomUUID().toString
+  private val uuidService             = mock[UuidService]
+  private val correlationId           = "d677693e-9981-4ee3-8574-654981ebe606"
 
   private val url            = s"http://localhost:$port/$eoriNumber/records/$recordId"
   private val routerUrl      = s"/trader-goods-profiles-router/$eoriNumber/records/$recordId"
@@ -68,7 +68,7 @@ class RemoveRecordControllerIntegrationSpec
       .configure(configureServices)
       .overrides(
         bind[AuthConnector].to(authConnector),
-        bind[DateTimeService].to(dateTimeService),
+        bind[UuidService].to(uuidService),
         bind[HttpClientV2].to(httpClientV2)
       )
       .build()
@@ -79,7 +79,7 @@ class RemoveRecordControllerIntegrationSpec
 
     reset(authConnector)
     stubRouterRequest(200, routerResponse.toString())
-    when(dateTimeService.timestamp).thenReturn(timestamp)
+    when(uuidService.uuid).thenReturn(correlationId)
   }
 
   override def beforeAll(): Unit = {
@@ -139,7 +139,8 @@ class RemoveRecordControllerIntegrationSpec
       val routerResponse = Json.obj(
         "correlationId" -> "correlationId",
         "code"          -> "NOT_FOUND",
-        "message"       -> "Not found"
+        "message"       -> "Not found",
+        "errors"         -> null
       )
 
       stubRouterRequest(404, routerResponse.toString())
@@ -147,7 +148,7 @@ class RemoveRecordControllerIntegrationSpec
       val result = getRecordAndWait()
 
       result.status mustBe NOT_FOUND
-      result.json mustBe routerResponse + ("timestamp" -> Json.toJson(timestamp.truncatedTo(ChronoUnit.SECONDS)))
+      result.json mustBe routerResponse
 
     }
 
@@ -207,7 +208,7 @@ class RemoveRecordControllerIntegrationSpec
       result.status mustBe FORBIDDEN
       result.json mustBe createExpectedJson(
         "FORBIDDEN",
-        "This EORI number is incorrect"
+        "EORI number is incorrect"
       )
     }
 
@@ -219,18 +220,18 @@ class RemoveRecordControllerIntegrationSpec
       result.status mustBe FORBIDDEN
       result.json mustBe createExpectedJson(
         "FORBIDDEN",
-        "This EORI number is incorrect"
+        "EORI number is incorrect"
       )
     }
 
-    "return forbidden when X-Client-ID header is missing" in {
+    "return bad request when X-Client-ID header is missing" in {
       withAuthorizedTrader()
 
       val headers = Seq("Content-Type" -> "application/json", "Accept" -> "application/vnd.hmrc.1.0+json")
       val result  = getRecordAndWait(url, headers: _*)
 
-      result.status mustBe FORBIDDEN
-      result.json mustBe createExpectedJson("INVALID_HEADER_PARAMETERS", "X-Client-ID header is missing")
+      result.status mustBe BAD_REQUEST
+      result.json mustBe createExpectedError("6000", "X-Client-ID was missing from Header or is in wrong format")
     }
 
     "return BadRequest for invalid request body" in {
@@ -248,20 +249,20 @@ class RemoveRecordControllerIntegrationSpec
       )
 
       result.status mustBe BAD_REQUEST
-      result.json mustBe createExpectedJson(
-        "INVALID_ACTOR_ID_PARAMETER",
-        "Missing or invalid mandatory request parameter"
+      result.json mustBe createExpectedError(
+        "008",
+        "Mandatory field actorId was missing from body or is in wrong format"
       )
 
     }
-    "return forbidden when Accept header is invalid" in {
+    "return bad request when Accept header is invalid" in {
       withAuthorizedTrader()
 
       val headers = Seq("X-Client-ID" -> "clientId", "Content-Type" -> "application/json")
       val result  = getRecordAndWait(url, headers: _*)
 
-      result.status mustBe FORBIDDEN
-      result.json mustBe createExpectedJson("INVALID_HEADER_PARAMETERS", "Accept header is missing or invalid")
+      result.status mustBe BAD_REQUEST
+      result.json mustBe createExpectedError("004", "Accept was missing from Header or is in wrong format")
     }
 
     "return internal server error if auth throw" in {
@@ -282,9 +283,9 @@ class RemoveRecordControllerIntegrationSpec
       val result = getRecordAndWait(s"http://localhost:$port/$eoriNumber/records/abcdfg-12gt")
 
       result.status mustBe BAD_REQUEST
-      result.json mustBe createExpectedJson(
-        "INVALID_RECORD_ID_PARAMETER",
-        "Invalid record ID supplied for eori number provided"
+      result.json mustBe createExpectedError(
+        "025",
+        "The recordId has been provided in the wrong format"
       )
     }
 
@@ -296,7 +297,7 @@ class RemoveRecordControllerIntegrationSpec
 
       result.status mustBe INTERNAL_SERVER_ERROR
       result.json mustBe Json.obj(
-        "timestamp" -> timestamp.truncatedTo(ChronoUnit.SECONDS),
+        "correlationId" -> correlationId,
         "code"      -> "INTERNAL_SERVER_ERROR",
         "message"   -> "Response body could not be parsed as JSON, body: error"
       )
@@ -330,9 +331,21 @@ class RemoveRecordControllerIntegrationSpec
         .put(removeRecordRequest)
     )
 
+  private def createExpectedError(code: String, message: String): Any =
+    Json.obj(
+      "correlationId" -> correlationId,
+      "code"          -> "BAD_REQUEST",
+      "message"       -> "Bad Request",
+      "errors"        -> Seq(
+        Json.obj(
+          "code"    -> code,
+          "message" -> message
+        )
+      )
+    )
   private def createExpectedJson(code: String, message: String): Any =
     Json.obj(
-      "timestamp" -> "2024-06-08T12:12:12Z",
+      "correlationId" -> correlationId,
       "code"      -> code,
       "message"   -> message
     )

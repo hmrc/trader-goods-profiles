@@ -32,7 +32,6 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 
-import java.time.Instant
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 
@@ -61,7 +60,6 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
   )
   private val recordId                      = UUID.randomUUID().toString
   private val correlationId                 = "d677693e-9981-4ee3-8574-654981ebe606"
-  private val timestamp                     = Instant.parse("2024-01-12T12:12:12Z")
   private val uuidService                   = mock[UuidService]
   private val routerService                 = mock[RouterService]
   private val sut                           = new RemoveRecordController(
@@ -102,9 +100,15 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
 
         status(result) mustBe BAD_REQUEST
         contentAsJson(result) mustBe Json.obj(
-          "timestamp" -> timestamp,
-          "code"      -> "INVALID_RECORD_ID_PARAMETER",
-          "message"   -> "Invalid record ID supplied for eori number provided"
+          "correlationId" -> correlationId,
+          "code"          -> "BAD_REQUEST",
+          "message"       -> "Bad Request",
+          "errors"        -> Seq(
+            Json.obj(
+              "code"    -> "025",
+              "message" -> "The recordId has been provided in the wrong format"
+            )
+          )
         )
       }
 
@@ -113,9 +117,15 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
 
         status(result) mustBe BAD_REQUEST
         contentAsJson(result) mustBe Json.obj(
-          "timestamp" -> timestamp,
-          "code"      -> "INVALID_RECORD_ID_PARAMETER",
-          "message"   -> "Invalid record ID supplied for eori number provided"
+          "correlationId" -> correlationId,
+          "code"          -> "BAD_REQUEST",
+          "message"       -> "Bad Request",
+          "errors"        -> Seq(
+            Json.obj(
+              "code"    -> "025",
+              "message" -> "The recordId has been provided in the wrong format"
+            )
+          )
         )
       }
 
@@ -124,9 +134,15 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
 
         status(result) mustBe BAD_REQUEST
         contentAsJson(result) mustBe Json.obj(
-          "timestamp" -> timestamp,
-          "code"      -> "INVALID_RECORD_ID_PARAMETER",
-          "message"   -> "Invalid record ID supplied for eori number provided"
+          "correlationId" -> correlationId,
+          "code"          -> "BAD_REQUEST",
+          "message"       -> "Bad Request",
+          "errors"        -> Seq(
+            Json.obj(
+              "code"    -> "025",
+              "message" -> "The recordId has been provided in the wrong format"
+            )
+          )
         )
       }
 

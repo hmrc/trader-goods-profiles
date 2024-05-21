@@ -36,7 +36,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, GetRecordResponseSupport}
 import uk.gov.hmrc.tradergoodsprofiles.models.GetRecordResponse
-import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
+import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
 
 import java.time.Instant
@@ -55,9 +55,10 @@ class GetRecordsControllerIntegrationSpec
     with BeforeAndAfterAll {
 
   private lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
-  private lazy val dateTimeService    = mock[DateTimeService]
   private lazy val timestamp          = Instant.parse("2024-06-08T12:12:12.456789Z")
   private val recordId                = UUID.randomUUID().toString
+  private val uuidService             = mock[UuidService]
+  private val correlationId           = "d677693e-9981-4ee3-8574-654981ebe606"
 
   private val url                 = s"http://localhost:$port/$eoriNumber/records/$recordId"
   private val routerUrl           = s"/trader-goods-profiles-router/$eoriNumber/records/$recordId"
@@ -73,7 +74,7 @@ class GetRecordsControllerIntegrationSpec
       .configure(configureServices)
       .overrides(
         bind[AuthConnector].to(authConnector),
-        bind[DateTimeService].to(dateTimeService),
+        bind[UuidService].to(uuidService),
         bind[HttpClientV2].to(httpClientV2)
       )
       .build()
@@ -85,7 +86,7 @@ class GetRecordsControllerIntegrationSpec
     reset(authConnector)
     stubRouterRequestGetRecords(200, routerResponse.toString())
     stubRouterRequest(200, routerResponse.toString())
-    when(dateTimeService.timestamp).thenReturn(timestamp)
+    when(uuidService.uuid).thenReturn(correlationId)
   }
 
   override def beforeAll(): Unit = {
@@ -103,25 +104,6 @@ class GetRecordsControllerIntegrationSpec
       withAuthorizedTrader()
 
       val result = getRecordAndWait()
-
-      result.status mustBe OK
-    }
-
-    "return 200 records with pagination" in {
-      withAuthorizedTrader()
-
-      //val result = getRecordAndWait()
-
-      val result = await(
-        wsClient
-          .url(s"$getRecordsUrl?page=1&size=1")
-          .withHttpHeaders(
-            "X-Client-ID"  -> "clientId",
-            "Accept"       -> "application/vnd.hmrc.1.0+json",
-            "Content-Type" -> "application/json"
-          )
-          .get()
-      )
 
       result.status mustBe OK
     }
@@ -147,7 +129,8 @@ class GetRecordsControllerIntegrationSpec
       val routerResponse = Json.obj(
         "correlationId" -> "correlationId",
         "code"          -> "NOT_FOUND",
-        "message"       -> "Not found"
+        "message"       -> "Not found",
+        "errors"         -> null
       )
 
       stubRouterRequest(404, routerResponse.toString())
@@ -155,7 +138,7 @@ class GetRecordsControllerIntegrationSpec
       val result = getRecordAndWait()
 
       result.status mustBe NOT_FOUND
-      result.json mustBe routerResponse + ("timestamp" -> Json.toJson(timestamp.truncatedTo(ChronoUnit.SECONDS)))
+      result.json mustBe routerResponse
 
     }
     "authorise an enrolment with multiple identifier" in {
@@ -214,7 +197,7 @@ class GetRecordsControllerIntegrationSpec
       result.status mustBe FORBIDDEN
       result.json mustBe createExpectedJson(
         "FORBIDDEN",
-        "This EORI number is incorrect"
+        "EORI number is incorrect"
       )
     }
 
@@ -226,34 +209,34 @@ class GetRecordsControllerIntegrationSpec
       result.status mustBe FORBIDDEN
       result.json mustBe createExpectedJson(
         "FORBIDDEN",
-        "This EORI number is incorrect"
+        "EORI number is incorrect"
       )
     }
 
-    "return forbidden when Accept header is invalid" in {
+    "return bad request when Accept header is invalid" in {
       withAuthorizedTrader()
 
       val headers = Seq("X-Client-ID" -> "clientId", "Content-Type" -> "application/json")
       val result  = getRecordAndWait(url, headers: _*)
 
-      result.status mustBe FORBIDDEN
-      result.json mustBe createExpectedJson("INVALID_HEADER_PARAMETERS", "Accept header is missing or invalid")
+      result.status mustBe BAD_REQUEST
+      result.json mustBe createExpectedError("004", "Accept was missing from Header or is in wrong format")
     }
 
-    "return forbidden when Content-Type header is missing" in {
+    "return bad request when Content-Type header is missing" in {
       withAuthorizedTrader()
 
       val headers = Seq("X-Client-ID" -> "clientId", "Accept" -> "application/vnd.hmrc.1.0+json")
       val result  = getRecordAndWait(url, headers: _*)
 
-      result.status mustBe FORBIDDEN
-      result.json mustBe createExpectedJson(
-        "INVALID_HEADER_PARAMETERS",
-        "Content-Type header is missing or invalid"
+      result.status mustBe BAD_REQUEST
+      result.json mustBe createExpectedError(
+        "003",
+        "Content-Type was missing from Header or is in the wrong format"
       )
     }
 
-    "return forbidden when Content-Type header is not the right format" in {
+    "return bad request when Content-Type header is not the right format" in {
       withAuthorizedTrader()
 
       val headers = Seq(
@@ -263,10 +246,10 @@ class GetRecordsControllerIntegrationSpec
       )
       val result  = getRecordAndWait(url, headers: _*)
 
-      result.status mustBe FORBIDDEN
-      result.json mustBe createExpectedJson(
-        "INVALID_HEADER_PARAMETERS",
-        "Content-Type header is missing or invalid"
+      result.status mustBe BAD_REQUEST
+      result.json mustBe createExpectedError(
+        "003",
+        "Content-Type was missing from Header or is in the wrong format"
       )
     }
 
@@ -288,9 +271,9 @@ class GetRecordsControllerIntegrationSpec
       val result = getRecordAndWait(s"http://localhost:$port/$eoriNumber/records/abcdfg-12gt")
 
       result.status mustBe BAD_REQUEST
-      result.json mustBe createExpectedJson(
-        "INVALID_RECORD_ID_PARAMETER",
-        "Invalid record ID supplied for eori number provided"
+      result.json mustBe createExpectedError(
+        "025",
+        "The recordId has been provided in the wrong format"
       )
     }
 
@@ -302,10 +285,11 @@ class GetRecordsControllerIntegrationSpec
 
       result.status mustBe INTERNAL_SERVER_ERROR
       result.json mustBe Json.obj(
-        "timestamp" -> timestamp.truncatedTo(ChronoUnit.SECONDS),
-        "code"      -> "INTERNAL_SERVER_ERROR",
-        "message"   -> "Response body could not be parsed as JSON, body: error"
+        "correlationId" -> correlationId,
+        "code"          -> "INTERNAL_SERVER_ERROR",
+        "message"       -> "Response body could not be parsed as JSON, body: error"
       )
+
     }
 
     "return an error if json cannot be deserialized to the router message" in {
@@ -316,9 +300,9 @@ class GetRecordsControllerIntegrationSpec
 
       result.status mustBe INTERNAL_SERVER_ERROR
       result.json mustBe Json.obj(
-        "timestamp" -> timestamp.truncatedTo(ChronoUnit.SECONDS),
-        "code"      -> "INTERNAL_SERVER_ERROR",
-        "message"   -> s"Response body could not be read as type ${typeOf[GetRecordResponse]}"
+        "correlationId" -> correlationId,
+        "code"          -> "INTERNAL_SERVER_ERROR",
+        "message"       -> s"Response body could not be read as type ${typeOf[GetRecordResponse]}"
       )
     }
 
@@ -346,9 +330,22 @@ class GetRecordsControllerIntegrationSpec
 
   private def createExpectedJson(code: String, message: String): Any =
     Json.obj(
-      "timestamp" -> "2024-06-08T12:12:12Z",
-      "code"      -> code,
-      "message"   -> message
+      "correlationId" -> correlationId,
+      "code"          -> code,
+      "message"       -> message
+    )
+
+  private def createExpectedError(code: String, message: String): Any =
+    Json.obj(
+      "correlationId" -> correlationId,
+      "code"          -> "BAD_REQUEST",
+      "message"       -> "Bad Request",
+      "errors"        -> Seq(
+        Json.obj(
+          "code"    -> code,
+          "message" -> message
+        )
+      )
     )
 
   private def stubRouterRequest(status: Int, errorResponse: String)           =

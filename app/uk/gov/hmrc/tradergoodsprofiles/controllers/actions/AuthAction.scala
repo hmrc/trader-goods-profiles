@@ -95,7 +95,7 @@ class AuthActionImpl @Inject() (
     logger.error(s"Internal server error for ${request.uri} with error ${ex.getMessage}", ex)
 
     ServerErrorResponse(
-      uuidService.toString,
+      uuidService.uuid,
       s"Internal server error for ${request.uri} with error: ${ex.getMessage}"
     ).toResult
   }
@@ -117,7 +117,7 @@ class AuthActionImpl @Inject() (
 
     Future.successful(
       ForbiddenErrorResponse(
-        uuidService.toString,
+        uuidService.uuid,
         s"EORI number is incorrect"
       ).toResult
     )
@@ -139,7 +139,7 @@ class AuthActionImpl @Inject() (
     logger.error(s"Unauthorised exception for ${request.uri} with error $errorMessage")
 
     UnauthorisedErrorResponse(
-      uuidService.toString,
+      uuidService.uuid,
       errorMessage
     ).toResult
   }
@@ -151,7 +151,7 @@ class AuthActionImpl @Inject() (
     logger.error(s"Unauthorised exception for ${request.uri} with error $errorMessage")
 
     UnauthorisedErrorResponse(
-      uuidService.toString,
+      uuidService.uuid,
       s"The details signed in do not have a Trader Goods Profile"
     ).toResult
   }
