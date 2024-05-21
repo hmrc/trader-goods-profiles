@@ -129,19 +129,17 @@ class RouterServiceImpl @Inject() (
           case httpResponse if is2xx(httpResponse.status) => Right(())
           case httpResponse                               => Left(handleError(httpResponse.body, httpResponse.status, eoriNumber, recordId))
         }
-        .recover {
-          case UpstreamErrorResponse(message, status, _, _) => Left(handleError(message, status, eoriNumber, recordId))
-          case ex: Throwable                                =>
-            logger.error(
-              s"[RouterServiceImpl] - Exception when removing record for eori number $eoriNumber and record ID $recordId, with message ${ex.getMessage}",
-              ex
-            )
-            Left(
-              ServerErrorResponse(
-                dateTimeService.timestamp,
-                s"Could not remove record for eori number $eoriNumber and record ID $recordId"
-              ).toResult
-            )
+        .recover { case ex: Throwable =>
+          logger.error(
+            s"[RouterServiceImpl] - Exception when removing record for eori number $eoriNumber and record ID $recordId, with message ${ex.getMessage}",
+            ex
+          )
+          Left(
+            ServerErrorResponse(
+              dateTimeService.timestamp,
+              s"Could not remove record for eori number $eoriNumber and record ID $recordId"
+            ).toResult
+          )
         }
     )
 
