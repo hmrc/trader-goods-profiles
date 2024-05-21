@@ -48,21 +48,22 @@ class RouterServiceSpec
   implicit val ec: ExecutionContext = ExecutionContext.global
   implicit val hc: HeaderCarrier    = HeaderCarrier()
 
-  private val connector       = mock[RouterConnector]
-  private val recordResponse  = createGetRecordResponse("GB123456789012", "recordId", Instant.now)
-  private val dateTimeService = mock[DateTimeService]
-  private val timestamp       = Instant.parse("2024-12-05T12:12:45Z")
+  private val connector      = mock[RouterConnector]
+  private val recordResponse = createGetRecordResponse("GB123456789012", "recordId", Instant.now)
+  private val uuidService    = mock[UuidService]
+  private val timestamp      = Instant.parse("2024-12-05T12:12:45Z")
+  private val correlationId  = "d677693e-9981-4ee3-8574-654981ebe606"
 
-  private val sut = new RouterServiceImpl(connector, dateTimeService)
+  private val sut = new RouterServiceImpl(connector, uuidService)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(connector, dateTimeService)
+    reset(connector, uuidService)
 
     when(connector.get(any, any)(any))
       .thenReturn(Future.successful(HttpResponse(200, Json.toJson(recordResponse), Map.empty)))
-    when(dateTimeService.timestamp).thenReturn(timestamp)
+    when(uuidService.uuid).thenReturn(correlationId)
   }
   "getRecord" should {
     "request a record" in {

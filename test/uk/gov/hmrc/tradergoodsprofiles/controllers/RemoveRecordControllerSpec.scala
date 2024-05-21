@@ -28,9 +28,9 @@ import play.api.mvc.Results.InternalServerError
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
-import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, RouterService}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
+import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 
 import java.time.Instant
 import java.util.UUID
@@ -60,13 +60,14 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
     "Content-Type" -> "application/json"
   )
   private val recordId                      = UUID.randomUUID().toString
+  private val correlationId                 = "d677693e-9981-4ee3-8574-654981ebe606"
   private val timestamp                     = Instant.parse("2024-01-12T12:12:12Z")
-  private val dateTimeService               = mock[DateTimeService]
+  private val uuidService                   = mock[UuidService]
   private val routerService                 = mock[RouterService]
   private val sut                           = new RemoveRecordController(
     new FakeSuccessAuthAction(),
-    new ValidateHeaderAction(dateTimeService),
-    dateTimeService,
+    new ValidateHeaderAction(uuidService),
+    uuidService,
     routerService,
     stubControllerComponents()
   )
@@ -74,8 +75,8 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(dateTimeService, routerService)
-    when(dateTimeService.timestamp).thenReturn(timestamp)
+    reset(uuidService, routerService)
+    when(uuidService.uuid).thenReturn(correlationId)
     when(routerService.removeRecord(any, any, any)(any))
       .thenReturn(EitherT.fromEither(Right(OK)))
   }

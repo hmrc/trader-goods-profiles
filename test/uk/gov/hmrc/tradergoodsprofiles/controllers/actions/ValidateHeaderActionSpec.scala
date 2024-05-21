@@ -21,10 +21,10 @@ import org.scalatest.{BeforeAndAfterEach, EitherValues}
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{JsObject, Json}
-import play.api.mvc.Results.Forbidden
+import play.api.mvc.Results.{BadRequest, Forbidden}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
+import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext
@@ -33,14 +33,15 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
-  private val dateTimeService = mock[DateTimeService]
-  private val sut             = new ValidateHeaderAction(dateTimeService)
+  private val uuidService   = mock[UuidService]
+  private val correlationId = "d677693e-9981-4ee3-8574-654981ebe606"
+  private val sut           = new ValidateHeaderAction(uuidService)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(dateTimeService)
-    when(dateTimeService.timestamp).thenReturn(Instant.parse("2024-05-09T12:12:12.5678985Z"))
+    reset(uuidService)
+    when(uuidService.uuid).thenReturn(correlationId)
   }
 
   "Validate Header Action" should {
@@ -61,21 +62,27 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
       "accept header is missing" in {
         val request = FakeRequest().withHeaders("Content-Type" -> "application/json", "X-Client-ID" -> "some client ID")
         val result  = await(sut.filter(request))
-        result.value mustBe Forbidden(createExpectedJson("Accept header is missing or invalid"))
+        result.value mustBe BadRequest(
+          createExpectedJson("004", "Accept was missing from Header or is in wrong format")
+        )
       }
 
       "content type header is missing" in {
         val request =
           FakeRequest().withHeaders("Accept" -> "application/vnd.hmrc.1.0+json", "X-Client-ID" -> "some client ID")
         val result  = await(sut.filter(request))
-        result.value mustBe Forbidden(createExpectedJson("Content-Type header is missing or invalid"))
+        result.value mustBe BadRequest(
+          createExpectedJson("003", "Content-Type was missing from Header or is in the wrong format")
+        )
       }
 
       "client ID header is missing" in {
         val request =
           FakeRequest().withHeaders("Accept" -> "application/vnd.hmrc.1.0+json", "Content-Type" -> "application/json")
         val result  = await(sut.filter(request))
-        result.value mustBe Forbidden(createExpectedJson("X-Client-ID header is missing"))
+        result.value mustBe BadRequest(
+          createExpectedJson("6000", "X-Client-ID was missing from Header or is in wrong format")
+        )
       }
 
       "accept header is the incorrect format" in {
@@ -86,7 +93,9 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
         )
         val result  = await(sut.filter(request))
 
-        result.value mustBe Forbidden(createExpectedJson("Accept header is missing or invalid"))
+        result.value mustBe BadRequest(
+          createExpectedJson("004", "Accept was missing from Header or is in wrong format")
+        )
       }
 
       "content type header is the incorrect format" in {
@@ -97,15 +106,23 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
         )
         val result  = await(sut.filter(request))
 
-        result.value mustBe Forbidden(createExpectedJson("Content-Type header is missing or invalid"))
+        result.value mustBe BadRequest(
+          createExpectedJson("003", "Content-Type was missing from Header or is in the wrong format")
+        )
       }
     }
   }
 
-  private def createExpectedJson(message: String): JsObject =
+  private def createExpectedJson(code: String, message: String): JsObject =
     Json.obj(
-      "timestamp" -> "2024-05-09T12:12:12Z",
-      "code"      -> "INVALID_HEADER_PARAMETERS",
-      "message"   -> message
+      "correlationId" -> correlationId,
+      "code"          -> "BAD_REQUEST",
+      "message"       -> "Bad Request",
+      "errors"        -> Seq(
+        Json.obj(
+          "code"    -> code,
+          "message" -> message
+        )
+      )
     )
 }

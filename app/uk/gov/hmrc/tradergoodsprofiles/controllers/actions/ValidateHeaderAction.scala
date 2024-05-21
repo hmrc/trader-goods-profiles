@@ -21,12 +21,13 @@ import play.api.http.{HeaderNames, MimeTypes}
 import play.api.mvc.{ActionFilter, Request, Result}
 import uk.gov.hmrc.tradergoodsprofiles.config.Constants
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.InvalidHeaderErrorResponse
-import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
+import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
+import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class ValidateHeaderAction @Inject() (datetimeService: DateTimeService)(implicit ec: ExecutionContext)
+class ValidateHeaderAction @Inject() (uuidService: UuidService)(implicit ec: ExecutionContext)
     extends ActionFilter[Request] {
 
   override val executionContext: ExecutionContext = ec
@@ -49,7 +50,13 @@ class ValidateHeaderAction @Inject() (datetimeService: DateTimeService)(implicit
         case Some(header) if pattern.matches(header) => Some(())
         case _                                       => None
       },
-      Some(InvalidHeaderErrorResponse(datetimeService.timestamp, "Accept header is missing or invalid").toResult)
+      Some(
+        InvalidHeaderErrorResponse(
+          uuidService.uuid,
+          InvalidHeaderAccept,
+          InvalidHeaderAcceptMessage
+        ).toResult
+      )
     )
 
   private def validateContentTypeHeader(request: Request[_]): EitherT[Future, Option[Result], Unit] =
@@ -59,7 +66,11 @@ class ValidateHeaderAction @Inject() (datetimeService: DateTimeService)(implicit
         case _                                             => None
       },
       Some(
-        InvalidHeaderErrorResponse(datetimeService.timestamp, "Content-Type header is missing or invalid").toResult
+        InvalidHeaderErrorResponse(
+          uuidService.uuid,
+          InvalidHeaderContentType,
+          InvalidHeaderContentTypeMessage
+        ).toResult
       )
     )
 
@@ -70,7 +81,11 @@ class ValidateHeaderAction @Inject() (datetimeService: DateTimeService)(implicit
         case _       => None
       },
       Some(
-        InvalidHeaderErrorResponse(datetimeService.timestamp, "X-Client-ID header is missing").toResult
+        InvalidHeaderErrorResponse(
+          uuidService.uuid,
+          InvalidHeaderClientId,
+          InvalidHeaderClientIdMessage
+        ).toResult
       )
     )
 }

@@ -20,19 +20,15 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.mvc.Result
 import play.api.mvc.Results.{BadRequest, Forbidden, InternalServerError, Unauthorized}
-import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService.DateTimeFormat
-
-import java.time.Instant
 
 sealed trait ErrorResponse {
   val correlationId: String
   val code: String
   val message: String
-  val errors: Seq[Error] = None
+  val errors: Option[Seq[Error]] = None
 
   def toResult: Result
 }
-case class Error(code: String, message: String)
 
 case class ForbiddenErrorResponse(correlationId: String, message: String) extends ErrorResponse {
   override val code: String = "FORBIDDEN"
@@ -83,13 +79,9 @@ object ServerErrorResponse {
   )(e => (e.correlationId, e.code, e.message))
 }
 
-case class InvalidErrorResponse(correlationId: String, message: String) extends ErrorResponse {
-  override val code: String = "BAD_REQUEST"
-  val errorMessage: String  = "Bad request"
-  override val errors       = Seq(
-    Error(code = "INVALID_REQUEST_PARAMETER", message = message)
-  )
-  def toResult: Result      = BadRequest(Json.toJson(InvalidErrorResponse(correlationId, message)))
+case class InvalidErrorResponse(correlationId: String, code: String, message: String) extends ErrorResponse {
+  override val errors  = Some(Seq(Error(code, message)))
+  def toResult: Result = BadRequest(Json.toJson(InvalidErrorResponse(correlationId, code, message)))
 }
 
 object InvalidErrorResponse {
@@ -98,25 +90,27 @@ object InvalidErrorResponse {
   implicit val write: Writes[InvalidErrorResponse] = (
     (JsPath \ "correlationId").write[String] and
       (JsPath \ "code").write[String] and
-      (JsPath \ "message").write[String]
-  )(e => (e.correlationId, e.code, e.message))
+      (JsPath \ "message").write[String] and
+      (JsPath \ "errors").writeOptionWithNull[Seq[Error]]
+  )(e => (e.correlationId, "BAD_REQUEST", "Bad Request", e.errors))
 }
 
 case class InvalidHeaderErrorResponse(
-  timestamp: Instant,
+  correlationId: String,
+  code: String,
   message: String
 ) extends ErrorResponse {
-  override val code: String = "INVALID_HEADER_PARAMETERS"
-
-  def toResult: Result = Forbidden(Json.toJson(InvalidHeaderErrorResponse(timestamp, message)))
+  override val errors  = Some(Seq(Error(code, message)))
+  def toResult: Result = BadRequest(Json.toJson(InvalidHeaderErrorResponse(correlationId, code, message)))
 }
 
 object InvalidHeaderErrorResponse {
   implicit val read: Reads[InvalidHeaderErrorResponse] = Json.reads[InvalidHeaderErrorResponse]
 
   implicit val write: Writes[InvalidHeaderErrorResponse] = (
-    (JsPath \ "timestamp").write[String] and
+    (JsPath \ "correlationId").write[String] and
       (JsPath \ "code").write[String] and
-      (JsPath \ "message").write[String]
-  )(e => (e.timestamp.asStringSeconds, e.code, e.message))
+      (JsPath \ "message").write[String] and
+      (JsPath \ "errors").writeOptionWithNull[Seq[Error]]
+  )(e => (e.correlationId, "BAD_REQUEST", "Bad Request", e.errors))
 }

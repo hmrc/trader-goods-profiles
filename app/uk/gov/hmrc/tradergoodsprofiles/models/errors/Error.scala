@@ -16,30 +16,10 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.models.errors
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json._
+import play.api.libs.json.{Json, OFormat}
 
-case class RouterError(
-  correlationId: String,
-  code: String,
-  message: String,
-  errors: Option[Seq[Error]] = None
-)
+case class Error(code: String, message: String)
 
-object RouterError {
-  implicit val read: Reads[RouterError] = Json.reads[RouterError]
-
-  implicit val write: Writes[RouterError] = (
-    (JsPath \ "correlationId").write[String] and
-      (JsPath \ "code").write[String] and
-      (JsPath \ "message").write[String] and
-      (JsPath \ "errors").writeOptionWithNull[Seq[Error]]
-  )(e =>
-    (
-      e.correlationId,
-      e.code,
-      e.message,
-      e.errors
-    )
-  )
+object Error {
+  implicit val format: OFormat[Error] = Json.format[Error]
 }

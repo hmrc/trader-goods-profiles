@@ -31,7 +31,7 @@ import uk.gov.hmrc.auth.core.{Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.auth.EnrolmentRequest
-import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
+import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -41,13 +41,14 @@ class AuthActionSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEa
 
   implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
 
-  private val timestamp       = Instant.now.truncatedTo(ChronoUnit.SECONDS)
-  private val dateTimeService = mock[DateTimeService]
-  private val parser          = mock[BodyParsers.Default]
+  private val timestamp     = Instant.now.truncatedTo(ChronoUnit.SECONDS)
+  private val uuidService   = mock[UuidService]
+  private val parser        = mock[BodyParsers.Default]
+  private val correlationId = "d677693e-9981-4ee3-8574-654981ebe606"
 
   private val sut = new AuthActionImpl(
     authConnector,
-    dateTimeService,
+    uuidService,
     parser,
     stubMessagesControllerComponents(),
     mock[BodyParsers.Default]
@@ -56,9 +57,9 @@ class AuthActionSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEa
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(authConnector, dateTimeService)
+    reset(authConnector, uuidService)
 
-    when(dateTimeService.timestamp).thenReturn(timestamp)
+    when(uuidService.uuid).thenReturn(correlationId)
   }
 
   "authorisation" should {

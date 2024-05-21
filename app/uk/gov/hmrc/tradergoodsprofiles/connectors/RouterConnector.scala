@@ -47,7 +47,12 @@ class RouterConnector @Inject() (
         .withClientId
         .execute[HttpResponse]
     }
-  def getRecords(eori: String, lastUpdatedDate: Option[String], page: Option[Int], size: Option[Int])(implicit
+  def getRecords(
+    eori: String,
+    lastUpdatedDate: Option[String],
+    page: Option[Int],
+    size: Option[Int]
+  )(implicit
     hc: HeaderCarrier
   ): Future[HttpResponse]                                                                                    =
     withMetricsTimerAsync("tgp.getrecords.connector") { _ =>

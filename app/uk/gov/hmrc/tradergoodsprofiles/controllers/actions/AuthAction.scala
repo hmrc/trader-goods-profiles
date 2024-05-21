@@ -29,7 +29,7 @@ import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.AuthAction.{gtpEnrolmentKey, gtpIdentifierKey}
 import uk.gov.hmrc.tradergoodsprofiles.models.auth.EnrolmentRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ForbiddenErrorResponse, ServerErrorResponse, UnauthorisedErrorResponse}
-import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, UuidService}
+import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future.successful

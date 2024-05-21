@@ -22,11 +22,12 @@ import play.api.Logging
 import play.api.libs.json._
 import play.api.mvc.Result
 import play.api.mvc.Results.Status
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.HttpReads.is2xx
-import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.models.GetRecordResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{RouterError, ServerErrorResponse}
+import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordsResponse
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.runtime.universe.{TypeTag, typeOf}
@@ -43,13 +44,13 @@ trait RouterService {
 
   def getRecords(eori: String, lastUpdatedDate: Option[String], page: Option[Int], size: Option[Int])(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Result, GetRecordResponse]
+  ): EitherT[Future, Result, GetRecordsResponse]
 
 }
 
 class RouterServiceImpl @Inject() (
   routerConnector: RouterConnector,
-  dateTimeService: DateTimeService
+  uuidService: UuidService
 )(implicit ec: ExecutionContext)
     extends RouterService
     with Logging {
@@ -71,7 +72,7 @@ class RouterServiceImpl @Inject() (
           )
           Left(
             ServerErrorResponse(
-              dateTimeService.timestamp,
+              uuidService.uuid,
               s"Could not retrieve record for eori number $eoriNumber and record ID $recordId"
             ).toResult
           )
@@ -90,7 +91,7 @@ class RouterServiceImpl @Inject() (
     jsonAs[RouterError](responseBody)
       .fold(
         error => error,
-        routerError => Status(status)(Json.toJson(routerError.copy(timestamp = Some(dateTimeService.timestamp))))
+        routerError => Status(status)(Json.toJson(routerError))
       )
   }
 
@@ -105,7 +106,7 @@ class RouterServiceImpl @Inject() (
             )
             Left(
               ServerErrorResponse(
-                dateTimeService.timestamp,
+                uuidService.uuid,
                 s"Response body could not be read as type ${typeOf[T]}"
               ).toResult
             )
@@ -117,7 +118,7 @@ class RouterServiceImpl @Inject() (
         )
         Left(
           ServerErrorResponse(
-            dateTimeService.timestamp,
+            uuidService.uuid,
             s"Response body could not be parsed as JSON, body: $responseBody"
           ).toResult
         )
@@ -140,22 +141,21 @@ class RouterServiceImpl @Inject() (
           )
           Left(
             ServerErrorResponse(
-              dateTimeService.timestamp,
+              uuidService.uuid,
               s"Could not remove record for eori number $eoriNumber and record ID $recordId"
             ).toResult
           )
         }
     )
 
-
   def getRecords(eoriNumber: String, lastUpdatedDate: Option[String], page: Option[Int], size: Option[Int])(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Result, GetRecordResponse] =
+  ): EitherT[Future, Result, GetRecordsResponse] =
     EitherT(
       routerConnector
         .getRecords(eoriNumber, lastUpdatedDate, page, size)
         .map {
-          case httpResponse if is2xx(httpResponse.status) => jsonAs[GetRecordResponse](httpResponse.body)
+          case httpResponse if is2xx(httpResponse.status) => jsonAs[GetRecordsResponse](httpResponse.body)
           case httpResponse                               => Left(handleError(httpResponse.body, httpResponse.status, eoriNumber))
         }
         .recover { case ex: Throwable =>
@@ -165,7 +165,7 @@ class RouterServiceImpl @Inject() (
           )
           Left(
             ServerErrorResponse(
-              dateTimeService.timestamp,
+              uuidService.uuid,
               s"Could not retrieve record for eori number $eoriNumber"
             ).toResult
           )
@@ -173,17 +173,17 @@ class RouterServiceImpl @Inject() (
     )
 
   private def handleError(
-                           responseBody: String,
-                           status: Int,
-                           eoriNumber: String
-                         ): Result = {
+    responseBody: String,
+    status: Int,
+    eoriNumber: String
+  ): Result = {
     logger.error(
       s"[RouterServiceImpl] - Error retrieving a record for eori number '$eoriNumber', status '$status' with message $responseBody"
     )
     jsonAs[RouterError](responseBody)
       .fold(
         error => error,
-        routerError => Status(status)(Json.toJson(routerError.copy(timestamp = Some(dateTimeService.timestamp))))
+        routerError => Status(status)(Json.toJson(routerError))
       )
   }
 
