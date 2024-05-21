@@ -41,6 +41,10 @@ trait RouterService {
     hc: HeaderCarrier
   ): EitherT[Future, Result, Unit]
 
+  def getRecords(eori: String, lastUpdatedDate: Option[String], page: Option[Int], size: Option[Int])(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Result, GetRecordResponse]
+
 }
 
 class RouterServiceImpl @Inject() (
@@ -142,5 +146,45 @@ class RouterServiceImpl @Inject() (
           )
         }
     )
+
+
+  def getRecords(eoriNumber: String, lastUpdatedDate: Option[String], page: Option[Int], size: Option[Int])(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Result, GetRecordResponse] =
+    EitherT(
+      routerConnector
+        .getRecords(eoriNumber, lastUpdatedDate, page, size)
+        .map {
+          case httpResponse if is2xx(httpResponse.status) => jsonAs[GetRecordResponse](httpResponse.body)
+          case httpResponse                               => Left(handleError(httpResponse.body, httpResponse.status, eoriNumber))
+        }
+        .recover { case ex: Throwable =>
+          logger.error(
+            s"[RouterServiceImpl] - Exception when retrieving record for eori number $eoriNumber, with message ${ex.getMessage}",
+            ex
+          )
+          Left(
+            ServerErrorResponse(
+              dateTimeService.timestamp,
+              s"Could not retrieve record for eori number $eoriNumber"
+            ).toResult
+          )
+        }
+    )
+
+  private def handleError(
+                           responseBody: String,
+                           status: Int,
+                           eoriNumber: String
+                         ): Result = {
+    logger.error(
+      s"[RouterServiceImpl] - Error retrieving a record for eori number '$eoriNumber', status '$status' with message $responseBody"
+    )
+    jsonAs[RouterError](responseBody)
+      .fold(
+        error => error,
+        routerError => Status(status)(Json.toJson(routerError.copy(timestamp = Some(dateTimeService.timestamp))))
+      )
+  }
 
 }

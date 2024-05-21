@@ -59,9 +59,11 @@ class GetRecordsControllerIntegrationSpec
   private lazy val timestamp          = Instant.parse("2024-06-08T12:12:12.456789Z")
   private val recordId                = UUID.randomUUID().toString
 
-  private val url            = s"http://localhost:$port/$eoriNumber/records/$recordId"
-  private val routerUrl      = s"/trader-goods-profiles-router/$eoriNumber/records/$recordId"
-  private val routerResponse = Json.toJson(createGetRecordResponse(eoriNumber, recordId, timestamp))
+  private val url                 = s"http://localhost:$port/$eoriNumber/records/$recordId"
+  private val routerUrl           = s"/trader-goods-profiles-router/$eoriNumber/records/$recordId"
+  private val routerResponse      = Json.toJson(createGetRecordResponse(eoriNumber, recordId, timestamp))
+  private val getRecordsUrl       = s"http://localhost:$port/$eoriNumber"
+  private val getRecordsRouterUrl = s"/trader-goods-profiles-router/$eoriNumber"
 
   override lazy val app: Application = {
     wireMock.start()
@@ -81,6 +83,7 @@ class GetRecordsControllerIntegrationSpec
     super.beforeEach()
 
     reset(authConnector)
+    stubRouterRequestGetRecords(200, routerResponse.toString())
     stubRouterRequest(200, routerResponse.toString())
     when(dateTimeService.timestamp).thenReturn(timestamp)
   }
@@ -100,6 +103,25 @@ class GetRecordsControllerIntegrationSpec
       withAuthorizedTrader()
 
       val result = getRecordAndWait()
+
+      result.status mustBe OK
+    }
+
+    "return 200 records with pagination" in {
+      withAuthorizedTrader()
+
+      //val result = getRecordAndWait()
+
+      val result = await(
+        wsClient
+          .url(s"$getRecordsUrl?page=1&size=1")
+          .withHttpHeaders(
+            "X-Client-ID"  -> "clientId",
+            "Accept"       -> "application/vnd.hmrc.1.0+json",
+            "Content-Type" -> "application/json"
+          )
+          .get()
+      )
 
       result.status mustBe OK
     }
@@ -329,10 +351,20 @@ class GetRecordsControllerIntegrationSpec
       "message"   -> message
     )
 
-  private def stubRouterRequest(status: Int, errorResponse: String) =
+  private def stubRouterRequest(status: Int, errorResponse: String)           =
     wireMock.stubFor(
       WireMock
         .get(routerUrl)
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withBody(errorResponse)
+        )
+    )
+  private def stubRouterRequestGetRecords(status: Int, errorResponse: String) =
+    wireMock.stubFor(
+      WireMock
+        .get(getRecordsRouterUrl)
         .willReturn(
           aResponse()
             .withStatus(status)

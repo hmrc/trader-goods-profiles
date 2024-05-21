@@ -29,7 +29,7 @@ import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.AuthAction.{gtpEnrolmentKey, gtpIdentifierKey}
 import uk.gov.hmrc.tradergoodsprofiles.models.auth.EnrolmentRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ForbiddenErrorResponse, ServerErrorResponse, UnauthorisedErrorResponse}
-import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
+import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, UuidService}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future.successful
@@ -37,11 +37,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class AuthActionImpl @Inject() (
-  override val authConnector: AuthConnector,
-  dateTimeService: DateTimeService,
-  val bodyParser: BodyParsers.Default,
-  cc: ControllerComponents,
-  val parser: BodyParsers.Default
+                                 override val authConnector: AuthConnector,
+                                 uuidService: UuidService,
+                                 val bodyParser: BodyParsers.Default,
+                                 cc: ControllerComponents,
+                                 val parser: BodyParsers.Default
 )(implicit val ec: ExecutionContext)
     extends BackendController(cc)
     with AuthorisedFunctions
@@ -95,7 +95,7 @@ class AuthActionImpl @Inject() (
     logger.error(s"Internal server error for ${request.uri} with error ${ex.getMessage}", ex)
 
     ServerErrorResponse(
-      dateTimeService.timestamp,
+      uuidService.toString,
       s"Internal server error for ${request.uri} with error: ${ex.getMessage}"
     ).toResult
   }
@@ -117,8 +117,8 @@ class AuthActionImpl @Inject() (
 
     Future.successful(
       ForbiddenErrorResponse(
-        dateTimeService.timestamp,
-        s"This EORI number is incorrect"
+        uuidService.toString,
+        s"EORI number is incorrect"
       ).toResult
     )
   }
@@ -139,7 +139,7 @@ class AuthActionImpl @Inject() (
     logger.error(s"Unauthorised exception for ${request.uri} with error $errorMessage")
 
     UnauthorisedErrorResponse(
-      dateTimeService.timestamp,
+      uuidService.toString,
       errorMessage
     ).toResult
   }
@@ -151,7 +151,7 @@ class AuthActionImpl @Inject() (
     logger.error(s"Unauthorised exception for ${request.uri} with error $errorMessage")
 
     UnauthorisedErrorResponse(
-      dateTimeService.timestamp,
+      uuidService.toString,
       s"The details signed in do not have a Trader Goods Profile"
     ).toResult
   }

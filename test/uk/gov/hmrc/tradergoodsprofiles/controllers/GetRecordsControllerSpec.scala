@@ -68,6 +68,8 @@ class GetRecordsControllerSpec
     when(dateTimeService.timestamp).thenReturn(timestamp)
     when(routerService.getRecord(any, any)(any))
       .thenReturn(EitherT.fromEither(Right(createGetRecordResponse(eoriNumber, recordId, timestamp))))
+    when(routerService.getRecords(any, any, any, any)(any))
+      .thenReturn(EitherT.fromEither(Right(createGetRecordResponse(eoriNumber, recordId, timestamp))))
   }
 
   "getRecord" should {
@@ -129,6 +131,56 @@ class GetRecordsControllerSpec
           .thenReturn(EitherT.fromEither(Left(InternalServerError(expectedJson))))
 
         val result = sut.getRecord(eoriNumber, recordId)(request)
+
+        status(result) mustBe INTERNAL_SERVER_ERROR
+        contentAsJson(result) mustBe expectedJson
+      }
+    }
+  }
+
+  "getRecords" should {
+    "return 200 records without pagination" in {
+      val result = sut.getRecords(eoriNumber, Some(""), Some(0), Some(0))(request)
+
+      status(result) mustBe OK
+    }
+
+    "return 200 records with pagination" in {
+      val result = sut.getRecords(eoriNumber, Some("2024-03-26T16:14:52Z"), Some(1), Some(1))(request)
+
+      status(result) mustBe OK
+    }
+
+    "get the record from router" in {
+      val result = sut.getRecords(eoriNumber, Some(""), Some(0), Some(0))(request)
+
+      status(result) mustBe OK
+      verify(routerService).getRecords(eqTo(eoriNumber), eqTo(Some("")), eqTo(0), eqTo(0))(any)
+    }
+
+    "return an error" when {
+
+      "eori is not valid" in {
+        val result = sut.getRecords("12345678910", Some(""), Some(0), Some(0))(request)
+
+        status(result) mustBe BAD_REQUEST
+        contentAsJson(result) mustBe Json.obj(
+          "timestamp" -> timestamp,
+          "code"      -> "INVALID_EORI_PARAMETER",
+          "message"   -> "Invalid eori number provided"
+        )
+      }
+
+      "routerService return an error" in {
+        val expectedJson = Json.obj(
+          "code"    -> "INTERNAL_SERVER_ERROR",
+          "message" -> s"internal server error"
+        )
+
+        when(routerService.getRecords(any, any, any, any)(any))
+          .thenReturn(EitherT.fromEither(Left(InternalServerError(expectedJson))))
+
+        val result = sut.getRecords(eoriNumber, Some(""), Some(0), Some(0))(request)
 
         status(result) mustBe INTERNAL_SERVER_ERROR
         contentAsJson(result) mustBe expectedJson

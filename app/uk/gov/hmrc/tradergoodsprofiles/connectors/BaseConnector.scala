@@ -30,6 +30,16 @@ trait BaseConnector {
       s"$routerBaseRoute/$eoriNumber/records/$recordId"
     )
 
+  def routerRouteGetRecords(
+    eoriNumber: String,
+    lastUpdatedDate: Option[String],
+    page: Option[Int],
+    size: Option[Int]
+  ): UrlPath =
+    UrlPath.parse(
+      s"$routerBaseRoute/$eoriNumber?$lastUpdatedDate&$page&$size"
+    )
+
   implicit class HttpResponseHelpers(requestBuilder: RequestBuilder) {
     def withClientId(implicit hc: HeaderCarrier): RequestBuilder =
       hc.headers(Seq(Constants.XClientIdHeader)).headOption match {

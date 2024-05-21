@@ -22,7 +22,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.InvalidRecordIdErrorResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.{InvalidEoriNumberErrorResponse, InvalidRecordIdErrorResponse}
 import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, RouterService}
 
 import java.util.UUID
@@ -48,14 +48,27 @@ class GetRecordsController @Inject() (
       } yield Ok(Json.toJson(record))).merge
     }
 
+  def getRecords(
+    eori: String,
+    lastUpdatedDate: Option[String],
+    page: Option[Int],
+    size: Option[Int]
+  ): Action[AnyContent] =
+    (authAction(eori) andThen validateHeaderAction).async { implicit request =>
+      (for {
+        record <- routerService.getRecords(eori, lastUpdatedDate, page, size)
+      } yield Ok(Json.toJson(record))).merge
+    }
+
   private def validateRecordId(recordId: String): EitherT[Future, Result, String] =
     EitherT.fromEither[Future](
       Try(UUID.fromString(recordId).toString).toEither.left.map(_ =>
-        InvalidRecordIdErrorResponse(
+        InvalidErrorResponse(
           dateTimeService.timestamp,
           "Invalid record ID supplied for eori number provided"
         ).toResult
       )
     )
+
 
 }

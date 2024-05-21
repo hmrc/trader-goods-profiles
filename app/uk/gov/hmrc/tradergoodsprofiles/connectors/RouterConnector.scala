@@ -37,7 +37,7 @@ class RouterConnector @Inject() (
     extends BaseConnector
     with MetricsSupport
     with Logging {
-  def get(eori: String, recordId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+  def get(eori: String, recordId: String)(implicit hc: HeaderCarrier): Future[HttpResponse]                  =
     withMetricsTimerAsync("tgp.getrecord.connector") { _ =>
       val url = appConfig.routerUrl.withPath(routerRoute(eori, recordId))
 
@@ -47,7 +47,18 @@ class RouterConnector @Inject() (
         .withClientId
         .execute[HttpResponse]
     }
+  def getRecords(eori: String, lastUpdatedDate: Option[String], page: Option[Int], size: Option[Int])(implicit
+    hc: HeaderCarrier
+  ): Future[HttpResponse]                                                                                    =
+    withMetricsTimerAsync("tgp.getrecords.connector") { _ =>
+      val url = appConfig.routerUrl.withPath(routerRouteGetRecords(eori, lastUpdatedDate, page, size))
 
+      httpClient
+        .get(url"$url")
+        .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+        .withClientId
+        .execute[HttpResponse]
+    }
   def put(eori: String, recordId: String, actorId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.removerecord.connector") { _ =>
       val url = appConfig.routerUrl.withPath(routerRoute(eori, recordId))
