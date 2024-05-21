@@ -41,21 +41,21 @@ class CreateRecordController @Inject() (
 
   def createRecord(eori: String): Action[JsValue] =
     (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
-      request.body
-        .validate[APICreateRecordRequest]
-        .fold(
-          errors => {
-            val errorMessages = errors.map { case (path, validationErrors) =>
-              path.toJsonString -> validationErrors.map(_.message).mkString(", ")
-            }.toMap
-            Future.successful(BadRequest(Json.obj("error" -> "Invalid JSON", "details" -> errorMessages)))
-          },
-          createRequest =>
-            (for {
-              response <- createRecordRequestForRouter(eori, createRequest)
-            } yield Created(Json.toJson(response))).merge
-        )
+      (for {
+        createRequest <- validateCreateRecordRequest(request.body)
+        response      <- createRecordRequestForRouter(eori, createRequest)
+      } yield Created(Json.toJson(response))).merge
     }
+
+  private def validateCreateRecordRequest(json: JsValue): EitherT[Future, Result, APICreateRecordRequest] =
+    EitherT.fromEither[Future](
+      json.validate[APICreateRecordRequest].asEither.left.map { errors =>
+        val errorMessages = errors.map { case (path, validationErrors) =>
+          path.toJsonString -> validationErrors.map(_.message).mkString(", ")
+        }.toMap
+        BadRequest(Json.obj("code" -> "INVALID JSON", "message" -> errorMessages))
+      }
+    )
 
   private def createRecordRequestForRouter(
     eori: String,
