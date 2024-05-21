@@ -23,6 +23,7 @@ import org.scalatest.prop.TableDrivenPropertyChecks._
 import org.scalatest.{BeforeAndAfterEach, EitherValues}
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
+import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.mvc.Results.InternalServerError
@@ -298,6 +299,83 @@ class RouterServiceSpec
               .thenReturn(Future.successful(createHttpResponse(status, code)))
 
             val result = sut.createRecord("GB123456789012", createRequest)
+
+            whenReady(result.value) {
+              _.left.value.header.status mustBe expectedResult
+            }
+          }
+      }
+    }
+  }
+
+  "removeRecord" should {
+    "return 200 OK " in {
+      val httpResponse = HttpResponse(Status.OK, "")
+      when(connector.put("GB123456789012", "recordId", "GB123456789012")).thenReturn(Future.successful(httpResponse))
+
+      val result = sut.removeRecord("GB123456789012", "recordId", "GB123456789012").value
+
+      result.map { res =>
+        res mustBe Right(())
+      }
+    }
+
+    "return an error" when {
+      "add timestamp to router error" in {
+        when(connector.put(any, any, any)(any))
+          .thenReturn(Future.successful(createHttpResponse(500, "INTERNAL_SERVER_ERROR")))
+
+        val result = sut.removeRecord("eori", "recordId", "actorId")
+
+        whenReady(result.value) {
+          _.left.value mustBe InternalServerError(
+            Json.obj(
+              "correlationId" -> "correlationId",
+              "code"          -> "INTERNAL_SERVER_ERROR",
+              "message"       -> "any message",
+              "timestamp"     -> timestamp
+            )
+          )
+        }
+      }
+
+      "routerConnector return an exception" in {
+        when(connector.put(any, any, any)(any))
+          .thenReturn(Future.failed(new RuntimeException("error")))
+
+        val result = sut.removeRecord("eori", "recordId", "actorId")
+
+        whenReady(result.value) {
+          _.left.value mustBe InternalServerError(
+            Json.obj(
+              "timestamp" -> timestamp,
+              "code"      -> "INTERNAL_SERVER_ERROR",
+              "message"   -> s"Could not remove record for eori number eori and record ID recordId"
+            )
+          )
+        }
+
+      }
+
+      val table = Table(
+        ("description", "status", "expectedResult", "code"),
+        ("return bad request", 400, 400, "BAD_REQUEST"),
+        ("return Forbidden", 403, 403, "FORBIDDEN"),
+        ("return Not Found", 404, 404, "NOT_FOUND")
+      )
+
+      forAll(table) {
+        (
+          description: String,
+          status: Int,
+          expectedResult: Int,
+          code: String
+        ) =>
+          s"$description" in {
+            when(connector.put(any, any, any)(any))
+              .thenReturn(Future.successful(createHttpResponse(status, code)))
+
+            val result = sut.removeRecord("eori", "recordId", "actorId")
 
             whenReady(result.value) {
               _.left.value.header.status mustBe expectedResult
