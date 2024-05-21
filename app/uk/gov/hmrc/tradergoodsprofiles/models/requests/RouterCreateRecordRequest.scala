@@ -28,11 +28,11 @@ case class RouterCreateRecordRequest(
   goodsDescription: String,
   countryOfOrigin: String,
   category: Int,
-  assessments: Seq[Assessment],
-  supplementaryUnit: Int,
-  measurementUnit: String,
+  assessments: Option[Seq[Assessment]] = None,
+  supplementaryUnit: Option[Int] = None,
+  measurementUnit: Option[String] = None,
   comcodeEffectiveFromDate: Instant,
-  comcodeEffectiveToDate: Instant
+  comcodeEffectiveToDate: Option[Instant] = None
 )
 
 object RouterCreateRecordRequest {

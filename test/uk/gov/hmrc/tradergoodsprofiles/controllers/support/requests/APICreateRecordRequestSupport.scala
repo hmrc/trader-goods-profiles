@@ -29,18 +29,25 @@ trait APICreateRecordRequestSupport {
     goodsDescription: String = "Bananas",
     countryOfOrigin: String = "GB",
     category: Int = 2,
-    supplementaryUnit: Int = 13,
-    measurementUnit: String = "Kilograms",
+    assessments: Option[Seq[Assessment]] = Some(
+      Seq(
+        Assessment(
+          "a06846e9a5f61fa4ecf2c4e3b23631fc",
+          1,
+          Condition(
+            "certificate",
+            "Y923",
+            "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
+            "Excluded product"
+          )
+        )
+      )
+    ),
+    supplementaryUnit: Option[Int] = Some(13),
+    measurementUnit: Option[String] = Some("Kilograms"),
     comcodeEffectiveFromDate: Instant = Instant.parse("2023-01-01T00:00:00Z"),
-    comcodeEffectiveToDate: Instant = Instant.parse("2028-01-01T00:00:00Z")
-  ): APICreateRecordRequest = {
-    val condition  = Condition(
-      "certificate",
-      "Y923",
-      "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
-      "Excluded product"
-    )
-    val assessment = Assessment("a06846e9a5f61fa4ecf2c4e3b23631fc", 1, condition)
+    comcodeEffectiveToDate: Option[Instant] = Some(Instant.parse("2028-01-01T00:00:00Z"))
+  ): APICreateRecordRequest =
     APICreateRecordRequest(
       actorId,
       traderRef,
@@ -48,11 +55,10 @@ trait APICreateRecordRequestSupport {
       goodsDescription,
       countryOfOrigin,
       category,
-      Seq(assessment),
+      assessments,
       supplementaryUnit,
       measurementUnit,
       comcodeEffectiveFromDate,
       comcodeEffectiveToDate
     )
-  }
 }
