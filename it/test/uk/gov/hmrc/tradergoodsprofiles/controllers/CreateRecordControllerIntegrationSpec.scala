@@ -29,7 +29,8 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment}
+import uk.gov.hmrc.auth.core.AffinityGroup.Agent
+import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
@@ -39,6 +40,7 @@ import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
 import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
 
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 
@@ -159,6 +161,71 @@ class CreateRecordControllerIntegrationSpec
         "timestamp" -> "2024-06-08T12:12:12Z",
         "code"      -> "FORBIDDEN",
         "message"   -> "This EORI number is incorrect"
+      )
+    }
+
+    "return Forbidden when identifier does not exist" in {
+      withUnauthorizedEmptyIdentifier()
+
+      val result = createRecordAndWait()
+
+      result.status mustBe FORBIDDEN
+      result.json mustBe Json.obj(
+        "timestamp" -> timestamp.truncatedTo(ChronoUnit.SECONDS),
+        "code"      -> "FORBIDDEN",
+        "message"   -> "This EORI number is incorrect"
+      )
+    }
+
+    "return Unauthorized when invalid enrolment" in {
+      withUnauthorizedTrader(InsufficientEnrolments())
+
+      val result = createRecordAndWait()
+
+      result.status mustBe UNAUTHORIZED
+      result.json mustBe Json.obj(
+        "timestamp" -> timestamp.truncatedTo(ChronoUnit.SECONDS),
+        "code"      -> "UNAUTHORIZED",
+        "message"   -> "The details signed in do not have a Trader Goods Profile"
+      )
+    }
+
+    "return Unauthorized when affinity group is Agent" in {
+      authorizeWithAffinityGroup(Some(Agent))
+
+      val result = createRecordAndWait()
+
+      result.status mustBe UNAUTHORIZED
+      result.json mustBe Json.obj(
+        "timestamp" -> timestamp.truncatedTo(ChronoUnit.SECONDS),
+        "code"      -> "UNAUTHORIZED",
+        "message"   -> "Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'"
+      )
+    }
+
+    "return Unauthorized when affinity group is empty" in {
+      authorizeWithAffinityGroup(None)
+
+      val result = createRecordAndWait()
+
+      result.status mustBe UNAUTHORIZED
+      result.json mustBe Json.obj(
+        "timestamp" -> timestamp.truncatedTo(ChronoUnit.SECONDS),
+        "code"      -> "UNAUTHORIZED",
+        "message"   -> "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'"
+      )
+    }
+
+    "return Internal server error if auth throws" in {
+      withUnauthorizedTrader(new RuntimeException("runtime exception"))
+
+      val result = createRecordAndWait()
+
+      result.status mustBe INTERNAL_SERVER_ERROR
+      result.json mustBe Json.obj(
+        "timestamp" -> timestamp.truncatedTo(ChronoUnit.SECONDS),
+        "code"      -> "INTERNAL_SERVER_ERROR",
+        "message"   -> s"Internal server error for /$eoriNumber/records with error: runtime exception"
       )
     }
 
