@@ -2,3 +2,4 @@
 
 
 GET     /:eori/records/:recordId   uk.gov.hmrc.tradergoodsprofiles.controllers.GetRecordsController.getRecord(eori: String, recordId: String)
+PUT     /:eori/records/:recordId   uk.gov.hmrc.tradergoodsprofiles.controllers.RemoveRecordController.removeRecord(eori: String, recordId: String)

@@ -19,6 +19,7 @@ package uk.gov.hmrc.tradergoodsprofiles.connectors
 import com.codahale.metrics.MetricRegistry
 import play.api.Logging
 import play.api.http.{HeaderNames, MimeTypes}
+import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
@@ -46,4 +47,17 @@ class RouterConnector @Inject() (
         .withClientId
         .execute[HttpResponse]
     }
+
+  def put(eori: String, recordId: String, actorId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+    withMetricsTimerAsync("tgp.removerecord.connector") { _ =>
+      val url = appConfig.routerUrl.withPath(routerRoute(eori, recordId))
+
+      httpClient
+        .put(url"$url")
+        .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+        .withClientId
+        .withBody(Json.obj("actorId" -> actorId))
+        .execute[HttpResponse]
+    }
+
 }
