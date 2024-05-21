@@ -37,7 +37,7 @@ trait RouterService {
 
   def getRecord(eori: String, recordId: String)(implicit hc: HeaderCarrier): EitherT[Future, Result, GetRecordResponse]
   def createRecord(eori: String, createRequest: RouterCreateRecordRequest)(implicit
-                                                                           hc: HeaderCarrier
+    hc: HeaderCarrier
   ): EitherT[Future, Result, CreateRecordResponse]
 
   def removeRecord(eori: String, recordId: String, actorId: String)(implicit
@@ -79,7 +79,7 @@ class RouterServiceImpl @Inject() (
     )
 
   def createRecord(eori: String, createRequest: RouterCreateRecordRequest)(implicit
-                                                                        hc: HeaderCarrier
+    hc: HeaderCarrier
   ): EitherT[Future, Result, CreateRecordResponse] =
     EitherT(
       routerConnector
@@ -160,7 +160,8 @@ class RouterServiceImpl @Inject() (
         .put(eoriNumber, recordId, actorId)
         .map {
           case httpResponse if is2xx(httpResponse.status) => Right(())
-          case httpResponse                               => Left(handleError(httpResponse.body, httpResponse.status, eoriNumber, recordId))
+          case httpResponse                               =>
+            Left(handleError(httpResponse.body, httpResponse.status, Some(eoriNumber), Some(recordId)))
         }
         .recover { case ex: Throwable =>
           logger.error(
