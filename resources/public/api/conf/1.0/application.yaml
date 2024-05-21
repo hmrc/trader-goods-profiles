@@ -9,7 +9,7 @@ info:
     The [Trader goods profile service
     guide](/guides/trader-goods-profile-service-guide/) contains a detailed
     overview of v1.0 of the API.
-  contact: { }
+  contact: {}
 servers:
   - url: https://test-api.service.hmrc.gov.uk
     description: Sandbox
@@ -50,7 +50,14 @@ paths:
             X-Correlation-ID:
               $ref: '#/components/headers/xCorrelationIdHdr'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+              examples:
+                StandardBadRequestExample:
+                  $ref: '#/components/examples/StandardBadRequestExample'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -63,7 +70,9 @@ paths:
     get:
       tags:
         - Goods records
-      summary: Get good records by EORI and optionally updatedSince, supports pagination
+      summary: >-
+        Get good records by EORI and optionally updatedSince, supports
+        pagination
       description: Gets a list of good records
       operationId: getTraderGoodsProfileRecord
       parameters:
@@ -128,7 +137,43 @@ paths:
             X-Correlation-ID:
               $ref: '#/components/headers/xCorrelationIdHdr'
         '400':
-          $ref: '#/components/responses/UpdateBadRequest'
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+              examples:
+                traderRefNotUnique:
+                  value:
+                    correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
+                    code: BAD_REQUEST
+                    message: Bad request
+                    errors:
+                      - code: INVALID_REQUEST_PARAMETER
+                        message: >-
+                          traderRef is not unique for all the provided
+                          traderEori goods records
+                        errorNumber: 5
+                recordIsLocked:
+                  value:
+                    correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
+                    code: BAD_REQUEST
+                    message: Bad request
+                    errors:
+                      - code: INVALID_REQUEST_PARAMETER
+                        message: >-
+                          Record is locked and cannot be updated until
+                          accreditation request withdrawn.
+                        errorNumber: 27
+                recordIsAlreadyDeactivated:
+                  value:
+                    correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
+                    code: BAD_REQUEST
+                    message: Bad request
+                    errors:
+                      - code: INVALID_REQUEST_PARAMETER
+                        message: A deactivated record cannot be updated.
+                        errorNumber: 31
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -165,7 +210,24 @@ paths:
             X-Correlation-ID:
               $ref: '#/components/headers/xCorrelationIdHdr'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+              example:
+                correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
+                code: BAD_REQUEST
+                message: Bad request
+                errors:
+                  - code: INVALID_HEADER
+                    message: Accept was missing from Header or wrong format
+                    errorNumber: 4
+                  - code: INVALID_REQUEST_PARAMETER
+                    message: >-
+                      Mandatory field goodsDescription was missing from body or
+                      is in the wrong format
+                    errorNumber: 12
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -238,7 +300,24 @@ paths:
             X-Correlation-ID:
               $ref: '#/components/headers/xCorrelationIdHdr'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+              example:
+                correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
+                code: BAD_REQUEST
+                message: Bad request
+                errors:
+                  - code: INVALID_HEADER
+                    message: Accept was missing from Header or wrong format
+                    errorNumber: 4
+                  - code: INVALID_REQUEST_PARAMETER
+                    message: >-
+                      Mandatory field requestorEmail was missing from body or is
+                      in the wrong format
+                    errorNumber: 1009
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -277,7 +356,22 @@ paths:
             X-Correlation-ID:
               $ref: '#/components/headers/xCorrelationIdHdr'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+              example:
+                correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
+                code: BAD_REQUEST
+                message: Bad request
+                errors:
+                  - code: INVALID_HEADER
+                    message: Accept was missing from Header or wrong format
+                    errorNumber: 4
+                  - code: INVALID_REQUEST_PARAMETER
+                    message: Optional field nirmsNumber is in the wrong format
+                    errorNumber: 34
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -291,74 +385,14 @@ paths:
             - trader-goods-profiles
 components:
   responses:
-    UpdateBadRequest:
-      description: Bad Request
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              code:
-                type: string
-              message:
-                type: string
-              errors:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Error'
-          examples:
-            traderRefNotUnique:
-              value:
-                code: BAD_REQUEST
-                message: Bad request
-                errors:
-                  - code: '005'
-                    message: traderRef is not unique for all the provided traderEori goods records
-            recordIsLocked:
-              value:
-                code: BAD_REQUEST
-                message: Bad request
-                errors:
-                  - code: '027'
-                    message: Record is locked and cannot be updated until accreditation request withdrawn.
-            recordIsAlreadyDeactivated:
-              value:
-                code: BAD_REQUEST
-                message: Bad request
-                errors:
-                  - code: '031'
-                    message: A deactivated record cannot be updated.
-    BadRequest:
-      description: Bad Request
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              code:
-                type: string
-              message:
-                type: string
-              errors:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Error'
-          example:
-            code: BAD_REQUEST
-            message: Bad request
-            errors:
-              - code: '005'
-                message: Missing or Invalid Header
-              - code: '011'
-                message: Missing or invalid mandatory request parameter
     Unauthorized:
       description: Unauthorized
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: '#/components/schemas/StandardError'
           example:
-            timestamp: "2024-06-08T12:12:12Z"
+            correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
             code: UNAUTHORIZED
             message: Unauthorized
     NotFoundError:
@@ -366,52 +400,60 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/CustomError'
+            $ref: '#/components/schemas/StandardError'
           example:
-            correlationId: "83a2d4a9-c053-437b-b717-07b89dff288e"
-            timestamp: "2024-06-08T12:12:12Z"
+            correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
             code: NOT_FOUND
-            message: Nor Found Error
+            message: Not Found
     InternalServerError:
       description: Internal Server Error
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/CustomError'
+            $ref: '#/components/schemas/StandardError'
           example:
-            correlationId: "83a2d4a9-c053-437b-b717-07b89dff288e"
-            timestamp: "2024-06-08T12:12:12Z"
+            correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
             code: INTERNAL_SERVER_ERROR
             message: Internal Server Error
   schemas:
-    Error:
-      type: object
-      properties:
-        timestamp:
-          type: string
-        code:
-          type: string
-        message:
-          type: string
-      required:
-        - timestamp
-        - code
-        - message
-    CustomError:
+    StandardError:
       type: object
       properties:
         correlationId:
           type: string
-        timestamp:
-          type: string
+          format: uuid
         code:
           type: string
         message:
           type: string
       required:
-        - timestamp
+        - correlationId
         - code
         - message
+    BadRequestError:
+      allOf:
+        - $ref: '#/components/schemas/StandardError'
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/BadRequestErrorDetail'
+      required:
+        - errors
+    BadRequestErrorDetail:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        errorNumber:
+          type: number
+      required:
+        - code
+        - message
+        - errorNumber
     CreateTGPRecordSchema:
       type: object
       required:
@@ -663,8 +705,7 @@ components:
         pagination:
           $ref: '#/components/schemas/pagination'
     recordsArray:
-      description: >-
-        An Array of records
+      description: An Array of records
       type: array
       items:
         $ref: '#/components/schemas/TGPGetRecordResponseSchema'
@@ -684,7 +725,9 @@ components:
             condition:
               type: certificate
               conditionId: Y923
-              conditionDescription: Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law
+              conditionDescription: >-
+                Products not considered as waste according to Regulation (EC) No
+                1013/2006 as retained in UK law
               conditionTraderText: Excluded product
           supplementaryUnit: 13
           measurementUnit: Kilograms
@@ -716,7 +759,9 @@ components:
             condition:
               type: certificate
               conditionId: Y923
-              conditionDescription: Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law
+              conditionDescription: >-
+                Products not considered as waste according to Regulation (EC) No
+                1013/2006 as retained in UK law
               conditionTraderText: Excluded product
           supplementaryUnit: 13
           measurementUnit: Kilograms
@@ -793,7 +838,8 @@ components:
       maxLength: 17
       example: GB123456789012
       description: >-
-        The traders' EORI number. The first 2 letters are the country code, like GB or XI, followed by 12 or 15 digits.
+        The traders' EORI number. The first 2 letters are the country code, like
+        GB or XI, followed by 12 or 15 digits.
     actorId:
       type: string
       pattern: ^[A-Z]{2}\d{12,15}$
@@ -801,21 +847,27 @@ components:
       maxLength: 17
       example: GB987654321098
       description: >-
-        EORI number of the user making the change. This may be different to the eori. The first 2 letters are the country code, like GB or XI followed by 12 or 15 digits.
+        EORI number of the user making the change. This may be different to the
+        eori. The first 2 letters are the country code, like GB or XI followed
+        by 12 or 15 digits.
     traderRef:
       type: string
       minLength: 1
       maxLength: 512
       example: SKU123456
       description: >-
-        Unique product reference traders use to identify the goods. For example a Stock Keeping Unit (SKU) code. If the trader does not provide a traderRef, the front end should duplicate the goodsDescription field and pass this as traderRef.
+        Unique product reference traders use to identify the goods. For example
+        a Stock Keeping Unit (SKU) code. If the trader does not provide a
+        traderRef, the front end should duplicate the goodsDescription field and
+        pass this as traderRef.
     comcode:
       type: string
       minLength: 6
       maxLength: 10
       example: 123456
       description: >-
-        A code specific to goods that is internationally recognised. Can be 6, 8 or 10 digits.
+        A code specific to goods that is internationally recognised. Can be 6, 8
+        or 10 digits.
     accreditationStatus:
       type: string
       minLength: 1
@@ -838,7 +890,8 @@ components:
       maxLength: 512
       example: Bananas
       description: >-
-        A description of the goods that the trader can choose. This field does not need to be unique.
+        A description of the goods that the trader can choose. This field does
+        not need to be unique.
     countryOfOrigin:
       type: string
       pattern: ^[A-Z]{2}$
@@ -846,21 +899,28 @@ components:
       maxLength: 2
       example: GB
       description: >-
-        Country where the product came from. This is a char field with 2 letters in it as per ISO 3166 standards. You can also refer to CDS Appendix 13 [Country codes for the Customs Declaration Service](https://www.gov.uk/government/publications/country-codes-for-the-customs-declaration-service).
+        Country where the product came from. This is a char field with 2 letters
+        in it as per ISO 3166 standards. You can also refer to CDS Appendix 13
+        [Country codes for the Customs Declaration
+        Service](https://www.gov.uk/government/publications/country-codes-for-the-customs-declaration-service).
     category:
       type: integer
       minimum: 1
       maximum: 3
       example: 2
       description: >-
-        To be retrieved using the Online Trade Tariff API. The category of the goods based on applicable restrictions, prohibitions or any exemptions the trader may hold.
+        To be retrieved using the Online Trade Tariff API. The category of the
+        goods based on applicable restrictions, prohibitions or any exemptions
+        the trader may hold.
       enum:
         - 1
         - 2
         - 3
     assessments:
       description: >-
-        Array of category assessment data describing the measures which apply to the trader's movement of goods, and how the trader is exempt (if applicable).
+        Array of category assessment data describing the measures which apply to
+        the trader's movement of goods, and how the trader is exempt (if
+        applicable).
       type: array
       items:
         $ref: '#/components/schemas/Assessment'
@@ -868,63 +928,65 @@ components:
       type: number
       example: 13
       description: >-
-        Supplementary units are sometimes needed on H8 declarations and provide a quantity of goods in a specified unit of measurement.
+        Supplementary units are sometimes needed on H8 declarations and provide
+        a quantity of goods in a specified unit of measurement.
     measurementUnit:
       type: string
       minLength: 1
       maxLength: 255
       example: Kilograms
       description: >-
-        Measurement units define the required unit of measure when a supplementary unit is needed on an H8 declaration. Measurement units are defined in the [Trade Tariff commodities API measurement documentation.](https://api.trade-tariff.service.gov.uk/reference-data.html#measurement-units)
+        Measurement units define the required unit of measure when a
+        supplementary unit is needed on an H8 declaration. Measurement units are
+        defined in the [Trade Tariff commodities API measurement
+        documentation.](https://api.trade-tariff.service.gov.uk/reference-data.html#measurement-units)
     comcodeEffectiveFromDate:
       type: string
       format: date-time
       pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$
       example: 2023-01-01T00:00:00Z
       description: >-
-        Date in the Online Tariff Tool (OTT) when authorised usage of a commodity code came into effect.
+        Date in the Online Tariff Tool (OTT) when authorised usage of a
+        commodity code came into effect.
     comcodeEffectiveToDate:
       type: string
       format: date-time
       pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$
       example: 2028-01-01T00:00:00Z
       description: >-
-        Date in the OTT when authorised usage of a commodity code expired or will expire.
+        Date in the OTT when authorised usage of a commodity code expired or
+        will expire.
     version:
       type: integer
       format: int64
-      description: >-
-        Version of the TGP record.
+      description: Version of the TGP record.
       example: 1
     active:
       type: boolean
       example: true
-      description: >-
-        Status of the TGP record.
+      description: Status of the TGP record.
     toReview:
       type: boolean
       example: false
-      description: >-
-        The state of the record and if the trader needs to review it.
+      description: The state of the record and if the trader needs to review it.
     reviewReason:
       type: string
       minLength: 1
       maxLength: 512
       example: Commodity code changed
       description: >-
-        Commodity code expiry:
-        The commodity code has expired. You'll need to change the commodity code and categorise the goods.
-        
-        
-        Measures change:
-        The restrictions have changed or there may be new restrictions. You need to categorise the record.
+        Commodity code expiry: The commodity code has expired. You'll need to
+        change the commodity code and categorise the goods.
+
+
+        Measures change: The restrictions have changed or there may be new
+        restrictions. You need to categorise the record.
     declarable:
       type: string
       minLength: 1
       maxLength: 100
       example: IMMI declarable
-      description: >-
-        Status of TGP record for H8 declarations.
+      description: Status of TGP record for H8 declarations.
       enum:
         - IMMI ready
         - not ready for IMMI
@@ -934,56 +996,52 @@ components:
       minLength: 32
       maxLength: 32
       example: XIUKIM47699357400020231115081800
-      description: >-
-        The traders' UK Internal Market Scheme registration number.
+      description: The traders' UK Internal Market Scheme registration number.
     nirmsNumber:
       type: string
       minLength: 13
       maxLength: 13
       example: RMS-GB-123456
       description: >-
-        The traders' Northern Ireland Retail Movement Scheme registration number.
+        The traders' Northern Ireland Retail Movement Scheme registration
+        number.
     niphlNumber:
       type: string
       minLength: 8
       maxLength: 8
       example: 6 S12345
       description: >-
-        The traders' Northern Ireland Plant Health Label scheme registration number.
+        The traders' Northern Ireland Plant Health Label scheme registration
+        number.
     locked:
       type: boolean
       example: false
-      description: >-
-        Whether the record is locked for updating due to the accreditationStatus
+      description: Whether the record is locked for updating due to the accreditationStatus
     createdDateTime:
       type: string
       format: date-time
       pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$
       example: 2023-01-01T00:00:00Z
-      description: >-
-        Timestamp when the record was created.
+      description: Timestamp when the record was created.
     updatedDateTime:
       type: string
       format: date-time
       pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$
       example: 2023-01-01T00:00:00Z
-      description: >-
-        Timestamp when the record was last updated.
+      description: Timestamp when the record was last updated.
     requestorName:
       type: string
       minLength: 1
       maxLength: 70
       example: Mr. Phil Edwards
-      description: >-
-        The name of the user requesting advice from HMRC.
+      description: The name of the user requesting advice from HMRC.
     requestorEmail:
       type: string
       format: email
       minLength: 3
       maxLength: 254
       example: Phil.Edwards@gmail.com
-      description: >-
-        The name of the user requesting advice from HMRC.
+      description: The name of the user requesting advice from HMRC.
     Assessment:
       type: object
       properties:
@@ -993,8 +1051,9 @@ components:
           maxLength: 35
           example: a06846e9a5f61fa4ecf2c4e3b23631fc
           description: >-
-            The ID of the category assessment(s) retrieved from the 
-            [Trade Tariff Green Lanes API](https://api.trade-tariff.service.gov.uk/green-lanes.html#get-green-lanes-category-assessments)
+            The ID of the category assessment(s) retrieved from the  [Trade
+            Tariff Green Lanes
+            API](https://api.trade-tariff.service.gov.uk/green-lanes.html#get-green-lanes-category-assessments)
         primaryCategory:
           type: integer
           example: 1
@@ -1003,7 +1062,8 @@ components:
           $ref: '#/components/schemas/Condition'
     Condition:
       description: >-
-        A collection of data detailing the condition the trader meets to exempt the category assessment
+        A collection of data detailing the condition the trader meets to exempt
+        the category assessment
       type: object
       properties:
         type:
@@ -1012,16 +1072,18 @@ components:
           maxLength: 35
           example: certificate
           description: >-
-            The type of condition/exemption as provided by the 
-            [Trade Tariff Green Lanes API](https://api.trade-tariff.service.gov.uk/green-lanes.html#get-green-lanes-category-assessments)
+            The type of condition/exemption as provided by the  [Trade Tariff
+            Green Lanes
+            API](https://api.trade-tariff.service.gov.uk/green-lanes.html#get-green-lanes-category-assessments)
         conditionId:
           type: string
           minLength: 1
           maxLength: 10
           example: Y923
           description: >-
-            The ID/code of the condition as provided by the 
-            [Trade Tariff Green Lanes API](https://api.trade-tariff.service.gov.uk/green-lanes.html#get-green-lanes-category-assessments)
+            The ID/code of the condition as provided by the  [Trade Tariff Green
+            Lanes
+            API](https://api.trade-tariff.service.gov.uk/green-lanes.html#get-green-lanes-category-assessments)
         conditionDescription:
           type: string
           minLength: 1
@@ -1030,28 +1092,28 @@ components:
             Products not considered as waste according to Regulation (EC) No
             1013/2006 as retained in UK law
           description: >-
-            The description of the condition as provided by the 
-            [Trade Tariff Green Lanes API](https://api.trade-tariff.service.gov.uk/green-lanes.html#get-green-lanes-category-assessments)
+            The description of the condition as provided by the  [Trade Tariff
+            Green Lanes
+            API](https://api.trade-tariff.service.gov.uk/green-lanes.html#get-green-lanes-category-assessments)
         conditionTraderText:
           type: string
           minLength: 1
           maxLength: 512
           example: Excluded product
           description: >-
-            A free text statement provided by the trader if required in the CDS guidance
+            A free text statement provided by the trader if required in the CDS
+            guidance
     page:
       type: integer
       minimum: 0
       example: 1
-      description: >-
-        0 indexed page number
+      description: 0 indexed page number
     size:
       type: integer
       minimum: 0
       maximum: 100000
       example: 100
-      description: >-
-        Number of records per page to be requested
+      description: Number of records per page to be requested
   parameters:
     Content-Type:
       name: Content-Type
@@ -1064,7 +1126,10 @@ components:
     Accept:
       name: Accept
       in: header
-      description: Specifies the response format and the [version](/api-documentation/docs/reference-guide#versioning) of the API to be used.
+      description: >-
+        Specifies the response format and the
+        [version](/api-documentation/docs/reference-guide#versioning) of the API
+        to be used.
       schema:
         type: string
         example: application/vnd.hmrc.1.0+json
@@ -1084,7 +1149,8 @@ components:
       schema:
         $ref: '#/components/schemas/eori'
       description: >-
-        The traders' EORI number. The first 2 letters are the country code, like GB or XI, followed by 12 or 15 digits.
+        The traders' EORI number. The first 2 letters are the country code, like
+        GB or XI, followed by 12 or 15 digits.
     updatedSinceParam:
       in: query
       name: updatedSince
@@ -1094,31 +1160,27 @@ components:
       schema:
         type: string
         format: date-time
-        pattern: >-
-          ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$
+        pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$
         example: 2024-04-18T23:20:19Z
     pageParam:
       in: query
       name: page
       schema:
         $ref: '#/components/schemas/page'
-      description: >-
-        The page number to fetch, defaults to 0
+      description: The page number to fetch, defaults to 0
     sizeParam:
       in: query
       name: size
       schema:
         $ref: '#/components/schemas/size'
-      description: >-
-        Number of records per page to be requested, default is 100000
+      description: Number of records per page to be requested, default is 100000
     recordParam:
       in: path
       name: recordId
       required: true
       schema:
         $ref: '#/components/schemas/recordId'
-      description: >-
-        ID of the record for the TGP Product in the TGP Core database (UUID)
+      description: ID of the record for the TGP Product in the TGP Core database (UUID)
   headers:
     xCorrelationIdHdr:
       description: A unique id created at source, i.e. client to TGP Digital.
@@ -1127,6 +1189,23 @@ components:
         type: string
         format: uuid
         example: 8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f
+  examples:
+    StandardBadRequestExample:
+      value:
+        correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
+        code: BAD_REQUEST
+        message: Bad request
+        errors:
+          - code: INVALID_REQUEST_PARAMETER
+            message: >-
+              traderRef is not unique for all the provided trader's goods
+              records
+            errorNumber: 10
+          - code: INVALID_REQUEST_PARAMETER
+            message: >-
+              Mandatory field goodsDescription was missing from body or is in
+              the wrong format
+            errorNumber: 12
   securitySchemes:
     userRestricted:
       type: oauth2
