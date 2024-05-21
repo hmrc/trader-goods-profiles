@@ -26,7 +26,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.HttpReads.is2xx
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{RouterError, ServerErrorResponse}
-import uk.gov.hmrc.tradergoodsprofiles.models.{APICreateRecordRequest, CreateRecordResponse, GetRecordResponse, RouterCreateRecordRequest}
+import uk.gov.hmrc.tradergoodsprofiles.models.{CreateRecordResponse, GetRecordResponse, RouterCreateRecordRequest}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.runtime.universe.{TypeTag, typeOf}

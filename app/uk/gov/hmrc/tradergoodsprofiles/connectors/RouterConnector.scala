@@ -25,7 +25,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.metrics.MetricsSupport
-import uk.gov.hmrc.tradergoodsprofiles.models.{APICreateRecordRequest, RouterCreateRecordRequest}
+import uk.gov.hmrc.tradergoodsprofiles.models.RouterCreateRecordRequest
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
