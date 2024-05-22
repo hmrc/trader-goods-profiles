@@ -29,7 +29,7 @@ import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.AuthAction.{gtpEnrolmentKey, gtpIdentifierKey}
 import uk.gov.hmrc.tradergoodsprofiles.models.auth.EnrolmentRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ForbiddenErrorResponse, ServerErrorResponse, UnauthorisedErrorResponse}
-import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
+import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future.successful
@@ -38,7 +38,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class AuthActionImpl @Inject() (
   override val authConnector: AuthConnector,
-  dateTimeService: DateTimeService,
+  uuidService: UuidService,
   val bodyParser: BodyParsers.Default,
   cc: ControllerComponents,
   val parser: BodyParsers.Default
@@ -95,7 +95,7 @@ class AuthActionImpl @Inject() (
     logger.error(s"Internal server error for ${request.uri} with error ${ex.getMessage}", ex)
 
     ServerErrorResponse(
-      dateTimeService.timestamp,
+      uuidService.uuid,
       s"Internal server error for ${request.uri} with error: ${ex.getMessage}"
     ).toResult
   }
@@ -117,8 +117,8 @@ class AuthActionImpl @Inject() (
 
     Future.successful(
       ForbiddenErrorResponse(
-        dateTimeService.timestamp,
-        s"This EORI number is incorrect"
+        uuidService.uuid,
+        s"EORI number is incorrect"
       ).toResult
     )
   }
@@ -139,7 +139,7 @@ class AuthActionImpl @Inject() (
     logger.error(s"Unauthorised exception for ${request.uri} with error $errorMessage")
 
     UnauthorisedErrorResponse(
-      dateTimeService.timestamp,
+      uuidService.uuid,
       errorMessage
     ).toResult
   }
@@ -151,7 +151,7 @@ class AuthActionImpl @Inject() (
     logger.error(s"Unauthorised exception for ${request.uri} with error $errorMessage")
 
     UnauthorisedErrorResponse(
-      dateTimeService.timestamp,
+      uuidService.uuid,
       s"The details signed in do not have a Trader Goods Profile"
     ).toResult
   }

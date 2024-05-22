@@ -36,11 +36,10 @@ import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.APICreateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateRecordResponseSupport
-import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService
+import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, UuidService}
 import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
 
 import java.time.Instant
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 
@@ -61,6 +60,8 @@ class CreateRecordControllerIntegrationSpec
   private lazy val dateTimeService    = mock[DateTimeService]
   private lazy val timestamp          = Instant.parse("2024-06-08T12:12:12.456789Z")
   private val recordId                = UUID.randomUUID().toString
+  private val uuidService             = mock[UuidService]
+  private val correlationId           = "d677693e-9981-4ee3-8574-654981ebe606"
 
   private val url              = s"http://localhost:$port/$eoriNumber/records"
   private val routerUrl        = s"/trader-goods-profiles-router/records"
@@ -76,6 +77,7 @@ class CreateRecordControllerIntegrationSpec
       .overrides(
         bind[AuthConnector].to(authConnector),
         bind[DateTimeService].to(dateTimeService),
+        bind[UuidService].to(uuidService),
         bind[HttpClientV2].to(httpClientV2)
       )
       .build()
@@ -87,6 +89,8 @@ class CreateRecordControllerIntegrationSpec
     reset(authConnector)
     stubRouterRequest(CREATED, expectedResponse.toString())
     when(dateTimeService.timestamp).thenReturn(timestamp)
+    when(uuidService.uuid).thenReturn(correlationId)
+
   }
 
   override def beforeAll(): Unit = {
@@ -143,11 +147,11 @@ class CreateRecordControllerIntegrationSpec
 
       val result = createRecordAndWaitWithoutClientIdHeader()
 
-      result.status mustBe FORBIDDEN
-      result.json mustBe Json.obj(
-        "timestamp" -> "2024-06-08T12:12:12Z",
-        "code"      -> "INVALID_HEADER_PARAMETERS",
-        "message"   -> "X-Client-ID header is missing"
+      result.status mustBe BAD_REQUEST
+      result.json mustBe createExpectedError(
+        "INVALID_HEADER_PARAMETER",
+        "X-Client-ID was missing from Header or is in wrong format",
+        6000
       )
     }
 
@@ -157,10 +161,9 @@ class CreateRecordControllerIntegrationSpec
       val result = createRecordAndWait()
 
       result.status mustBe FORBIDDEN
-      result.json mustBe Json.obj(
-        "timestamp" -> "2024-06-08T12:12:12Z",
-        "code"      -> "FORBIDDEN",
-        "message"   -> "This EORI number is incorrect"
+      result.json mustBe createExpectedJson(
+        "FORBIDDEN",
+        "EORI number is incorrect"
       )
     }
 
@@ -170,10 +173,9 @@ class CreateRecordControllerIntegrationSpec
       val result = createRecordAndWait()
 
       result.status mustBe FORBIDDEN
-      result.json mustBe Json.obj(
-        "timestamp" -> timestamp.truncatedTo(ChronoUnit.SECONDS),
-        "code"      -> "FORBIDDEN",
-        "message"   -> "This EORI number is incorrect"
+      result.json mustBe createExpectedJson(
+        "FORBIDDEN",
+        "EORI number is incorrect"
       )
     }
 
@@ -183,10 +185,9 @@ class CreateRecordControllerIntegrationSpec
       val result = createRecordAndWait()
 
       result.status mustBe UNAUTHORIZED
-      result.json mustBe Json.obj(
-        "timestamp" -> timestamp.truncatedTo(ChronoUnit.SECONDS),
-        "code"      -> "UNAUTHORIZED",
-        "message"   -> "The details signed in do not have a Trader Goods Profile"
+      result.json mustBe createExpectedJson(
+        "UNAUTHORIZED",
+        s"The details signed in do not have a Trader Goods Profile"
       )
     }
 
@@ -196,10 +197,9 @@ class CreateRecordControllerIntegrationSpec
       val result = createRecordAndWait()
 
       result.status mustBe UNAUTHORIZED
-      result.json mustBe Json.obj(
-        "timestamp" -> timestamp.truncatedTo(ChronoUnit.SECONDS),
-        "code"      -> "UNAUTHORIZED",
-        "message"   -> "Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'"
+      result.json mustBe createExpectedJson(
+        "UNAUTHORIZED",
+        s"Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'"
       )
     }
 
@@ -209,10 +209,9 @@ class CreateRecordControllerIntegrationSpec
       val result = createRecordAndWait()
 
       result.status mustBe UNAUTHORIZED
-      result.json mustBe Json.obj(
-        "timestamp" -> timestamp.truncatedTo(ChronoUnit.SECONDS),
-        "code"      -> "UNAUTHORIZED",
-        "message"   -> "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'"
+      result.json mustBe createExpectedJson(
+        "UNAUTHORIZED",
+        "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'"
       )
     }
 
@@ -222,10 +221,9 @@ class CreateRecordControllerIntegrationSpec
       val result = createRecordAndWait()
 
       result.status mustBe INTERNAL_SERVER_ERROR
-      result.json mustBe Json.obj(
-        "timestamp" -> timestamp.truncatedTo(ChronoUnit.SECONDS),
-        "code"      -> "INTERNAL_SERVER_ERROR",
-        "message"   -> s"Internal server error for /$eoriNumber/records with error: runtime exception"
+      result.json mustBe createExpectedJson(
+        "INTERNAL_SERVER_ERROR",
+        s"Internal server error for /$eoriNumber/records with error: runtime exception"
       )
     }
 
@@ -262,5 +260,26 @@ class CreateRecordControllerIntegrationSpec
             .withStatus(status)
             .withBody(responseBody)
         )
+    )
+
+  private def createExpectedError(code: String, message: String, errorNumber: Int): Any =
+    Json.obj(
+      "correlationId" -> correlationId,
+      "code"          -> "BAD_REQUEST",
+      "message"       -> "Bad Request",
+      "errors"        -> Seq(
+        Json.obj(
+          "code"        -> code,
+          "message"     -> message,
+          "errorNumber" -> errorNumber
+        )
+      )
+    )
+
+  private def createExpectedJson(code: String, message: String): Any =
+    Json.obj(
+      "correlationId" -> correlationId,
+      "code"          -> code,
+      "message"       -> message
     )
 }

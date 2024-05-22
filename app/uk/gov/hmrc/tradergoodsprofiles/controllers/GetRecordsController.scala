@@ -22,8 +22,9 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.InvalidRecordIdErrorResponse
-import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, RouterService}
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.InvalidErrorResponse
+import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
+import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.{InvalidRecordId, InvalidRecordIdMessage, InvalidRequestParameter}
 
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
@@ -34,7 +35,7 @@ import scala.util.Try
 class GetRecordsController @Inject() (
   authAction: AuthAction,
   validateHeaderAction: ValidateHeaderAction,
-  dateTimeService: DateTimeService,
+  uuidService: UuidService,
   routerService: RouterService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
@@ -48,12 +49,26 @@ class GetRecordsController @Inject() (
       } yield Ok(Json.toJson(record))).merge
     }
 
+  def getRecords(
+    eori: String,
+    lastUpdatedDate: Option[String],
+    page: Option[Int],
+    size: Option[Int]
+  ): Action[AnyContent] =
+    (authAction(eori) andThen validateHeaderAction).async { implicit request =>
+      (for {
+        record <- routerService.getRecords(eori, lastUpdatedDate, page, size)
+      } yield Ok(Json.toJson(record))).merge
+    }
+
   private def validateRecordId(recordId: String): EitherT[Future, Result, String] =
     EitherT.fromEither[Future](
       Try(UUID.fromString(recordId).toString).toEither.left.map(_ =>
-        InvalidRecordIdErrorResponse(
-          dateTimeService.timestamp,
-          "Invalid record ID supplied for eori number provided"
+        InvalidErrorResponse(
+          uuidService.uuid,
+          InvalidRequestParameter,
+          InvalidRecordIdMessage,
+          InvalidRecordId
         ).toResult
       )
     )

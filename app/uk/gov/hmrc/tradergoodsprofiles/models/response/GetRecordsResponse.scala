@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.tradergoodsprofiles.models.requests
+package uk.gov.hmrc.tradergoodsprofiles.models.response
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{Format, Json}
 
-case class RemoveRecordRequest(actorId: String)
+case class GetRecordsResponse(
+  records: Seq[GoodsItemRecords],
+  pagination: Pagination
+)
 
-object RemoveRecordRequest {
-  implicit val format: OFormat[RemoveRecordRequest] = Json.format[RemoveRecordRequest]
+object GetRecordsResponse {
+  implicit val format: Format[GetRecordsResponse] = Json.format[GetRecordsResponse]
 }

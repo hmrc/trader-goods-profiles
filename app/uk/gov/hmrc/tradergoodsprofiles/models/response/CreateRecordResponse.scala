@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.tradergoodsprofiles.models
+package uk.gov.hmrc.tradergoodsprofiles.models.response
 
 import play.api.libs.json._
+import uk.gov.hmrc.tradergoodsprofiles.models.Assessment
 
 import java.time.Instant
 

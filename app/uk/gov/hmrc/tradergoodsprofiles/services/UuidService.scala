@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.tradergoodsprofiles.models.requests
+package uk.gov.hmrc.tradergoodsprofiles.services
 
-import play.api.libs.json.{Json, OFormat}
+import com.google.inject.Singleton
 
-case class RemoveRecordRequest(actorId: String)
+import java.util.UUID
 
-object RemoveRecordRequest {
-  implicit val format: OFormat[RemoveRecordRequest] = Json.format[RemoveRecordRequest]
+@Singleton
+class UuidService {
+
+  def uuid: String = UUID.randomUUID().toString
+
 }

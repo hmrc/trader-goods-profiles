@@ -32,7 +32,7 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.APICreateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateRecordResponseSupport
-import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, RouterService}
+import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, RouterService, UuidService}
 
 import java.time.Instant
 import java.util.UUID
@@ -55,10 +55,11 @@ class CreateRecordControllerSpec
   private val recordId        = UUID.randomUUID().toString
   private val timestamp       = Instant.parse("2024-01-12T12:12:12Z")
   private val dateTimeService = mock[DateTimeService]
+  private val uuidService     = mock[UuidService]
   private val routerService   = mock[RouterService]
   private val sut             = new CreateRecordController(
     new FakeSuccessAuthAction(),
-    new ValidateHeaderAction(dateTimeService),
+    new ValidateHeaderAction(uuidService),
     dateTimeService,
     routerService,
     stubControllerComponents()

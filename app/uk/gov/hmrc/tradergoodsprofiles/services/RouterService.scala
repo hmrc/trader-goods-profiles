@@ -26,7 +26,8 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.HttpReads.is2xx
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{RouterError, ServerErrorResponse}
-import uk.gov.hmrc.tradergoodsprofiles.models.{APICreateRecordRequest, CreateRecordResponse, GetRecordResponse, RouterCreateRecordRequest}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.{APICreateRecordRequest, RouterCreateRecordRequest}
+import uk.gov.hmrc.tradergoodsprofiles.models.response.{CreateRecordResponse, GetRecordResponse, GetRecordsResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.runtime.universe.{TypeTag, typeOf}
@@ -45,11 +46,15 @@ trait RouterService {
     hc: HeaderCarrier
   ): EitherT[Future, Result, Unit]
 
+  def getRecords(eori: String, lastUpdatedDate: Option[String], page: Option[Int], size: Option[Int])(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Result, GetRecordsResponse]
+
 }
 
 class RouterServiceImpl @Inject() (
   routerConnector: RouterConnector,
-  dateTimeService: DateTimeService
+  uuidService: UuidService
 )(implicit ec: ExecutionContext)
     extends RouterService
     with Logging {
@@ -72,8 +77,57 @@ class RouterServiceImpl @Inject() (
           )
           Left(
             ServerErrorResponse(
-              dateTimeService.timestamp,
+              uuidService.uuid,
               s"Could not retrieve record for eori number $eoriNumber and record ID $recordId"
+            ).toResult
+          )
+        }
+    )
+
+  override def removeRecord(eoriNumber: String, recordId: String, actorId: String)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Result, Unit] =
+    EitherT(
+      routerConnector
+        .put(eoriNumber, recordId, actorId)
+        .map {
+          case httpResponse if is2xx(httpResponse.status) => Right(())
+          case httpResponse                               =>
+            Left(handleError(httpResponse.body, httpResponse.status, Some(eoriNumber), Some(recordId)))
+        }
+        .recover { case ex: Throwable =>
+          logger.error(
+            s"[RouterServiceImpl] - Exception when removing record for eori number $eoriNumber and record ID $recordId, with message ${ex.getMessage}",
+            ex
+          )
+          Left(
+            ServerErrorResponse(
+              uuidService.uuid,
+              s"Could not remove record for eori number $eoriNumber and record ID $recordId"
+            ).toResult
+          )
+        }
+    )
+
+  def getRecords(eoriNumber: String, lastUpdatedDate: Option[String], page: Option[Int], size: Option[Int])(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Result, GetRecordsResponse] =
+    EitherT(
+      routerConnector
+        .getRecords(eoriNumber, lastUpdatedDate, page, size)
+        .map {
+          case httpResponse if is2xx(httpResponse.status) => jsonAs[GetRecordsResponse](httpResponse.body)
+          case httpResponse                               => Left(handleError(httpResponse.body, httpResponse.status, Some(eoriNumber)))
+        }
+        .recover { case ex: Throwable =>
+          logger.error(
+            s"[RouterServiceImpl] - Exception when retrieving record for eori number $eoriNumber, with message ${ex.getMessage}",
+            ex
+          )
+          Left(
+            ServerErrorResponse(
+              uuidService.uuid,
+              s"Could not retrieve record for eori number $eoriNumber"
             ).toResult
           )
         }
@@ -100,7 +154,7 @@ class RouterServiceImpl @Inject() (
             ex
           )
           Left(
-            ServerErrorResponse(dateTimeService.timestamp, "Could not create record due to an internal error").toResult
+            ServerErrorResponse(uuidService.uuid, "Could not create record due to an internal error").toResult
           )
         }
     )
@@ -120,10 +174,11 @@ class RouterServiceImpl @Inject() (
     logger.error(
       s"[RouterServiceImpl] - Error processing request $errorContext, status '$status' with message: $responseBody"
     )
-    jsonAs[RouterError](responseBody).fold(
-      error => error,
-      routerError => Status(status)(Json.toJson(routerError.copy(timestamp = Some(dateTimeService.timestamp))))
-    )
+    jsonAs[RouterError](responseBody)
+      .fold(
+        error => error,
+        routerError => Status(status)(Json.toJson(routerError))
+      )
   }
 
   private def jsonAs[T](responseBody: String)(implicit reads: Reads[T], tt: TypeTag[T]) =
@@ -137,7 +192,7 @@ class RouterServiceImpl @Inject() (
             )
             Left(
               ServerErrorResponse(
-                dateTimeService.timestamp,
+                uuidService.uuid,
                 s"Response body could not be read as type ${typeOf[T]}"
               ).toResult
             )
@@ -149,35 +204,10 @@ class RouterServiceImpl @Inject() (
         )
         Left(
           ServerErrorResponse(
-            dateTimeService.timestamp,
+            uuidService.uuid,
             s"Response body could not be parsed as JSON, body: $responseBody"
           ).toResult
         )
     }
-
-  override def removeRecord(eoriNumber: String, recordId: String, actorId: String)(implicit
-    hc: HeaderCarrier
-  ): EitherT[Future, Result, Unit] =
-    EitherT(
-      routerConnector
-        .put(eoriNumber, recordId, actorId)
-        .map {
-          case httpResponse if is2xx(httpResponse.status) => Right(())
-          case httpResponse                               =>
-            Left(handleError(httpResponse.body, httpResponse.status, Some(eoriNumber), Some(recordId)))
-        }
-        .recover { case ex: Throwable =>
-          logger.error(
-            s"[RouterServiceImpl] - Exception when removing record for eori number $eoriNumber and record ID $recordId, with message ${ex.getMessage}",
-            ex
-          )
-          Left(
-            ServerErrorResponse(
-              dateTimeService.timestamp,
-              s"Could not remove record for eori number $eoriNumber and record ID $recordId"
-            ).toResult
-          )
-        }
-    )
 
 }

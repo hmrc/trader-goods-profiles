@@ -14,28 +14,28 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses
+package uk.gov.hmrc.tradergoodsprofiles.controllers.support
 
-import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.response.{GetRecordsResponse, GoodsItemRecords, Pagination}
 import uk.gov.hmrc.tradergoodsprofiles.models.{Assessment, Condition}
 
 import java.time.Instant
 
-trait GetRecordResponseSupport {
+trait GetRecordsResponseSupport {
 
-  def createGetRecordResponse(
+  def createGetRecordsResponse(
     eori: String,
     recordId: String,
     timestamp: Instant
-  ): GetRecordResponse = {
-    val condition  = Condition(
+  ): GetRecordsResponse = {
+    val condition        = Condition(
       "certificate",
       "Y923",
       "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
       "Excluded product"
     )
-    val assessment = Assessment("a06846e9a5f61fa4ecf2c4e3b23631fc", 1, condition)
-    GetRecordResponse(
+    val assessment       = Assessment("a06846e9a5f61fa4ecf2c4e3b23631fc", 1, condition)
+    val goodsItemRecords = GoodsItemRecords(
       eori,
       "GB123456789012",
       recordId,
@@ -63,5 +63,15 @@ trait GetRecordResponseSupport {
       timestamp,
       timestamp
     )
+
+    val pagination = Pagination(
+      1,
+      0,
+      1,
+      None,
+      None
+    )
+
+    GetRecordsResponse(Seq(goodsItemRecords), pagination)
   }
 }

@@ -19,6 +19,7 @@ package uk.gov.hmrc.tradergoodsprofiles.models
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{JsObject, JsResult, Json}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.GetRecordResponseSupport
+import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
 
 import java.time.Instant
 

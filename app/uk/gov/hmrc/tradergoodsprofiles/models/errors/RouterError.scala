@@ -16,17 +16,14 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.models.errors
 
-import play.api.libs.json.{JsPath, Json, Reads, Writes}
 import play.api.libs.functional.syntax._
-import uk.gov.hmrc.tradergoodsprofiles.services.DateTimeService.DateTimeFormat
-
-import java.time.Instant
+import play.api.libs.json._
 
 case class RouterError(
   correlationId: String,
   code: String,
   message: String,
-  timestamp: Option[Instant] = None
+  errors: Option[Seq[Error]] = None
 )
 
 object RouterError {
@@ -36,13 +33,13 @@ object RouterError {
     (JsPath \ "correlationId").write[String] and
       (JsPath \ "code").write[String] and
       (JsPath \ "message").write[String] and
-      (JsPath \ "timestamp").writeOptionWithNull[String]
+      (JsPath \ "errors").writeOptionWithNull[Seq[Error]]
   )(e =>
     (
       e.correlationId,
       e.code,
       e.message,
-      e.timestamp.fold(Some(Instant.now.asStringSeconds))(o => Some(o.asStringSeconds))
+      e.errors
     )
   )
 }

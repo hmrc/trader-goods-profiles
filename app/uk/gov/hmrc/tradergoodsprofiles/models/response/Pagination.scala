@@ -14,27 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.tradergoodsprofiles.models.requests
+package uk.gov.hmrc.tradergoodsprofiles.models.response
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.tradergoodsprofiles.models.Assessment
 
-import java.time.Instant
-
-case class APICreateRecordRequest(
-  actorId: String,
-  traderRef: String,
-  comcode: String,
-  goodsDescription: String,
-  countryOfOrigin: String,
-  category: Int,
-  assessments: Option[Seq[Assessment]] = None,
-  supplementaryUnit: Option[Int] = None,
-  measurementUnit: Option[String] = None,
-  comcodeEffectiveFromDate: Instant,
-  comcodeEffectiveToDate: Option[Instant] = None
+case class Pagination(
+  totalRecords: Int,
+  currentPage: Int,
+  totalPages: Int,
+  nextPage: Option[Int],
+  prevPage: Option[Int]
 )
 
-object APICreateRecordRequest {
-  implicit val format: OFormat[APICreateRecordRequest] = Json.format[APICreateRecordRequest]
+object Pagination {
+  implicit val format: OFormat[Pagination] = Json.format[Pagination]
 }

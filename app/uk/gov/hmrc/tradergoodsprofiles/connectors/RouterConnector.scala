@@ -25,7 +25,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.metrics.MetricsSupport
-import uk.gov.hmrc.tradergoodsprofiles.models.RouterCreateRecordRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.RouterCreateRecordRequest
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -38,10 +38,28 @@ class RouterConnector @Inject() (
     extends BaseConnector
     with MetricsSupport
     with Logging {
+
   def get(eori: String, recordId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.getrecord.connector") { _ =>
       val url = appConfig.routerUrl.withPath(routerRoute(eori, recordId))
 
+      httpClient
+        .get(url"$url")
+        .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+        .withClientId
+        .execute[HttpResponse]
+    }
+
+  def getRecords(
+    eori: String,
+    lastUpdatedDate: Option[String] = None,
+    page: Option[Int] = None,
+    size: Option[Int] = None
+  )(implicit
+    hc: HeaderCarrier
+  ): Future[HttpResponse] =
+    withMetricsTimerAsync("tgp.getrecords.connector") { _ =>
+      val url = appConfig.routerUrl.toUrl + routerRouteGetRecords(eori, lastUpdatedDate, page, size)
       httpClient
         .get(url"$url")
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)

@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses
 
-import uk.gov.hmrc.tradergoodsprofiles.models.{Assessment, Condition, CreateRecordResponse}
+import uk.gov.hmrc.tradergoodsprofiles.models.response.CreateRecordResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.{Assessment, Condition}
 
 import java.time.Instant
 
