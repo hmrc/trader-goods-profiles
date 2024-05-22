@@ -23,7 +23,7 @@ case class RouterCreateRecordRequest(
   eori: String,
   actorId: String,
   traderRef: String,
-  comcode: Int,
+  comcode: String,
   goodsDescription: String,
   countryOfOrigin: String,
   category: Int,

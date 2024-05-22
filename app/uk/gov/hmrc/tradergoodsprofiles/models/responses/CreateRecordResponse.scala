@@ -25,7 +25,7 @@ case class CreateRecordResponse(
   eori: String,
   actorId: String,
   traderRef: String,
-  comcode: Int,
+  comcode: String,
   accreditationStatus: String,
   goodsDescription: String,
   countryOfOrigin: String,
@@ -82,7 +82,7 @@ object CreateRecordResponse {
       eori                     <- (json \ "eori").validate[String]
       actorId                  <- (json \ "actorId").validate[String]
       traderRef                <- (json \ "traderRef").validate[String]
-      comcode                  <- (json \ "comcode").validate[Int]
+      comcode                  <- (json \ "comcode").validate[String]
       accreditationStatus      <- (json \ "accreditationStatus").validate[String]
       goodsDescription         <- (json \ "goodsDescription").validate[String]
       countryOfOrigin          <- (json \ "countryOfOrigin").validate[String]

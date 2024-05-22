@@ -26,7 +26,7 @@ trait RouterCreateRecordRequestSupport {
     eori: String = "GB123456789012",
     actorId: String = "GB987654321098",
     traderRef: String = "SKU123456",
-    comcode: Int = 123456,
+    comcode: String = "123456",
     goodsDescription: String = "Bananas",
     countryOfOrigin: String = "GB",
     category: Int = 2,

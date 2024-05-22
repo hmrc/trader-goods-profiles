@@ -39,7 +39,7 @@ trait CreateRecordResponseSupport {
       eori = eori,
       actorId = "GB987654321098",
       traderRef = "SKU123456",
-      comcode = 123456,
+      comcode = "123456",
       accreditationStatus = "Not Requested",
       goodsDescription = "Bananas",
       countryOfOrigin = "GB",

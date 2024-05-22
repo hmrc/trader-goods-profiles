@@ -23,7 +23,7 @@ import java.time.Instant
 case class APICreateRecordRequest(
   actorId: String,
   traderRef: String,
-  comcode: Int,
+  comcode: String,
   goodsDescription: String,
   countryOfOrigin: String,
   category: Int,
