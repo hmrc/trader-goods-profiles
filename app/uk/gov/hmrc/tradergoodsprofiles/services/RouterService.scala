@@ -178,7 +178,7 @@ class RouterServiceImpl @Inject() (
     eoriNumber: String
   ): Result = {
     logger.error(
-      s"[RouterServiceImpl] - Error retrieving a record for eori number '$eoriNumber', status '$status' with message $responseBody"
+      s"[RouterServiceImpl] - Error occurred for eori number '$eoriNumber', status '$status' with message $responseBody"
     )
     jsonAs[RouterError](responseBody)
       .fold(
