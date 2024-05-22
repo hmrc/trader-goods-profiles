@@ -81,7 +81,7 @@ object ServerErrorResponse {
 
 case class InvalidErrorResponse(correlationId: String, code: String, message: String, errorNumber: Int)
     extends ErrorResponse {
-  override val errors  = Some(Seq(Error(code, message, errorNumber)))
+  override val errors: Option[Seq[Error]] = Some(Seq(Error(code, message, errorNumber)))
   def toResult: Result = BadRequest(Json.toJson(InvalidErrorResponse(correlationId, code, message, errorNumber)))
 }
 
@@ -102,7 +102,7 @@ case class InvalidHeaderErrorResponse(
   message: String,
   errorNumber: Int
 ) extends ErrorResponse {
-  override val errors  = Some(Seq(Error(code, message, errorNumber)))
+  override val errors: Option[Seq[Error]] = Some(Seq(Error(code, message, errorNumber)))
   def toResult: Result = BadRequest(Json.toJson(InvalidHeaderErrorResponse(correlationId, code, message, errorNumber)))
 }
 

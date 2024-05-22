@@ -76,7 +76,7 @@ class RemoveRecordControllerIntegrationSpec
     super.beforeEach()
 
     reset(authConnector)
-    stubRouterRequest(200, routerResponse.toString())
+    stubRouterRequest(200, routerResponse.toString)
     when(uuidService.uuid).thenReturn(correlationId)
   }
 
