@@ -27,7 +27,7 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Results.InternalServerError
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
-import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
+import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
@@ -64,7 +64,7 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
   private val routerService                 = mock[RouterService]
   private val sut                           = new RemoveRecordController(
     new FakeSuccessAuthAction(),
-    new ValidateHeaderAction(uuidService),
+    new ValidateAction(uuidService),
     uuidService,
     routerService,
     stubControllerComponents()

@@ -20,14 +20,16 @@ import cats.data.EitherT
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.mvc.{ActionFilter, Request, Result}
 import uk.gov.hmrc.tradergoodsprofiles.config.Constants
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.InvalidHeaderErrorResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.{InvalidErrorResponse, InvalidHeaderErrorResponse}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
 
+import java.util.UUID
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
-class ValidateHeaderAction @Inject() (uuidService: UuidService)(implicit ec: ExecutionContext)
+class ValidateAction @Inject()(uuidService: UuidService)(implicit ec: ExecutionContext)
     extends ActionFilter[Request] {
 
   override val executionContext: ExecutionContext = ec
@@ -88,6 +90,18 @@ class ValidateHeaderAction @Inject() (uuidService: UuidService)(implicit ec: Exe
           InvalidHeaderParameter,
           InvalidHeaderClientIdMessage,
           InvalidHeaderClientId
+        ).toResult
+      )
+    )
+
+   def validateRecordId(recordId: String): EitherT[Future, Result, String] =
+    EitherT.fromEither[Future](
+      Try(UUID.fromString(recordId).toString).toEither.left.map(_ =>
+        InvalidErrorResponse(
+          uuidService.uuid,
+          InvalidRequestParameter,
+          InvalidRecordIdMessage,
+          InvalidRecordId
         ).toResult
       )
     )
