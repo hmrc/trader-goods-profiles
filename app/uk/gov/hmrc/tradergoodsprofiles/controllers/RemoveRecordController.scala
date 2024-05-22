@@ -24,8 +24,9 @@ import play.api.mvc.{Action, ControllerComponents, Request, Result}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
 import uk.gov.hmrc.tradergoodsprofiles.models.RemoveRecordRequest
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.{InvalidActorIdErrorResponse, InvalidRecordIdErrorResponse}
-import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, RouterService}
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.InvalidErrorResponse
+import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
+import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
 
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
@@ -36,7 +37,7 @@ import scala.util.Try
 class RemoveRecordController @Inject() (
   authAction: AuthAction,
   validateHeaderAction: ValidateHeaderAction,
-  dateTimeService: DateTimeService,
+  uuidService: UuidService,
   routerService: RouterService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
@@ -57,19 +58,18 @@ class RemoveRecordController @Inject() (
   )(implicit ec: ExecutionContext): EitherT[Future, Result, RemoveRecordRequest] =
     EitherT.fromEither(
       request.body.validate[RemoveRecordRequest].asEither.leftMap { errors =>
-        InvalidActorIdErrorResponse(
-          dateTimeService.timestamp,
-          "Missing or invalid mandatory request parameter"
-        ).toResult
+        InvalidErrorResponse(uuidService.uuid, InvalidRequestParameter, InvalidActorMessage, InvalidActorId).toResult
       }
     )
 
   def validateRecordId(recordId: String): EitherT[Future, Result, String] =
     EitherT.fromEither[Future](
       Try(UUID.fromString(recordId).toString).toEither.left.map(_ =>
-        InvalidRecordIdErrorResponse(
-          dateTimeService.timestamp,
-          "Invalid record ID supplied for eori number provided"
+        InvalidErrorResponse(
+          uuidService.uuid,
+          InvalidRequestParameter,
+          InvalidRecordIdMessage,
+          InvalidRecordId
         ).toResult
       )
     )

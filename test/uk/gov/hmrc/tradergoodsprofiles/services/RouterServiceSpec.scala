@@ -48,21 +48,21 @@ class RouterServiceSpec
   implicit val ec: ExecutionContext = ExecutionContext.global
   implicit val hc: HeaderCarrier    = HeaderCarrier()
 
-  private val connector       = mock[RouterConnector]
-  private val recordResponse  = createGetRecordResponse("GB123456789012", "recordId", Instant.now)
-  private val dateTimeService = mock[DateTimeService]
-  private val timestamp       = Instant.parse("2024-12-05T12:12:45Z")
+  private val connector      = mock[RouterConnector]
+  private val recordResponse = createGetRecordResponse("GB123456789012", "recordId", Instant.now)
+  private val uuidService    = mock[UuidService]
+  private val correlationId  = "d677693e-9981-4ee3-8574-654981ebe606"
 
-  private val sut = new RouterServiceImpl(connector, dateTimeService)
+  private val sut = new RouterServiceImpl(connector, uuidService)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(connector, dateTimeService)
+    reset(connector, uuidService)
 
     when(connector.get(any, any)(any))
       .thenReturn(Future.successful(HttpResponse(200, Json.toJson(recordResponse), Map.empty)))
-    when(dateTimeService.timestamp).thenReturn(timestamp)
+    when(uuidService.uuid).thenReturn(correlationId)
   }
   "getRecord" should {
     "request a record" in {
@@ -90,9 +90,9 @@ class RouterServiceSpec
         whenReady(result.value) {
           _.left.value mustBe InternalServerError(
             Json.obj(
-              "timestamp" -> timestamp,
-              "code"      -> "INTERNAL_SERVER_ERROR",
-              "message"   -> s"Response body could not be read as type ${typeOf[GetRecordResponse]}"
+              "correlationId" -> correlationId,
+              "code"          -> "INTERNAL_SERVER_ERROR",
+              "message"       -> s"Response body could not be read as type ${typeOf[GetRecordResponse]}"
             )
           )
         }
@@ -111,24 +111,6 @@ class RouterServiceSpec
         }
       }
 
-      "add timestamp to router error" in {
-        when(connector.get(any, any)(any))
-          .thenReturn(Future.successful(createHttpResponse(500, "INTERNAL_SERVER_ERROR")))
-
-        val result = sut.getRecord("eori", "recordId")
-
-        whenReady(result.value) {
-          _.left.value mustBe InternalServerError(
-            Json.obj(
-              "correlationId" -> "correlationId",
-              "code"          -> "INTERNAL_SERVER_ERROR",
-              "message"       -> "any message",
-              "timestamp"     -> timestamp
-            )
-          )
-        }
-      }
-
       "routerConnector return an exception" in {
         when(connector.get(any, any)(any))
           .thenReturn(Future.failed(new RuntimeException("error")))
@@ -138,9 +120,9 @@ class RouterServiceSpec
         whenReady(result.value) {
           _.left.value mustBe InternalServerError(
             Json.obj(
-              "timestamp" -> timestamp,
-              "code"      -> "INTERNAL_SERVER_ERROR",
-              "message"   -> s"Could not retrieve record for eori number eori and record ID recordId"
+              "correlationId" -> correlationId,
+              "code"          -> "INTERNAL_SERVER_ERROR",
+              "message"       -> s"Could not retrieve record for eori number eori and record ID recordId"
             )
           )
         }
@@ -188,23 +170,6 @@ class RouterServiceSpec
     }
 
     "return an error" when {
-      "add timestamp to router error" in {
-        when(connector.put(any, any, any)(any))
-          .thenReturn(Future.successful(createHttpResponse(500, "INTERNAL_SERVER_ERROR")))
-
-        val result = sut.removeRecord("eori", "recordId", "actorId")
-
-        whenReady(result.value) {
-          _.left.value mustBe InternalServerError(
-            Json.obj(
-              "correlationId" -> "correlationId",
-              "code"          -> "INTERNAL_SERVER_ERROR",
-              "message"       -> "any message",
-              "timestamp"     -> timestamp
-            )
-          )
-        }
-      }
 
       "routerConnector return an exception" in {
         when(connector.put(any, any, any)(any))
@@ -215,9 +180,9 @@ class RouterServiceSpec
         whenReady(result.value) {
           _.left.value mustBe InternalServerError(
             Json.obj(
-              "timestamp" -> timestamp,
-              "code"      -> "INTERNAL_SERVER_ERROR",
-              "message"   -> s"Could not remove record for eori number eori and record ID recordId"
+              "correlationId" -> correlationId,
+              "code"          -> "INTERNAL_SERVER_ERROR",
+              "message"       -> s"Could not remove record for eori number eori and record ID recordId"
             )
           )
         }
@@ -255,9 +220,9 @@ class RouterServiceSpec
   private def createInternalServerErrorResult(message: String): Result =
     InternalServerError(
       Json.obj(
-        "timestamp" -> timestamp,
-        "code"      -> "INTERNAL_SERVER_ERROR",
-        "message"   -> message
+        "correlationId" -> correlationId,
+        "code"          -> "INTERNAL_SERVER_ERROR",
+        "message"       -> message
       )
     )
 

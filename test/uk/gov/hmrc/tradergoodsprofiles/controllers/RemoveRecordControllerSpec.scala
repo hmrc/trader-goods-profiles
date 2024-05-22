@@ -23,16 +23,15 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Results.InternalServerError
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
-import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, RouterService}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
+import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 
-import java.time.Instant
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 
@@ -60,13 +59,13 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
     "Content-Type" -> "application/json"
   )
   private val recordId                      = UUID.randomUUID().toString
-  private val timestamp                     = Instant.parse("2024-01-12T12:12:12Z")
-  private val dateTimeService               = mock[DateTimeService]
+  private val correlationId                 = "d677693e-9981-4ee3-8574-654981ebe606"
+  private val uuidService                   = mock[UuidService]
   private val routerService                 = mock[RouterService]
   private val sut                           = new RemoveRecordController(
     new FakeSuccessAuthAction(),
-    new ValidateHeaderAction(dateTimeService),
-    dateTimeService,
+    new ValidateHeaderAction(uuidService),
+    uuidService,
     routerService,
     stubControllerComponents()
   )
@@ -74,8 +73,8 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(dateTimeService, routerService)
-    when(dateTimeService.timestamp).thenReturn(timestamp)
+    reset(uuidService, routerService)
+    when(uuidService.uuid).thenReturn(correlationId)
     when(routerService.removeRecord(any, any, any)(any))
       .thenReturn(EitherT.fromEither(Right(OK)))
   }
@@ -100,33 +99,21 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
         val result = sut.removeRecord(eoriNumber, "1234-abc")(request)
 
         status(result) mustBe BAD_REQUEST
-        contentAsJson(result) mustBe Json.obj(
-          "timestamp" -> timestamp,
-          "code"      -> "INVALID_RECORD_ID_PARAMETER",
-          "message"   -> "Invalid record ID supplied for eori number provided"
-        )
+        contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
       }
 
       "recordId is null" in {
         val result = sut.removeRecord(eoriNumber, null)(request)
 
         status(result) mustBe BAD_REQUEST
-        contentAsJson(result) mustBe Json.obj(
-          "timestamp" -> timestamp,
-          "code"      -> "INVALID_RECORD_ID_PARAMETER",
-          "message"   -> "Invalid record ID supplied for eori number provided"
-        )
+        contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
       }
 
       "recordId is empty" in {
         val result = sut.removeRecord(eoriNumber, " ")(request)
 
         status(result) mustBe BAD_REQUEST
-        contentAsJson(result) mustBe Json.obj(
-          "timestamp" -> timestamp,
-          "code"      -> "INVALID_RECORD_ID_PARAMETER",
-          "message"   -> "Invalid record ID supplied for eori number provided"
-        )
+        contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
       }
 
       "routerService return an error" in {
@@ -145,5 +132,19 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
       }
     }
   }
+
+  private def createInvalidRequestParameterExpectedJson: JsObject =
+    Json.obj(
+      "correlationId" -> correlationId,
+      "code"          -> "BAD_REQUEST",
+      "message"       -> "Bad Request",
+      "errors"        -> Seq(
+        Json.obj(
+          "code"        -> "INVALID_REQUEST_PARAMETER",
+          "message"     -> "The recordId has been provided in the wrong format",
+          "errorNumber" -> 25
+        )
+      )
+    )
 
 }
