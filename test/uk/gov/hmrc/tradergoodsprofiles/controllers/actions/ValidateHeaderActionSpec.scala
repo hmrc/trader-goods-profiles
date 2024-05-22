@@ -21,12 +21,11 @@ import org.scalatest.{BeforeAndAfterEach, EitherValues}
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{JsObject, Json}
-import play.api.mvc.Results.{BadRequest, Forbidden}
+import play.api.mvc.Results.BadRequest
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
-import java.time.Instant
 import scala.concurrent.ExecutionContext
 
 class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with EitherValues {
@@ -58,12 +57,12 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
       }
     }
 
-    "return a forbidden" when {
+    "return a bad request" when {
       "accept header is missing" in {
         val request = FakeRequest().withHeaders("Content-Type" -> "application/json", "X-Client-ID" -> "some client ID")
         val result  = await(sut.filter(request))
         result.value mustBe BadRequest(
-          createExpectedJson("004", "Accept was missing from Header or is in wrong format")
+          createExpectedJson("INVALID_HEADER_PARAMETER", "Accept was missing from Header or is in wrong format", 4)
         )
       }
 
@@ -72,7 +71,11 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
           FakeRequest().withHeaders("Accept" -> "application/vnd.hmrc.1.0+json", "X-Client-ID" -> "some client ID")
         val result  = await(sut.filter(request))
         result.value mustBe BadRequest(
-          createExpectedJson("003", "Content-Type was missing from Header or is in the wrong format")
+          createExpectedJson(
+            "INVALID_HEADER_PARAMETER",
+            "Content-Type was missing from Header or is in the wrong format",
+            3
+          )
         )
       }
 
@@ -81,7 +84,11 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
           FakeRequest().withHeaders("Accept" -> "application/vnd.hmrc.1.0+json", "Content-Type" -> "application/json")
         val result  = await(sut.filter(request))
         result.value mustBe BadRequest(
-          createExpectedJson("6000", "X-Client-ID was missing from Header or is in wrong format")
+          createExpectedJson(
+            "INVALID_HEADER_PARAMETER",
+            "X-Client-ID was missing from Header or is in wrong format",
+            6000
+          )
         )
       }
 
@@ -94,7 +101,7 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
         val result  = await(sut.filter(request))
 
         result.value mustBe BadRequest(
-          createExpectedJson("004", "Accept was missing from Header or is in wrong format")
+          createExpectedJson("INVALID_HEADER_PARAMETER", "Accept was missing from Header or is in wrong format", 4)
         )
       }
 
@@ -107,21 +114,26 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
         val result  = await(sut.filter(request))
 
         result.value mustBe BadRequest(
-          createExpectedJson("003", "Content-Type was missing from Header or is in the wrong format")
+          createExpectedJson(
+            "INVALID_HEADER_PARAMETER",
+            "Content-Type was missing from Header or is in the wrong format",
+            3
+          )
         )
       }
     }
   }
 
-  private def createExpectedJson(code: String, message: String): JsObject =
+  private def createExpectedJson(code: String, message: String, errorNumber: Int): JsObject =
     Json.obj(
       "correlationId" -> correlationId,
       "code"          -> "BAD_REQUEST",
       "message"       -> "Bad Request",
       "errors"        -> Seq(
         Json.obj(
-          "code"    -> code,
-          "message" -> message
+          "code"        -> code,
+          "message"     -> message,
+          "errorNumber" -> errorNumber
         )
       )
     )

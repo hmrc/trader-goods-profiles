@@ -24,7 +24,7 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.InvalidErrorResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
-import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.{InvalidRecordIdCode, InvalidRecordIdMessage}
+import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.{InvalidRecordId, InvalidRecordIdMessage, InvalidRequestParameter}
 
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
@@ -66,8 +66,9 @@ class GetRecordsController @Inject() (
       Try(UUID.fromString(recordId).toString).toEither.left.map(_ =>
         InvalidErrorResponse(
           uuidService.uuid,
-          InvalidRecordIdCode,
-          InvalidRecordIdMessage
+          InvalidRequestParameter,
+          InvalidRecordIdMessage,
+          InvalidRecordId
         ).toResult
       )
     )

@@ -58,14 +58,19 @@ class RemoveRecordController @Inject() (
   )(implicit ec: ExecutionContext): EitherT[Future, Result, RemoveRecordRequest] =
     EitherT.fromEither(
       request.body.validate[RemoveRecordRequest].asEither.leftMap { errors =>
-        InvalidErrorResponse(uuidService.uuid, InvalidActorId, InvalidActorMessage).toResult
+        InvalidErrorResponse(uuidService.uuid, InvalidRequestParameter, InvalidActorMessage, InvalidActorId).toResult
       }
     )
 
   def validateRecordId(recordId: String): EitherT[Future, Result, String] =
     EitherT.fromEither[Future](
       Try(UUID.fromString(recordId).toString).toEither.left.map(_ =>
-        InvalidErrorResponse(uuidService.uuid, InvalidRecordIdCode, InvalidRecordIdMessage).toResult
+        InvalidErrorResponse(
+          uuidService.uuid,
+          InvalidRequestParameter,
+          InvalidRecordIdMessage,
+          InvalidRecordId
+        ).toResult
       )
     )
 }

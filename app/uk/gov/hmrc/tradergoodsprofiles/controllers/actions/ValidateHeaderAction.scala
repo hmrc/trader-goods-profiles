@@ -53,8 +53,9 @@ class ValidateHeaderAction @Inject() (uuidService: UuidService)(implicit ec: Exe
       Some(
         InvalidHeaderErrorResponse(
           uuidService.uuid,
-          InvalidHeaderAccept,
-          InvalidHeaderAcceptMessage
+          InvalidHeaderParameter,
+          InvalidHeaderAcceptMessage,
+          InvalidHeaderAccept
         ).toResult
       )
     )
@@ -68,8 +69,9 @@ class ValidateHeaderAction @Inject() (uuidService: UuidService)(implicit ec: Exe
       Some(
         InvalidHeaderErrorResponse(
           uuidService.uuid,
-          InvalidHeaderContentType,
-          InvalidHeaderContentTypeMessage
+          InvalidHeaderParameter,
+          InvalidHeaderContentTypeMessage,
+          InvalidHeaderContentType
         ).toResult
       )
     )
@@ -83,8 +85,9 @@ class ValidateHeaderAction @Inject() (uuidService: UuidService)(implicit ec: Exe
       Some(
         InvalidHeaderErrorResponse(
           uuidService.uuid,
-          InvalidHeaderClientId,
-          InvalidHeaderClientIdMessage
+          InvalidHeaderParameter,
+          InvalidHeaderClientIdMessage,
+          InvalidHeaderClientId
         ).toResult
       )
     )

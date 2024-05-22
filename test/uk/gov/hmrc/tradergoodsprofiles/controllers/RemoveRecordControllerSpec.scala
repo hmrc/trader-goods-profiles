@@ -23,7 +23,7 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Results.InternalServerError
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
@@ -99,51 +99,21 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
         val result = sut.removeRecord(eoriNumber, "1234-abc")(request)
 
         status(result) mustBe BAD_REQUEST
-        contentAsJson(result) mustBe Json.obj(
-          "correlationId" -> correlationId,
-          "code"          -> "BAD_REQUEST",
-          "message"       -> "Bad Request",
-          "errors"        -> Seq(
-            Json.obj(
-              "code"    -> "025",
-              "message" -> "The recordId has been provided in the wrong format"
-            )
-          )
-        )
+        contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
       }
 
       "recordId is null" in {
         val result = sut.removeRecord(eoriNumber, null)(request)
 
         status(result) mustBe BAD_REQUEST
-        contentAsJson(result) mustBe Json.obj(
-          "correlationId" -> correlationId,
-          "code"          -> "BAD_REQUEST",
-          "message"       -> "Bad Request",
-          "errors"        -> Seq(
-            Json.obj(
-              "code"    -> "025",
-              "message" -> "The recordId has been provided in the wrong format"
-            )
-          )
-        )
+        contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
       }
 
       "recordId is empty" in {
         val result = sut.removeRecord(eoriNumber, " ")(request)
 
         status(result) mustBe BAD_REQUEST
-        contentAsJson(result) mustBe Json.obj(
-          "correlationId" -> correlationId,
-          "code"          -> "BAD_REQUEST",
-          "message"       -> "Bad Request",
-          "errors"        -> Seq(
-            Json.obj(
-              "code"    -> "025",
-              "message" -> "The recordId has been provided in the wrong format"
-            )
-          )
-        )
+        contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
       }
 
       "routerService return an error" in {
@@ -162,5 +132,19 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
       }
     }
   }
+
+  private def createInvalidRequestParameterExpectedJson: JsObject =
+    Json.obj(
+      "correlationId" -> correlationId,
+      "code"          -> "BAD_REQUEST",
+      "message"       -> "Bad Request",
+      "errors"        -> Seq(
+        Json.obj(
+          "code"        -> "INVALID_REQUEST_PARAMETER",
+          "message"     -> "The recordId has been provided in the wrong format",
+          "errorNumber" -> 25
+        )
+      )
+    )
 
 }

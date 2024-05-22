@@ -79,52 +79,6 @@ class RouterServiceImpl @Inject() (
         }
     )
 
-  private def handleError(
-    responseBody: String,
-    status: Int,
-    eoriNumber: String,
-    recordId: String
-  ): Result = {
-    logger.error(
-      s"[RouterServiceImpl] - Error retrieving a record for eori number '$eoriNumber' and record ID '$recordId', status '$status' with message $responseBody"
-    )
-    jsonAs[RouterError](responseBody)
-      .fold(
-        error => error,
-        routerError => Status(status)(Json.toJson(routerError))
-
-      )
-  }
-
-  private def jsonAs[T](responseBody: String)(implicit reads: Reads[T], tt: TypeTag[T]) =
-    Try(Json.parse(responseBody)) match {
-      case Success(value)     =>
-        value.validate[T] match {
-          case JsSuccess(v, _) => Right(v)
-          case JsError(error)  =>
-            logger.error(
-              s"[RouterServiceImpl] - Response body could not be read as type ${typeOf[T]}, error ${error.toString()}"
-            )
-            Left(
-              ServerErrorResponse(
-                uuidService.uuid,
-                s"Response body could not be read as type ${typeOf[T]}"
-              ).toResult
-            )
-        }
-      case Failure(exception) =>
-        logger.error(
-          s"[RouterServiceImpl] - Response body could not be parsed as JSON, body: $responseBody",
-          exception
-        )
-        Left(
-          ServerErrorResponse(
-            uuidService.uuid,
-            s"Response body could not be parsed as JSON, body: $responseBody"
-          ).toResult
-        )
-    }
-
   override def removeRecord(eoriNumber: String, recordId: String, actorId: String)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Result, Unit] =
@@ -172,6 +126,51 @@ class RouterServiceImpl @Inject() (
           )
         }
     )
+
+  private def handleError(
+    responseBody: String,
+    status: Int,
+    eoriNumber: String,
+    recordId: String
+  ): Result = {
+    logger.error(
+      s"[RouterServiceImpl] - Error retrieving a record for eori number '$eoriNumber' and record ID '$recordId', status '$status' with message $responseBody"
+    )
+    jsonAs[RouterError](responseBody)
+      .fold(
+        error => error,
+        routerError => Status(status)(Json.toJson(routerError))
+      )
+  }
+
+  private def jsonAs[T](responseBody: String)(implicit reads: Reads[T], tt: TypeTag[T]) =
+    Try(Json.parse(responseBody)) match {
+      case Success(value)     =>
+        value.validate[T] match {
+          case JsSuccess(v, _) => Right(v)
+          case JsError(error)  =>
+            logger.error(
+              s"[RouterServiceImpl] - Response body could not be read as type ${typeOf[T]}, error ${error.toString()}"
+            )
+            Left(
+              ServerErrorResponse(
+                uuidService.uuid,
+                s"Response body could not be read as type ${typeOf[T]}"
+              ).toResult
+            )
+        }
+      case Failure(exception) =>
+        logger.error(
+          s"[RouterServiceImpl] - Response body could not be parsed as JSON, body: $responseBody",
+          exception
+        )
+        Left(
+          ServerErrorResponse(
+            uuidService.uuid,
+            s"Response body could not be parsed as JSON, body: $responseBody"
+          ).toResult
+        )
+    }
 
   private def handleError(
     responseBody: String,

@@ -35,11 +35,9 @@ import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
-import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, UuidService}
+import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
 
-import java.time.Instant
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class RemoveRecordControllerIntegrationSpec
@@ -140,7 +138,7 @@ class RemoveRecordControllerIntegrationSpec
         "correlationId" -> "correlationId",
         "code"          -> "NOT_FOUND",
         "message"       -> "Not found",
-        "errors"         -> null
+        "errors"        -> null
       )
 
       stubRouterRequest(404, routerResponse.toString())
@@ -231,7 +229,11 @@ class RemoveRecordControllerIntegrationSpec
       val result  = getRecordAndWait(url, headers: _*)
 
       result.status mustBe BAD_REQUEST
-      result.json mustBe createExpectedError("6000", "X-Client-ID was missing from Header or is in wrong format")
+      result.json mustBe createExpectedError(
+        "INVALID_HEADER_PARAMETER",
+        "X-Client-ID was missing from Header or is in wrong format",
+        6000
+      )
     }
 
     "return BadRequest for invalid request body" in {
@@ -250,8 +252,9 @@ class RemoveRecordControllerIntegrationSpec
 
       result.status mustBe BAD_REQUEST
       result.json mustBe createExpectedError(
-        "008",
-        "Mandatory field actorId was missing from body or is in wrong format"
+        "INVALID_REQUEST_PARAMETER",
+        "Mandatory field actorId was missing from body or is in wrong format",
+        8
       )
 
     }
@@ -262,7 +265,11 @@ class RemoveRecordControllerIntegrationSpec
       val result  = getRecordAndWait(url, headers: _*)
 
       result.status mustBe BAD_REQUEST
-      result.json mustBe createExpectedError("004", "Accept was missing from Header or is in wrong format")
+      result.json mustBe createExpectedError(
+        "INVALID_HEADER_PARAMETER",
+        "Accept was missing from Header or is in wrong format",
+        4
+      )
     }
 
     "return internal server error if auth throw" in {
@@ -284,8 +291,9 @@ class RemoveRecordControllerIntegrationSpec
 
       result.status mustBe BAD_REQUEST
       result.json mustBe createExpectedError(
-        "025",
-        "The recordId has been provided in the wrong format"
+        "INVALID_REQUEST_PARAMETER",
+        "The recordId has been provided in the wrong format",
+        25
       )
     }
 
@@ -298,8 +306,8 @@ class RemoveRecordControllerIntegrationSpec
       result.status mustBe INTERNAL_SERVER_ERROR
       result.json mustBe Json.obj(
         "correlationId" -> correlationId,
-        "code"      -> "INTERNAL_SERVER_ERROR",
-        "message"   -> "Response body could not be parsed as JSON, body: error"
+        "code"          -> "INTERNAL_SERVER_ERROR",
+        "message"       -> "Response body could not be parsed as JSON, body: error"
       )
     }
 
@@ -331,23 +339,25 @@ class RemoveRecordControllerIntegrationSpec
         .put(removeRecordRequest)
     )
 
-  private def createExpectedError(code: String, message: String): Any =
+  private def createExpectedError(code: String, message: String, errorNumber: Int): Any =
     Json.obj(
       "correlationId" -> correlationId,
       "code"          -> "BAD_REQUEST",
       "message"       -> "Bad Request",
       "errors"        -> Seq(
         Json.obj(
-          "code"    -> code,
-          "message" -> message
+          "code"        -> code,
+          "message"     -> message,
+          "errorNumber" -> errorNumber
         )
       )
     )
+
   private def createExpectedJson(code: String, message: String): Any =
     Json.obj(
       "correlationId" -> correlationId,
-      "code"      -> code,
-      "message"   -> message
+      "code"          -> code,
+      "message"       -> message
     )
 
   private def stubRouterRequest(status: Int, errorResponse: String) =

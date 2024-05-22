@@ -18,7 +18,7 @@ package uk.gov.hmrc.tradergoodsprofiles.models.errors
 
 import play.api.libs.json.{Json, OFormat}
 
-case class Error(code: String, message: String)
+case class Error(code: String, message: String, errorNumber: Int)
 
 object Error {
   implicit val format: OFormat[Error] = Json.format[Error]

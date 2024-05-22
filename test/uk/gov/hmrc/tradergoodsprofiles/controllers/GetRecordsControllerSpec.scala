@@ -23,7 +23,7 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Results.InternalServerError
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
@@ -94,51 +94,21 @@ class GetRecordsControllerSpec
         val result = sut.getRecord(eoriNumber, "1234-abc")(request)
 
         status(result) mustBe BAD_REQUEST
-        contentAsJson(result) mustBe Json.obj(
-          "correlationId" -> correlationId,
-          "code"          -> "BAD_REQUEST",
-          "message"       -> "Bad Request",
-          "errors"        -> Seq(
-            Json.obj(
-              "code"    -> "025",
-              "message" -> "The recordId has been provided in the wrong format"
-            )
-          )
-        )
+        contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
       }
 
       "recordId is null" in {
         val result = sut.getRecord(eoriNumber, null)(request)
 
         status(result) mustBe BAD_REQUEST
-        contentAsJson(result) mustBe Json.obj(
-          "correlationId" -> correlationId,
-          "code"          -> "BAD_REQUEST",
-          "message"       -> "Bad Request",
-          "errors"        -> Seq(
-            Json.obj(
-              "code"    -> "025",
-              "message" -> "The recordId has been provided in the wrong format"
-            )
-          )
-        )
+        contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
       }
 
       "recordId is empty" in {
         val result = sut.getRecord(eoriNumber, " ")(request)
 
         status(result) mustBe BAD_REQUEST
-        contentAsJson(result) mustBe Json.obj(
-          "correlationId" -> correlationId,
-          "code"          -> "BAD_REQUEST",
-          "message"       -> "Bad Request",
-          "errors"        -> Seq(
-            Json.obj(
-              "code"    -> "025",
-              "message" -> "The recordId has been provided in the wrong format"
-            )
-          )
-        )
+        contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
       }
 
       "routerService return an error" in {
@@ -199,4 +169,18 @@ class GetRecordsControllerSpec
       }
     }
   }
+
+  private def createInvalidRequestParameterExpectedJson: JsObject =
+    Json.obj(
+      "correlationId" -> correlationId,
+      "code"          -> "BAD_REQUEST",
+      "message"       -> "Bad Request",
+      "errors"        -> Seq(
+        Json.obj(
+          "code"        -> "INVALID_REQUEST_PARAMETER",
+          "message"     -> "The recordId has been provided in the wrong format",
+          "errorNumber" -> 25
+        )
+      )
+    )
 }

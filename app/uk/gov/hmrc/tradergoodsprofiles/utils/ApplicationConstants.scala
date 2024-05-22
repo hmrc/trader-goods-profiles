@@ -17,15 +17,17 @@
 package uk.gov.hmrc.tradergoodsprofiles.utils
 
 object ApplicationConstants {
-  val InvalidHeaderClientId           = "6000"
+  val InvalidHeaderParameter          = "INVALID_HEADER_PARAMETER"
+  val InvalidRequestParameter         = "INVALID_REQUEST_PARAMETER"
+  val InvalidHeaderClientId           = 6000
   val InvalidHeaderClientIdMessage    = "X-Client-ID was missing from Header or is in wrong format"
-  val InvalidHeaderContentType        = "003"
+  val InvalidHeaderContentType        = 3
   val InvalidHeaderContentTypeMessage = "Content-Type was missing from Header or is in the wrong format"
-  val InvalidHeaderAccept             = "004"
+  val InvalidHeaderAccept             = 4
   val InvalidHeaderAcceptMessage      = "Accept was missing from Header or is in wrong format"
-  val InvalidActorId                  = "008"
+  val InvalidActorId                  = 8
   val InvalidActorMessage             = "Mandatory field actorId was missing from body or is in wrong format"
-  val InvalidRecordIdCode             = "025"
+  val InvalidRecordId                 = 25
   val InvalidRecordIdMessage          = "The recordId has been provided in the wrong format"
 
 }

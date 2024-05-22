@@ -34,7 +34,6 @@ import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.{AppConfig, Constants}
 
-import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
 
 class RouteConnectorSpec extends PlaySpec with ScalaFutures with EitherValues with BeforeAndAfterEach {
@@ -49,7 +48,6 @@ class RouteConnectorSpec extends PlaySpec with ScalaFutures with EitherValues wi
   private val successCounter                  = mock[Counter]
   private val failureCounter                  = mock[Counter]
   private val metricsRegistry: MetricRegistry = mock[MetricRegistry](RETURNS_DEEP_STUBS)
-  private val timestamp                        = Instant.parse("2024-05-12T12:15:15.456321Z")
 
   private val sut = new RouterConnector(httpClient, appConfig, metricsRegistry)
 
@@ -72,7 +70,7 @@ class RouteConnectorSpec extends PlaySpec with ScalaFutures with EitherValues wi
     when(timerContext.stop()) thenReturn 0L
   }
 
-  "get" should {
+  "get single record" should {
 
     "return 200" in {
       val result = await(sut.get("eoriNumber", "recordId"))
@@ -92,6 +90,62 @@ class RouteConnectorSpec extends PlaySpec with ScalaFutures with EitherValues wi
 
       withClue("process the response within a timer") {
         verify(metricsRegistry).timer(eqTo("tgp.getrecord.connector-timer"))
+        verify(metricsRegistry.timer(eqTo("emcs.submission.connector-timer"))).time()
+        verify(timerContext).stop()
+      }
+    }
+  }
+  "get multiple records" should {
+
+    "return 200" in {
+      val result = await(sut.getRecords("eoriNumber"))
+
+      result.status mustBe OK
+    }
+
+    "return 200 with optional query parameters" in {
+      val result = await(sut.getRecords("eoriNumber", Some("2024-06-08T12:12:12.456789Z"), Some(1), Some(1)))
+
+      result.status mustBe OK
+    }
+
+    "return 200 with optional query parameters page and size" in {
+      val result = await(sut.getRecords("eoriNumber", None, Some(1), Some(1)))
+
+      result.status mustBe OK
+    }
+
+    "send a request with the right url" in {
+
+      await(sut.getRecords("eoriNumber")(hc))
+
+      val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/eoriNumber")
+      verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
+      verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+      verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
+      verify(requestBuilder).execute(any, any)
+
+      withClue("process the response within a timer") {
+        verify(metricsRegistry).timer(eqTo("tgp.getrecords.connector-timer"))
+        verify(metricsRegistry.timer(eqTo("emcs.submission.connector-timer"))).time()
+        verify(timerContext).stop()
+      }
+    }
+
+    "send a request with the right url with optional query parameter" in {
+
+      await(sut.getRecords("eoriNumber", Some("2024-06-08T12:12:12.456789Z"), Some(1), Some(1))(hc))
+
+      val expectedUrl = UrlPath.fromRaw(
+        "http://localhost:23123/trader-goods-profiles-router/eoriNumber?lastUpdatedDate=2024-06-08T12:12:12.456789Z&page=1&size=1"
+      )
+      verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
+      verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+      verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
+      verify(requestBuilder).execute(any, any)
+
+      withClue("process the response within a timer") {
+        verify(metricsRegistry).timer(eqTo("tgp.getrecords.connector-timer"))
         verify(metricsRegistry.timer(eqTo("emcs.submission.connector-timer"))).time()
         verify(timerContext).stop()
       }

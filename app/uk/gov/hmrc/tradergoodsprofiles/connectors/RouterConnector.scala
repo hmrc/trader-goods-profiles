@@ -50,8 +50,8 @@ class RouterConnector @Inject() (
   def getRecords(
     eori: String,
     lastUpdatedDate: Option[String] = None,
-    page: Option[Int]= None,
-    size: Option[Int]= None
+    page: Option[Int] = None,
+    size: Option[Int] = None
   )(implicit
     hc: HeaderCarrier
   ): Future[HttpResponse]                                                                                    =
