@@ -17,7 +17,7 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers.support
 
 import uk.gov.hmrc.tradergoodsprofiles.models.response.{GetRecordsResponse, GoodsItemRecords, Pagination}
-import uk.gov.hmrc.tradergoodsprofiles.models.{Assessment, Condition, GetRecordResponse}
+import uk.gov.hmrc.tradergoodsprofiles.models.{Assessment, Condition}
 
 import java.time.Instant
 

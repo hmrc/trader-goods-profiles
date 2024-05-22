@@ -18,7 +18,6 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
-import io.lemonlabs.uri.UrlPath
 import org.mockito.MockitoSugar.{reset, when}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar.mock
@@ -374,16 +373,36 @@ class GetRecordsControllerIntegrationSpec
 
     "return multiple records with optional query parameters" in {
       withAuthorizedTrader()
+      wireMock.stubFor(
+        WireMock
+          .get(s"$getMultipleRecordsRouterUrl?lastUpdatedDate=2024-06-08T12:12:12.456789Z&page=1&size=1")
+          .willReturn(
+            aResponse()
+              .withStatus(200)
+              .withBody(getMultipleRecordsRouterResponse.toString())
+          )
+      )
 
       val result =
-        getRecordsAndWait(s"$getMultipleRecordsUrl?lastUpdatedDate=2024-06-08T12:12:12.456789Z&page=1&size=1")
+        await(
+          wsClient
+            .url(s"http://localhost:$port/$eoriNumber?lastUpdatedDate=2024-06-08T12:12:12.456789Z&page=1&size=1")
+            .withHttpHeaders(
+              "X-Client-ID"  -> "clientId",
+              "Accept"       -> "application/vnd.hmrc.1.0+json",
+              "Content-Type" -> "application/json"
+            )
+            .get()
+        )
 
+      result.status mustBe OK
       result.json mustBe getMultipleRecordsRouterResponse
 
       withClue("should add the right headers") {
         verify(
-          getRequestedFor(urlEqualTo(getMultipleRecordsRouterUrl))
-            .withHeader("Content-Type", equalTo("application/json"))
+          getRequestedFor(
+            urlEqualTo(s"$getMultipleRecordsRouterUrl?lastUpdatedDate=2024-06-08T12:12:12.456789Z&page=1&size=1")
+          )
             .withHeader("X-Client-ID", equalTo("clientId"))
         )
       }

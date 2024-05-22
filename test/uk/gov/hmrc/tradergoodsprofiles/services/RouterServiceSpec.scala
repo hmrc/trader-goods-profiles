@@ -91,8 +91,8 @@ class RouterServiceSpec
           _.left.value mustBe InternalServerError(
             Json.obj(
               "correlationId" -> correlationId,
-              "code"      -> "INTERNAL_SERVER_ERROR",
-              "message"   -> s"Response body could not be read as type ${typeOf[GetRecordResponse]}"
+              "code"          -> "INTERNAL_SERVER_ERROR",
+              "message"       -> s"Response body could not be read as type ${typeOf[GetRecordResponse]}"
             )
           )
         }
@@ -121,8 +121,8 @@ class RouterServiceSpec
           _.left.value mustBe InternalServerError(
             Json.obj(
               "correlationId" -> correlationId,
-              "code"      -> "INTERNAL_SERVER_ERROR",
-              "message"   -> s"Could not retrieve record for eori number eori and record ID recordId"
+              "code"          -> "INTERNAL_SERVER_ERROR",
+              "message"       -> s"Could not retrieve record for eori number eori and record ID recordId"
             )
           )
         }
@@ -171,7 +171,6 @@ class RouterServiceSpec
 
     "return an error" when {
 
-
       "routerConnector return an exception" in {
         when(connector.put(any, any, any)(any))
           .thenReturn(Future.failed(new RuntimeException("error")))
@@ -182,8 +181,8 @@ class RouterServiceSpec
           _.left.value mustBe InternalServerError(
             Json.obj(
               "correlationId" -> correlationId,
-              "code"      -> "INTERNAL_SERVER_ERROR",
-              "message"   -> s"Could not remove record for eori number eori and record ID recordId"
+              "code"          -> "INTERNAL_SERVER_ERROR",
+              "message"       -> s"Could not remove record for eori number eori and record ID recordId"
             )
           )
         }
@@ -222,8 +221,8 @@ class RouterServiceSpec
     InternalServerError(
       Json.obj(
         "correlationId" -> correlationId,
-        "code"      -> "INTERNAL_SERVER_ERROR",
-        "message"   -> message
+        "code"          -> "INTERNAL_SERVER_ERROR",
+        "message"       -> message
       )
     )
 

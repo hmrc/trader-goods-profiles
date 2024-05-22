@@ -56,7 +56,7 @@ class RouterConnector @Inject() (
     hc: HeaderCarrier
   ): Future[HttpResponse]                                                                                    =
     withMetricsTimerAsync("tgp.getrecords.connector") { _ =>
-      val url = appConfig.routerUrl.withPath(routerRouteGetRecords(eori, lastUpdatedDate, page, size))
+      val url = appConfig.routerUrl.toUrl + routerRouteGetRecords(eori, lastUpdatedDate, page, size)
 
       httpClient
         .get(url"$url")

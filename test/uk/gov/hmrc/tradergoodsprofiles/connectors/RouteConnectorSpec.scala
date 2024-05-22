@@ -136,9 +136,9 @@ class RouteConnectorSpec extends PlaySpec with ScalaFutures with EitherValues wi
 
       await(sut.getRecords("eoriNumber", Some("2024-06-08T12:12:12.456789Z"), Some(1), Some(1))(hc))
 
-      val expectedUrl = UrlPath.fromRaw(
+      val expectedUrl =
         "http://localhost:23123/trader-goods-profiles-router/eoriNumber?lastUpdatedDate=2024-06-08T12:12:12.456789Z&page=1&size=1"
-      )
+
       verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
