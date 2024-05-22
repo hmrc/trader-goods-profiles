@@ -20,10 +20,9 @@ import cats.data.EitherT
 import cats.implicits._
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents, Result}
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.models.{APICreateRecordRequest, CreateRecordResponse, RouterCreateRecordRequest}
+import uk.gov.hmrc.tradergoodsprofiles.models.APICreateRecordRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, RouterService}
 
 import javax.inject.{Inject, Singleton}
@@ -43,7 +42,7 @@ class CreateRecordController @Inject() (
     (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
       (for {
         createRequest <- validateCreateRecordRequest(request.body)
-        response      <- createRecordRequestForRouter(eori, createRequest)
+        response      <- routerService.createRecord(eori, createRequest)
       } yield Created(Json.toJson(response))).merge
     }
 
@@ -56,25 +55,4 @@ class CreateRecordController @Inject() (
         BadRequest(Json.obj("code" -> "INVALID JSON", "message" -> errorMessages))
       }
     )
-
-  private def createRecordRequestForRouter(
-    eori: String,
-    createRequest: APICreateRecordRequest
-  )(implicit hc: HeaderCarrier): EitherT[Future, Result, CreateRecordResponse] = {
-    val routerCreateRecordRequest = RouterCreateRecordRequest(
-      eori = eori,
-      createRequest.actorId,
-      createRequest.traderRef,
-      createRequest.comcode,
-      createRequest.goodsDescription,
-      createRequest.countryOfOrigin,
-      createRequest.category,
-      createRequest.assessments,
-      createRequest.supplementaryUnit,
-      createRequest.measurementUnit,
-      createRequest.comcodeEffectiveFromDate,
-      createRequest.comcodeEffectiveToDate
-    )
-    routerService.createRecord(eori, routerCreateRecordRequest)
-  }
 }

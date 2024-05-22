@@ -17,7 +17,6 @@
 package uk.gov.hmrc.tradergoodsprofiles.models
 
 import play.api.libs.json.{Json, OFormat}
-
 import java.time.Instant
 
 case class RouterCreateRecordRequest(
@@ -37,4 +36,20 @@ case class RouterCreateRecordRequest(
 
 object RouterCreateRecordRequest {
   implicit val format: OFormat[RouterCreateRecordRequest] = Json.format[RouterCreateRecordRequest]
+
+  def apply(eori: String, createRequest: APICreateRecordRequest): RouterCreateRecordRequest =
+    RouterCreateRecordRequest(
+      eori = eori,
+      actorId = createRequest.actorId,
+      traderRef = createRequest.traderRef,
+      comcode = createRequest.comcode,
+      goodsDescription = createRequest.goodsDescription,
+      countryOfOrigin = createRequest.countryOfOrigin,
+      category = createRequest.category,
+      assessments = createRequest.assessments,
+      supplementaryUnit = createRequest.supplementaryUnit,
+      measurementUnit = createRequest.measurementUnit,
+      comcodeEffectiveFromDate = createRequest.comcodeEffectiveFromDate,
+      comcodeEffectiveToDate = createRequest.comcodeEffectiveToDate
+    )
 }

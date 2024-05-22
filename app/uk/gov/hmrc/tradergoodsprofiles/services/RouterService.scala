@@ -26,7 +26,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.HttpReads.is2xx
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{RouterError, ServerErrorResponse}
-import uk.gov.hmrc.tradergoodsprofiles.models.{CreateRecordResponse, GetRecordResponse, RouterCreateRecordRequest}
+import uk.gov.hmrc.tradergoodsprofiles.models.{APICreateRecordRequest, CreateRecordResponse, GetRecordResponse, RouterCreateRecordRequest}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.runtime.universe.{TypeTag, typeOf}
@@ -36,7 +36,8 @@ import scala.util.{Failure, Success, Try}
 trait RouterService {
 
   def getRecord(eori: String, recordId: String)(implicit hc: HeaderCarrier): EitherT[Future, Result, GetRecordResponse]
-  def createRecord(eori: String, createRequest: RouterCreateRecordRequest)(implicit
+
+  def createRecord(eori: String, createRequest: APICreateRecordRequest)(implicit
     hc: HeaderCarrier
   ): EitherT[Future, Result, CreateRecordResponse]
 
@@ -78,12 +79,13 @@ class RouterServiceImpl @Inject() (
         }
     )
 
-  def createRecord(eori: String, createRequest: RouterCreateRecordRequest)(implicit
+  def createRecord(eori: String, createRequest: APICreateRecordRequest)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Result, CreateRecordResponse] =
+  ): EitherT[Future, Result, CreateRecordResponse] = {
+    val routerCreateRecordRequest = RouterCreateRecordRequest(eori, createRequest)
     EitherT(
       routerConnector
-        .post(createRequest)
+        .post(routerCreateRecordRequest)
         .map { httpResponse =>
           httpResponse.status match {
             case status if is2xx(status) =>
@@ -102,6 +104,7 @@ class RouterServiceImpl @Inject() (
           )
         }
     )
+  }
 
   private def handleError(
     responseBody: String,

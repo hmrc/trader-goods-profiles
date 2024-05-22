@@ -29,10 +29,10 @@ import play.api.mvc.Result
 import play.api.mvc.Results.InternalServerError
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.RouterCreateRecordRequestSupport
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{APICreateRecordRequestSupport, RouterCreateRecordRequestSupport}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.{CreateRecordResponseSupport, GetRecordResponseSupport}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.RouterError
-import uk.gov.hmrc.tradergoodsprofiles.models.{CreateRecordResponse, GetRecordResponse}
+import uk.gov.hmrc.tradergoodsprofiles.models.{CreateRecordResponse, GetRecordResponse, RouterCreateRecordRequest}
 
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
@@ -42,6 +42,7 @@ class RouterServiceSpec
     extends PlaySpec
     with GetRecordResponseSupport
     with CreateRecordResponseSupport
+    with APICreateRecordRequestSupport
     with RouterCreateRecordRequestSupport
     with ScalaFutures
     with EitherValues
@@ -181,7 +182,7 @@ class RouterServiceSpec
 
   "createRecord" should {
     "create a record" in {
-      val createRequest = createRouterCreateRecordRequest()
+      val createRequest = createAPICreateRecordRequest()
 
       when(connector.post(any)(any))
         .thenReturn(Future.successful(HttpResponse(201, Json.toJson(createResponse), Map.empty)))
@@ -189,12 +190,12 @@ class RouterServiceSpec
       val result = sut.createRecord("GB123456789012", createRequest)
 
       whenReady(result.value) { _ =>
-        verify(connector).post(eqTo(createRequest))(any)
+        verify(connector).post(eqTo(RouterCreateRecordRequest("GB123456789012", createRequest)))(any)
       }
     }
 
     "return CreateRecordResponse" in {
-      val createRequest = createRouterCreateRecordRequest()
+      val createRequest = createAPICreateRecordRequest()
 
       when(connector.post(any)(any))
         .thenReturn(Future.successful(HttpResponse(201, Json.toJson(createResponse), Map.empty)))
@@ -206,7 +207,7 @@ class RouterServiceSpec
 
     "return an error" when {
       "cannot parse the response" in {
-        val createRequest = createRouterCreateRecordRequest()
+        val createRequest = createAPICreateRecordRequest()
 
         when(connector.post(any)(any))
           .thenReturn(Future.successful(HttpResponse(201, Json.obj(), Map.empty)))
@@ -225,7 +226,7 @@ class RouterServiceSpec
       }
 
       "cannot parse the response as Json" in {
-        val createRequest = createRouterCreateRecordRequest()
+        val createRequest = createAPICreateRecordRequest()
 
         when(connector.post(any)(any))
           .thenReturn(Future.successful(HttpResponse(201, "error")))
@@ -240,7 +241,7 @@ class RouterServiceSpec
       }
 
       "add timestamp to router error" in {
-        val createRequest = createRouterCreateRecordRequest()
+        val createRequest = createAPICreateRecordRequest()
 
         when(connector.post(any)(any))
           .thenReturn(Future.successful(createHttpResponse(500, "INTERNAL_SERVER_ERROR")))
@@ -260,7 +261,7 @@ class RouterServiceSpec
       }
 
       "routerConnector return an exception" in {
-        val createRequest = createRouterCreateRecordRequest()
+        val createRequest = createAPICreateRecordRequest()
 
         when(connector.post(any)(any))
           .thenReturn(Future.failed(new RuntimeException("error")))
@@ -293,7 +294,7 @@ class RouterServiceSpec
           code: String
         ) =>
           s"$description" in {
-            val createRequest = createRouterCreateRecordRequest()
+            val createRequest = createAPICreateRecordRequest()
 
             when(connector.post(any)(any))
               .thenReturn(Future.successful(createHttpResponse(status, code)))
