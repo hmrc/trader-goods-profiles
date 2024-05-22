@@ -22,29 +22,31 @@ import play.api.libs.json.Format.GenericFormat
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, ControllerComponents, Request, Result}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateAction}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
 import uk.gov.hmrc.tradergoodsprofiles.models.RemoveRecordRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.InvalidErrorResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
 
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 @Singleton
 class RemoveRecordController @Inject() (
   authAction: AuthAction,
-  validateAction: ValidateAction,
+  validateHeaderAction: ValidateHeaderAction,
   uuidService: UuidService,
   routerService: RouterService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
     extends BackendController(cc) {
   def removeRecord(eori: String, recordId: String): Action[JsValue] =
-    (authAction(eori) andThen validateAction).async(parse.json) { implicit request =>
+    (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
       val result = for {
         removeRecordRequest <- removeRecordRequest(request)
-        _                   <- validateAction.validateRecordId(recordId)
+        _                   <- validateRecordId(recordId)
         _                   <- routerService.removeRecord(eori, recordId, removeRecordRequest.actorId)
       } yield Ok
 
@@ -60,4 +62,15 @@ class RemoveRecordController @Inject() (
       }
     )
 
+  def validateRecordId(recordId: String): EitherT[Future, Result, String] =
+    EitherT.fromEither[Future](
+      Try(UUID.fromString(recordId).toString).toEither.left.map(_ =>
+        InvalidErrorResponse(
+          uuidService.uuid,
+          InvalidRequestParameter,
+          InvalidRecordIdMessage,
+          InvalidRecordId
+        ).toResult
+      )
+    )
 }

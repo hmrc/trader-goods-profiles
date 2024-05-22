@@ -34,7 +34,7 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
 
   private val uuidService   = mock[UuidService]
   private val correlationId = "d677693e-9981-4ee3-8574-654981ebe606"
-  private val sut           = new ValidateAction(uuidService)
+  private val sut           = new ValidateHeaderAction(uuidService)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
