@@ -36,7 +36,7 @@ import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.APICreateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateRecordResponseSupport
-import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, UuidService}
+import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
 
 import java.time.Instant
@@ -57,7 +57,6 @@ class CreateRecordControllerIntegrationSpec
   implicit val ec: ExecutionContext = ExecutionContext.global
 
   private lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
-  private lazy val dateTimeService    = mock[DateTimeService]
   private lazy val timestamp          = Instant.parse("2024-06-08T12:12:12.456789Z")
   private val recordId                = UUID.randomUUID().toString
   private val uuidService             = mock[UuidService]
@@ -76,7 +75,6 @@ class CreateRecordControllerIntegrationSpec
       .configure(configureServices)
       .overrides(
         bind[AuthConnector].to(authConnector),
-        bind[DateTimeService].to(dateTimeService),
         bind[UuidService].to(uuidService),
         bind[HttpClientV2].to(httpClientV2)
       )
@@ -88,7 +86,6 @@ class CreateRecordControllerIntegrationSpec
 
     reset(authConnector)
     stubRouterRequest(CREATED, expectedResponse.toString())
-    when(dateTimeService.timestamp).thenReturn(timestamp)
     when(uuidService.uuid).thenReturn(correlationId)
 
   }
@@ -129,17 +126,18 @@ class CreateRecordControllerIntegrationSpec
 
       result.status mustBe BAD_REQUEST
       result.json mustBe Json.obj(
-        "code"    -> "INVALID JSON",
-        "message" -> Json.obj(
-          "obj.comcode"                  -> "error.path.missing",
-          "obj.comcodeEffectiveFromDate" -> "error.path.missing",
-          "obj.actorId"                  -> "error.path.missing",
-          "obj.traderRef"                -> "error.path.missing",
-          "obj.goodsDescription"         -> "error.path.missing",
-          "obj.category"                 -> "error.path.missing",
-          "obj.countryOfOrigin"          -> "error.path.missing"
+        "correlationId" -> correlationId,
+        "code"          -> "BAD_REQUEST",
+        "message"       -> "Bad Request",
+        "errors"        -> Seq(
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "JSON body doesn’t match the schema",
+            "errorNumber" -> 0
+          )
         )
       )
+
     }
 
     "return Forbidden when X-Client-ID header is missing" in {

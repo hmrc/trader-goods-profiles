@@ -23,7 +23,7 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status.{BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Results.InternalServerError
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
@@ -32,7 +32,7 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.APICreateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateRecordResponseSupport
-import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, RouterService, UuidService}
+import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 
 import java.time.Instant
 import java.util.UUID
@@ -47,28 +47,28 @@ class CreateRecordControllerSpec
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
-  private val request         = FakeRequest().withHeaders(
+  private val request       = FakeRequest().withHeaders(
     "Accept"       -> "application/vnd.hmrc.1.0+json",
     "Content-Type" -> "application/json",
     "X-Client-ID"  -> "some client ID"
   )
-  private val recordId        = UUID.randomUUID().toString
-  private val timestamp       = Instant.parse("2024-01-12T12:12:12Z")
-  private val dateTimeService = mock[DateTimeService]
-  private val uuidService     = mock[UuidService]
-  private val routerService   = mock[RouterService]
-  private val sut             = new CreateRecordController(
+  private val recordId      = UUID.randomUUID().toString
+  private val timestamp     = Instant.parse("2024-01-12T12:12:12Z")
+  private val correlationId = "d677693e-9981-4ee3-8574-654981ebe606"
+  private val uuidService   = mock[UuidService]
+  private val routerService = mock[RouterService]
+  private val sut           = new CreateRecordController(
     new FakeSuccessAuthAction(),
     new ValidateHeaderAction(uuidService),
-    dateTimeService,
+    uuidService,
     routerService,
     stubControllerComponents()
   )
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    reset(dateTimeService, routerService)
-    when(dateTimeService.timestamp).thenReturn(timestamp)
+    reset(uuidService, routerService)
+    when(uuidService.uuid).thenReturn(correlationId)
     when(routerService.createRecord(any, any)(any))
       .thenReturn(EitherT.fromEither(Right(createCreateRecordResponse(recordId, eoriNumber, timestamp))))
   }
@@ -97,10 +97,7 @@ class CreateRecordControllerSpec
 
       status(result) mustBe BAD_REQUEST
 
-      (contentAsJson(result) \ "code").as[String] mustBe "INVALID JSON"
-
-      val errorMessage = (contentAsJson(result) \ "message" \ "obj.actorId").as[String]
-      errorMessage mustBe "error.path.missing"
+      contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
     }
 
     "return 400 when traderRef is missing" in {
@@ -116,9 +113,7 @@ class CreateRecordControllerSpec
       val result = sut.createRecord(eoriNumber)(request.withBody(invalidJsonRequest))
 
       status(result) mustBe BAD_REQUEST
-      (contentAsJson(result) \ "code").as[String] mustBe "INVALID JSON"
-      val errorMessage = (contentAsJson(result) \ "message" \ "obj.traderRef").as[String]
-      errorMessage mustBe "error.path.missing"
+      contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
     }
 
     "return 400 when comcode is missing" in {
@@ -134,9 +129,7 @@ class CreateRecordControllerSpec
       val result = sut.createRecord(eoriNumber)(request.withBody(invalidJsonRequest))
 
       status(result) mustBe BAD_REQUEST
-      (contentAsJson(result) \ "code").as[String] mustBe "INVALID JSON"
-      val errorMessage = (contentAsJson(result) \ "message" \ "obj.comcode").as[String]
-      errorMessage mustBe "error.path.missing"
+      contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
     }
 
     "return 400 when goodsDescription is missing" in {
@@ -152,9 +145,7 @@ class CreateRecordControllerSpec
       val result = sut.createRecord(eoriNumber)(request.withBody(invalidJsonRequest))
 
       status(result) mustBe BAD_REQUEST
-      (contentAsJson(result) \ "code").as[String] mustBe "INVALID JSON"
-      val errorMessage = (contentAsJson(result) \ "message" \ "obj.goodsDescription").as[String]
-      errorMessage mustBe "error.path.missing"
+      contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
     }
 
     "return 400 when countryOfOrigin is missing" in {
@@ -170,9 +161,7 @@ class CreateRecordControllerSpec
       val result = sut.createRecord(eoriNumber)(request.withBody(invalidJsonRequest))
 
       status(result) mustBe BAD_REQUEST
-      (contentAsJson(result) \ "code").as[String] mustBe "INVALID JSON"
-      val errorMessage = (contentAsJson(result) \ "message" \ "obj.countryOfOrigin").as[String]
-      errorMessage mustBe "error.path.missing"
+      contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
     }
 
     "return 400 when category is missing" in {
@@ -188,9 +177,7 @@ class CreateRecordControllerSpec
       val result = sut.createRecord(eoriNumber)(request.withBody(invalidJsonRequest))
 
       status(result) mustBe BAD_REQUEST
-      (contentAsJson(result) \ "code").as[String] mustBe "INVALID JSON"
-      val errorMessage = (contentAsJson(result) \ "message" \ "obj.category").as[String]
-      errorMessage mustBe "error.path.missing"
+      contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
     }
 
     "return 400 when comcodeEffectiveFromDate is missing" in {
@@ -206,9 +193,7 @@ class CreateRecordControllerSpec
       val result = sut.createRecord(eoriNumber)(request.withBody(invalidJsonRequest))
 
       status(result) mustBe BAD_REQUEST
-      (contentAsJson(result) \ "code").as[String] mustBe "INVALID JSON"
-      val errorMessage = (contentAsJson(result) \ "message" \ "obj.comcodeEffectiveFromDate").as[String]
-      errorMessage mustBe "error.path.missing"
+      contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
     }
 
     "return 500 when the router service returns an error" in {
@@ -229,4 +214,19 @@ class CreateRecordControllerSpec
       contentAsJson(result) mustBe expectedJson
     }
   }
+
+  private def createInvalidRequestParameterExpectedJson: JsObject =
+    Json.obj(
+      "correlationId" -> correlationId,
+      "code"          -> "BAD_REQUEST",
+      "message"       -> "Bad Request",
+      "errors"        -> Seq(
+        Json.obj(
+          "code"        -> "INVALID_REQUEST_PARAMETER",
+          "message"     -> "JSON body doesn’t match the schema",
+          "errorNumber" -> 0
+        )
+      )
+    )
+
 }

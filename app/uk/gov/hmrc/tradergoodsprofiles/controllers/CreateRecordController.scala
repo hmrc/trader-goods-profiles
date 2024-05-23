@@ -22,8 +22,10 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents, Result}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.InvalidErrorResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.APICreateRecordRequest
-import uk.gov.hmrc.tradergoodsprofiles.services.{DateTimeService, RouterService}
+import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
+import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.{InvalidActorId, InvalidActorMessage, InvalidJson, InvalidJsonMessage, InvalidRequestParameter}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -32,7 +34,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class CreateRecordController @Inject() (
   authAction: AuthAction,
   validateHeaderAction: ValidateHeaderAction,
-  dateTimeService: DateTimeService,
+  uuidService: UuidService,
   routerService: RouterService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
@@ -52,7 +54,7 @@ class CreateRecordController @Inject() (
         val errorMessages = errors.map { case (path, validationErrors) =>
           path.toJsonString -> validationErrors.map(_.message).mkString(", ")
         }.toMap
-        BadRequest(Json.obj("code" -> "INVALID JSON", "message" -> errorMessages))
+        InvalidErrorResponse(uuidService.uuid, InvalidRequestParameter, InvalidJsonMessage, InvalidJson).toResult
       }
     )
 }
