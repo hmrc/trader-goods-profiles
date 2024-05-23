@@ -33,6 +33,7 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessA
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.APICreateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
+import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants
 
 import java.time.Instant
 import java.util.UUID
@@ -85,8 +86,9 @@ class CreateRecordControllerSpec
 
     "return 400 when actorId is missing" in {
       val invalidJsonRequest = Json.obj(
+        "actorId"                  -> "",
         "traderRef"                -> "SKU123456",
-        "comcode"                  -> 123456,
+        "comcode"                  -> "123456",
         "goodsDescription"         -> "Bananas",
         "countryOfOrigin"          -> "GB",
         "category"                 -> 2,
@@ -97,13 +99,18 @@ class CreateRecordControllerSpec
 
       status(result) mustBe BAD_REQUEST
 
-      contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
+      contentAsJson(result) mustBe createMissingFieldExpectedJson(
+        "actorId",
+        ApplicationConstants.InvalidActorMessage,
+        ApplicationConstants.InvalidActorId
+      )
     }
 
     "return 400 when traderRef is missing" in {
       val invalidJsonRequest = Json.obj(
         "actorId"                  -> "GB987654321098",
-        "comcode"                  -> 123456,
+        "traderRef"                -> "",
+        "comcode"                  -> "123456",
         "goodsDescription"         -> "Bananas",
         "countryOfOrigin"          -> "GB",
         "category"                 -> 2,
@@ -113,13 +120,18 @@ class CreateRecordControllerSpec
       val result = sut.createRecord(eoriNumber)(request.withBody(invalidJsonRequest))
 
       status(result) mustBe BAD_REQUEST
-      contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
+      contentAsJson(result) mustBe createMissingFieldExpectedJson(
+        "traderRef",
+        ApplicationConstants.InvalidOrMissingTraderRef,
+        ApplicationConstants.InvalidOrMissingTraderRefCode
+      )
     }
 
     "return 400 when comcode is missing" in {
       val invalidJsonRequest = Json.obj(
         "actorId"                  -> "GB987654321098",
         "traderRef"                -> "SKU123456",
+        "comcode"                  -> "",
         "goodsDescription"         -> "Bananas",
         "countryOfOrigin"          -> "GB",
         "category"                 -> 2,
@@ -129,14 +141,19 @@ class CreateRecordControllerSpec
       val result = sut.createRecord(eoriNumber)(request.withBody(invalidJsonRequest))
 
       status(result) mustBe BAD_REQUEST
-      contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
+      contentAsJson(result) mustBe createMissingFieldExpectedJson(
+        "comcode",
+        ApplicationConstants.InvalidOrMissingComcode,
+        ApplicationConstants.InvalidOrMissingComcodeCode
+      )
     }
 
     "return 400 when goodsDescription is missing" in {
       val invalidJsonRequest = Json.obj(
         "actorId"                  -> "GB987654321098",
         "traderRef"                -> "SKU123456",
-        "comcode"                  -> 123456,
+        "comcode"                  -> "123456",
+        "goodsDescription"         -> "",
         "countryOfOrigin"          -> "GB",
         "category"                 -> 2,
         "comcodeEffectiveFromDate" -> "2023-01-01T00:00:00Z"
@@ -145,15 +162,20 @@ class CreateRecordControllerSpec
       val result = sut.createRecord(eoriNumber)(request.withBody(invalidJsonRequest))
 
       status(result) mustBe BAD_REQUEST
-      contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
+      contentAsJson(result) mustBe createMissingFieldExpectedJson(
+        "goodsDescription",
+        ApplicationConstants.InvalidOrMissingGoodsDescription,
+        ApplicationConstants.InvalidOrMissingGoodsDescriptionCode
+      )
     }
 
     "return 400 when countryOfOrigin is missing" in {
       val invalidJsonRequest = Json.obj(
         "actorId"                  -> "GB987654321098",
         "traderRef"                -> "SKU123456",
-        "comcode"                  -> 123456,
+        "comcode"                  -> "123456",
         "goodsDescription"         -> "Bananas",
+        "countryOfOrigin"          -> "",
         "category"                 -> 2,
         "comcodeEffectiveFromDate" -> "2023-01-01T00:00:00Z"
       )
@@ -161,39 +183,66 @@ class CreateRecordControllerSpec
       val result = sut.createRecord(eoriNumber)(request.withBody(invalidJsonRequest))
 
       status(result) mustBe BAD_REQUEST
-      contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
+      contentAsJson(result) mustBe createMissingFieldExpectedJson(
+        "countryOfOrigin",
+        ApplicationConstants.InvalidOrMissingCountryOfOrigin,
+        ApplicationConstants.InvalidOrMissingCountryOfOriginCode
+      )
     }
 
     "return 400 when category is missing" in {
       val invalidJsonRequest = Json.obj(
         "actorId"                  -> "GB987654321098",
         "traderRef"                -> "SKU123456",
-        "comcode"                  -> 123456,
+        "comcode"                  -> "123456",
         "goodsDescription"         -> "Bananas",
         "countryOfOrigin"          -> "GB",
+        "category"                 -> 0,
         "comcodeEffectiveFromDate" -> "2023-01-01T00:00:00Z"
       )
 
       val result = sut.createRecord(eoriNumber)(request.withBody(invalidJsonRequest))
 
       status(result) mustBe BAD_REQUEST
-      contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
+      contentAsJson(result) mustBe createMissingFieldExpectedJson(
+        "category",
+        ApplicationConstants.InvalidOrMissingCategory,
+        ApplicationConstants.InvalidOrMissingCategoryCode
+      )
     }
 
     "return 400 when comcodeEffectiveFromDate is missing" in {
       val invalidJsonRequest = Json.obj(
-        "actorId"          -> "GB987654321098",
-        "traderRef"        -> "SKU123456",
-        "comcode"          -> 123456,
-        "goodsDescription" -> "Bananas",
-        "countryOfOrigin"  -> "GB",
-        "category"         -> 2
+        "actorId"                  -> "GB987654321098",
+        "traderRef"                -> "SKU123456",
+        "comcode"                  -> "123456",
+        "goodsDescription"         -> "Bananas",
+        "countryOfOrigin"          -> "GB",
+        "category"                 -> 2,
+        "comcodeEffectiveFromDate" -> ""
       )
 
       val result = sut.createRecord(eoriNumber)(request.withBody(invalidJsonRequest))
 
       status(result) mustBe BAD_REQUEST
-      contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
+      contentAsJson(result) mustBe createInvalidJsonExpectedJson
+    }
+
+    "return 400 when JSON body doesn’t match the schema" in {
+      val invalidJsonRequest = Json.obj(
+        "traderRef"                -> "SKU123456",
+        "comcode"                  -> "123456",
+        "goodsDescription"         -> "Bananas",
+        "countryOfOrigin"          -> "GB",
+        "category"                 -> 2,
+        "comcodeEffectiveFromDate" -> "2023-01-01T00:00:00Z"
+      )
+
+      val result = sut.createRecord(eoriNumber)(request.withBody(invalidJsonRequest))
+
+      status(result) mustBe BAD_REQUEST
+
+      contentAsJson(result) mustBe createInvalidJsonExpectedJson
     }
 
     "return 500 when the router service returns an error" in {
@@ -215,7 +264,21 @@ class CreateRecordControllerSpec
     }
   }
 
-  private def createInvalidRequestParameterExpectedJson: JsObject =
+  private def createMissingFieldExpectedJson(fieldName: String, errorMessage: String, errorNumber: Int): JsObject =
+    Json.obj(
+      "correlationId" -> correlationId,
+      "code"          -> "BAD_REQUEST",
+      "message"       -> "Bad Request",
+      "errors"        -> Seq(
+        Json.obj(
+          "code"        -> "INVALID_REQUEST_PARAMETER",
+          "message"     -> errorMessage,
+          "errorNumber" -> errorNumber
+        )
+      )
+    )
+
+  private def createInvalidJsonExpectedJson: JsObject =
     Json.obj(
       "correlationId" -> correlationId,
       "code"          -> "BAD_REQUEST",
@@ -228,5 +291,4 @@ class CreateRecordControllerSpec
         )
       )
     )
-
 }

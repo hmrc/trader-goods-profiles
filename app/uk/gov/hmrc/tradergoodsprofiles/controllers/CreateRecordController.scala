@@ -18,17 +18,16 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import cats.data.EitherT
 import cats.implicits._
+import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, ControllerComponents, Result}
+import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.InvalidErrorResponse
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.APICreateRecordRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
-import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.{InvalidActorId, InvalidActorMessage, InvalidJson, InvalidJsonMessage, InvalidRequestParameter}
+import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.validateCreateRecordRequest
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class CreateRecordController @Inject() (
@@ -38,23 +37,14 @@ class CreateRecordController @Inject() (
   routerService: RouterService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
-    extends BackendController(cc) {
+    extends BackendController(cc)
+    with Logging {
 
   def createRecord(eori: String): Action[JsValue] =
     (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
       (for {
-        createRequest <- validateCreateRecordRequest(request.body)
+        createRequest <- EitherT(validateCreateRecordRequest(request.body, uuidService))
         response      <- routerService.createRecord(eori, createRequest)
       } yield Created(Json.toJson(response))).merge
     }
-
-  private def validateCreateRecordRequest(json: JsValue): EitherT[Future, Result, APICreateRecordRequest] =
-    EitherT.fromEither[Future](
-      json.validate[APICreateRecordRequest].asEither.left.map { errors =>
-        val errorMessages = errors.map { case (path, validationErrors) =>
-          path.toJsonString -> validationErrors.map(_.message).mkString(", ")
-        }.toMap
-        InvalidErrorResponse(uuidService.uuid, InvalidRequestParameter, InvalidJsonMessage, InvalidJson).toResult
-      }
-    )
 }

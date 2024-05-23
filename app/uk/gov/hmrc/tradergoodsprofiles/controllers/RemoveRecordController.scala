@@ -23,7 +23,7 @@ import play.api.libs.json.JsValue
 import play.api.mvc.{Action, ControllerComponents, Request, Result}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.InvalidErrorResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.{Error, InvalidErrorResponse}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.RemoveRecordRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
@@ -58,7 +58,12 @@ class RemoveRecordController @Inject() (
   )(implicit ec: ExecutionContext): EitherT[Future, Result, RemoveRecordRequest] =
     EitherT.fromEither(
       request.body.validate[RemoveRecordRequest].asEither.leftMap { errors =>
-        InvalidErrorResponse(uuidService.uuid, InvalidRequestParameter, InvalidActorMessage, InvalidActorId).toResult
+        InvalidErrorResponse(
+          uuidService.uuid,
+          "BAD_REQUEST",
+          "Bad Request",
+          Some(Seq(Error(InvalidRequestParameter, InvalidActorMessage, InvalidActorId)))
+        ).toResult
       }
     )
 
@@ -67,9 +72,9 @@ class RemoveRecordController @Inject() (
       Try(UUID.fromString(recordId).toString).toEither.left.map(_ =>
         InvalidErrorResponse(
           uuidService.uuid,
-          InvalidRequestParameter,
-          InvalidRecordIdMessage,
-          InvalidRecordId
+          "BAD_REQUEST",
+          "Bad Request",
+          Some(Seq(Error(InvalidRequestParameter, InvalidRecordIdMessage, InvalidRecordId)))
         ).toResult
       )
     )

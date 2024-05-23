@@ -79,23 +79,24 @@ object ServerErrorResponse {
   )(e => (e.correlationId, e.code, e.message))
 }
 
-case class InvalidErrorResponse(correlationId: String, code: String, message: String, errorNumber: Int)
-    extends ErrorResponse {
-  override val errors: Option[Seq[Error]] = Some(Seq(Error(code, message, errorNumber)))
-  def toResult: Result                    = BadRequest(Json.toJson(InvalidErrorResponse(correlationId, code, message, errorNumber)))
+case class InvalidErrorResponse(
+  correlationId: String,
+  code: String,
+  message: String,
+  override val errors: Option[Seq[Error]]
+) extends ErrorResponse {
+  override def toResult: Result = BadRequest(Json.toJson(this))
 }
 
 object InvalidErrorResponse {
-  implicit val read: Reads[InvalidErrorResponse] = Json.reads[InvalidErrorResponse]
-
+  implicit val read: Reads[InvalidErrorResponse]   = Json.reads[InvalidErrorResponse]
   implicit val write: Writes[InvalidErrorResponse] = (
     (JsPath \ "correlationId").write[String] and
       (JsPath \ "code").write[String] and
       (JsPath \ "message").write[String] and
-      (JsPath \ "errors").writeOptionWithNull[Seq[Error]]
-  )(e => (e.correlationId, "BAD_REQUEST", "Bad Request", e.errors))
+      (JsPath \ "errors").write[Option[Seq[Error]]]
+  )(unlift(InvalidErrorResponse.unapply))
 }
-
 case class InvalidHeaderErrorResponse(
   correlationId: String,
   code: String,
