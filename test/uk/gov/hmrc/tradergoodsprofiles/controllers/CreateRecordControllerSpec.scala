@@ -228,6 +228,46 @@ class CreateRecordControllerSpec
       contentAsJson(result) mustBe createInvalidJsonExpectedJson
     }
 
+    "return 400 when multiple fields are missing" in {
+      val invalidJsonRequest = Json.obj(
+        "actorId"                  -> "",
+        "traderRef"                -> "",
+        "comcode"                  -> "",
+        "goodsDescription"         -> "Bananas",
+        "countryOfOrigin"          -> "GB",
+        "category"                 -> 2,
+        "comcodeEffectiveFromDate" -> "2023-01-01T00:00:00Z"
+      )
+
+      val expectedJsonResponse = Json.obj(
+        "correlationId" -> correlationId,
+        "code"          -> "BAD_REQUEST",
+        "message"       -> "Bad Request",
+        "errors"        -> Seq(
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Mandatory field actorId was missing from body or is in wrong format",
+            "errorNumber" -> 8
+          ),
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Mandatory field traderRef was missing from body or is in the wrong format",
+            "errorNumber" -> 9
+          ),
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Mandatory field comcode was missing from body or is in the wrong format",
+            "errorNumber" -> 11
+          )
+        )
+      )
+
+      val result = sut.createRecord(eoriNumber)(request.withBody(invalidJsonRequest))
+
+      status(result) mustBe BAD_REQUEST
+      contentAsJson(result) mustBe expectedJsonResponse
+    }
+
     "return 400 when JSON body doesn’t match the schema" in {
       val invalidJsonRequest = Json.obj(
         "traderRef"                -> "SKU123456",
