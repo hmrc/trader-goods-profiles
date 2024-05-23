@@ -43,7 +43,7 @@ class CreateRecordController @Inject() (
   def createRecord(eori: String): Action[JsValue] =
     (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
       (for {
-        createRequest <- EitherT(validateCreateRecordRequest(request.body, uuidService))
+        createRequest <- EitherT(validateCreateRecordRequest(request.body, uuidService.uuid))
         response      <- routerService.createRecord(eori, createRequest)
       } yield Created(Json.toJson(response))).merge
     }

@@ -16,104 +16,89 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.models.errors
 
-import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.mvc.Result
 import play.api.mvc.Results.{BadRequest, Forbidden, InternalServerError, Unauthorized}
 
-sealed trait ErrorResponse {
-  val correlationId: String
-  val code: String
-  val message: String
-  val errors: Option[Seq[Error]] = None
+case class ErrorResponse(
+  correlationId: String,
+  code: String,
+  message: String,
+  errors: Option[Seq[Error]] = None
+)
 
-  def toResult: Result
+object ErrorResponse {
+  implicit val format: OFormat[ErrorResponse] = Json.format[ErrorResponse]
 }
 
-case class ForbiddenErrorResponse(correlationId: String, message: String) extends ErrorResponse {
-  override val code: String = "FORBIDDEN"
-
-  def toResult: Result = Forbidden(Json.toJson(ForbiddenErrorResponse(correlationId, message)))
-}
-
-object ForbiddenErrorResponse {
-  implicit val read: Reads[ForbiddenErrorResponse] = Json.reads[ForbiddenErrorResponse]
-
-  implicit val write: Writes[ForbiddenErrorResponse] = (
-    (JsPath \ "correlationId").write[String] and
-      (JsPath \ "code").write[String] and
-      (JsPath \ "message").write[String]
-  )(e => (e.correlationId, e.code, e.message))
-}
-
-case class UnauthorisedErrorResponse(correlationId: String, message: String) extends ErrorResponse {
-  override val code: String = "UNAUTHORIZED"
-
-  def toResult: Result = Unauthorized(Json.toJson(UnauthorisedErrorResponse(correlationId, message)))
-}
-
-object UnauthorisedErrorResponse {
-  implicit val read: Reads[UnauthorisedErrorResponse] = Json.reads[UnauthorisedErrorResponse]
-
-  implicit val write: Writes[UnauthorisedErrorResponse] = (
-    (JsPath \ "correlationId").write[String] and
-      (JsPath \ "code").write[String] and
-      (JsPath \ "message").write[String]
-  )(e => (e.correlationId, e.code, e.message))
-}
-
-case class ServerErrorResponse(correlationId: String, message: String) extends ErrorResponse {
-  override val code: String = "INTERNAL_SERVER_ERROR"
-
+case class ForbiddenErrorResponse(correlationId: String, message: String) {
   def toResult: Result =
-    InternalServerError(Json.toJson(ServerErrorResponse(correlationId, message)))
+    Forbidden(
+      Json.toJson(
+        ErrorResponse(
+          correlationId,
+          "FORBIDDEN",
+          message
+        )
+      )
+    )
 }
 
-object ServerErrorResponse {
-  implicit val read: Reads[ServerErrorResponse] = Json.reads[ServerErrorResponse]
-
-  implicit val write: Writes[ServerErrorResponse] = (
-    (JsPath \ "correlationId").write[String] and
-      (JsPath \ "code").write[String] and
-      (JsPath \ "message").write[String]
-  )(e => (e.correlationId, e.code, e.message))
+case class UnauthorisedErrorResponse(correlationId: String, message: String) {
+  def toResult: Result =
+    Unauthorized(
+      Json.toJson(
+        ErrorResponse(
+          correlationId,
+          "UNAUTHORIZED",
+          message
+        )
+      )
+    )
 }
 
-case class InvalidErrorResponse(
-  correlationId: String,
-  code: String,
-  message: String,
-  override val errors: Option[Seq[Error]]
-) extends ErrorResponse {
-  override def toResult: Result = BadRequest(Json.toJson(this))
+case class ServerErrorResponse(correlationId: String, message: String) {
+  def toResult: Result =
+    InternalServerError(
+      Json.toJson(
+        ErrorResponse(
+          correlationId,
+          "INTERNAL_SERVER_ERROR",
+          message
+        )
+      )
+    )
 }
 
-object InvalidErrorResponse {
-  implicit val read: Reads[InvalidErrorResponse]   = Json.reads[InvalidErrorResponse]
-  implicit val write: Writes[InvalidErrorResponse] = (
-    (JsPath \ "correlationId").write[String] and
-      (JsPath \ "code").write[String] and
-      (JsPath \ "message").write[String] and
-      (JsPath \ "errors").write[Option[Seq[Error]]]
-  )(unlift(InvalidErrorResponse.unapply))
-}
-case class InvalidHeaderErrorResponse(
-  correlationId: String,
-  code: String,
-  message: String,
-  errorNumber: Int
-) extends ErrorResponse {
-  override val errors: Option[Seq[Error]] = Some(Seq(Error(code, message, errorNumber)))
-  def toResult: Result                    = BadRequest(Json.toJson(InvalidHeaderErrorResponse(correlationId, code, message, errorNumber)))
+case class InvalidErrorResponse(correlationId: String, code: String, message: String, errorNumber: Int) {
+  val errors           = Some(Seq(Error(code, message, errorNumber)))
+  def toResult: Result =
+    BadRequest(
+      Json.toJson(
+        ErrorResponse(
+          correlationId,
+          "BAD_REQUEST",
+          "Bad Request",
+          errors
+        )
+      )
+    )
 }
 
-object InvalidHeaderErrorResponse {
-  implicit val read: Reads[InvalidHeaderErrorResponse] = Json.reads[InvalidHeaderErrorResponse]
-
-  implicit val write: Writes[InvalidHeaderErrorResponse] = (
-    (JsPath \ "correlationId").write[String] and
-      (JsPath \ "code").write[String] and
-      (JsPath \ "message").write[String] and
-      (JsPath \ "errors").writeOptionWithNull[Seq[Error]]
-  )(e => (e.correlationId, "BAD_REQUEST", "Bad Request", e.errors))
+case class InvalidErrorsResponse(correlationId: String, errors: Option[Seq[Error]]) {
+  def toResult: Result =
+    BadRequest(
+      Json.toJson(
+        ErrorResponse(
+          correlationId,
+          "BAD_REQUEST",
+          "Bad Request",
+          errors
+        )
+      )
+    )
 }
+
+//object InvalidErrorsResponse {
+//  implicit val writes: Writes[InvalidErrorsResponse] = Json.writes[InvalidErrorsResponse]
+//}

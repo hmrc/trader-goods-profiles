@@ -16,11 +16,10 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.utils
 
-import play.api.libs.json.{JsPath, JsValue, Json, JsonValidationError}
-import play.api.mvc.{Result, Results}
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.{Error, InvalidErrorResponse}
+import play.api.libs.json.{JsPath, JsValue, JsonValidationError}
+import play.api.mvc.Result
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.{Error, InvalidErrorsResponse}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.APICreateRecordRequest
-import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -36,7 +35,7 @@ object ValidationSupport {
     "/comcodeEffectiveFromDate" -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDateCode)
   )
 
-  def validateCreateRecordRequest(json: JsValue, uuidService: UuidService)(implicit
+  def validateCreateRecordRequest(json: JsValue, correlationId: String)(implicit
     ec: ExecutionContext
   ): Future[Either[Result, APICreateRecordRequest]] =
     json.validate[APICreateRecordRequest].asEither match {
@@ -45,10 +44,10 @@ object ValidationSupport {
         if (errors.isEmpty) {
           Future.successful(Right(request))
         } else {
-          Future.successful(Left(constructErrorResponse(uuidService, errors)))
+          Future.successful(Left(constructErrorResponse(correlationId, errors)))
         }
       case Left(validationErrors) =>
-        Future.successful(Left(constructErrorResponse(uuidService, convertError(validationErrors))))
+        Future.successful(Left(constructErrorResponse(correlationId, convertError(validationErrors))))
     }
 
   private def validateFields(request: APICreateRecordRequest): Seq[Error] = {
@@ -91,20 +90,17 @@ object ValidationSupport {
     }
   }
 
-  private def constructErrorResponse(uuidService: UuidService, errors: Seq[Error]): Result = {
-    val correlationId = uuidService.uuid
-    val defaultError  = Error(
+  private def constructErrorResponse(correlationId: String, errors: Seq[Error]): Result = {
+    val defaultError = Error(
       code = ApplicationConstants.InvalidRequestParameter,
       message = ApplicationConstants.InvalidJsonMessage,
       errorNumber = ApplicationConstants.InvalidJson
     )
-    val errorResponse = InvalidErrorResponse(
-      correlationId = correlationId,
-      code = "BAD_REQUEST",
-      message = "Bad Request",
+
+    InvalidErrorsResponse(
+      correlationId,
       errors = Some(if (errors.isEmpty) Seq(defaultError) else errors)
-    )
-    Results.BadRequest(Json.toJson(errorResponse))
+    ).toResult
   }
 
   def convertError(

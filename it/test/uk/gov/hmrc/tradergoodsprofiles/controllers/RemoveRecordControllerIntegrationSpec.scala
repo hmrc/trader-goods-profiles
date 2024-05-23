@@ -141,12 +141,18 @@ class RemoveRecordControllerIntegrationSpec
         "errors"        -> null
       )
 
+      val expectedErrorResponse = Json.obj(
+        "correlationId" -> "correlationId",
+        "code"          -> "NOT_FOUND",
+        "message"       -> "Not found"
+      )
+
       stubRouterRequest(404, routerResponse.toString())
 
       val result = getRecordAndWait()
 
       result.status mustBe NOT_FOUND
-      result.json mustBe routerResponse
+      result.json mustBe expectedErrorResponse
 
     }
 

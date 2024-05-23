@@ -135,12 +135,18 @@ class GetRecordsControllerIntegrationSpec
         "errors"        -> null
       )
 
+      val expectedErrorResponse = Json.obj(
+        "correlationId" -> "correlationId",
+        "code"          -> "NOT_FOUND",
+        "message"       -> "Not found"
+      )
+
       stubRouterRequest(404, routerResponse.toString())
 
       val result = getRecordAndWait()
 
       result.status mustBe NOT_FOUND
-      result.json mustBe routerResponse
+      result.json mustBe expectedErrorResponse
 
     }
 
@@ -302,6 +308,31 @@ class GetRecordsControllerIntegrationSpec
 
     }
 
+    "return an error if API return an error with null errors field" in {
+      withAuthorizedTrader()
+
+      val routerResponse =
+        s"""
+           |{
+           |    "correlationId": "$correlationId",
+           |    "code": "INTERNAL_SERVER_ERROR",
+           |    "message": "Internal Server Error"
+           |}
+        """.stripMargin
+
+      stubRouterRequest(500, routerResponse)
+
+      val result = getRecordAndWait()
+
+      result.status mustBe INTERNAL_SERVER_ERROR
+      result.json mustBe Json.obj(
+        "correlationId" -> correlationId,
+        "code"          -> "INTERNAL_SERVER_ERROR",
+        "message"       -> "Internal Server Error"
+      )
+
+    }
+
     "return an error if json cannot be deserialized to the router message" in {
       withAuthorizedTrader()
       stubRouterRequest(200, "{}")
@@ -417,12 +448,18 @@ class GetRecordsControllerIntegrationSpec
         "errors"        -> null
       )
 
+      val expectedErrorResponse = Json.obj(
+        "correlationId" -> "correlationId",
+        "code"          -> "NOT_FOUND",
+        "message"       -> "Not found"
+      )
+
       stubRouterRequestGetRecords(404, routerResponse.toString())
 
       val result = getRecordsAndWait()
 
       result.status mustBe NOT_FOUND
-      result.json mustBe routerResponse
+      result.json mustBe expectedErrorResponse
     }
 
     "authorise an enrolment with multiple identifier" in {
