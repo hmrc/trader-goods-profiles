@@ -59,7 +59,7 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
 
     "return a bad request" when {
       "accept header is missing" in {
-        val request = FakeRequest().withHeaders("Content-Type" -> "application/json", "X-Client-ID" -> "some client ID")
+        val request = FakeRequest().withHeaders("Content-Type" -> "application/json")
         val result  = await(sut.filter(request))
         result.value mustBe BadRequest(
           createExpectedJson("INVALID_HEADER_PARAMETER", "Accept was missing from Header or is in wrong format", 4)
