@@ -18,7 +18,7 @@ package uk.gov.hmrc.tradergoodsprofiles.utils
 
 import play.api.libs.json.{JsPath, JsValue, JsonValidationError}
 import play.api.mvc.Result
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.{Error, InvalidErrorsResponse}
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.{BadRequestErrorsResponse, Error}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.APICreateRecordRequest
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -35,8 +35,9 @@ object ValidationSupport {
     "/comcodeEffectiveFromDate" -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDateCode)
   )
 
-  def validateCreateRecordRequest(json: JsValue, correlationId: String)(implicit
-    ec: ExecutionContext
+  def validateCreateRecordRequest(
+    json: JsValue,
+    correlationId: String
   ): Future[Either[Result, APICreateRecordRequest]] =
     json.validate[APICreateRecordRequest].asEither match {
       case Right(request)         =>
@@ -97,16 +98,16 @@ object ValidationSupport {
       errorNumber = ApplicationConstants.InvalidJson
     )
 
-    InvalidErrorsResponse(
+    BadRequestErrorsResponse(
       correlationId,
       errors = Some(if (errors.isEmpty) Seq(defaultError) else errors)
     ).toResult
   }
 
-  def convertError(
+  private def convertError(
     errors: scala.collection.Seq[(JsPath, scala.collection.Seq[JsonValidationError])]
   ): Seq[Error] =
-    errors.flatMap { case (path, validationErrors) =>
+    errors.flatMap { case (path, _) =>
       fieldsToErrorCode.get(path.toJsonString).map { case (code, message, errorNumber) =>
         Error(code, message, errorNumber)
       }

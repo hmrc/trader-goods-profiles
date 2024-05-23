@@ -20,7 +20,7 @@ import cats.data.EitherT
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.mvc.{ActionFilter, Request, Result}
 import uk.gov.hmrc.tradergoodsprofiles.config.Constants
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.InvalidErrorResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.BadRequestErrorResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
 
@@ -51,7 +51,7 @@ class ValidateHeaderAction @Inject() (uuidService: UuidService)(implicit ec: Exe
         case _                                       => None
       },
       Some(
-        InvalidErrorResponse(
+        BadRequestErrorResponse(
           uuidService.uuid,
           InvalidHeaderParameter,
           InvalidHeaderAcceptMessage,
@@ -67,7 +67,7 @@ class ValidateHeaderAction @Inject() (uuidService: UuidService)(implicit ec: Exe
         case _                                             => None
       },
       Some(
-        InvalidErrorResponse(
+        BadRequestErrorResponse(
           uuidService.uuid,
           InvalidHeaderParameter,
           InvalidHeaderContentTypeMessage,
@@ -83,7 +83,7 @@ class ValidateHeaderAction @Inject() (uuidService: UuidService)(implicit ec: Exe
         case _       => None
       },
       Some(
-        InvalidErrorResponse(
+        BadRequestErrorResponse(
           uuidService.uuid,
           InvalidHeaderParameter,
           InvalidHeaderClientIdMessage,

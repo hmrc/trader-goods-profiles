@@ -89,7 +89,7 @@ class RouteConnectorSpec
 
     "send a request with the right url" in {
 
-      await(sut.get("eoriNumber", "recordId")(hc))
+      await(sut.get("eoriNumber", "recordId"))
 
       val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/eoriNumber/records/recordId")
       verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
@@ -99,7 +99,6 @@ class RouteConnectorSpec
 
       withClue("process the response within a timer") {
         verify(metricsRegistry).timer(eqTo("tgp.getrecord.connector-timer"))
-        verify(metricsRegistry.timer(eqTo("emcs.submission.connector-timer"))).time()
         verify(timerContext).stop()
       }
     }
@@ -126,7 +125,7 @@ class RouteConnectorSpec
 
     "send a request with the right url" in {
 
-      await(sut.getRecords("eoriNumber")(hc))
+      await(sut.getRecords("eoriNumber"))
 
       val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/eoriNumber")
       verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
@@ -136,14 +135,13 @@ class RouteConnectorSpec
 
       withClue("process the response within a timer") {
         verify(metricsRegistry).timer(eqTo("tgp.getrecords.connector-timer"))
-        verify(metricsRegistry.timer(eqTo("emcs.submission.connector-timer"))).time()
         verify(timerContext).stop()
       }
     }
 
     "send a request with the right url with optional query parameter" in {
 
-      await(sut.getRecords("eoriNumber", Some("2024-06-08T12:12:12.456789Z"), Some(1), Some(1))(hc))
+      await(sut.getRecords("eoriNumber", Some("2024-06-08T12:12:12.456789Z"), Some(1), Some(1)))
 
       val expectedUrl =
         "http://localhost:23123/trader-goods-profiles-router/eoriNumber?lastUpdatedDate=2024-06-08T12:12:12.456789Z&page=1&size=1"
@@ -155,7 +153,6 @@ class RouteConnectorSpec
 
       withClue("process the response within a timer") {
         verify(metricsRegistry).timer(eqTo("tgp.getrecords.connector-timer"))
-        verify(metricsRegistry.timer(eqTo("emcs.submission.connector-timer"))).time()
         verify(timerContext).stop()
       }
     }
@@ -184,7 +181,7 @@ class RouteConnectorSpec
       when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "message")))
 
-      await(sut.post(createRecordRequest)(hc))
+      await(sut.post(createRecordRequest))
 
       val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/records")
       verify(httpClient).post(eqTo(url"$expectedUrl"))(any)
@@ -195,7 +192,6 @@ class RouteConnectorSpec
 
       withClue("process the response within a timer") {
         verify(metricsRegistry).timer(eqTo("tgp.createrecord.connector-timer"))
-        verify(metricsRegistry.timer(eqTo("emcs.submission.connector-timer"))).time()
         verify(timerContext).stop()
       }
     }
@@ -211,7 +207,7 @@ class RouteConnectorSpec
 
     "send a PUT request with the right url and body" in {
 
-      await(sut.put("eoriNumber", "recordId", "actorId")(hc))
+      await(sut.put("eoriNumber", "recordId", "actorId"))
 
       val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/eoriNumber/records/recordId")
       verify(httpClient).put(eqTo(url"$expectedUrl"))(any)
@@ -222,7 +218,6 @@ class RouteConnectorSpec
 
       withClue("process the response within a timer") {
         verify(metricsRegistry).timer(eqTo("tgp.removerecord.connector-timer"))
-        verify(metricsRegistry.timer(eqTo("emcs.submission.connector-timer"))).time()
         verify(timerContext).stop()
       }
     }

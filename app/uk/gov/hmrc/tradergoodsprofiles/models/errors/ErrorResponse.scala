@@ -70,7 +70,7 @@ case class ServerErrorResponse(correlationId: String, message: String) {
     )
 }
 
-case class InvalidErrorResponse(correlationId: String, code: String, message: String, errorNumber: Int) {
+case class BadRequestErrorResponse(correlationId: String, code: String, message: String, errorNumber: Int) {
   val errors           = Some(Seq(Error(code, message, errorNumber)))
   def toResult: Result =
     BadRequest(
@@ -85,7 +85,7 @@ case class InvalidErrorResponse(correlationId: String, code: String, message: St
     )
 }
 
-case class InvalidErrorsResponse(correlationId: String, errors: Option[Seq[Error]]) {
+case class BadRequestErrorsResponse(correlationId: String, errors: Option[Seq[Error]]) {
   def toResult: Result =
     BadRequest(
       Json.toJson(
@@ -98,7 +98,3 @@ case class InvalidErrorsResponse(correlationId: String, errors: Option[Seq[Error
       )
     )
 }
-
-//object InvalidErrorsResponse {
-//  implicit val writes: Writes[InvalidErrorsResponse] = Json.writes[InvalidErrorsResponse]
-//}
