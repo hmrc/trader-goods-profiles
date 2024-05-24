@@ -29,8 +29,6 @@ object ApplicationConstants {
   val InvalidActorMessage                          = "Mandatory field actorId was missing from body or is in the wrong format"
   val InvalidRecordId                              = 25
   val InvalidRecordIdMessage                       = "The recordId has been provided in the wrong format"
-  val InvalidJson                                  = 0
-  val InvalidJsonMessage                           = "JSON body doesn’t match the schema"
   val InvalidOrMissingTraderRef                    = "Mandatory field traderRef was missing from body or is in the wrong format"
   val InvalidOrMissingTraderRefCode                = 9
   val InvalidOrMissingComcode                      = "Mandatory field comcode was missing from body or is in the wrong format"
