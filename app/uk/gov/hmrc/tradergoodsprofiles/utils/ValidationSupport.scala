@@ -16,12 +16,8 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.utils
 
-import play.api.libs.json.{JsPath, JsValue, JsonValidationError}
-import play.api.mvc.Result
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.{BadRequestErrorsResponse, Error}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.APICreateRecordRequest
-
-import scala.concurrent.{ExecutionContext, Future}
+import play.api.libs.json.{JsPath, JsonValidationError}
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.Error
 
 object ValidationSupport {
 
@@ -35,80 +31,11 @@ object ValidationSupport {
     "/comcodeEffectiveFromDate" -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDateCode)
   )
 
-  def validateRecordRequestBody(
-    json: JsValue,
-    correlationId: String
-  ): Future[Either[Result, APICreateRecordRequest]] =
-    json.validate[APICreateRecordRequest].asEither match {
-      case Right(request)         =>
-        val errors = validateFields(request)
-        if (errors.isEmpty) {
-          Future.successful(Right(request))
-        } else {
-          Future.successful(Left(constructErrorResponse(correlationId, errors)))
-        }
-      case Left(validationErrors) =>
-        Future.successful(Left(constructErrorResponse(correlationId, convertError(validationErrors))))
-    }
-
-  private def validateFields(request: APICreateRecordRequest): Seq[Error] = {
-    val validations = List(
-      (request.actorId.isEmpty, ApplicationConstants.InvalidActorMessage, ApplicationConstants.InvalidActorId),
-      (
-        request.traderRef.isEmpty,
-        ApplicationConstants.InvalidOrMissingTraderRef,
-        ApplicationConstants.InvalidOrMissingTraderRefCode
-      ),
-      (
-        request.comcode.isEmpty,
-        ApplicationConstants.InvalidOrMissingComcode,
-        ApplicationConstants.InvalidOrMissingComcodeCode
-      ),
-      (
-        request.goodsDescription.isEmpty,
-        ApplicationConstants.InvalidOrMissingGoodsDescription,
-        ApplicationConstants.InvalidOrMissingGoodsDescriptionCode
-      ),
-      (
-        request.countryOfOrigin.isEmpty,
-        ApplicationConstants.InvalidOrMissingCountryOfOrigin,
-        ApplicationConstants.InvalidOrMissingCountryOfOriginCode
-      ),
-      (
-        request.category == 0,
-        ApplicationConstants.InvalidOrMissingCategory,
-        ApplicationConstants.InvalidOrMissingCategoryCode
-      ),
-      (
-        request.comcodeEffectiveFromDate.toString.isEmpty,
-        ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDate,
-        ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDateCode
-      )
-    )
-
-    validations.collect { case (true, message, errorNumber) =>
-      Error(ApplicationConstants.InvalidRequestParameter, message, errorNumber)
-    }
-  }
-
-  private def constructErrorResponse(correlationId: String, errors: Seq[Error]): Result = {
-    val defaultError = Error(
-      code = ApplicationConstants.InvalidRequestParameter,
-      message = ApplicationConstants.InvalidJsonMessage,
-      errorNumber = ApplicationConstants.InvalidJson
-    )
-
-    BadRequestErrorsResponse(
-      correlationId,
-      errors = Some(if (errors.isEmpty) Seq(defaultError) else errors)
-    ).toResult
-  }
-
-  private def convertError(
+  def convertError(
     errors: scala.collection.Seq[(JsPath, scala.collection.Seq[JsonValidationError])]
   ): Seq[Error] =
     errors.flatMap { case (path, _) =>
-      fieldsToErrorCode.get(path.toJsonString).map { case (code, message, errorNumber) =>
+      fieldsToErrorCode.get(path.toString).map { case (code, message, errorNumber) =>
         Error(code, message, errorNumber)
       }
     }.toSeq

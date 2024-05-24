@@ -19,15 +19,17 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers
 import cats.data.EitherT
 import cats.implicits._
 import play.api.Logging
-import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, ControllerComponents}
+import play.api.libs.json.{JsPath, JsValue, Json, JsonValidationError}
+import play.api.mvc.{Action, ControllerComponents, Result}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.BadRequestErrorsResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.APICreateRecordRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
-import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.validateRecordRequestBody
+import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.convertError
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CreateRecordController @Inject() (
@@ -43,8 +45,21 @@ class CreateRecordController @Inject() (
   def createRecord(eori: String): Action[JsValue] =
     (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
       (for {
-        createRequest <- EitherT(validateRecordRequestBody(request.body, uuidService.uuid))
+        createRequest <- validateCreateRecordRequest(request.body)
         response      <- routerService.createRecord(eori, createRequest)
       } yield Created(Json.toJson(response))).merge
     }
+
+  def validateCreateRecordRequest(json: JsValue)(implicit
+    ec: ExecutionContext
+  ): EitherT[Future, Result, APICreateRecordRequest] =
+    EitherT.fromEither(
+      json
+        .validate[APICreateRecordRequest]
+        .asEither
+        .left
+        .map((e: collection.Seq[(JsPath, collection.Seq[JsonValidationError])]) =>
+          BadRequestErrorsResponse(uuidService.uuid, Some(convertError(e))).toResult
+        )
+    )
 }

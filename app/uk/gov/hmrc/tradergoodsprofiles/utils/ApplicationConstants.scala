@@ -26,7 +26,7 @@ object ApplicationConstants {
   val InvalidHeaderAccept                          = 4
   val InvalidHeaderAcceptMessage                   = "Accept was missing from Header or is in wrong format"
   val InvalidActorId                               = 8
-  val InvalidActorMessage                          = "Mandatory field actorId was missing from body or is in wrong format"
+  val InvalidActorMessage                          = "Mandatory field actorId was missing from body or is in the wrong format"
   val InvalidRecordId                              = 25
   val InvalidRecordIdMessage                       = "The recordId has been provided in the wrong format"
   val InvalidJson                                  = 0
