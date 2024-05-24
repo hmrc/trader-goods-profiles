@@ -24,7 +24,7 @@ import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
-import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.validateCreateRecordRequest
+import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.validateRecordRequestBody
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -43,7 +43,7 @@ class CreateRecordController @Inject() (
   def createRecord(eori: String): Action[JsValue] =
     (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
       (for {
-        createRequest <- EitherT(validateCreateRecordRequest(request.body, uuidService.uuid))
+        createRequest <- EitherT(validateRecordRequestBody(request.body, uuidService.uuid))
         response      <- routerService.createRecord(eori, createRequest)
       } yield Created(Json.toJson(response))).merge
     }

@@ -35,7 +35,7 @@ object ValidationSupport {
     "/comcodeEffectiveFromDate" -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDateCode)
   )
 
-  def validateCreateRecordRequest(
+  def validateRecordRequestBody(
     json: JsValue,
     correlationId: String
   ): Future[Either[Result, APICreateRecordRequest]] =
