@@ -259,7 +259,7 @@ class RemoveRecordControllerIntegrationSpec
       result.status mustBe BAD_REQUEST
       result.json mustBe createExpectedError(
         "INVALID_REQUEST_PARAMETER",
-        "Mandatory field actorId was missing from body or is in wrong format",
+        "Mandatory field actorId was missing from body or is in the wrong format",
         8
       )
 

@@ -130,11 +130,16 @@ class CreateRecordControllerIntegrationSpec
         "code"          -> "BAD_REQUEST",
         "message"       -> "Bad Request",
         "errors"        -> Seq(
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "JSON body doesn’t match the schema",
-            "errorNumber" -> 0
-          )
+          createBadRequestJson("Mandatory field countryOfOrigin was missing from body or is in the wrong format", 13),
+          createBadRequestJson(
+            "Mandatory field comcodeEffectiveFromDate was missing from body or is in the wrong format",
+            23
+          ),
+          createBadRequestJson("Mandatory field category was missing from body or is in the wrong format", 14),
+          createBadRequestJson("Mandatory field actorId was missing from body or is in the wrong format", 8),
+          createBadRequestJson("Mandatory field goodsDescription was missing from body or is in the wrong format", 12),
+          createBadRequestJson("Mandatory field comcode was missing from body or is in the wrong format", 11),
+          createBadRequestJson("Mandatory field traderRef was missing from body or is in the wrong format", 9)
         )
       )
 
@@ -279,5 +284,12 @@ class CreateRecordControllerIntegrationSpec
       "correlationId" -> correlationId,
       "code"          -> code,
       "message"       -> message
+    )
+
+  private def createBadRequestJson(message: String, errorNumber: Int) =
+    Json.obj(
+      "code"        -> "INVALID_REQUEST_PARAMETER",
+      "message"     -> message,
+      "errorNumber" -> errorNumber
     )
 }
