@@ -76,7 +76,7 @@ class RemoveRecordControllerIntegrationSpec
     super.beforeEach()
 
     reset(authConnector)
-    stubRouterRequest(200, routerResponse.toString())
+    stubRouterRequest(200, routerResponse.toString)
     when(uuidService.uuid).thenReturn(correlationId)
   }
 
@@ -259,7 +259,7 @@ class RemoveRecordControllerIntegrationSpec
       result.status mustBe BAD_REQUEST
       result.json mustBe createExpectedError(
         "INVALID_REQUEST_PARAMETER",
-        "Mandatory field actorId was missing from body or is in wrong format",
+        "Mandatory field actorId was missing from body or is in the wrong format",
         8
       )
 

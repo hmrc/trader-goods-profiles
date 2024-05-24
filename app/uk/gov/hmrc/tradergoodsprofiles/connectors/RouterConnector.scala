@@ -25,6 +25,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.metrics.MetricsSupport
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.RouterCreateRecordRequest
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -37,7 +38,8 @@ class RouterConnector @Inject() (
     extends BaseConnector
     with MetricsSupport
     with Logging {
-  def get(eori: String, recordId: String)(implicit hc: HeaderCarrier): Future[HttpResponse]                  =
+
+  def get(eori: String, recordId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.getrecord.connector") { _ =>
       val url = appConfig.routerUrl.withPath(routerRoute(eori, recordId))
 
@@ -47,6 +49,7 @@ class RouterConnector @Inject() (
         .withClientId
         .execute[HttpResponse]
     }
+
   def getRecords(
     eori: String,
     lastUpdatedDate: Option[String] = None,
@@ -54,16 +57,28 @@ class RouterConnector @Inject() (
     size: Option[Int] = None
   )(implicit
     hc: HeaderCarrier
-  ): Future[HttpResponse]                                                                                    =
+  ): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.getrecords.connector") { _ =>
       val url = appConfig.routerUrl.toUrl + routerRouteGetRecords(eori, lastUpdatedDate, page, size)
-
       httpClient
         .get(url"$url")
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
         .withClientId
         .execute[HttpResponse]
     }
+
+  def post(createRecordRequest: RouterCreateRecordRequest)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+    withMetricsTimerAsync("tgp.createrecord.connector") { _ =>
+      val url      = appConfig.routerUrl.withPath(routerCreateRoute())
+      val jsonData = Json.toJson(createRecordRequest)
+      httpClient
+        .post(url"$url")
+        .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+        .withBody(jsonData)
+        .withClientId
+        .execute[HttpResponse]
+    }
+
   def put(eori: String, recordId: String, actorId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.removerecord.connector") { _ =>
       val url = appConfig.routerUrl.withPath(routerRoute(eori, recordId))

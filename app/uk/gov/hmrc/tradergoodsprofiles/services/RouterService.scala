@@ -25,9 +25,9 @@ import play.api.mvc.Results.Status
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.HttpReads.is2xx
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.models.GetRecordResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{RouterError, ServerErrorResponse}
-import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordsResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.{APICreateRecordRequest, RouterCreateRecordRequest}
+import uk.gov.hmrc.tradergoodsprofiles.models.response.{CreateRecordResponse, GetRecordResponse, GetRecordsResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.runtime.universe.{TypeTag, typeOf}
@@ -37,6 +37,10 @@ import scala.util.{Failure, Success, Try}
 trait RouterService {
 
   def getRecord(eori: String, recordId: String)(implicit hc: HeaderCarrier): EitherT[Future, Result, GetRecordResponse]
+
+  def createRecord(eori: String, createRequest: APICreateRecordRequest)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Result, CreateRecordResponse]
 
   def removeRecord(eori: String, recordId: String, actorId: String)(implicit
     hc: HeaderCarrier
@@ -63,7 +67,8 @@ class RouterServiceImpl @Inject() (
         .get(eoriNumber, recordId)
         .map {
           case httpResponse if is2xx(httpResponse.status) => jsonAs[GetRecordResponse](httpResponse.body)
-          case httpResponse                               => Left(handleError(httpResponse.body, httpResponse.status, eoriNumber, recordId))
+          case httpResponse                               =>
+            Left(handleError(httpResponse.body, httpResponse.status, Some(eoriNumber), Some(recordId)))
         }
         .recover { case ex: Throwable =>
           logger.error(
@@ -87,7 +92,8 @@ class RouterServiceImpl @Inject() (
         .put(eoriNumber, recordId, actorId)
         .map {
           case httpResponse if is2xx(httpResponse.status) => Right(())
-          case httpResponse                               => Left(handleError(httpResponse.body, httpResponse.status, eoriNumber, recordId))
+          case httpResponse                               =>
+            Left(handleError(httpResponse.body, httpResponse.status, Some(eoriNumber), Some(recordId)))
         }
         .recover { case ex: Throwable =>
           logger.error(
@@ -111,7 +117,7 @@ class RouterServiceImpl @Inject() (
         .getRecords(eoriNumber, lastUpdatedDate, page, size)
         .map {
           case httpResponse if is2xx(httpResponse.status) => jsonAs[GetRecordsResponse](httpResponse.body)
-          case httpResponse                               => Left(handleError(httpResponse.body, httpResponse.status, eoriNumber))
+          case httpResponse                               => Left(handleError(httpResponse.body, httpResponse.status, Some(eoriNumber)))
         }
         .recover { case ex: Throwable =>
           logger.error(
@@ -127,14 +133,46 @@ class RouterServiceImpl @Inject() (
         }
     )
 
+  def createRecord(eori: String, createRequest: APICreateRecordRequest)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Result, CreateRecordResponse] = {
+    val routerCreateRecordRequest = RouterCreateRecordRequest(eori, createRequest)
+    EitherT(
+      routerConnector
+        .post(routerCreateRecordRequest)
+        .map { httpResponse =>
+          httpResponse.status match {
+            case status if is2xx(status) =>
+              jsonAs[CreateRecordResponse](httpResponse.body)
+            case _                       =>
+              Left(handleError(httpResponse.body, httpResponse.status))
+          }
+        }
+        .recover { case ex: Throwable =>
+          logger.error(
+            s"[RouterServiceImpl] - Exception when creating record for eori number $eori with message ${ex.getMessage}",
+            ex
+          )
+          Left(
+            ServerErrorResponse(uuidService.uuid, "Could not create record due to an internal error").toResult
+          )
+        }
+    )
+  }
+
   private def handleError(
     responseBody: String,
     status: Int,
-    eoriNumber: String,
-    recordId: String
+    eoriNumber: Option[String] = None,
+    recordId: Option[String] = None
   ): Result = {
+    val errorContext = (eoriNumber, recordId) match {
+      case (Some(eori), Some(record)) => s"for eori number '$eori' and record ID '$record'"
+      case (Some(eori), None)         => s"for eori number '$eori'"
+      case _                          => ""
+    }
     logger.error(
-      s"[RouterServiceImpl] - Error retrieving a record for eori number '$eoriNumber' and record ID '$recordId', status '$status' with message $responseBody"
+      s"[RouterServiceImpl] - Error processing request $errorContext, status '$status' with message: $responseBody"
     )
     jsonAs[RouterError](responseBody)
       .fold(
@@ -171,20 +209,5 @@ class RouterServiceImpl @Inject() (
           ).toResult
         )
     }
-
-  private def handleError(
-    responseBody: String,
-    status: Int,
-    eoriNumber: String
-  ): Result = {
-    logger.error(
-      s"[RouterServiceImpl] - Error occurred for eori number '$eoriNumber', status '$status' with message $responseBody"
-    )
-    jsonAs[RouterError](responseBody)
-      .fold(
-        error => error,
-        routerError => Status(status)(Json.toJson(routerError))
-      )
-  }
 
 }

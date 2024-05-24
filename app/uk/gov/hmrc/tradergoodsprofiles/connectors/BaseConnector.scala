@@ -41,6 +41,11 @@ trait BaseConnector {
     s"$uri"
   }
 
+  def routerCreateRoute(): UrlPath =
+    UrlPath.parse(
+      s"$routerBaseRoute/records"
+    )
+
   implicit class HttpResponseHelpers(requestBuilder: RequestBuilder) {
     def withClientId(implicit hc: HeaderCarrier): RequestBuilder =
       hc.headers(Seq(Constants.XClientIdHeader)).headOption match {

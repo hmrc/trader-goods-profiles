@@ -14,12 +14,27 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.tradergoodsprofiles.models
+package uk.gov.hmrc.tradergoodsprofiles.models.requests
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.tradergoodsprofiles.models.Assessment
 
-case class RemoveRecordRequest(actorId: String)
+import java.time.Instant
 
-object RemoveRecordRequest {
-  implicit val format: OFormat[RemoveRecordRequest] = Json.format[RemoveRecordRequest]
+case class APICreateRecordRequest(
+  actorId: String,
+  traderRef: String,
+  comcode: String,
+  goodsDescription: String,
+  countryOfOrigin: String,
+  category: Int,
+  assessments: Option[Seq[Assessment]] = None,
+  supplementaryUnit: Option[Int] = None,
+  measurementUnit: Option[String] = None,
+  comcodeEffectiveFromDate: Instant,
+  comcodeEffectiveToDate: Option[Instant] = None
+)
+
+object APICreateRecordRequest {
+  implicit val format: OFormat[APICreateRecordRequest] = Json.format[APICreateRecordRequest]
 }

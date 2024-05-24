@@ -22,7 +22,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.InvalidErrorResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.{BadRequestErrorsResponse, Error}
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.{InvalidRecordId, InvalidRecordIdMessage, InvalidRequestParameter}
 
@@ -63,14 +63,11 @@ class GetRecordsController @Inject() (
 
   private def validateRecordId(recordId: String): EitherT[Future, Result, String] =
     EitherT.fromEither[Future](
-      Try(UUID.fromString(recordId).toString).toEither.left.map(_ =>
-        InvalidErrorResponse(
+      Try(UUID.fromString(recordId).toString).toEither.left.map { _ =>
+        BadRequestErrorsResponse(
           uuidService.uuid,
-          InvalidRequestParameter,
-          InvalidRecordIdMessage,
-          InvalidRecordId
+          Some(Seq(Error(InvalidRequestParameter, InvalidRecordIdMessage, InvalidRecordId)))
         ).toResult
-      )
+      }
     )
-
 }

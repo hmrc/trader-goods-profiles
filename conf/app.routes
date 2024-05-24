@@ -2,5 +2,6 @@
 
 
 GET     /:eori/records/:recordId   uk.gov.hmrc.tradergoodsprofiles.controllers.GetRecordsController.getRecord(eori: String, recordId: String)
+POST    /:eori/records             uk.gov.hmrc.tradergoodsprofiles.controllers.CreateRecordController.createRecord(eori: String)
 PUT     /:eori/records/:recordId   uk.gov.hmrc.tradergoodsprofiles.controllers.RemoveRecordController.removeRecord(eori: String, recordId: String)
 GET     /:eori                     uk.gov.hmrc.tradergoodsprofiles.controllers.GetRecordsController.getRecords(eori: String, lastUpdatedDate:Option[String] ?= None, page: Option[Int] ?= None, size: Option[Int] ?= None)

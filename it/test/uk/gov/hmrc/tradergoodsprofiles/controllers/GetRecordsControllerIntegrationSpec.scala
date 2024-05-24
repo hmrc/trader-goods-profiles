@@ -34,9 +34,9 @@ import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, GetRecordResponseSupport, GetRecordsResponseSupport}
-import uk.gov.hmrc.tradergoodsprofiles.models.GetRecordResponse
-import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordsResponse
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.GetRecordResponseSupport
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, GetRecordsResponseSupport}
+import uk.gov.hmrc.tradergoodsprofiles.models.response.{GetRecordResponse, GetRecordsResponse}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
 

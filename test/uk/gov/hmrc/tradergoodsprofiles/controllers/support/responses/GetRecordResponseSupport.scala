@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.tradergoodsprofiles.controllers.support
+package uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses
 
-import uk.gov.hmrc.tradergoodsprofiles.models.{Assessment, Condition, GetRecordResponse}
+import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.{Assessment, Condition}
 
 import java.time.Instant
 
