@@ -33,7 +33,7 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{APICreateRe
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.{CreateRecordResponseSupport, GetRecordResponseSupport}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.RouterError
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.RouterCreateRecordRequest
-import uk.gov.hmrc.tradergoodsprofiles.models.response.{CreateRecordResponse, GetRecordResponse}
+import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
 
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
@@ -202,7 +202,7 @@ class RouterServiceSpec
             Json.obj(
               "correlationId" -> correlationId,
               "code"          -> "INTERNAL_SERVER_ERROR",
-              "message"       -> s"Response body could not be read as type ${typeOf[CreateRecordResponse]}"
+              "message"       -> s"Could not create record due to an internal error"
             )
           )
         }

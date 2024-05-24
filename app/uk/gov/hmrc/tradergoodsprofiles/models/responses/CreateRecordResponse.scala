@@ -22,20 +22,20 @@ import uk.gov.hmrc.tradergoodsprofiles.models.Assessment
 import java.time.Instant
 
 case class CreateRecordResponse(
-  recordId: String,
   eori: String,
   actorId: String,
+  recordId: String,
   traderRef: String,
   comcode: String,
   accreditationStatus: String,
   goodsDescription: String,
   countryOfOrigin: String,
   category: Int,
-  assessments: Seq[Assessment],
-  supplementaryUnit: Int,
-  measurementUnit: String,
+  assessments: Option[Seq[Assessment]],
+  supplementaryUnit: Option[Int],
+  measurementUnit: Option[String],
   comcodeEffectiveFromDate: Instant,
-  comcodeEffectiveToDate: Instant,
+  comcodeEffectiveToDate: Option[Instant],
   version: Int,
   active: Boolean,
   toReview: Boolean,
@@ -44,90 +44,74 @@ case class CreateRecordResponse(
   ukimsNumber: String,
   nirmsNumber: String,
   niphlNumber: String,
+  locked: Boolean,
+  srcSystemName: String,
   createdDateTime: Instant,
   updatedDateTime: Instant
 )
 
 object CreateRecordResponse {
-  implicit lazy val format: OFormat[CreateRecordResponse] = new OFormat[CreateRecordResponse] {
-    override def writes(o: CreateRecordResponse): JsObject =
-      Json.obj(
-        "recordId"                 -> o.recordId,
-        "eori"                     -> o.eori,
-        "actorId"                  -> o.actorId,
-        "traderRef"                -> o.traderRef,
-        "comcode"                  -> o.comcode,
-        "accreditationStatus"      -> o.accreditationStatus,
-        "goodsDescription"         -> o.goodsDescription,
-        "countryOfOrigin"          -> o.countryOfOrigin,
-        "category"                 -> o.category,
-        "assessments"              -> o.assessments,
-        "supplementaryUnit"        -> o.supplementaryUnit,
-        "measurementUnit"          -> o.measurementUnit,
-        "comcodeEffectiveFromDate" -> o.comcodeEffectiveFromDate,
-        "comcodeEffectiveToDate"   -> o.comcodeEffectiveToDate,
-        "version"                  -> o.version,
-        "active"                   -> o.active,
-        "toReview"                 -> o.toReview,
-        "reviewReason"             -> o.reviewReason,
-        "declarable"               -> o.declarable,
-        "ukimsNumber"              -> o.ukimsNumber,
-        "nirmsNumber"              -> o.nirmsNumber,
-        "niphlNumber"              -> o.niphlNumber,
-        "createdDateTime"          -> o.createdDateTime,
-        "updatedDateTime"          -> o.updatedDateTime
-      )
 
-    override def reads(json: JsValue): JsResult[CreateRecordResponse] = for {
-      recordId                 <- (json \ "recordId").validate[String]
-      eori                     <- (json \ "eori").validate[String]
-      actorId                  <- (json \ "actorId").validate[String]
-      traderRef                <- (json \ "traderRef").validate[String]
-      comcode                  <- (json \ "comcode").validate[String]
-      accreditationStatus      <- (json \ "accreditationStatus").validate[String]
-      goodsDescription         <- (json \ "goodsDescription").validate[String]
-      countryOfOrigin          <- (json \ "countryOfOrigin").validate[String]
-      category                 <- (json \ "category").validate[Int]
-      assessments              <- (json \ "assessments").validate[Seq[Assessment]]
-      supplementaryUnit        <- (json \ "supplementaryUnit").validate[Int]
-      measurementUnit          <- (json \ "measurementUnit").validate[String]
-      comcodeEffectiveFromDate <- (json \ "comcodeEffectiveFromDate").validate[Instant]
-      comcodeEffectiveToDate   <- (json \ "comcodeEffectiveToDate").validate[Instant]
-      version                  <- (json \ "version").validate[Int]
-      active                   <- (json \ "active").validate[Boolean]
-      toReview                 <- (json \ "toReview").validate[Boolean]
-      reviewReason             <- (json \ "reviewReason").validateOpt[String]
-      declarable               <- (json \ "declarable").validate[String]
-      ukimsNumber              <- (json \ "ukimsNumber").validate[String]
-      nirmsNumber              <- (json \ "nirmsNumber").validate[String]
-      niphlNumber              <- (json \ "niphlNumber").validate[String]
-      createdDateTime          <- (json \ "createdDateTime").validate[Instant]
-      updatedDateTime          <- (json \ "updatedDateTime").validate[Instant]
-    } yield CreateRecordResponse(
-      recordId,
-      eori,
-      actorId,
-      traderRef,
-      comcode,
-      accreditationStatus,
-      goodsDescription,
-      countryOfOrigin,
-      category,
-      assessments,
-      supplementaryUnit,
-      measurementUnit,
-      comcodeEffectiveFromDate,
-      comcodeEffectiveToDate,
-      version,
-      active,
-      toReview,
-      reviewReason,
-      declarable,
-      ukimsNumber,
-      nirmsNumber,
-      niphlNumber,
-      createdDateTime,
-      updatedDateTime
+  implicit val createRecordResponseReads: Reads[CreateRecordResponse] = (json: JsValue) =>
+    JsSuccess(
+      CreateRecordResponse(
+        (json \ "eori").as[String],
+        (json \ "actorId").as[String],
+        (json \ "recordId").as[String],
+        (json \ "traderRef").as[String],
+        (json \ "comcode").as[String],
+        (json \ "accreditationStatus").as[String],
+        (json \ "goodsDescription").as[String],
+        (json \ "countryOfOrigin").as[String],
+        (json \ "category").as[Int],
+        (json \ "assessments").asOpt[Seq[Assessment]],
+        (json \ "supplementaryUnit").asOpt[Int],
+        (json \ "measurementUnit").asOpt[String],
+        (json \ "comcodeEffectiveFromDate").as[Instant],
+        (json \ "comcodeEffectiveToDate").asOpt[Instant],
+        (json \ "version").as[Int],
+        (json \ "active").as[Boolean],
+        (json \ "toReview").as[Boolean],
+        (json \ "reviewReason").asOpt[String],
+        (json \ "declarable").as[String],
+        (json \ "ukimsNumber").as[String],
+        (json \ "nirmsNumber").as[String],
+        (json \ "niphlNumber").as[String],
+        (json \ "locked").as[Boolean],
+        (json \ "srcSystemName").as[String],
+        (json \ "createdDateTime").as[Instant],
+        (json \ "updatedDateTime").as[Instant]
+      )
     )
-  }
+
+  implicit val createRecordResponseWrites: Writes[CreateRecordResponse] =
+    (createRecordResponse: CreateRecordResponse) =>
+      Json.obj(
+        "eori"                     -> createRecordResponse.eori,
+        "actorId"                  -> createRecordResponse.actorId,
+        "recordId"                 -> createRecordResponse.recordId,
+        "traderRef"                -> createRecordResponse.traderRef,
+        "comcode"                  -> createRecordResponse.comcode,
+        "accreditationStatus"      -> createRecordResponse.accreditationStatus,
+        "goodsDescription"         -> createRecordResponse.goodsDescription,
+        "countryOfOrigin"          -> createRecordResponse.countryOfOrigin,
+        "category"                 -> createRecordResponse.category,
+        "assessments"              -> createRecordResponse.assessments,
+        "supplementaryUnit"        -> createRecordResponse.supplementaryUnit,
+        "measurementUnit"          -> createRecordResponse.measurementUnit,
+        "comcodeEffectiveFromDate" -> createRecordResponse.comcodeEffectiveFromDate,
+        "comcodeEffectiveToDate"   -> createRecordResponse.comcodeEffectiveToDate,
+        "version"                  -> createRecordResponse.version,
+        "active"                   -> createRecordResponse.active,
+        "toReview"                 -> createRecordResponse.toReview,
+        "reviewReason"             -> createRecordResponse.reviewReason,
+        "declarable"               -> createRecordResponse.declarable,
+        "ukimsNumber"              -> createRecordResponse.ukimsNumber,
+        "nirmsNumber"              -> createRecordResponse.nirmsNumber,
+        "niphlNumber"              -> createRecordResponse.niphlNumber,
+        "locked"                   -> createRecordResponse.locked,
+        "srcSystemName"            -> createRecordResponse.srcSystemName,
+        "createdDateTime"          -> createRecordResponse.createdDateTime,
+        "updatedDateTime"          -> createRecordResponse.updatedDateTime
+      )
 }
