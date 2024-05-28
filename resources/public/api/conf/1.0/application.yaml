@@ -215,19 +215,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BadRequestError'
-              example:
-                correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
-                code: BAD_REQUEST
-                message: Bad request
-                errors:
-                  - code: INVALID_HEADER
-                    message: Accept was missing from Header or wrong format
-                    errorNumber: 4
-                  - code: INVALID_REQUEST_PARAMETER
-                    message: >-
-                      Mandatory field goodsDescription was missing from body or
-                      is in the wrong format
-                    errorNumber: 12
+              examples:
+                invalidHeader:
+                  value:
+                    correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
+                    code: BAD_REQUEST
+                    message: Bad request
+                    errors:
+                      - code: INVALID_HEADER
+                        message: Accept was missing from Header or wrong format
+                        errorNumber: 4
+                invalidRequestParam:
+                  value:
+                    correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
+                    code: BAD_REQUEST
+                    message: Bad request
+                    errors:
+                      - code: INVALID_REQUEST_PARAMETER
+                        message: >-
+                          Mandatory field goodsDescription was missing from body or
+                          is in the wrong format
+                        errorNumber: 12
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -305,19 +313,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BadRequestError'
-              example:
-                correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
-                code: BAD_REQUEST
-                message: Bad request
-                errors:
-                  - code: INVALID_HEADER
-                    message: Accept was missing from Header or wrong format
-                    errorNumber: 4
-                  - code: INVALID_REQUEST_PARAMETER
-                    message: >-
-                      Mandatory field requestorEmail was missing from body or is
-                      in the wrong format
-                    errorNumber: 1009
+              examples:
+                invalidHeader:
+                  value:
+                    correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
+                    code: BAD_REQUEST
+                    message: Bad request
+                    errors:
+                      - code: INVALID_HEADER
+                        message: Accept was missing from Header or wrong format
+                        errorNumber: 4
+                invalidRequestParam:
+                  value:
+                    correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
+                    code: BAD_REQUEST
+                    message: Bad request
+                    errors:
+                      - code: INVALID_REQUEST_PARAMETER
+                        message: >-
+                          Mandatory field requestorEmail was missing from body or is
+                          in the wrong format
+                        errorNumber: 1009
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -361,17 +377,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BadRequestError'
-              example:
-                correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
-                code: BAD_REQUEST
-                message: Bad request
-                errors:
-                  - code: INVALID_HEADER
-                    message: Accept was missing from Header or wrong format
-                    errorNumber: 4
-                  - code: INVALID_REQUEST_PARAMETER
-                    message: Optional field nirmsNumber is in the wrong format
-                    errorNumber: 34
+              examples:
+                invalidHeader:
+                  value:
+                    correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
+                    code: BAD_REQUEST
+                    message: Bad request
+                    errors:
+                      - code: INVALID_HEADER
+                        message: Accept was missing from Header or wrong format
+                        errorNumber: 4
+                invalidRequestParam:
+                  value:
+                    correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
+                    code: BAD_REQUEST
+                    message: Bad request
+                    errors:
+                      - code: INVALID_REQUEST_PARAMETER
+                        message: Optional field nirmsNumber is in the wrong format
+                        errorNumber: 34
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
