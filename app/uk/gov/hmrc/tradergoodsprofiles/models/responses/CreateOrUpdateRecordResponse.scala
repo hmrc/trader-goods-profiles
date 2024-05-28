@@ -18,6 +18,7 @@ package uk.gov.hmrc.tradergoodsprofiles.models.response
 
 import play.api.libs.json._
 import uk.gov.hmrc.tradergoodsprofiles.models.Assessment
+import uk.gov.hmrc.tradergoodsprofiles.utils.ResponseModelSupport.removeNulls
 
 import java.time.Instant
 
@@ -110,12 +111,4 @@ object CreateOrUpdateRecordResponse {
           "updatedDateTime"          -> createRecordResponse.updatedDateTime
         )
       )
-
-  private def removeNulls(jsObject: JsObject): JsValue =
-    JsObject(jsObject.fields.collect {
-      case (s, j: JsObject)            =>
-        (s, removeNulls(j))
-      case other if other._2 != JsNull =>
-        other
-    })
 }

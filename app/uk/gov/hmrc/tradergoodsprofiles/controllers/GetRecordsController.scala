@@ -63,17 +63,17 @@ class GetRecordsController @Inject() (
       } yield Ok(Json.toJson(record))).merge
     }
 
-  private def validateQueryParameterLastUpdatedDate(lastUpdatedDate: Option[String]): EitherT[Future, Result, Instant] =
-    if (lastUpdatedDate.nonEmpty)
-      EitherT.fromEither[Future](
-        Try(Instant.parse(lastUpdatedDate.get)).toEither.left.map { _ =>
-          BadRequestErrorsResponse(
-            uuidService.uuid,
-            Some(Seq(Error(InvalidRequestParameter, InvalidLastUpdatedDate, InvalidLastUpdatedDateCode)))
-          ).toResult
-        }
-      )
-    else EitherT.fromEither(Right(Instant.now()))
+  private def validateQueryParameterLastUpdatedDate(
+    lastUpdatedDate: Option[String]
+  ): EitherT[Future, Result, Option[Instant]] =
+    EitherT.fromEither[Future](
+      Try(lastUpdatedDate.map(Instant.parse)).toEither.left.map { _ =>
+        BadRequestErrorsResponse(
+          uuidService.uuid,
+          Some(Seq(Error(InvalidRequestParameter, InvalidLastUpdatedDate, InvalidLastUpdatedDateCode)))
+        ).toResult
+      }
+    )
 
   private def validateRecordId(recordId: String): EitherT[Future, Result, String] =
     EitherT.fromEither[Future](

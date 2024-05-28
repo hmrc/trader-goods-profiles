@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.models.response
 
-import play.api.libs.json.{JsError, JsNull, JsObject, JsPath, JsResult, JsSuccess, JsValue, Json, JsonValidationError, OFormat, Reads}
+import play.api.libs.json._
 import uk.gov.hmrc.tradergoodsprofiles.models.Assessment
+import uk.gov.hmrc.tradergoodsprofiles.utils.ResponseModelSupport.removeNulls
 
 import java.time.Instant
 
@@ -83,14 +84,6 @@ object GetRecordResponse {
       )
       removeNulls(JsObject(fields))
     }
-
-    private def removeNulls(jsObject: JsObject): JsObject =
-      JsObject(jsObject.fields.collect {
-        case (s, j: JsObject)            =>
-          (s, removeNulls(j))
-        case other if other._2 != JsNull =>
-          other
-      })
 
     override def reads(json: JsValue): JsResult[GetRecordResponse] = {
 
