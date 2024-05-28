@@ -35,13 +35,15 @@ trait RouterUpdateRecordRequestSupport {
     assessments: Option[Seq[Assessment]] = Some(
       Seq(
         Assessment(
-          "a06846e9a5f61fa4ecf2c4e3b23631fc",
-          1,
-          Condition(
-            "certificate",
-            "Y923",
-            "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
-            "Excluded product"
+          Some("a06846e9a5f61fa4ecf2c4e3b23631fc"),
+          Some(1),
+          Some(
+            Condition(
+              Some("certificate"),
+              Some("Y923"),
+              Some("Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law"),
+              Some("Excluded product")
+            )
           )
         )
       )

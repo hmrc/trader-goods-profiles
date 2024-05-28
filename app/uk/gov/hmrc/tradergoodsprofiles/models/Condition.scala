@@ -16,15 +16,15 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.models
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{Format, Json}
 
 case class Condition(
-  `type`: String,
-  conditionId: String,
-  conditionDescription: String,
-  conditionTraderText: String
+  `type`: Option[String],
+  conditionId: Option[String],
+  conditionDescription: Option[String],
+  conditionTraderText: Option[String]
 )
 
 object Condition {
-  implicit val format: OFormat[Condition] = Json.format[Condition]
+  implicit val format: Format[Condition] = Json.format[Condition]
 }

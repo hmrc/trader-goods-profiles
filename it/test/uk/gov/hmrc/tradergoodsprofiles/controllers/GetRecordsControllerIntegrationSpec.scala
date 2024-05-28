@@ -62,11 +62,13 @@ class GetRecordsControllerIntegrationSpec
   private val correlationId           = "d677693e-9981-4ee3-8574-654981ebe606"
 
   private val getSingleRecordUrl               = s"http://localhost:$port/$eoriNumber/records/$recordId"
-  private val getMultipleRecordsUrl            = s"http://localhost:$port/$eoriNumber"
+  private val getMultipleRecordsUrl            = s"http://localhost:$port/$eoriNumber/records"
   private val getSingleRecordRouterUrl         = s"/trader-goods-profiles-router/$eoriNumber/records/$recordId"
   private val getMultipleRecordsRouterUrl      = s"/trader-goods-profiles-router/$eoriNumber"
   private val getSingleRecordRouterResponse    = Json.toJson(createGetRecordResponse(eoriNumber, recordId, timestamp))
-  private val getMultipleRecordsRouterResponse = Json.toJson(createGetRecordsResponse(eoriNumber, recordId, timestamp))
+  private val getMultipleRecordsRouterResponse = Json.toJson(createGetRecordsResponse(eoriNumber))
+  private val getMultipleRecordsCallerResponse =
+    Json.toJson(createGetRecordsCallerResponse(eoriNumber))
 
   override lazy val app: Application = {
     wireMock.start()
@@ -363,7 +365,7 @@ class GetRecordsControllerIntegrationSpec
 
       val result = getRecordsAndWait()
 
-      result.json mustBe getMultipleRecordsRouterResponse
+      result.json mustBe getMultipleRecordsCallerResponse
 
       withClue("should add the right headers") {
         verify(
@@ -390,7 +392,7 @@ class GetRecordsControllerIntegrationSpec
       val result =
         await(
           wsClient
-            .url(s"http://localhost:$port/$eoriNumber?page=1&size=1")
+            .url(s"http://localhost:$port/$eoriNumber/records?page=1&size=1")
             .withHttpHeaders(
               "X-Client-ID"  -> "clientId",
               "Accept"       -> "application/vnd.hmrc.1.0+json",
@@ -417,7 +419,9 @@ class GetRecordsControllerIntegrationSpec
       val result =
         await(
           wsClient
-            .url(s"http://localhost:$port/$eoriNumber?lastUpdatedDate=2024-06-08T12:12:12.456789Z&page=1&size=1")
+            .url(
+              s"http://localhost:$port/$eoriNumber/records?lastUpdatedDate=2024-06-08T12:12:12.456789Z&page=1&size=1"
+            )
             .withHttpHeaders(
               "X-Client-ID"  -> "clientId",
               "Accept"       -> "application/vnd.hmrc.1.0+json",
@@ -427,7 +431,7 @@ class GetRecordsControllerIntegrationSpec
         )
 
       result.status mustBe OK
-      result.json mustBe getMultipleRecordsRouterResponse
+      result.json mustBe getMultipleRecordsCallerResponse
 
       withClue("should add the right headers") {
         verify(
@@ -525,7 +529,7 @@ class GetRecordsControllerIntegrationSpec
     "return forbidden if identifier is not authorised" in {
       withAuthorizedTrader()
 
-      val result = getRecordsAndWait(s"http://localhost:$port/wrongEoriNumber")
+      val result = getRecordsAndWait(s"http://localhost:$port/wrongEoriNumber/records")
 
       result.status mustBe FORBIDDEN
       result.json mustBe createExpectedJson(
@@ -588,7 +592,7 @@ class GetRecordsControllerIntegrationSpec
       result.status mustBe INTERNAL_SERVER_ERROR
       result.json mustBe createExpectedJson(
         "INTERNAL_SERVER_ERROR",
-        s"Internal server error for /$eoriNumber with error: runtime exception"
+        s"Internal server error for /$eoriNumber/records with error: runtime exception"
       )
     }
 
@@ -609,7 +613,7 @@ class GetRecordsControllerIntegrationSpec
 
     "return an error if json cannot be deserialized to the router message" in {
       withAuthorizedTrader()
-      stubRouterRequestGetRecords(200, "{}")
+      stubRouterRequestGetRecords(200, "{test}")
 
       val result = getRecordsAndWait()
 
@@ -617,7 +621,7 @@ class GetRecordsControllerIntegrationSpec
       result.json mustBe Json.obj(
         "correlationId" -> correlationId,
         "code"          -> "INTERNAL_SERVER_ERROR",
-        "message"       -> s"Response body could not be read as type ${typeOf[GetRecordsResponse]}"
+        "message"       -> s"Response body could not be parsed as JSON, body: {test}"
       )
     }
 
