@@ -29,10 +29,11 @@ import play.api.mvc.Result
 import play.api.mvc.Results.InternalServerError
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{APICreateRecordRequestSupport, RouterCreateRecordRequestSupport}
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.{CreateRecordResponseSupport, GetRecordResponseSupport}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{APICreateRecordRequestSupport, RouterCreateRecordRequestSupport, UpdateRecordRequestSupport}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.{CreateOrUpdateRecordResponseSupport, GetRecordResponseSupport}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.RouterError
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.RouterCreateRecordRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.router
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterCreateRecordRequest, RouterUpdateRecordRequest}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
 
 import java.time.Instant
@@ -42,9 +43,10 @@ import scala.reflect.runtime.universe.typeOf
 class RouterServiceSpec
     extends PlaySpec
     with GetRecordResponseSupport
-    with CreateRecordResponseSupport
+    with CreateOrUpdateRecordResponseSupport
     with APICreateRecordRequestSupport
     with RouterCreateRecordRequestSupport
+    with UpdateRecordRequestSupport
     with ScalaFutures
     with EitherValues
     with IntegrationPatience
@@ -55,7 +57,7 @@ class RouterServiceSpec
 
   private val connector      = mock[RouterConnector]
   private val recordResponse = createGetRecordResponse("GB123456789012", "recordId", Instant.now)
-  private val createResponse = createCreateRecordResponse("recordId", "GB123456789012", Instant.now)
+  private val createResponse = createCreateOrUpdateRecordResponse("recordId", "GB123456789012", Instant.now)
   private val uuidService    = mock[UuidService]
   private val correlationId  = "d677693e-9981-4ee3-8574-654981ebe606"
 
@@ -173,7 +175,7 @@ class RouterServiceSpec
       val result = sut.createRecord("GB123456789012", createRequest)
 
       whenReady(result.value) { _ =>
-        verify(connector).post(eqTo(RouterCreateRecordRequest("GB123456789012", createRequest)))(any)
+        verify(connector).post(eqTo(router.RouterCreateRecordRequest("GB123456789012", createRequest)))(any)
       }
     }
 
@@ -323,6 +325,117 @@ class RouterServiceSpec
               .thenReturn(Future.successful(createHttpResponse(status, code)))
 
             val result = sut.removeRecord("eori", "recordId", "actorId")
+
+            whenReady(result.value) {
+              _.left.value.header.status mustBe expectedResult
+            }
+          }
+      }
+    }
+  }
+
+  "updateRecord" should {
+    "update a record" in {
+      val updateRequest = createUpdateRecordRequest()
+
+      when(connector.put(any)(any))
+        .thenReturn(Future.successful(HttpResponse(200, Json.toJson(createResponse), Map.empty)))
+
+      val result = sut.updateRecord("GB123456789012", "d677693e-9981-4ee3-8574-654981ebe606", updateRequest)
+
+      whenReady(result.value) { _ =>
+        verify(connector).put(
+          eqTo(RouterUpdateRecordRequest("GB123456789012", "d677693e-9981-4ee3-8574-654981ebe606", updateRequest))
+        )(any)
+      }
+    }
+
+    "return CreateOrUpdateRecordResponse" in {
+      val updateRequest = createUpdateRecordRequest()
+
+      when(connector.put(any)(any))
+        .thenReturn(Future.successful(HttpResponse(200, Json.toJson(createResponse), Map.empty)))
+
+      val result = sut.updateRecord("GB123456789012", "d677693e-9981-4ee3-8574-654981ebe606", updateRequest)
+
+      whenReady(result.value)(_.value mustBe createResponse)
+    }
+
+    "return an error" when {
+      "cannot parse the response" in {
+        val updateRequest = createUpdateRecordRequest()
+
+        when(connector.put(any)(any))
+          .thenReturn(Future.successful(HttpResponse(200, Json.obj(), Map.empty)))
+
+        val result = sut.updateRecord("GB123456789012", "d677693e-9981-4ee3-8574-654981ebe606", updateRequest)
+
+        whenReady(result.value) {
+          _.left.value mustBe InternalServerError(
+            Json.obj(
+              "correlationId" -> correlationId,
+              "code"          -> "INTERNAL_SERVER_ERROR",
+              "message"       -> s"Could not update record due to an internal error"
+            )
+          )
+        }
+      }
+
+      "cannot parse the response as Json" in {
+        val updateRequest = createUpdateRecordRequest()
+
+        when(connector.put(any)(any))
+          .thenReturn(Future.successful(HttpResponse(200, "error")))
+
+        val result = sut.updateRecord("GB123456789012", "d677693e-9981-4ee3-8574-654981ebe606", updateRequest)
+
+        whenReady(result.value) {
+          _.left.value mustBe createInternalServerErrorResult(
+            s"Response body could not be parsed as JSON, body: error"
+          )
+        }
+      }
+
+      "routerConnector return an exception" in {
+        val updateRequest = createUpdateRecordRequest()
+
+        when(connector.put(any)(any))
+          .thenReturn(Future.failed(new RuntimeException("error")))
+
+        val result = sut.updateRecord("GB123456789012", "d677693e-9981-4ee3-8574-654981ebe606", updateRequest)
+
+        whenReady(result.value) {
+          _.left.value mustBe InternalServerError(
+            Json.obj(
+              "correlationId" -> correlationId,
+              "code"          -> "INTERNAL_SERVER_ERROR",
+              "message"       -> s"Could not update record due to an internal error"
+            )
+          )
+        }
+      }
+
+      val table = Table(
+        ("description", "status", "expectedResult", "code"),
+        ("return bad request", 400, 400, "BAD_REQUEST"),
+        ("return Forbidden", 403, 403, "FORBIDDEN"),
+        ("return Not Found", 404, 404, "NOT_FOUND")
+      )
+
+      forAll(table) {
+        (
+          description: String,
+          status: Int,
+          expectedResult: Int,
+          code: String
+        ) =>
+          s"$description" in {
+            val updateRequest = createUpdateRecordRequest()
+
+            when(connector.put(any)(any))
+              .thenReturn(Future.successful(createHttpResponse(status, code)))
+
+            val result = sut.updateRecord("GB123456789012", "d677693e-9981-4ee3-8574-654981ebe606", updateRequest)
 
             whenReady(result.value) {
               _.left.value.header.status mustBe expectedResult

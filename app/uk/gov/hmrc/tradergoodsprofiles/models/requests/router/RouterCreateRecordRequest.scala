@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.tradergoodsprofiles.models.requests
+package uk.gov.hmrc.tradergoodsprofiles.models.requests.router
 
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.tradergoodsprofiles.models.Assessment
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.APICreateRecordRequest
 
 import java.time.Instant
 

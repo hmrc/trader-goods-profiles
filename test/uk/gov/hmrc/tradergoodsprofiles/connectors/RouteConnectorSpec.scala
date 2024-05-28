@@ -33,7 +33,7 @@ import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.{AppConfig, Constants}
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.RouterCreateRecordRequestSupport
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{RouterCreateRecordRequestSupport, RouterUpdateRecordRequestSupport}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -42,7 +42,8 @@ class RouteConnectorSpec
     with ScalaFutures
     with EitherValues
     with BeforeAndAfterEach
-    with RouterCreateRecordRequestSupport {
+    with RouterCreateRecordRequestSupport
+    with RouterUpdateRecordRequestSupport {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
   implicit val hc: HeaderCarrier    = HeaderCarrier(otherHeaders = Seq(Constants.XClientIdHeader -> "clientId"))
@@ -218,6 +219,45 @@ class RouteConnectorSpec
 
       withClue("process the response within a timer") {
         verify(metricsRegistry).timer(eqTo("tgp.removerecord.connector-timer"))
+        verify(timerContext).stop()
+      }
+    }
+  }
+
+  "update" should {
+
+    "return 200" in {
+      val updateRecordRequest = createRouterUpdateRecordRequest()
+
+      when(httpClient.put(any)(any)).thenReturn(requestBuilder)
+      when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
+      when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(200, "message")))
+
+      val result = await(sut.put(updateRecordRequest))
+
+      result.status mustBe OK
+    }
+
+    "send a PUT request with the right url and body" in {
+      val updateRecordRequest = createRouterUpdateRecordRequest()
+
+      when(httpClient.put(any)(any)).thenReturn(requestBuilder)
+      when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
+      when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(200, "message")))
+
+      await(sut.put(updateRecordRequest))
+
+      val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/records")
+      verify(httpClient).put(eqTo(url"$expectedUrl"))(any)
+      verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+      verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
+      verify(requestBuilder).withBody(eqTo(Json.toJson(updateRecordRequest)))(any, any, any)
+      verify(requestBuilder).execute(any, any)
+
+      withClue("process the response within a timer") {
+        verify(metricsRegistry).timer(eqTo("tgp.updaterecord.connector-timer"))
         verify(timerContext).stop()
       }
     }

@@ -41,7 +41,7 @@ trait BaseConnector {
     s"$uri"
   }
 
-  def routerCreateRoute(): UrlPath =
+  def routerCreateOrUpdateRoute(): UrlPath =
     UrlPath.parse(
       s"$routerBaseRoute/records"
     )

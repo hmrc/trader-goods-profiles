@@ -26,8 +26,9 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.HttpReads.is2xx
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{RouterError, ServerErrorResponse}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.{APICreateRecordRequest, RouterCreateRecordRequest}
-import uk.gov.hmrc.tradergoodsprofiles.models.response.{CreateRecordResponse, GetRecordResponse, GetRecordsResponse}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterCreateRecordRequest, RouterUpdateRecordRequest}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.{APICreateRecordRequest, UpdateRecordRequest, router}
+import uk.gov.hmrc.tradergoodsprofiles.models.response.{CreateOrUpdateRecordResponse, GetRecordResponse, GetRecordsResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.runtime.universe.{TypeTag, typeOf}
@@ -40,7 +41,11 @@ trait RouterService {
 
   def createRecord(eori: String, createRequest: APICreateRecordRequest)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Result, CreateRecordResponse]
+  ): EitherT[Future, Result, CreateOrUpdateRecordResponse]
+
+  def updateRecord(eori: String, recordId: String, updateRequest: UpdateRecordRequest)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Result, CreateOrUpdateRecordResponse]
 
   def removeRecord(eori: String, recordId: String, actorId: String)(implicit
     hc: HeaderCarrier
@@ -135,15 +140,15 @@ class RouterServiceImpl @Inject() (
 
   def createRecord(eori: String, createRequest: APICreateRecordRequest)(implicit
     hc: HeaderCarrier
-  ): EitherT[Future, Result, CreateRecordResponse] = {
-    val routerCreateRecordRequest = RouterCreateRecordRequest(eori, createRequest)
+  ): EitherT[Future, Result, CreateOrUpdateRecordResponse] = {
+    val routerCreateRecordRequest = router.RouterCreateRecordRequest(eori, createRequest)
     EitherT(
       routerConnector
         .post(routerCreateRecordRequest)
         .map { httpResponse =>
           httpResponse.status match {
             case status if is2xx(status) =>
-              jsonAs[CreateRecordResponse](httpResponse.body)
+              jsonAs[CreateOrUpdateRecordResponse](httpResponse.body)
             case _                       =>
               Left(handleError(httpResponse.body, httpResponse.status))
           }
@@ -155,6 +160,33 @@ class RouterServiceImpl @Inject() (
           )
           Left(
             ServerErrorResponse(uuidService.uuid, "Could not create record due to an internal error").toResult
+          )
+        }
+    )
+  }
+
+  def updateRecord(eori: String, recordId: String, updateRequest: UpdateRecordRequest)(implicit
+    hc: HeaderCarrier
+  ): EitherT[Future, Result, CreateOrUpdateRecordResponse] = {
+    val routerUpdateRecordRequest = RouterUpdateRecordRequest(eori, recordId, updateRequest)
+    EitherT(
+      routerConnector
+        .put(routerUpdateRecordRequest)
+        .map { httpResponse =>
+          httpResponse.status match {
+            case status if is2xx(status) =>
+              jsonAs[CreateOrUpdateRecordResponse](httpResponse.body)
+            case _                       =>
+              Left(handleError(httpResponse.body, httpResponse.status))
+          }
+        }
+        .recover { case ex: Throwable =>
+          logger.error(
+            s"[RouterServiceImpl] - Exception when updating record for eori number $eori with message ${ex.getMessage}",
+            ex
+          )
+          Left(
+            ServerErrorResponse(uuidService.uuid, "Could not update record due to an internal error").toResult
           )
         }
     )

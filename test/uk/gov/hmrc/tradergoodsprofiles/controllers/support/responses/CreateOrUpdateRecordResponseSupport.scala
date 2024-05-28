@@ -16,18 +16,18 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses
 
-import uk.gov.hmrc.tradergoodsprofiles.models.response.CreateRecordResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.response.CreateOrUpdateRecordResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.{Assessment, Condition}
 
 import java.time.Instant
 
-trait CreateRecordResponseSupport {
+trait CreateOrUpdateRecordResponseSupport {
 
-  def createCreateRecordResponse(
+  def createCreateOrUpdateRecordResponse(
     recordId: String,
     eori: String,
     timestamp: Instant
-  ): CreateRecordResponse = {
+  ): CreateOrUpdateRecordResponse = {
     val condition  = Condition(
       "certificate",
       "Y923",
@@ -35,7 +35,7 @@ trait CreateRecordResponseSupport {
       "Excluded product"
     )
     val assessment = Assessment("a06846e9a5f61fa4ecf2c4e3b23631fc", 1, condition)
-    CreateRecordResponse(
+    CreateOrUpdateRecordResponse(
       recordId = recordId,
       eori = eori,
       actorId = "GB987654321098",
@@ -55,11 +55,9 @@ trait CreateRecordResponseSupport {
       toReview = false,
       reviewReason = Some("Commodity code changed"),
       declarable = "IMMI declarable",
-      ukimsNumber = "XIUKIM47699357400020231115081800",
-      nirmsNumber = "RMS-GB-123456",
-      niphlNumber = "6 S12345",
-      locked = false,
-      srcSystemName = "TGPS",
+      ukimsNumber = Some("XIUKIM47699357400020231115081800"),
+      nirmsNumber = Some("RMS-GB-123456"),
+      niphlNumber = Some("6 S12345"),
       createdDateTime = timestamp,
       updatedDateTime = timestamp
     )

@@ -21,10 +21,10 @@ import uk.gov.hmrc.tradergoodsprofiles.models.Assessment
 
 import java.time.Instant
 
-case class CreateRecordResponse(
+case class CreateOrUpdateRecordResponse(
+  recordId: String,
   eori: String,
   actorId: String,
-  recordId: String,
   traderRef: String,
   comcode: String,
   accreditationStatus: String,
@@ -41,23 +41,21 @@ case class CreateRecordResponse(
   toReview: Boolean,
   reviewReason: Option[String],
   declarable: String,
-  ukimsNumber: String,
-  nirmsNumber: String,
-  niphlNumber: String,
-  locked: Boolean,
-  srcSystemName: String,
+  ukimsNumber: Option[String],
+  nirmsNumber: Option[String],
+  niphlNumber: Option[String],
   createdDateTime: Instant,
   updatedDateTime: Instant
 )
 
-object CreateRecordResponse {
+object CreateOrUpdateRecordResponse {
 
-  implicit val createRecordResponseReads: Reads[CreateRecordResponse] = (json: JsValue) =>
+  implicit val createRecordResponseReads: Reads[CreateOrUpdateRecordResponse] = (json: JsValue) =>
     JsSuccess(
-      CreateRecordResponse(
+      CreateOrUpdateRecordResponse(
+        (json \ "recordId").as[String],
         (json \ "eori").as[String],
         (json \ "actorId").as[String],
-        (json \ "recordId").as[String],
         (json \ "traderRef").as[String],
         (json \ "comcode").as[String],
         (json \ "accreditationStatus").as[String],
@@ -74,18 +72,16 @@ object CreateRecordResponse {
         (json \ "toReview").as[Boolean],
         (json \ "reviewReason").asOpt[String],
         (json \ "declarable").as[String],
-        (json \ "ukimsNumber").as[String],
-        (json \ "nirmsNumber").as[String],
-        (json \ "niphlNumber").as[String],
-        (json \ "locked").as[Boolean],
-        (json \ "srcSystemName").as[String],
+        (json \ "ukimsNumber").asOpt[String],
+        (json \ "nirmsNumber").asOpt[String],
+        (json \ "niphlNumber").asOpt[String],
         (json \ "createdDateTime").as[Instant],
         (json \ "updatedDateTime").as[Instant]
       )
     )
 
-  implicit val createRecordResponseWrites: Writes[CreateRecordResponse] =
-    (createRecordResponse: CreateRecordResponse) =>
+  implicit val createRecordResponseWrites: Writes[CreateOrUpdateRecordResponse] =
+    (createRecordResponse: CreateOrUpdateRecordResponse) =>
       Json.obj(
         "eori"                     -> createRecordResponse.eori,
         "actorId"                  -> createRecordResponse.actorId,
@@ -109,8 +105,6 @@ object CreateRecordResponse {
         "ukimsNumber"              -> createRecordResponse.ukimsNumber,
         "nirmsNumber"              -> createRecordResponse.nirmsNumber,
         "niphlNumber"              -> createRecordResponse.niphlNumber,
-        "locked"                   -> createRecordResponse.locked,
-        "srcSystemName"            -> createRecordResponse.srcSystemName,
         "createdDateTime"          -> createRecordResponse.createdDateTime,
         "updatedDateTime"          -> createRecordResponse.updatedDateTime
       )
