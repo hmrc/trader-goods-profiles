@@ -25,7 +25,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.metrics.MetricsSupport
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.RouterCreateRecordRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterCreateRecordRequest, RouterUpdateRecordRequest}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -69,7 +69,7 @@ class RouterConnector @Inject() (
 
   def post(createRecordRequest: RouterCreateRecordRequest)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.createrecord.connector") { _ =>
-      val url      = appConfig.routerUrl.withPath(routerCreateRoute())
+      val url      = appConfig.routerUrl.withPath(routerCreateOrUpdateRoute())
       val jsonData = Json.toJson(createRecordRequest)
       httpClient
         .post(url"$url")
@@ -88,6 +88,18 @@ class RouterConnector @Inject() (
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
         .withClientId
         .withBody(Json.obj("actorId" -> actorId))
+        .execute[HttpResponse]
+    }
+
+  def put(updateRecordRequest: RouterUpdateRecordRequest)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+    withMetricsTimerAsync("tgp.updaterecord.connector") { _ =>
+      val url      = appConfig.routerUrl.withPath(routerCreateOrUpdateRoute())
+      val jsonData = Json.toJson(updateRecordRequest)
+      httpClient
+        .put(url"$url")
+        .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+        .withBody(jsonData)
+        .withClientId
         .execute[HttpResponse]
     }
 

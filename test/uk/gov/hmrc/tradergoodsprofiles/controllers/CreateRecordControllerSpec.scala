@@ -31,7 +31,7 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.APICreateRecordRequestSupport
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateRecordResponseSupport
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateOrUpdateRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants
 
@@ -42,7 +42,7 @@ import scala.concurrent.ExecutionContext
 class CreateRecordControllerSpec
     extends PlaySpec
     with AuthTestSupport
-    with CreateRecordResponseSupport
+    with CreateOrUpdateRecordResponseSupport
     with APICreateRecordRequestSupport
     with BeforeAndAfterEach {
 
@@ -71,7 +71,7 @@ class CreateRecordControllerSpec
     reset(uuidService, routerService)
     when(uuidService.uuid).thenReturn(correlationId)
     when(routerService.createRecord(any, any)(any))
-      .thenReturn(EitherT.fromEither(Right(createCreateRecordResponse(recordId, eoriNumber, timestamp))))
+      .thenReturn(EitherT.fromEither(Right(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))))
   }
 
   "createRecord" should {
@@ -81,7 +81,7 @@ class CreateRecordControllerSpec
       val result = sut.createRecord(eoriNumber)(request.withBody(Json.toJson(createRequest)))
 
       status(result) mustBe CREATED
-      contentAsJson(result) mustBe Json.toJson(createCreateRecordResponse(recordId, eoriNumber, timestamp))
+      contentAsJson(result) mustBe Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
     }
 
     "return 400 when actorId is missing" in {

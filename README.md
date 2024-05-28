@@ -73,6 +73,10 @@ The Trader Goods Profiles system communicates with the Enterprise Integration Se
 Profiles Router microservice. This microservice facilitates seamless communication between the Trader Goods Profiles
 system and EIS, ensuring efficient data exchange and integration.
 
+### Dev
+
+Before pushing, you can run [verify.sh](./verify.sh) which will run all the tests, as well as check the format.
+
 ### License
 
 This code is open source software licensed under

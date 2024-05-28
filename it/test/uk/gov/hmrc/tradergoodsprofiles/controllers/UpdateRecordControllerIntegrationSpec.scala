@@ -34,7 +34,7 @@ import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.APICreateRecordRequestSupport
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.UpdateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateOrUpdateRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
@@ -43,14 +43,14 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 
-class CreateRecordControllerIntegrationSpec
+class UpdateRecordControllerIntegrationSpec
     extends PlaySpec
     with GuiceOneServerPerSuite
     with HttpClientV2Support
     with AuthTestSupport
     with WireMockServerSpec
     with CreateOrUpdateRecordResponseSupport
-    with APICreateRecordRequestSupport
+    with UpdateRecordRequestSupport
     with BeforeAndAfterEach
     with BeforeAndAfterAll {
 
@@ -62,9 +62,9 @@ class CreateRecordControllerIntegrationSpec
   private val uuidService             = mock[UuidService]
   private val correlationId           = "d677693e-9981-4ee3-8574-654981ebe606"
 
-  private val url              = s"http://localhost:$port/$eoriNumber/records"
+  private val url              = s"http://localhost:$port/$eoriNumber/records/$recordId"
   private val routerUrl        = s"/trader-goods-profiles-router/records"
-  private val requestBody      = Json.toJson(createAPICreateRecordRequest())
+  private val requestBody      = Json.toJson(createUpdateRecordRequest())
   private val expectedResponse = Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
 
   override lazy val app: Application = {
@@ -85,7 +85,7 @@ class CreateRecordControllerIntegrationSpec
     super.beforeEach()
 
     reset(authConnector)
-    stubRouterRequest(CREATED, expectedResponse.toString())
+    stubRouterRequest(OK, expectedResponse.toString())
     when(uuidService.uuid).thenReturn(correlationId)
 
   }
@@ -100,18 +100,18 @@ class CreateRecordControllerIntegrationSpec
     wireMock.stop()
   }
 
-  "CreateRecordController" should {
-    "successfully create a record and return 201" in {
+  "UpdateRecordController" should {
+    "successfully update a record and return 200" in {
       withAuthorizedTrader()
 
-      val result = createRecordAndWait()
+      val result = updateRecordAndWait()
 
-      result.status mustBe CREATED
+      result.status mustBe OK
       result.json mustBe expectedResponse
 
       withClue("should add the right headers") {
         verify(
-          postRequestedFor(urlEqualTo(routerUrl))
+          putRequestedFor(urlEqualTo(routerUrl))
             .withHeader("Content-Type", equalTo("application/json"))
             .withHeader("X-Client-ID", equalTo("clientId"))
         )
@@ -122,7 +122,7 @@ class CreateRecordControllerIntegrationSpec
       withAuthorizedTrader()
       val invalidRequestBody = Json.obj()
 
-      val result = createRecordAndWait(invalidRequestBody)
+      val result = updateRecordAndWait(invalidRequestBody)
 
       result.status mustBe BAD_REQUEST
       result.json mustBe Json.obj(
@@ -130,16 +130,11 @@ class CreateRecordControllerIntegrationSpec
         "code"          -> "BAD_REQUEST",
         "message"       -> "Bad Request",
         "errors"        -> Seq(
-          createBadRequestJson("Mandatory field countryOfOrigin was missing from body or is in the wrong format", 13),
-          createBadRequestJson(
-            "Mandatory field comcodeEffectiveFromDate was missing from body or is in the wrong format",
-            23
-          ),
-          createBadRequestJson("Mandatory field category was missing from body or is in the wrong format", 14),
-          createBadRequestJson("Mandatory field actorId was missing from body or is in the wrong format", 8),
-          createBadRequestJson("Mandatory field goodsDescription was missing from body or is in the wrong format", 12),
-          createBadRequestJson("Mandatory field comcode was missing from body or is in the wrong format", 11),
-          createBadRequestJson("Mandatory field traderRef was missing from body or is in the wrong format", 9)
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Mandatory field actorId was missing from body or is in the wrong format",
+            "errorNumber" -> 8
+          )
         )
       )
 
@@ -148,10 +143,10 @@ class CreateRecordControllerIntegrationSpec
     "return Forbidden when X-Client-ID header is missing" in {
       withAuthorizedTrader()
 
-      val result = createRecordAndWaitWithoutClientIdHeader()
+      val result = updateRecordAndWaitWithoutClientIdHeader()
 
       result.status mustBe BAD_REQUEST
-      result.json mustBe createExpectedError(
+      result.json mustBe updateExpectedError(
         "INVALID_HEADER_PARAMETER",
         "X-Client-ID was missing from Header or is in wrong format",
         6000
@@ -161,10 +156,10 @@ class CreateRecordControllerIntegrationSpec
     "return Forbidden when EORI number is not authorized" in {
       withAuthorizedTrader(enrolment = Enrolment("OTHER-ENROLMENT-KEY"))
 
-      val result = createRecordAndWait()
+      val result = updateRecordAndWait()
 
       result.status mustBe FORBIDDEN
-      result.json mustBe createExpectedJson(
+      result.json mustBe updateExpectedJson(
         "FORBIDDEN",
         "EORI number is incorrect"
       )
@@ -173,10 +168,10 @@ class CreateRecordControllerIntegrationSpec
     "return Forbidden when identifier does not exist" in {
       withUnauthorizedEmptyIdentifier()
 
-      val result = createRecordAndWait()
+      val result = updateRecordAndWait()
 
       result.status mustBe FORBIDDEN
-      result.json mustBe createExpectedJson(
+      result.json mustBe updateExpectedJson(
         "FORBIDDEN",
         "EORI number is incorrect"
       )
@@ -185,10 +180,10 @@ class CreateRecordControllerIntegrationSpec
     "return Unauthorized when invalid enrolment" in {
       withUnauthorizedTrader(InsufficientEnrolments())
 
-      val result = createRecordAndWait()
+      val result = updateRecordAndWait()
 
       result.status mustBe UNAUTHORIZED
-      result.json mustBe createExpectedJson(
+      result.json mustBe updateExpectedJson(
         "UNAUTHORIZED",
         s"The details signed in do not have a Trader Goods Profile"
       )
@@ -197,10 +192,10 @@ class CreateRecordControllerIntegrationSpec
     "return Unauthorized when affinity group is Agent" in {
       authorizeWithAffinityGroup(Some(Agent))
 
-      val result = createRecordAndWait()
+      val result = updateRecordAndWait()
 
       result.status mustBe UNAUTHORIZED
-      result.json mustBe createExpectedJson(
+      result.json mustBe updateExpectedJson(
         "UNAUTHORIZED",
         s"Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'"
       )
@@ -209,10 +204,10 @@ class CreateRecordControllerIntegrationSpec
     "return Unauthorized when affinity group is empty" in {
       authorizeWithAffinityGroup(None)
 
-      val result = createRecordAndWait()
+      val result = updateRecordAndWait()
 
       result.status mustBe UNAUTHORIZED
-      result.json mustBe createExpectedJson(
+      result.json mustBe updateExpectedJson(
         "UNAUTHORIZED",
         "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'"
       )
@@ -221,18 +216,18 @@ class CreateRecordControllerIntegrationSpec
     "return Internal server error if auth throws" in {
       withUnauthorizedTrader(new RuntimeException("runtime exception"))
 
-      val result = createRecordAndWait()
+      val result = updateRecordAndWait()
 
       result.status mustBe INTERNAL_SERVER_ERROR
-      result.json mustBe createExpectedJson(
+      result.json mustBe updateExpectedJson(
         "INTERNAL_SERVER_ERROR",
-        s"Internal server error for /$eoriNumber/records with error: runtime exception"
+        s"Internal server error for /$eoriNumber/records/$recordId with error: runtime exception"
       )
     }
 
   }
 
-  private def createRecordAndWaitWithoutClientIdHeader() =
+  private def updateRecordAndWaitWithoutClientIdHeader() =
     await(
       wsClient
         .url(url)
@@ -240,10 +235,10 @@ class CreateRecordControllerIntegrationSpec
           "Accept"       -> "application/vnd.hmrc.1.0+json",
           "Content-Type" -> "application/json"
         )
-        .post(requestBody)
+        .patch(requestBody)
     )
 
-  private def createRecordAndWait(requestBody: JsValue = requestBody) =
+  private def updateRecordAndWait(requestBody: JsValue = requestBody) =
     await(
       wsClient
         .url(url)
@@ -252,12 +247,12 @@ class CreateRecordControllerIntegrationSpec
           "Accept"       -> "application/vnd.hmrc.1.0+json",
           "Content-Type" -> "application/json"
         )
-        .post(requestBody)
+        .patch(requestBody)
     )
 
   private def stubRouterRequest(status: Int, responseBody: String) =
     wireMock.stubFor(
-      post(urlEqualTo(routerUrl))
+      put(urlEqualTo(routerUrl))
         .willReturn(
           aResponse()
             .withStatus(status)
@@ -265,7 +260,7 @@ class CreateRecordControllerIntegrationSpec
         )
     )
 
-  private def createExpectedError(code: String, message: String, errorNumber: Int): Any =
+  private def updateExpectedError(code: String, message: String, errorNumber: Int): Any =
     Json.obj(
       "correlationId" -> correlationId,
       "code"          -> "BAD_REQUEST",
@@ -279,17 +274,10 @@ class CreateRecordControllerIntegrationSpec
       )
     )
 
-  private def createExpectedJson(code: String, message: String): Any =
+  private def updateExpectedJson(code: String, message: String): Any =
     Json.obj(
       "correlationId" -> correlationId,
       "code"          -> code,
       "message"       -> message
-    )
-
-  private def createBadRequestJson(message: String, errorNumber: Int) =
-    Json.obj(
-      "code"        -> "INVALID_REQUEST_PARAMETER",
-      "message"     -> message,
-      "errorNumber" -> errorNumber
     )
 }

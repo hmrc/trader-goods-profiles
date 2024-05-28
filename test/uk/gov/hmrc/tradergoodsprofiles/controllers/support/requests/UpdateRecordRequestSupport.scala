@@ -16,21 +16,20 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests
 
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterCreateRecordRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.UpdateRecordRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.{Assessment, Condition}
 
 import java.time.Instant
 
-trait RouterCreateRecordRequestSupport {
+trait UpdateRecordRequestSupport {
 
-  def createRouterCreateRecordRequest(
-    eori: String = "GB123456789012",
+  def createUpdateRecordRequest(
     actorId: String = "GB987654321098",
-    traderRef: String = "SKU123456",
-    comcode: String = "123456",
-    goodsDescription: String = "Bananas",
-    countryOfOrigin: String = "GB",
-    category: Int = 2,
+    traderRef: Option[String] = Some("SKU123456"),
+    comcode: Option[String] = Some("123456"),
+    goodsDescription: Option[String] = Some("Bananas"),
+    countryOfOrigin: Option[String] = Some("GB"),
+    category: Option[Int] = Some(2),
     assessments: Option[Seq[Assessment]] = Some(
       Seq(
         Assessment(
@@ -47,11 +46,10 @@ trait RouterCreateRecordRequestSupport {
     ),
     supplementaryUnit: Option[Int] = Some(13),
     measurementUnit: Option[String] = Some("Kilograms"),
-    comcodeEffectiveFromDate: Instant = Instant.parse("2023-01-01T00:00:00Z"),
+    comcodeEffectiveFromDate: Option[Instant] = Some(Instant.parse("2023-01-01T00:00:00Z")),
     comcodeEffectiveToDate: Option[Instant] = Some(Instant.parse("2028-01-01T00:00:00Z"))
-  ): RouterCreateRecordRequest =
-    RouterCreateRecordRequest(
-      eori,
+  ): UpdateRecordRequest =
+    UpdateRecordRequest(
       actorId,
       traderRef,
       comcode,
