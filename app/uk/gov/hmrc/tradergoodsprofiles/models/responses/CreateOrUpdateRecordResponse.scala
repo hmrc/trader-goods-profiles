@@ -82,30 +82,40 @@ object CreateOrUpdateRecordResponse {
 
   implicit val createRecordResponseWrites: Writes[CreateOrUpdateRecordResponse] =
     (createRecordResponse: CreateOrUpdateRecordResponse) =>
-      Json.obj(
-        "eori"                     -> createRecordResponse.eori,
-        "actorId"                  -> createRecordResponse.actorId,
-        "recordId"                 -> createRecordResponse.recordId,
-        "traderRef"                -> createRecordResponse.traderRef,
-        "comcode"                  -> createRecordResponse.comcode,
-        "accreditationStatus"      -> createRecordResponse.accreditationStatus,
-        "goodsDescription"         -> createRecordResponse.goodsDescription,
-        "countryOfOrigin"          -> createRecordResponse.countryOfOrigin,
-        "category"                 -> createRecordResponse.category,
-        "assessments"              -> createRecordResponse.assessments,
-        "supplementaryUnit"        -> createRecordResponse.supplementaryUnit,
-        "measurementUnit"          -> createRecordResponse.measurementUnit,
-        "comcodeEffectiveFromDate" -> createRecordResponse.comcodeEffectiveFromDate,
-        "comcodeEffectiveToDate"   -> createRecordResponse.comcodeEffectiveToDate,
-        "version"                  -> createRecordResponse.version,
-        "active"                   -> createRecordResponse.active,
-        "toReview"                 -> createRecordResponse.toReview,
-        "reviewReason"             -> createRecordResponse.reviewReason,
-        "declarable"               -> createRecordResponse.declarable,
-        "ukimsNumber"              -> createRecordResponse.ukimsNumber,
-        "nirmsNumber"              -> createRecordResponse.nirmsNumber,
-        "niphlNumber"              -> createRecordResponse.niphlNumber,
-        "createdDateTime"          -> createRecordResponse.createdDateTime,
-        "updatedDateTime"          -> createRecordResponse.updatedDateTime
+      removeNulls(
+        Json.obj(
+          "eori"                     -> createRecordResponse.eori,
+          "actorId"                  -> createRecordResponse.actorId,
+          "recordId"                 -> createRecordResponse.recordId,
+          "traderRef"                -> createRecordResponse.traderRef,
+          "comcode"                  -> createRecordResponse.comcode,
+          "accreditationStatus"      -> createRecordResponse.accreditationStatus,
+          "goodsDescription"         -> createRecordResponse.goodsDescription,
+          "countryOfOrigin"          -> createRecordResponse.countryOfOrigin,
+          "category"                 -> createRecordResponse.category,
+          "assessments"              -> createRecordResponse.assessments,
+          "supplementaryUnit"        -> createRecordResponse.supplementaryUnit,
+          "measurementUnit"          -> createRecordResponse.measurementUnit,
+          "comcodeEffectiveFromDate" -> createRecordResponse.comcodeEffectiveFromDate,
+          "comcodeEffectiveToDate"   -> createRecordResponse.comcodeEffectiveToDate,
+          "version"                  -> createRecordResponse.version,
+          "active"                   -> createRecordResponse.active,
+          "toReview"                 -> createRecordResponse.toReview,
+          "reviewReason"             -> createRecordResponse.reviewReason,
+          "declarable"               -> createRecordResponse.declarable,
+          "ukimsNumber"              -> createRecordResponse.ukimsNumber,
+          "nirmsNumber"              -> createRecordResponse.nirmsNumber,
+          "niphlNumber"              -> createRecordResponse.niphlNumber,
+          "createdDateTime"          -> createRecordResponse.createdDateTime,
+          "updatedDateTime"          -> createRecordResponse.updatedDateTime
+        )
       )
+
+  private def removeNulls(jsObject: JsObject): JsValue =
+    JsObject(jsObject.fields.collect {
+      case (s, j: JsObject)            =>
+        (s, removeNulls(j))
+      case other if other._2 != JsNull =>
+        other
+    })
 }

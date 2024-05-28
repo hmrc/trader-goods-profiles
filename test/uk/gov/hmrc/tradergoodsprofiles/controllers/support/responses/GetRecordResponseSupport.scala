@@ -59,7 +59,6 @@ trait GetRecordResponseSupport {
       "RMS-GB-123456",
       "6 S12345",
       false,
-      "TGPS",
       timestamp,
       timestamp
     )

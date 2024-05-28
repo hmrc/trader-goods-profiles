@@ -33,7 +33,7 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{APICreateRe
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.{CreateOrUpdateRecordResponseSupport, GetRecordResponseSupport}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.RouterError
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.router
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterCreateRecordRequest, RouterUpdateRecordRequest}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterUpdateRecordRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
 
 import java.time.Instant
