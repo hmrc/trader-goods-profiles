@@ -28,9 +28,11 @@ import play.api.mvc.Results.InternalServerError
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.GetRecordResponseSupport
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, GetRecordsResponseSupport}
+import uk.gov.hmrc.tradergoodsprofiles.models.response.{GetRecordsResponse, GoodsItemRecords, Pagination}
+import uk.gov.hmrc.tradergoodsprofiles.models.{Assessment, Condition}
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 
 import java.time.Instant
@@ -41,7 +43,6 @@ class GetRecordsControllerSpec
     extends PlaySpec
     with AuthTestSupport
     with GetRecordResponseSupport
-    with GetRecordsResponseSupport
     with BeforeAndAfterEach {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
@@ -184,4 +185,56 @@ class GetRecordsControllerSpec
         )
       )
     )
+
+  def createGetRecordsResponse(
+    eori: String,
+    recordId: String,
+    timestamp: Instant
+  ): GetRecordsResponse = {
+    val condition        = Condition(
+      Some("certificate"),
+      Some("Y923"),
+      Some("Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law"),
+      Some("Excluded product")
+    )
+    val assessment       = Assessment(Some("a06846e9a5f61fa4ecf2c4e3b23631fc"), Some(1), Some(condition))
+    val goodsItemRecords = GoodsItemRecords(
+      eori,
+      "GB123456789012",
+      recordId,
+      "SKU123456",
+      "123456",
+      "Not Requested",
+      "Bananas",
+      "GB",
+      2,
+      Some(Seq(assessment)),
+      Some(13),
+      Some("Kilograms"),
+      timestamp,
+      Some(timestamp),
+      1,
+      true,
+      false,
+      Some("Commodity code changed"),
+      "IMMI declarable",
+      "XIUKIM47699357400020231115081800",
+      "RMS-GB-123456",
+      "6 S12345",
+      false,
+      "TGPS",
+      timestamp,
+      timestamp
+    )
+
+    val pagination = Pagination(
+      1,
+      0,
+      1,
+      None,
+      None
+    )
+
+    GetRecordsResponse(Seq(goodsItemRecords), pagination)
+  }
 }

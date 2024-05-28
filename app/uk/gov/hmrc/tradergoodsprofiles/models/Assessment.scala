@@ -16,14 +16,10 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.models
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{Format, Json}
 
-case class Assessment(
-  assessmentId: String,
-  primaryCategory: Int,
-  condition: Condition
-)
+case class Assessment(assessmentId: Option[String], primaryCategory: Option[Int], condition: Option[Condition])
 
 object Assessment {
-  implicit val format: OFormat[Assessment] = Json.format[Assessment]
+  implicit val format: Format[Assessment] = Json.format[Assessment]
 }
