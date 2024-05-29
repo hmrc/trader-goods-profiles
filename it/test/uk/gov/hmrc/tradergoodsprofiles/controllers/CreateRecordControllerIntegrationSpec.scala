@@ -26,7 +26,7 @@ import play.api.Application
 import play.api.http.Status._
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
@@ -105,6 +105,23 @@ class CreateRecordControllerIntegrationSpec
       withAuthorizedTrader()
 
       val result = createRecordAndWait()
+
+      result.status mustBe CREATED
+      result.json mustBe expectedResponse
+
+      withClue("should add the right headers") {
+        verify(
+          postRequestedFor(urlEqualTo(routerUrl))
+            .withHeader("Content-Type", equalTo("application/json"))
+            .withHeader("X-Client-ID", equalTo("clientId"))
+        )
+      }
+    }
+
+    "successfully create a record without condition and return 201" in {
+      withAuthorizedTrader()
+
+      val result = createRecordWithoutConditionAndWait()
 
       result.status mustBe CREATED
       result.json mustBe expectedResponse
@@ -304,6 +321,26 @@ class CreateRecordControllerIntegrationSpec
         )
         .post(requestBody)
     )
+
+  private def createRecordWithoutConditionAndWait(requestBody: JsValue = requestBody) = {
+    val updatedAssessments = (requestBody \ "assessments").asOpt[JsArray].map { assessments =>
+      JsArray(assessments.value.map { assessment =>
+        assessment.as[JsObject] - "condition"
+      })
+    }
+    requestBody.as[JsObject] ++ Json.obj("assessments" -> updatedAssessments)
+
+    await(
+      wsClient
+        .url(url)
+        .withHttpHeaders(
+          "X-Client-ID"  -> "clientId",
+          "Accept"       -> "application/vnd.hmrc.1.0+json",
+          "Content-Type" -> "application/json"
+        )
+        .post(requestBody)
+    )
+  }
 
   private def stubRouterRequest(status: Int, responseBody: String) =
     wireMock.stubFor(
