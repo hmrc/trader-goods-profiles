@@ -36,7 +36,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.GetRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, GetRecordsResponseSupport}
-import uk.gov.hmrc.tradergoodsprofiles.models.response.{GetRecordResponse, GetRecordsResponse}
+import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
 
@@ -549,6 +549,31 @@ class GetRecordsControllerIntegrationSpec
         "INVALID_HEADER_PARAMETER",
         "Accept was missing from Header or is in wrong format",
         4
+      )
+    }
+
+    "return bad request when lastUpdatedDate query parameter is invalid" in {
+      withAuthorizedTrader()
+
+      val result =
+        await(
+          wsClient
+            .url(
+              s"http://localhost:$port/$eoriNumber/records?lastUpdatedDate=test"
+            )
+            .withHttpHeaders(
+              "X-Client-ID"  -> "clientId",
+              "Accept"       -> "application/vnd.hmrc.1.0+json",
+              "Content-Type" -> "application/json"
+            )
+            .get()
+        )
+
+      result.status mustBe BAD_REQUEST
+      result.json mustBe createExpectedError(
+        "INVALID_REQUEST_PARAMETER",
+        "The URL parameter lastUpdatedDate is in the wrong format",
+        28
       )
     }
 

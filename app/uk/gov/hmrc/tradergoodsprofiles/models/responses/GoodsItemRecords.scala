@@ -18,6 +18,7 @@ package uk.gov.hmrc.tradergoodsprofiles.models.response
 
 import play.api.libs.json._
 import uk.gov.hmrc.tradergoodsprofiles.models.Assessment
+import uk.gov.hmrc.tradergoodsprofiles.utils.ResponseModelSupport.removeNulls
 
 import java.time.Instant
 case class GoodsItemRecords(
@@ -44,7 +45,6 @@ case class GoodsItemRecords(
   nirmsNumber: String,
   niphlNumber: String,
   locked: Boolean,
-  srcSystemName: String,
   createdDateTime: Instant,
   updatedDateTime: Instant
 )
@@ -77,39 +77,39 @@ object GoodsItemRecords {
         (json \ "nirmsNumber").as[String],
         (json \ "niphlNumber").as[String],
         (json \ "locked").as[Boolean],
-        (json \ "srcSystemName").as[String],
         (json \ "createdDateTime").as[Instant],
         (json \ "updatedDateTime").as[Instant]
       )
     )
 
   implicit val goodsItemRecordsWrites: Writes[GoodsItemRecords] = (goodsItemRecords: GoodsItemRecords) =>
-    Json.obj(
-      "eori"                     -> goodsItemRecords.eori,
-      "actorId"                  -> goodsItemRecords.actorId,
-      "recordId"                 -> goodsItemRecords.recordId,
-      "traderRef"                -> goodsItemRecords.traderRef,
-      "comcode"                  -> goodsItemRecords.comcode,
-      "accreditationStatus"      -> goodsItemRecords.accreditationStatus,
-      "goodsDescription"         -> goodsItemRecords.goodsDescription,
-      "countryOfOrigin"          -> goodsItemRecords.countryOfOrigin,
-      "category"                 -> goodsItemRecords.category,
-      "assessments"              -> goodsItemRecords.assessments,
-      "supplementaryUnit"        -> goodsItemRecords.supplementaryUnit,
-      "measurementUnit"          -> goodsItemRecords.measurementUnit,
-      "comcodeEffectiveFromDate" -> goodsItemRecords.comcodeEffectiveFromDate,
-      "comcodeEffectiveToDate"   -> goodsItemRecords.comcodeEffectiveToDate,
-      "version"                  -> goodsItemRecords.version,
-      "active"                   -> goodsItemRecords.active,
-      "toReview"                 -> goodsItemRecords.toReview,
-      "reviewReason"             -> goodsItemRecords.reviewReason,
-      "declarable"               -> goodsItemRecords.declarable,
-      "ukimsNumber"              -> goodsItemRecords.ukimsNumber,
-      "nirmsNumber"              -> goodsItemRecords.nirmsNumber,
-      "niphlNumber"              -> goodsItemRecords.niphlNumber,
-      "locked"                   -> goodsItemRecords.locked,
-      "srcSystemName"            -> goodsItemRecords.srcSystemName,
-      "createdDateTime"          -> goodsItemRecords.createdDateTime,
-      "updatedDateTime"          -> goodsItemRecords.updatedDateTime
+    removeNulls(
+      Json.obj(
+        "eori"                     -> goodsItemRecords.eori,
+        "actorId"                  -> goodsItemRecords.actorId,
+        "recordId"                 -> goodsItemRecords.recordId,
+        "traderRef"                -> goodsItemRecords.traderRef,
+        "comcode"                  -> goodsItemRecords.comcode,
+        "accreditationStatus"      -> goodsItemRecords.accreditationStatus,
+        "goodsDescription"         -> goodsItemRecords.goodsDescription,
+        "countryOfOrigin"          -> goodsItemRecords.countryOfOrigin,
+        "category"                 -> goodsItemRecords.category,
+        "assessments"              -> goodsItemRecords.assessments,
+        "supplementaryUnit"        -> goodsItemRecords.supplementaryUnit,
+        "measurementUnit"          -> goodsItemRecords.measurementUnit,
+        "comcodeEffectiveFromDate" -> goodsItemRecords.comcodeEffectiveFromDate,
+        "comcodeEffectiveToDate"   -> goodsItemRecords.comcodeEffectiveToDate,
+        "version"                  -> goodsItemRecords.version,
+        "active"                   -> goodsItemRecords.active,
+        "toReview"                 -> goodsItemRecords.toReview,
+        "reviewReason"             -> goodsItemRecords.reviewReason,
+        "declarable"               -> goodsItemRecords.declarable,
+        "ukimsNumber"              -> goodsItemRecords.ukimsNumber,
+        "nirmsNumber"              -> goodsItemRecords.nirmsNumber,
+        "niphlNumber"              -> goodsItemRecords.niphlNumber,
+        "locked"                   -> goodsItemRecords.locked,
+        "createdDateTime"          -> goodsItemRecords.createdDateTime,
+        "updatedDateTime"          -> goodsItemRecords.updatedDateTime
+      )
     )
 }

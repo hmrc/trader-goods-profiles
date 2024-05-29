@@ -91,7 +91,6 @@ class GetRecordResponseSpec extends PlaySpec with GetRecordResponseSupport {
       "nirmsNumber"              -> "RMS-GB-123456",
       "niphlNumber"              -> "6 S12345",
       "locked"                   -> false,
-      "srcSystemName"            -> "TGPS",
       "createdDateTime"          -> timestamp,
       "updatedDateTime"          -> timestamp
     )

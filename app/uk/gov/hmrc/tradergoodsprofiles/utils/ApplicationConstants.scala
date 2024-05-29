@@ -44,5 +44,7 @@ object ApplicationConstants {
   val InvalidOrMissingComcodeEffectiveFromDate     =
     "Mandatory field comcodeEffectiveFromDate was missing from body or is in the wrong format"
   val InvalidOrMissingComcodeEffectiveFromDateCode = 23
+  val InvalidLastUpdatedDate                       = "The URL parameter lastUpdatedDate is in the wrong format"
+  val InvalidLastUpdatedDateCode                   = 28
 
 }

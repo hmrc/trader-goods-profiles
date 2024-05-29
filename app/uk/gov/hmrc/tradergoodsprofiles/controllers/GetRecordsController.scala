@@ -24,8 +24,9 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{BadRequestErrorsResponse, Error}
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
-import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.{InvalidRecordId, InvalidRecordIdMessage, InvalidRequestParameter}
+import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
 
+import java.time.Instant
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -57,9 +58,22 @@ class GetRecordsController @Inject() (
   ): Action[AnyContent] =
     (authAction(eori) andThen validateHeaderAction).async { implicit request =>
       (for {
+        _      <- validateQueryParameterLastUpdatedDate(lastUpdatedDate)
         record <- routerService.getRecords(eori, lastUpdatedDate, page, size)
       } yield Ok(Json.toJson(record))).merge
     }
+
+  private def validateQueryParameterLastUpdatedDate(
+    lastUpdatedDate: Option[String]
+  ): EitherT[Future, Result, Option[Instant]] =
+    EitherT.fromEither[Future](
+      Try(lastUpdatedDate.map(Instant.parse)).toEither.left.map { _ =>
+        BadRequestErrorsResponse(
+          uuidService.uuid,
+          Some(Seq(Error(InvalidRequestParameter, InvalidLastUpdatedDate, InvalidLastUpdatedDateCode)))
+        ).toResult
+      }
+    )
 
   private def validateRecordId(recordId: String): EitherT[Future, Result, String] =
     EitherT.fromEither[Future](

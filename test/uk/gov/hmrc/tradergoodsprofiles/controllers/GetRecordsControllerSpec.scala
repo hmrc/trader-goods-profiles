@@ -147,10 +147,11 @@ class GetRecordsControllerSpec
     }
 
     "get the record from router" in {
-      val result = sut.getRecords(eoriNumber, Some(""), Some(0), Some(0))(request)
+      val result = sut.getRecords(eoriNumber, Some("2024-03-26T16:14:52Z"), Some(0), Some(0))(request)
 
       status(result) mustBe OK
-      verify(routerService).getRecords(eqTo(eoriNumber), eqTo(Some("")), eqTo(Some(0)), eqTo(Some(0)))(any)
+      verify(routerService)
+        .getRecords(eqTo(eoriNumber), eqTo(Some("2024-03-26T16:14:52Z")), eqTo(Some(0)), eqTo(Some(0)))(any)
     }
 
     "return an error" when {
@@ -164,9 +165,31 @@ class GetRecordsControllerSpec
         when(routerService.getRecords(any, any, any, any)(any))
           .thenReturn(EitherT.fromEither(Left(InternalServerError(expectedJson))))
 
-        val result = sut.getRecords(eoriNumber, Some(""), Some(0), Some(0))(request)
+        val result = sut.getRecords(eoriNumber, Some("2024-03-26T16:14:52Z"), Some(0), Some(0))(request)
 
         status(result) mustBe INTERNAL_SERVER_ERROR
+        contentAsJson(result) mustBe expectedJson
+      }
+      "bad request for invalid lastUpdatedDate query param" in {
+        val expectedJson = Json.obj(
+          "correlationId" -> correlationId,
+          "code"          -> "BAD_REQUEST",
+          "message"       -> "Bad Request",
+          "errors"        -> Seq(
+            Json.obj(
+              "code"        -> "INVALID_REQUEST_PARAMETER",
+              "message"     -> "The URL parameter lastUpdatedDate is in the wrong format",
+              "errorNumber" -> 28
+            )
+          )
+        )
+
+        when(routerService.getRecords(any, any, any, any)(any))
+          .thenReturn(EitherT.fromEither(Left(InternalServerError(expectedJson))))
+
+        val result = sut.getRecords(eoriNumber, Some("test"), Some(0), Some(0))(request)
+
+        status(result) mustBe BAD_REQUEST
         contentAsJson(result) mustBe expectedJson
       }
     }
@@ -222,7 +245,6 @@ class GetRecordsControllerSpec
       "RMS-GB-123456",
       "6 S12345",
       false,
-      "TGPS",
       timestamp,
       timestamp
     )

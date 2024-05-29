@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.models.response
 
-import play.api.libs.json.{JsError, JsObject, JsPath, JsResult, JsSuccess, JsValue, Json, JsonValidationError, OFormat, Reads}
+import play.api.libs.json._
 import uk.gov.hmrc.tradergoodsprofiles.models.Assessment
+import uk.gov.hmrc.tradergoodsprofiles.utils.ResponseModelSupport.removeNulls
 
 import java.time.Instant
 
@@ -45,7 +46,6 @@ case class GetRecordResponse(
   nirmsNumber: String,
   niphlNumber: String,
   locked: Boolean,
-  srcSystemName: String,
   createdDateTime: Instant,
   updatedDateTime: Instant
 )
@@ -79,11 +79,10 @@ object GetRecordResponse {
         "nirmsNumber"              -> Json.toJson(o.nirmsNumber),
         "niphlNumber"              -> Json.toJson(o.niphlNumber),
         "locked"                   -> Json.toJson(o.locked),
-        "srcSystemName"            -> Json.toJson(o.srcSystemName),
         "createdDateTime"          -> Json.toJson(o.createdDateTime),
         "updatedDateTime"          -> Json.toJson(o.updatedDateTime)
       )
-      JsObject(fields)
+      removeNulls(JsObject(fields))
     }
 
     override def reads(json: JsValue): JsResult[GetRecordResponse] = {
@@ -135,7 +134,6 @@ object GetRecordResponse {
       val nirmsNumber              = read[String]("nirmsNumber")
       val niphlNumber              = read[String]("niphlNumber")
       val locked                   = read[Boolean]("locked")
-      val srcSystemName            = read[String]("srcSystemName")
       val createdDateTime          = read[Instant]("createdDateTime")
       val updatedDateTime          = read[Instant]("updatedDateTime")
 
@@ -163,7 +161,6 @@ object GetRecordResponse {
         nirmsNumber,
         niphlNumber,
         locked,
-        srcSystemName,
         createdDateTime,
         updatedDateTime
       ).collect { case JsError(values) =>
@@ -196,7 +193,6 @@ object GetRecordResponse {
             nirmsNumber.get,
             niphlNumber.get,
             locked.get,
-            srcSystemName.get,
             createdDateTime.get,
             updatedDateTime.get
           )
