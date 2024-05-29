@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.models.requests
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.functional.syntax._
+import play.api.libs.json.Reads.verifying
+import play.api.libs.json._
 import uk.gov.hmrc.tradergoodsprofiles.models.Assessment
 
 import java.time.Instant
@@ -36,5 +38,24 @@ case class APICreateRecordRequest(
 )
 
 object APICreateRecordRequest {
-  implicit val format: OFormat[APICreateRecordRequest] = Json.format[APICreateRecordRequest]
+
+  def nonEmptyString: Reads[String] = verifying[String](_.nonEmpty)
+
+  implicit val reads: Reads[APICreateRecordRequest] = (
+    (JsPath \ "actorId").read[String](nonEmptyString) and
+      (JsPath \ "traderRef").read[String](nonEmptyString) and
+      (JsPath \ "comcode").read[String](nonEmptyString) and
+      (JsPath \ "goodsDescription").read[String](nonEmptyString) and
+      (JsPath \ "countryOfOrigin").read[String](nonEmptyString) and
+      (JsPath \ "category").read[Int](verifying[Int](category => category >= 1 && category <= 3)) and
+      (JsPath \ "assessments").readNullable[Seq[Assessment]] and
+      (JsPath \ "supplementaryUnit").readNullable[Int] and
+      (JsPath \ "measurementUnit").readNullable[String] and
+      (JsPath \ "comcodeEffectiveFromDate").read[Instant] and
+      (JsPath \ "comcodeEffectiveToDate").readNullable[Instant]
+  )(APICreateRecordRequest.apply _)
+
+  implicit val writes: OWrites[APICreateRecordRequest] = Json.writes[APICreateRecordRequest]
+
+  implicit val format: OFormat[APICreateRecordRequest] = OFormat(reads, writes)
 }

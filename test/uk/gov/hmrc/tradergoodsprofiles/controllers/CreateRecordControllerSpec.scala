@@ -250,8 +250,9 @@ class CreateRecordControllerSpec
       )
     }
 
-    "return 400 when multiple fields are missing" in {
+    "return 400 when multiple fields are missing or empty" in {
       val invalidJsonRequest = Json.obj(
+        "traderRef"        -> "",
         "goodsDescription" -> "Bananas",
         "countryOfOrigin"  -> "GB",
         "category"         -> 2
