@@ -137,7 +137,7 @@ class CreateRecordControllerIntegrationSpec
       )
     }
 
-    "return BadRequest when Content-Type header is empty" in {
+    "return Unsupported media type when Content-Type header is empty or invalid" in {
       withAuthorizedTrader()
 
       val headers = Seq("X-Client-ID" -> "clientId", "Content-Type" -> "", "Accept" -> "application/vnd.hmrc.1.0+json")
@@ -149,6 +149,10 @@ class CreateRecordControllerIntegrationSpec
       )
 
       result.status mustBe UNSUPPORTED_MEDIA_TYPE
+      result.json mustBe Json.obj(
+        "statusCode" -> 415,
+        "message"    -> "Expecting text/json or application/json body"
+      )
     }
 
     "return BadRequest when X-Client-ID header is missing" in {
