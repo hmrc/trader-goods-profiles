@@ -118,6 +118,52 @@ class CreateRecordControllerIntegrationSpec
       }
     }
 
+    "return BadRequest when Accept header is invalid" in {
+      withAuthorizedTrader()
+
+      val headers = Seq("X-Client-ID" -> "clientId", "Content-Type" -> "application/json")
+      val result  = await(
+        wsClient
+          .url(url)
+          .withHttpHeaders(headers: _*)
+          .post(requestBody)
+      )
+
+      result.status mustBe BAD_REQUEST
+      result.json mustBe createExpectedError(
+        "INVALID_HEADER_PARAMETER",
+        "Accept was missing from Header or is in wrong format",
+        4
+      )
+    }
+
+    "return BadRequest when Content-Type header is empty" in {
+      withAuthorizedTrader()
+
+      val headers = Seq("X-Client-ID" -> "clientId", "Content-Type" -> "", "Accept" -> "application/vnd.hmrc.1.0+json")
+      val result  = await(
+        wsClient
+          .url(url)
+          .withHttpHeaders(headers: _*)
+          .post(requestBody)
+      )
+
+      result.status mustBe UNSUPPORTED_MEDIA_TYPE
+    }
+
+    "return BadRequest when X-Client-ID header is missing" in {
+      withAuthorizedTrader()
+
+      val result = createRecordAndWaitWithoutClientIdHeader()
+
+      result.status mustBe BAD_REQUEST
+      result.json mustBe createExpectedError(
+        "INVALID_HEADER_PARAMETER",
+        "X-Client-ID was missing from Header or is in wrong format",
+        6000
+      )
+    }
+
     "return BadRequest for invalid request body" in {
       withAuthorizedTrader()
       val invalidRequestBody = Json.obj()
