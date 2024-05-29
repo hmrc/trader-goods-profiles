@@ -221,8 +221,38 @@ class CreateRecordControllerSpec
       contentAsJson(result) mustBe createInvalidJsonExpectedJson("comcodeEffectiveFromDate", 23)
     }
 
-    "return 400 when multiple fields are missing" in {
+    "return 400 when comcodeEffectiveToDate is empty" in {
       val invalidJsonRequest = Json.obj(
+        "actorId"                  -> "GB987654321098",
+        "traderRef"                -> "SKU123456",
+        "comcode"                  -> "123456",
+        "goodsDescription"         -> "Bananas",
+        "countryOfOrigin"          -> "GB",
+        "category"                 -> 2,
+        "comcodeEffectiveFromDate" -> "2023-01-01T00:00:00Z",
+        "comcodeEffectiveToDate"   -> ""
+      )
+
+      val result = sut.createRecord(eoriNumber)(request.withBody(invalidJsonRequest))
+
+      status(result) mustBe BAD_REQUEST
+      contentAsJson(result) mustBe Json.obj(
+        "correlationId" -> correlationId,
+        "code"          -> "BAD_REQUEST",
+        "message"       -> "Bad Request",
+        "errors"        -> Seq(
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Optional field comcodeEffectiveToDate is in the wrong format",
+            "errorNumber" -> 24
+          )
+        )
+      )
+    }
+
+    "return 400 when multiple fields are missing or empty" in {
+      val invalidJsonRequest = Json.obj(
+        "traderRef"        -> "",
         "goodsDescription" -> "Bananas",
         "countryOfOrigin"  -> "GB",
         "category"         -> 2

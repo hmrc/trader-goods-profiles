@@ -28,7 +28,8 @@ object ValidationSupport {
     "/goodsDescription",
     "/countryOfOrigin",
     "/category",
-    "/comcodeEffectiveFromDate"
+    "/comcodeEffectiveFromDate",
+    "/comcodeEffectiveToDate"
   )
 
   private val fieldsToErrorCode: Map[String, (String, String, Int)] = Map(
@@ -38,7 +39,8 @@ object ValidationSupport {
     "/goodsDescription"         -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingGoodsDescription, ApplicationConstants.InvalidOrMissingGoodsDescriptionCode),
     "/countryOfOrigin"          -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingCountryOfOrigin, ApplicationConstants.InvalidOrMissingCountryOfOriginCode),
     "/category"                 -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingCategory, ApplicationConstants.InvalidOrMissingCategoryCode),
-    "/comcodeEffectiveFromDate" -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDateCode)
+    "/comcodeEffectiveFromDate" -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDateCode),
+    "/comcodeEffectiveToDate"   -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcodeEffectiveToDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveToDateCode)
   )
 
   def convertError(
