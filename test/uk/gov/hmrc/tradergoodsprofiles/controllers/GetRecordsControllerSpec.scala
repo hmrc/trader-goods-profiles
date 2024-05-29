@@ -187,7 +187,7 @@ class GetRecordsControllerSpec
         when(routerService.getRecords(any, any, any, any)(any))
           .thenReturn(EitherT.fromEither(Left(InternalServerError(expectedJson))))
 
-        val result = sut.getRecords(eoriNumber, Some("test"), Some(0), Some(0))(request)
+        val result = sut.getRecords(eoriNumber, Some("2024-03-26T16:14:52222Z"), Some(0), Some(0))(request)
 
         status(result) mustBe BAD_REQUEST
         contentAsJson(result) mustBe expectedJson
