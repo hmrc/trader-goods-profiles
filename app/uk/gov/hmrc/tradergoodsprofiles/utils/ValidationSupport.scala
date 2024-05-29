@@ -21,6 +21,16 @@ import uk.gov.hmrc.tradergoodsprofiles.models.errors.Error
 
 object ValidationSupport {
 
+  private val fieldOrder: Seq[String] = Seq(
+    "/actorId",
+    "/traderRef",
+    "/comcode",
+    "/goodsDescription",
+    "/countryOfOrigin",
+    "/category",
+    "/comcodeEffectiveFromDate"
+  )
+
   private val fieldsToErrorCode: Map[String, (String, String, Int)] = Map(
     "/actorId"                  -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidActorMessage, ApplicationConstants.InvalidActorId),
     "/traderRef"                -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingTraderRef, ApplicationConstants.InvalidOrMissingTraderRefCode),
@@ -34,9 +44,13 @@ object ValidationSupport {
   def convertError(
     errors: scala.collection.Seq[(JsPath, scala.collection.Seq[JsonValidationError])]
   ): Seq[Error] =
-    errors.flatMap { case (path, _) =>
-      fieldsToErrorCode.get(path.toString).map { case (code, message, errorNumber) =>
-        Error(code, message, errorNumber)
+    errors
+      .flatMap { case (path, _) =>
+        fieldsToErrorCode.get(path.toString).map { case (code, message, errorNumber) =>
+          (fieldOrder.indexOf(path.toString), Error(code, message, errorNumber))
+        }
       }
-    }.toSeq
+      .toSeq
+      .sortBy(_._1)
+      .map(_._2)
 }

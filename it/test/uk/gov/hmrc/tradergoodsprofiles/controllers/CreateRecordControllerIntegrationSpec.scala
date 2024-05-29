@@ -26,7 +26,7 @@ import play.api.Application
 import play.api.http.Status._
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
@@ -118,6 +118,23 @@ class CreateRecordControllerIntegrationSpec
       }
     }
 
+    "successfully create a record without condition and return 201" in {
+      withAuthorizedTrader()
+
+      val result = createRecordWithoutConditionAndWait()
+
+      result.status mustBe CREATED
+      result.json mustBe expectedResponse
+
+      withClue("should add the right headers") {
+        verify(
+          postRequestedFor(urlEqualTo(routerUrl))
+            .withHeader("Content-Type", equalTo("application/json"))
+            .withHeader("X-Client-ID", equalTo("clientId"))
+        )
+      }
+    }
+
     "return BadRequest when Accept header is invalid" in {
       withAuthorizedTrader()
 
@@ -180,19 +197,18 @@ class CreateRecordControllerIntegrationSpec
         "code"          -> "BAD_REQUEST",
         "message"       -> "Bad Request",
         "errors"        -> Seq(
+          createBadRequestJson("Mandatory field actorId was missing from body or is in the wrong format", 8),
+          createBadRequestJson("Mandatory field traderRef was missing from body or is in the wrong format", 9),
+          createBadRequestJson("Mandatory field comcode was missing from body or is in the wrong format", 11),
+          createBadRequestJson("Mandatory field goodsDescription was missing from body or is in the wrong format", 12),
           createBadRequestJson("Mandatory field countryOfOrigin was missing from body or is in the wrong format", 13),
+          createBadRequestJson("Mandatory field category was missing from body or is in the wrong format", 14),
           createBadRequestJson(
             "Mandatory field comcodeEffectiveFromDate was missing from body or is in the wrong format",
             23
-          ),
-          createBadRequestJson("Mandatory field category was missing from body or is in the wrong format", 14),
-          createBadRequestJson("Mandatory field actorId was missing from body or is in the wrong format", 8),
-          createBadRequestJson("Mandatory field goodsDescription was missing from body or is in the wrong format", 12),
-          createBadRequestJson("Mandatory field comcode was missing from body or is in the wrong format", 11),
-          createBadRequestJson("Mandatory field traderRef was missing from body or is in the wrong format", 9)
+          )
         )
       )
-
     }
 
     "return Forbidden when X-Client-ID header is missing" in {
@@ -304,6 +320,26 @@ class CreateRecordControllerIntegrationSpec
         )
         .post(requestBody)
     )
+
+  private def createRecordWithoutConditionAndWait(requestBody: JsValue = requestBody) = {
+    val updatedAssessments = (requestBody \ "assessments").asOpt[JsArray].map { assessments =>
+      JsArray(assessments.value.map { assessment =>
+        assessment.as[JsObject] - "condition"
+      })
+    }
+    requestBody.as[JsObject] ++ Json.obj("assessments" -> updatedAssessments)
+
+    await(
+      wsClient
+        .url(url)
+        .withHttpHeaders(
+          "X-Client-ID"  -> "clientId",
+          "Accept"       -> "application/vnd.hmrc.1.0+json",
+          "Content-Type" -> "application/json"
+        )
+        .post(requestBody)
+    )
+  }
 
   private def stubRouterRequest(status: Int, responseBody: String) =
     wireMock.stubFor(

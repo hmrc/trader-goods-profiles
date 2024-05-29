@@ -223,10 +223,9 @@ class CreateRecordControllerSpec
 
     "return 400 when multiple fields are missing" in {
       val invalidJsonRequest = Json.obj(
-        "goodsDescription"         -> "Bananas",
-        "countryOfOrigin"          -> "GB",
-        "category"                 -> 2,
-        "comcodeEffectiveFromDate" -> "2023-01-01T00:00:00Z"
+        "goodsDescription" -> "Bananas",
+        "countryOfOrigin"  -> "GB",
+        "category"         -> 2
       )
 
       val expectedJsonResponse = Json.obj(
@@ -241,13 +240,18 @@ class CreateRecordControllerSpec
           ),
           Json.obj(
             "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Mandatory field traderRef was missing from body or is in the wrong format",
+            "errorNumber" -> 9
+          ),
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
             "message"     -> "Mandatory field comcode was missing from body or is in the wrong format",
             "errorNumber" -> 11
           ),
           Json.obj(
             "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Mandatory field traderRef was missing from body or is in the wrong format",
-            "errorNumber" -> 9
+            "message"     -> "Mandatory field comcodeEffectiveFromDate was missing from body or is in the wrong format",
+            "errorNumber" -> 23
           )
         )
       )
