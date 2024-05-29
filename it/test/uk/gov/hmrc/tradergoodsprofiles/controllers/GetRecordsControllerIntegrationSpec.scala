@@ -408,7 +408,7 @@ class GetRecordsControllerIntegrationSpec
       withAuthorizedTrader()
       wireMock.stubFor(
         WireMock
-          .get(s"$getMultipleRecordsRouterUrl?lastUpdatedDate=2024-06-08T12:12:12.456789Z&page=1&size=1")
+          .get(s"$getMultipleRecordsRouterUrl?lastUpdatedDate=2024-06-08T12:12:12Z&page=1&size=1")
           .willReturn(
             aResponse()
               .withStatus(200)
@@ -420,7 +420,7 @@ class GetRecordsControllerIntegrationSpec
         await(
           wsClient
             .url(
-              s"http://localhost:$port/$eoriNumber/records?lastUpdatedDate=2024-06-08T12:12:12.456789Z&page=1&size=1"
+              s"http://localhost:$port/$eoriNumber/records?lastUpdatedDate=2024-06-08T12:12:12Z&page=1&size=1"
             )
             .withHttpHeaders(
               "X-Client-ID"  -> "clientId",
@@ -436,7 +436,7 @@ class GetRecordsControllerIntegrationSpec
       withClue("should add the right headers") {
         verify(
           getRequestedFor(
-            urlEqualTo(s"$getMultipleRecordsRouterUrl?lastUpdatedDate=2024-06-08T12:12:12.456789Z&page=1&size=1")
+            urlEqualTo(s"$getMultipleRecordsRouterUrl?lastUpdatedDate=2024-06-08T12:12:12Z&page=1&size=1")
           )
             .withHeader("X-Client-ID", equalTo("clientId"))
         )
