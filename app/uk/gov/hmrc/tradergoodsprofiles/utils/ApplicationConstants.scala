@@ -48,5 +48,7 @@ object ApplicationConstants {
   val InvalidLastUpdatedDateCode                   = 28
   val InvalidOrMissingComcodeEffectiveToDate       = "Optional field comcodeEffectiveToDate is in the wrong format"
   val InvalidOrMissingComcodeEffectiveToDateCode   = 24
+  val InvalidOrMissingSupplementaryUnit            = "Optional field supplementaryUnit is in the wrong format"
+  val InvalidOrMissingSupplementaryUnitCode        = 21
 
 }

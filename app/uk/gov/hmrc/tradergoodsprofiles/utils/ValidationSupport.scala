@@ -28,6 +28,7 @@ object ValidationSupport {
     "/goodsDescription",
     "/countryOfOrigin",
     "/category",
+    "/supplementaryUnit",
     "/comcodeEffectiveFromDate",
     "/comcodeEffectiveToDate"
   )
@@ -39,6 +40,7 @@ object ValidationSupport {
     "/goodsDescription"         -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingGoodsDescription, ApplicationConstants.InvalidOrMissingGoodsDescriptionCode),
     "/countryOfOrigin"          -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingCountryOfOrigin, ApplicationConstants.InvalidOrMissingCountryOfOriginCode),
     "/category"                 -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingCategory, ApplicationConstants.InvalidOrMissingCategoryCode),
+    "/supplementaryUnit"        -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingSupplementaryUnit, ApplicationConstants.InvalidOrMissingSupplementaryUnitCode),
     "/comcodeEffectiveFromDate" -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDateCode),
     "/comcodeEffectiveToDate"   -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcodeEffectiveToDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveToDateCode)
   )
