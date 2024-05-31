@@ -27,8 +27,9 @@ import uk.gov.hmrc.http.HttpReads.is2xx
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{RouterError, ServerErrorResponse}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterUpdateRecordRequest
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.{APICreateRecordRequest, UpdateRecordRequest, router}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.{APICreateRecordRequest, UpdateProfileRequest, UpdateRecordRequest, router}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.{CreateOrUpdateRecordResponse, GetRecordResponse, GetRecordsResponse}
+import uk.gov.hmrc.tradergoodsprofiles.models.responses.UpdateProfileResponse
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.runtime.universe.{TypeTag, typeOf}
@@ -55,6 +56,9 @@ trait RouterService {
     hc: HeaderCarrier
   ): EitherT[Future, Result, GetRecordsResponse]
 
+  def updateProfile(eori: String, updateRequest: UpdateProfileRequest)(implicit
+    hc: HeaderCarrier
+  ): Future[Either[Result, UpdateProfileResponse]]
 }
 
 class RouterServiceImpl @Inject() (
@@ -191,6 +195,24 @@ class RouterServiceImpl @Inject() (
         }
     )
   }
+
+  def updateProfile(eori: String, updateRequest: UpdateProfileRequest)(implicit
+    hc: HeaderCarrier
+  ): Future[Either[Result, UpdateProfileResponse]] =
+    routerConnector
+      .put(eori, updateRequest)
+      .map { httpResponse =>
+        httpResponse.status match {
+          case status if is2xx(status) =>
+            jsonAs[UpdateProfileResponse](httpResponse.body)
+          case _                       =>
+            Left(handleError(httpResponse.body, httpResponse.status, Some(eori)))
+        }
+      }
+      .recover { case ex: Throwable =>
+        logger.error(s"Exception when updating profile for eori number $eori: ${ex.getMessage}", ex)
+        Left(ServerErrorResponse(uuidService.uuid, "Could not update profile due to an internal error").toResult)
+      }
 
   private def handleError(
     responseBody: String,
