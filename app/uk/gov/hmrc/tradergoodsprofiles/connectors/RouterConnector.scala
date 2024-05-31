@@ -25,6 +25,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.metrics.MetricsSupport
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.UpdateProfileRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterCreateRecordRequest, RouterUpdateRecordRequest}
 
 import javax.inject.Inject
@@ -100,6 +101,19 @@ class RouterConnector @Inject() (
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
         .withBody(jsonData)
         .withClientId
+        .execute[HttpResponse]
+    }
+
+  def put(eori: String, updateProfileRequest: UpdateProfileRequest)(implicit
+    hc: HeaderCarrier
+  ): Future[HttpResponse] =
+    withMetricsTimerAsync("tgp.maintainprofile.connector") { _ =>
+      val url      = s"${appConfig.routerUrl}/maintainprofile/v1/$eori" // TODO: double check router endpoint
+      val jsonData = Json.toJson(updateProfileRequest)
+      httpClient
+        .put(url"$url")
+        .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+        .withBody(jsonData)
         .execute[HttpResponse]
     }
 
