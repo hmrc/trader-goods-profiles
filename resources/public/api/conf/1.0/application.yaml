@@ -515,12 +515,6 @@ components:
       type: object
       required:
         - actorId
-        - traderRef
-        - comcode
-        - goodsDescription
-        - countryOfOrigin
-        - category
-        - comcodeEffectiveFromDate
       properties:
         actorId:
           $ref: '#/components/schemas/actorId'

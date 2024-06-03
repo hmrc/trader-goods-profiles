@@ -18,6 +18,7 @@ package uk.gov.hmrc.tradergoodsprofiles.utils
 
 import play.api.libs.json.{JsPath, JsonValidationError}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.Error
+import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
 
 object ValidationSupport {
 
@@ -28,21 +29,35 @@ object ValidationSupport {
     "/goodsDescription",
     "/countryOfOrigin",
     "/category",
+    "/assessments(0)/primaryCategory",
+    "/assessments(0)/assessmentId",
+    "/assessments(0)/condition/type",
+    "/assessments(0)/condition/conditionId",
+    "/assessments(0)/condition/conditionDescription",
+    "/assessments(0)/condition/conditionTraderText",
     "/supplementaryUnit",
+    "/measurementUnit",
     "/comcodeEffectiveFromDate",
     "/comcodeEffectiveToDate"
   )
 
   private val fieldsToErrorCode: Map[String, (String, String, Int)] = Map(
-    "/actorId"                  -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidActorMessage, ApplicationConstants.InvalidActorId),
-    "/traderRef"                -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingTraderRef, ApplicationConstants.InvalidOrMissingTraderRefCode),
-    "/comcode"                  -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcode, ApplicationConstants.InvalidOrMissingComcodeCode),
-    "/goodsDescription"         -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingGoodsDescription, ApplicationConstants.InvalidOrMissingGoodsDescriptionCode),
-    "/countryOfOrigin"          -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingCountryOfOrigin, ApplicationConstants.InvalidOrMissingCountryOfOriginCode),
-    "/category"                 -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingCategory, ApplicationConstants.InvalidOrMissingCategoryCode),
-    "/supplementaryUnit"        -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingSupplementaryUnit, ApplicationConstants.InvalidOrMissingSupplementaryUnitCode),
-    "/comcodeEffectiveFromDate" -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDateCode),
-    "/comcodeEffectiveToDate"   -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcodeEffectiveToDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveToDateCode)
+    "/actorId"                                       -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidActorMessage, ApplicationConstants.InvalidActorId),
+    "/traderRef"                                     -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingTraderRef, ApplicationConstants.InvalidOrMissingTraderRefCode),
+    "/comcode"                                       -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcode, ApplicationConstants.InvalidOrMissingComcodeCode),
+    "/goodsDescription"                              -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingGoodsDescription, ApplicationConstants.InvalidOrMissingGoodsDescriptionCode),
+    "/countryOfOrigin"                               -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingCountryOfOrigin, ApplicationConstants.InvalidOrMissingCountryOfOriginCode),
+    "/category"                                      -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingCategory, ApplicationConstants.InvalidOrMissingCategoryCode),
+    "/assessments(0)/primaryCategory"                -> (ApplicationConstants.InvalidRequestParameter, InvalidAssessmentPrimaryCategory, InvalidAssessmentPrimaryCategoryCode),
+    "/assessments(0)/assessmentId"                   -> (ApplicationConstants.InvalidRequestParameter, InvalidOrMissingAssessmentId, InvalidOrMissingAssessmentIdCode),
+    "/assessments(0)/condition/type"                 -> (ApplicationConstants.InvalidRequestParameter, InvalidAssessmentPrimaryCategoryConditionType, InvalidAssessmentPrimaryCategoryConditionTypeCode),
+    "/assessments(0)/condition/conditionId"          -> (ApplicationConstants.InvalidRequestParameter, InvalidAssessmentPrimaryCategoryConditionId, InvalidAssessmentPrimaryCategoryConditionIdCode),
+    "/assessments(0)/condition/conditionDescription" -> (ApplicationConstants.InvalidRequestParameter, InvalidAssessmentPrimaryCategoryConditionDescription, InvalidAssessmentPrimaryCategoryConditionDescriptionCode),
+    "/assessments(0)/condition/conditionTraderText"  -> (ApplicationConstants.InvalidRequestParameter, InvalidAssessmentPrimaryCategoryConditionTraderText, InvalidAssessmentPrimaryCategoryConditionTraderTextCode),
+    "/supplementaryUnit"                             -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingSupplementaryUnit, ApplicationConstants.InvalidOrMissingSupplementaryUnitCode),
+    "/measurementUnit"                               -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingMeasurementUnit, ApplicationConstants.InvalidOrMissingMeasurementUnitCode),
+    "/comcodeEffectiveFromDate"                      -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDateCode),
+    "/comcodeEffectiveToDate"                        -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcodeEffectiveToDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveToDateCode)
   )
 
   def convertError(

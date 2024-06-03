@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.models.requests
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
+import play.api.libs.json.Reads.verifying
+import play.api.libs.json._
 import uk.gov.hmrc.tradergoodsprofiles.models.Assessment
 
 import java.time.Instant
@@ -36,5 +38,23 @@ case class UpdateRecordRequest(
 )
 
 object UpdateRecordRequest {
-  implicit val format: OFormat[UpdateRecordRequest] = Json.format[UpdateRecordRequest]
+  def nonEmptyString: Reads[String] = verifying[String](_.nonEmpty)
+
+  implicit val reads: Reads[UpdateRecordRequest] = (
+    (JsPath \ "actorId").read[String](nonEmptyString) and
+      (JsPath \ "traderRef").readNullable[String](nonEmptyString) and
+      (JsPath \ "comcode").readNullable[String](nonEmptyString) and
+      (JsPath \ "goodsDescription").readNullable[String](nonEmptyString) and
+      (JsPath \ "countryOfOrigin").readNullable[String](nonEmptyString) and
+      (JsPath \ "category").readNullable[Int](verifying[Int](category => category >= 1 && category <= 3)) and
+      (JsPath \ "assessments").readNullable[Seq[Assessment]] and
+      (JsPath \ "supplementaryUnit").readNullable[Int] and
+      (JsPath \ "measurementUnit").readNullable[String] and
+      (JsPath \ "comcodeEffectiveFromDate").readNullable[Instant] and
+      (JsPath \ "comcodeEffectiveToDate").readNullable[Instant]
+  )(UpdateRecordRequest.apply _)
+
+  implicit val writes: OWrites[UpdateRecordRequest] = Json.writes[UpdateRecordRequest]
+
+  implicit val format: OFormat[UpdateRecordRequest] = OFormat(reads, writes)
 }
