@@ -46,6 +46,11 @@ trait BaseConnector {
       s"$routerBaseRoute/records"
     )
 
+  def updateProfileRoute(eoriNumber: String): UrlPath =
+    UrlPath.parse(
+      s"$routerBaseRoute/maintainprofile/v1/$eoriNumber"
+    )
+
   implicit class HttpResponseHelpers(requestBuilder: RequestBuilder) {
     def withClientId(implicit hc: HeaderCarrier): RequestBuilder =
       hc.headers(Seq(Constants.XClientIdHeader)).headOption match {
