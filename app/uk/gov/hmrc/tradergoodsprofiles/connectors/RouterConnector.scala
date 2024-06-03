@@ -108,12 +108,13 @@ class RouterConnector @Inject() (
     hc: HeaderCarrier
   ): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.maintainprofile.connector") { _ =>
-      val url      = s"${appConfig.routerUrl}/maintainprofile/v1/$eori" // TODO: double check router endpoint
+      val url      = appConfig.routerUrl.withPath(updateProfileRoute(eori))
       val jsonData = Json.toJson(updateProfileRequest)
       httpClient
         .put(url"$url")
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
         .withBody(jsonData)
+        .withClientId
         .execute[HttpResponse]
     }
 
