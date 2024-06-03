@@ -16,10 +16,22 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.models
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
+import play.api.libs.json.Reads.verifying
+import play.api.libs.json._
 
 case class Assessment(assessmentId: Option[String], primaryCategory: Option[Int], condition: Option[Condition])
 
 object Assessment {
-  implicit val format: Format[Assessment] = Json.format[Assessment]
+  def nonEmptyString: Reads[String] = verifying[String](_.nonEmpty)
+
+  implicit val reads: Reads[Assessment] = (
+    (JsPath \ "assessmentId").readNullable[String](nonEmptyString) and
+      (JsPath \ "primaryCategory").readNullable[Int] and
+      (JsPath \ "condition").readNullable[Condition]
+  )(Assessment.apply _)
+
+  implicit val writes: OWrites[Assessment] = Json.writes[Assessment]
+
+  implicit val format: OFormat[Assessment] = OFormat(reads, writes)
 }
