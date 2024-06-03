@@ -16,8 +16,11 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.utils
 
-import play.api.libs.json.{JsPath, JsonValidationError}
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.Error
+import play.api.libs.json.{JsError, JsPath, JsSuccess, JsValue, JsonValidationError, Reads}
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.{Error, ErrorResponse}
+import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
+
+import scala.reflect.runtime.universe.TypeTag
 
 object ValidationSupport {
 
@@ -57,4 +60,17 @@ object ValidationSupport {
       .toSeq
       .sortBy(_._1)
       .map(_._2)
+
+  def validateRequestBody[T](
+    json: JsValue,
+    uuidService: UuidService
+  )(implicit reads: Reads[T], tt: TypeTag[T]): Either[ErrorResponse, T] =
+    json.validate[T] match {
+      case JsSuccess(request, _) =>
+        Right(request)
+      case JsError(errors)       =>
+        Left(
+          ErrorResponse.badRequestErrorResponse(uuidService.uuid, Some(convertError(errors)))
+        )
+    }
 }

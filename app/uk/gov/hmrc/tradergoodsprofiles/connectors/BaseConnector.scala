@@ -20,7 +20,7 @@ import io.lemonlabs.uri.UrlPath
 import sttp.model.Uri.UriContext
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.client.RequestBuilder
-import uk.gov.hmrc.tradergoodsprofiles.config.Constants
+import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.XClientIdHeader
 
 trait BaseConnector {
 
@@ -46,9 +46,14 @@ trait BaseConnector {
       s"$routerBaseRoute/records"
     )
 
+  def routerAccreditationRoute(): UrlPath =
+    UrlPath.parse(
+      s"$routerBaseRoute/records"
+    )
+
   implicit class HttpResponseHelpers(requestBuilder: RequestBuilder) {
     def withClientId(implicit hc: HeaderCarrier): RequestBuilder =
-      hc.headers(Seq(Constants.XClientIdHeader)).headOption match {
+      hc.headers(Seq(XClientIdHeader)).headOption match {
         case Some(header) => requestBuilder.setHeader(header)
         case None         => requestBuilder
       }

@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
-import cats.data.EitherT
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.MockitoSugar.{reset, verify, when}
 import org.scalatest.BeforeAndAfterEach
@@ -24,16 +23,16 @@ import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.{JsObject, Json}
-import play.api.mvc.Results.InternalServerError
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 
 import java.util.UUID
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEach {
 
@@ -76,7 +75,7 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
     reset(uuidService, routerService)
     when(uuidService.uuid).thenReturn(correlationId)
     when(routerService.removeRecord(any, any, any)(any))
-      .thenReturn(EitherT.fromEither(Right(OK)))
+      .thenReturn(Future.successful(Right(OK)))
   }
 
   "removeRecord" should {
@@ -118,12 +117,17 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
 
       "routerService return an error" in {
         val expectedJson = Json.obj(
-          "code"    -> "INTERNAL_SERVER_ERROR",
-          "message" -> s"internal server error"
+          "correlationId" -> "d677693e-9981-4ee3-8574-654981ebe606",
+          "code"          -> "INTERNAL_SERVER_ERROR",
+          "message"       -> s"internal server error"
         )
 
+        val errorResponse =
+          ErrorResponse.serverErrorResponse(uuidService.uuid, "internal server error")
+        val serviceError  = ServiceError(INTERNAL_SERVER_ERROR, errorResponse)
+
         when(routerService.removeRecord(any, any, any)(any))
-          .thenReturn(EitherT.fromEither(Left(InternalServerError(expectedJson))))
+          .thenReturn(Future.successful(Left(serviceError)))
 
         val result = sut.removeRecord(eoriNumber, recordId)(request)
 

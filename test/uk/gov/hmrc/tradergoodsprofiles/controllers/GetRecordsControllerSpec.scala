@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
-import cats.data.EitherT
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.MockitoSugar.{reset, verify, when}
 import org.scalatest.BeforeAndAfterEach
@@ -24,20 +23,20 @@ import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.{JsObject, Json}
-import play.api.mvc.Results.InternalServerError
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.GetRecordResponseSupport
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.{Error, ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.{GetRecordsResponse, GoodsItemRecords, Pagination}
 import uk.gov.hmrc.tradergoodsprofiles.models.{Assessment, Condition}
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 
 import java.time.Instant
 import java.util.UUID
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class GetRecordsControllerSpec
     extends PlaySpec
@@ -71,9 +70,9 @@ class GetRecordsControllerSpec
     reset(uuidService, routerService)
     when(uuidService.uuid).thenReturn(correlationId)
     when(routerService.getRecord(any, any)(any))
-      .thenReturn(EitherT.fromEither(Right(createGetRecordResponse(eoriNumber, recordId, timestamp))))
+      .thenReturn(Future.successful(Right(createGetRecordResponse(recordId, eoriNumber, timestamp))))
     when(routerService.getRecords(any, any, any, any)(any))
-      .thenReturn(EitherT.fromEither(Right(createGetRecordsResponse(eoriNumber, recordId, timestamp))))
+      .thenReturn(Future.successful(Right(createGetRecordsResponse(eoriNumber, recordId, timestamp))))
   }
 
   "getRecord" should {
@@ -120,8 +119,15 @@ class GetRecordsControllerSpec
           "message"       -> s"Internal Server Error"
         )
 
+        val errorResponse =
+          ErrorResponse.serverErrorResponse(
+            uuidService.uuid,
+            "Internal Server Error"
+          )
+        val serviceError  = ServiceError(INTERNAL_SERVER_ERROR, errorResponse)
+
         when(routerService.getRecord(any, any)(any))
-          .thenReturn(EitherT.fromEither(Left(InternalServerError(expectedJson))))
+          .thenReturn(Future.successful(Left(serviceError)))
 
         val result = sut.getRecord(eoriNumber, recordId)(request)
 
@@ -162,8 +168,15 @@ class GetRecordsControllerSpec
           "message"       -> s"Internal Server Error"
         )
 
+        val errorResponse =
+          ErrorResponse.serverErrorResponse(
+            uuidService.uuid,
+            "Internal Server Error"
+          )
+        val serviceError  = ServiceError(INTERNAL_SERVER_ERROR, errorResponse)
+
         when(routerService.getRecords(any, any, any, any)(any))
-          .thenReturn(EitherT.fromEither(Left(InternalServerError(expectedJson))))
+          .thenReturn(Future.successful(Left(serviceError)))
 
         val result = sut.getRecords(eoriNumber, Some("2024-03-26T16:14:52Z"), Some(0), Some(0))(request)
 
@@ -184,8 +197,19 @@ class GetRecordsControllerSpec
           )
         )
 
-        when(routerService.getRecords(any, any, any, any)(any))
-          .thenReturn(EitherT.fromEither(Left(InternalServerError(expectedJson))))
+        val errorResponse =
+          ErrorResponse.badRequestErrorResponse(
+            uuidService.uuid,
+            Some(
+              Seq(
+                Error("INVALID_REQUEST_PARAMETER", "The URL parameter lastUpdatedDate is in the wrong format", 28)
+              )
+            )
+          )
+        val serviceError  = ServiceError(INTERNAL_SERVER_ERROR, errorResponse)
+
+        when(routerService.updateRecord(any, any, any)(any))
+          .thenReturn(Future.successful(Left(serviceError)))
 
         val result = sut.getRecords(eoriNumber, Some("2024-03-26T16:14:52222Z"), Some(0), Some(0))(request)
 

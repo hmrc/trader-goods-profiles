@@ -16,13 +16,12 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
-import cats.data.EitherT
-import cats.implicits._
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
+import play.api.libs.json.Json.toJson
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.{BadRequestErrorsResponse, Error}
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.{Error, ErrorResponse}
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
 
@@ -45,10 +44,17 @@ class GetRecordsController @Inject() (
 
   def getRecord(eori: String, recordId: String): Action[AnyContent] =
     (authAction(eori) andThen validateHeaderAction).async { implicit request =>
-      (for {
-        _      <- validateRecordId(recordId)
-        record <- routerService.getRecord(eori, recordId)
-      } yield Ok(Json.toJson(record))).merge
+      validateRecordId(recordId) match {
+        case Left(errorResponse)      =>
+          Future.successful(BadRequest(Json.toJson(errorResponse)))
+        case Right(validatedRecordId) =>
+          routerService.getRecord(eori, validatedRecordId).map {
+            case Left(serviceError) =>
+              Status(serviceError.status)(toJson(serviceError.errorResponse))
+            case Right(response)    =>
+              Ok(Json.toJson(response))
+          }
+      }
     }
 
   def getRecords(
@@ -58,35 +64,38 @@ class GetRecordsController @Inject() (
     size: Option[Int]
   ): Action[AnyContent] =
     (authAction(eori) andThen validateHeaderAction).async { implicit request =>
-      (for {
-        _      <- validateQueryParameterLastUpdatedDate(lastUpdatedDate)
-        record <- routerService.getRecords(eori, lastUpdatedDate, page, size)
-      } yield Ok(Json.toJson(record))).merge
+      validateQueryParameterLastUpdatedDate(lastUpdatedDate) match {
+        case Left(errorResponse)  =>
+          Future.successful(BadRequest(Json.toJson(errorResponse)))
+        case Right(validatedDate) =>
+          routerService.getRecords(eori, validatedDate, page, size).map {
+            case Left(serviceError) =>
+              Status(serviceError.status)(toJson(serviceError.errorResponse))
+            case Right(response)    =>
+              Ok(Json.toJson(response))
+          }
+      }
     }
 
   private def validateQueryParameterLastUpdatedDate(
     lastUpdatedDate: Option[String]
-  ): EitherT[Future, Result, Option[Instant]] =
-    EitherT.fromEither[Future](
-      Try(lastUpdatedDate.map { dateTime =>
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
-        formatter.parse(dateTime)
-        Instant.parse(dateTime)
-      }).toEither.left.map { _ =>
-        BadRequestErrorsResponse(
-          uuidService.uuid,
-          Some(Seq(Error(InvalidRequestParameter, InvalidLastUpdatedDate, InvalidLastUpdatedDateCode)))
-        ).toResult
-      }
-    )
+  ): Either[ErrorResponse, Option[String]] =
+    Try(lastUpdatedDate.map { dateTime =>
+      val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
+      formatter.parse(dateTime)
+      Instant.parse(dateTime).toString
+    }).toEither.left.map { _ =>
+      ErrorResponse.badRequestErrorResponse(
+        uuidService.uuid,
+        Some(Seq(Error(InvalidRequestParameter, InvalidLastUpdatedDate, InvalidLastUpdatedDateCode)))
+      )
+    }
 
-  private def validateRecordId(recordId: String): EitherT[Future, Result, String] =
-    EitherT.fromEither[Future](
-      Try(UUID.fromString(recordId).toString).toEither.left.map { _ =>
-        BadRequestErrorsResponse(
-          uuidService.uuid,
-          Some(Seq(Error(InvalidRequestParameter, InvalidRecordIdMessage, InvalidRecordId)))
-        ).toResult
-      }
-    )
+  private def validateRecordId(recordId: String): Either[ErrorResponse, String] =
+    Try(UUID.fromString(recordId).toString).toEither.left.map { _ =>
+      ErrorResponse.badRequestErrorResponse(
+        uuidService.uuid,
+        Some(Seq(Error(InvalidRequestParameter, InvalidRecordIdMessage, InvalidRecordId)))
+      )
+    }
 }

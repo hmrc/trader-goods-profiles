@@ -22,7 +22,5 @@ import java.util.UUID
 
 @Singleton
 class UuidService {
-
   def uuid: String = UUID.randomUUID().toString
-
 }

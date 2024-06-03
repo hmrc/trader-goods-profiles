@@ -19,7 +19,6 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers.actions
 import cats.data.EitherT
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.mvc.{ActionFilter, Request, Result}
-import uk.gov.hmrc.tradergoodsprofiles.config.Constants
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.BadRequestErrorResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
@@ -78,7 +77,7 @@ class ValidateHeaderAction @Inject() (uuidService: UuidService)(implicit ec: Exe
 
   private def validateClientIdHeader(request: Request[_]): EitherT[Future, Option[Result], Unit] =
     EitherT.fromOption(
-      request.headers.get(Constants.XClientIdHeader) match {
+      request.headers.get(XClientIdHeader) match {
         case Some(_) => Some(())
         case _       => None
       },
