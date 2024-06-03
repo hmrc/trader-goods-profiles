@@ -29,7 +29,14 @@ object ValidationSupport {
     "/goodsDescription",
     "/countryOfOrigin",
     "/category",
+    "/assessments(0)/primaryCategory",
+    "/assessments(0)/assessmentId",
+    "/assessments(0)/condition/type",
+    "/assessments(0)/condition/conditionId",
+    "/assessments(0)/condition/conditionDescription",
+    "/assessments(0)/condition/conditionTraderText",
     "/supplementaryUnit",
+    "/measurementUnit",
     "/comcodeEffectiveFromDate",
     "/comcodeEffectiveToDate"
   )
