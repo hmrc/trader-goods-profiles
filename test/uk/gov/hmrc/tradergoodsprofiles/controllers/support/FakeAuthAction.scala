@@ -17,6 +17,7 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers.support
 
 import org.scalatestplus.mockito.MockitoSugar.mock
+import play.api.libs.json.Json
 import play.api.mvc._
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.AuthAction
 import uk.gov.hmrc.tradergoodsprofiles.models.auth.EnrolmentRequest
@@ -38,6 +39,31 @@ object FakeAuth {
           block: EnrolmentRequest[A] => Future[Result]
         ): Future[Result] =
           block(EnrolmentRequest(request))
+      }
+  }
+
+  class FakeUnauthorizedAuthAction(correlationId: String) extends AuthAction {
+    override def apply(
+      eori: String
+    ): ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest] =
+      new ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest] {
+
+        override val parser: BodyParsers.Default         = mock[BodyParsers.Default]
+        protected def executionContext: ExecutionContext = ExecutionContext.global
+
+        override def invokeBlock[A](
+          request: Request[A],
+          block: EnrolmentRequest[A] => Future[Result]
+        ): Future[Result] =
+          Future.successful(
+            Results.Unauthorized(
+              Json.obj(
+                "correlationId" -> correlationId,
+                "code"          -> "UNAUTHORIZED",
+                "message"       -> "Unauthorized"
+              )
+            )
+          )
       }
   }
 }
