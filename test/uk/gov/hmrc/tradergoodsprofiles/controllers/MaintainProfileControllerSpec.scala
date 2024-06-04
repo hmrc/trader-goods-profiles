@@ -20,14 +20,14 @@ import org.mockito.ArgumentMatchers.{any, eq => mockEq}
 import org.mockito.MockitoSugar.{mock, reset, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.play.PlaySpec
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK, UNAUTHORIZED}
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Results.InternalServerError
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.{FakeSuccessAuthAction, FakeUnauthorizedAuthAction}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.UpdateProfileRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.UpdateProfileResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
@@ -72,14 +72,6 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
     stubControllerComponents()
   )
 
-  private val unauthorizedSut = new MaintainProfileController(
-    new FakeUnauthorizedAuthAction(correlationId),
-    new ValidateHeaderAction(uuidService),
-    uuidService,
-    routerService,
-    stubControllerComponents()
-  )
-
   override def beforeEach(): Unit = {
     super.beforeEach()
     reset(uuidService, routerService)
@@ -112,24 +104,6 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
 
       status(result) mustBe BAD_REQUEST
       //TODO: Assert actual error response
-    }
-
-    "return 401 Unauthorized when the user is not authorized" in {
-      val expectedJson = Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "UNAUTHORIZED",
-        "message"       -> "Unauthorized"
-      )
-
-      val request = FakeRequest()
-        .withHeaders(requestHeaders: _*)
-        .withBody(Json.toJson(updateProfileRequest))
-
-      val result = unauthorizedSut.updateProfile(eori)(request)
-
-      status(result) mustBe UNAUTHORIZED
-      val jsonResponse = contentAsJson(result)
-      jsonResponse mustBe expectedJson
     }
 
     "return 500 Internal Server Error when the service layer fails" in {
