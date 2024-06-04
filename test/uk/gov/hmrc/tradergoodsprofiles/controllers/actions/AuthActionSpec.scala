@@ -46,8 +46,7 @@ class AuthActionSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEa
     authConnector,
     uuidService,
     parser,
-    stubMessagesControllerComponents(),
-    mock[BodyParsers.Default]
+    stubMessagesControllerComponents()
   )
 
   override def beforeEach(): Unit = {
