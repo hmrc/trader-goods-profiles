@@ -39,8 +39,7 @@ class AuthActionImpl @Inject() (
   override val authConnector: AuthConnector,
   uuidService: UuidService,
   val bodyParser: BodyParsers.Default,
-  cc: ControllerComponents,
-  val parser: BodyParsers.Default
+  cc: ControllerComponents
 )(implicit val ec: ExecutionContext)
     extends BackendController(cc)
     with AuthorisedFunctions
