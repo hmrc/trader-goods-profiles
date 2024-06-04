@@ -23,14 +23,13 @@ import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status.{FORBIDDEN, INTERNAL_SERVER_ERROR, OK, UNAUTHORIZED}
 import play.api.libs.json.Json
-import play.api.mvc.{BodyParsers, Result, Results}
+import play.api.mvc.{BodyParsers, Request, Result, Results}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, contentAsJson, defaultAwaitTimeout, status}
 import uk.gov.hmrc.auth.core.AffinityGroup.{Agent, Individual}
 import uk.gov.hmrc.auth.core.{Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.play.bootstrap.tools.Stubs.stubMessagesControllerComponents
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
-import uk.gov.hmrc.tradergoodsprofiles.models.auth.EnrolmentRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -47,8 +46,7 @@ class AuthActionSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEa
     authConnector,
     uuidService,
     parser,
-    stubMessagesControllerComponents(),
-    mock[BodyParsers.Default]
+    stubMessagesControllerComponents()
   )
 
   override def beforeEach(): Unit = {
@@ -173,6 +171,6 @@ class AuthActionSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEa
     }
   }
 
-  def block(request: EnrolmentRequest[_]): Future[Result] =
+  def block(request: Request[_]): Future[Result] =
     Future.successful(Results.Ok)
 }
