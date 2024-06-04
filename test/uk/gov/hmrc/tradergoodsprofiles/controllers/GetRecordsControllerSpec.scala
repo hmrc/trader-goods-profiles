@@ -70,7 +70,7 @@ class GetRecordsControllerSpec
     reset(uuidService, routerService)
     when(uuidService.uuid).thenReturn(correlationId)
     when(routerService.getRecord(any, any)(any))
-      .thenReturn(Future.successful(Right(createGetRecordResponse(recordId, eoriNumber, timestamp))))
+      .thenReturn(Future.successful(Right(createGetRecordResponse(eoriNumber, recordId, timestamp))))
     when(routerService.getRecords(any, any, any, any)(any))
       .thenReturn(Future.successful(Right(createGetRecordsResponse(eoriNumber, recordId, timestamp))))
   }

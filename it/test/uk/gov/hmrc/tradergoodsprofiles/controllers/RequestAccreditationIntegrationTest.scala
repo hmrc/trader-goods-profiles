@@ -103,7 +103,7 @@ class RequestAccreditationIntegrationTest
     "successfully request accreditation and return 201" in {
       withAuthorizedTrader()
 
-      val result = updateRecordAndWait()
+      val result = requestAccreditationAndWait()
 
       result.status mustBe CREATED
 
@@ -120,7 +120,7 @@ class RequestAccreditationIntegrationTest
       withAuthorizedTrader()
       val invalidRequestBody = Json.obj()
 
-      val result = updateRecordAndWait(invalidRequestBody)
+      val result = requestAccreditationAndWait(invalidRequestBody)
 
       result.status mustBe BAD_REQUEST
       result.json mustBe Json.obj(
@@ -141,7 +141,7 @@ class RequestAccreditationIntegrationTest
     "return Bad Request when X-Client-ID header is missing" in {
       withAuthorizedTrader()
 
-      val result = updateRecordAndWaitWithoutClientIdHeader()
+      val result = requestAccreditationAndWaitWithoutClientIdHeader()
 
       result.status mustBe BAD_REQUEST
       result.json mustBe Json.obj(
@@ -161,10 +161,10 @@ class RequestAccreditationIntegrationTest
     "return Forbidden when EORI number is not authorized" in {
       withAuthorizedTrader(enrolment = Enrolment("OTHER-ENROLMENT-KEY"))
 
-      val result = updateRecordAndWait()
+      val result = requestAccreditationAndWait()
 
       result.status mustBe FORBIDDEN
-      result.json mustBe updateExpectedJson(
+      result.json mustBe expectedJson(
         "FORBIDDEN",
         "EORI number is incorrect"
       )
@@ -173,10 +173,10 @@ class RequestAccreditationIntegrationTest
     "return Forbidden when identifier does not exist" in {
       withUnauthorizedEmptyIdentifier()
 
-      val result = updateRecordAndWait()
+      val result = requestAccreditationAndWait()
 
       result.status mustBe FORBIDDEN
-      result.json mustBe updateExpectedJson(
+      result.json mustBe expectedJson(
         "FORBIDDEN",
         "EORI number is incorrect"
       )
@@ -185,10 +185,10 @@ class RequestAccreditationIntegrationTest
     "return Unauthorized when invalid enrolment" in {
       withUnauthorizedTrader(InsufficientEnrolments())
 
-      val result = updateRecordAndWait()
+      val result = requestAccreditationAndWait()
 
       result.status mustBe UNAUTHORIZED
-      result.json mustBe updateExpectedJson(
+      result.json mustBe expectedJson(
         "UNAUTHORIZED",
         s"The details signed in do not have a Trader Goods Profile"
       )
@@ -197,10 +197,10 @@ class RequestAccreditationIntegrationTest
     "return Unauthorized when affinity group is Agent" in {
       authorizeWithAffinityGroup(Some(Agent))
 
-      val result = updateRecordAndWait()
+      val result = requestAccreditationAndWait()
 
       result.status mustBe UNAUTHORIZED
-      result.json mustBe updateExpectedJson(
+      result.json mustBe expectedJson(
         "UNAUTHORIZED",
         s"Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'"
       )
@@ -209,10 +209,10 @@ class RequestAccreditationIntegrationTest
     "return Unauthorized when affinity group is empty" in {
       authorizeWithAffinityGroup(None)
 
-      val result = updateRecordAndWait()
+      val result = requestAccreditationAndWait()
 
       result.status mustBe UNAUTHORIZED
-      result.json mustBe updateExpectedJson(
+      result.json mustBe expectedJson(
         "UNAUTHORIZED",
         "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'"
       )
@@ -221,10 +221,10 @@ class RequestAccreditationIntegrationTest
     "return Internal server error if auth throws" in {
       withUnauthorizedTrader(new RuntimeException("runtime exception"))
 
-      val result = updateRecordAndWait()
+      val result = requestAccreditationAndWait()
 
       result.status mustBe INTERNAL_SERVER_ERROR
-      result.json mustBe updateExpectedJson(
+      result.json mustBe expectedJson(
         "INTERNAL_SERVER_ERROR",
         s"Internal server error for /$eoriNumber/records/$recordId/accreditations with error: runtime exception"
       )
@@ -238,7 +238,7 @@ class RequestAccreditationIntegrationTest
     requestorEmail = "Phil.Edwards@gmail.com"
   )
 
-  private def updateRecordAndWaitWithoutClientIdHeader() =
+  private def requestAccreditationAndWaitWithoutClientIdHeader() =
     await(
       wsClient
         .url(url)
@@ -249,7 +249,7 @@ class RequestAccreditationIntegrationTest
         .post(requestBody)
     )
 
-  private def updateRecordAndWait(requestBody: JsValue = requestBody) =
+  private def requestAccreditationAndWait(requestBody: JsValue = requestBody) =
     await(
       wsClient
         .url(url)
@@ -261,7 +261,7 @@ class RequestAccreditationIntegrationTest
         .post(requestBody)
     )
 
-  private def updateExpectedJson(code: String, message: String): Any =
+  private def expectedJson(code: String, message: String): Any =
     Json.obj(
       "correlationId" -> correlationId,
       "code"          -> code,

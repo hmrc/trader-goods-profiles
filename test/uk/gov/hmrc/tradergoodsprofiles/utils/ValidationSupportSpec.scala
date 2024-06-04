@@ -23,12 +23,13 @@ import uk.gov.hmrc.tradergoodsprofiles.models.requests.{APICreateRecordRequest, 
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.{convertError, validateRequestBody}
 
+import scala.reflect.runtime.universe
 import scala.reflect.runtime.universe.typeTag
 
 class ValidationSupportSpec extends PlaySpec {
 
-  implicit val uuidService = new UuidService {}
-  implicit val tt          = typeTag[APICreateRecordRequest]
+  implicit val uuidService: UuidService                     = new UuidService {}
+  implicit val tt: universe.TypeTag[APICreateRecordRequest] = typeTag[APICreateRecordRequest]
 
   "convertError" should {
     "for actorId" in {

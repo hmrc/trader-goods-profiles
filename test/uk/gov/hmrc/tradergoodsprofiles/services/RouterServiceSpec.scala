@@ -26,13 +26,11 @@ import org.scalatestplus.play.PlaySpec
 import play.api.http.Status
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
-import play.api.mvc.Result
-import play.api.mvc.Results.InternalServerError
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{APICreateRecordRequestSupport, RouterCreateRecordRequestSupport, UpdateRecordRequestSupport}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.{CreateOrUpdateRecordResponseSupport, GetRecordResponseSupport}
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, RouterError, ServiceError}
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterRequestAccreditationRequest, RouterUpdateRecordRequest}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.{RequestAccreditationRequest, router}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
@@ -572,15 +570,6 @@ class RouterServiceSpec
     requestorEmail = "Phil.Edwards@gmail.com"
   )
 
-  private def createInternalServerErrorResult(message: String): Result =
-    InternalServerError(
-      Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "INTERNAL_SERVER_ERROR",
-        "message"       -> message
-      )
-    )
-
   private def createHttpResponse(status: Int, code: String) =
-    HttpResponse(status, Json.toJson(RouterError("correlationId", code, "any message")), Map.empty)
+    HttpResponse(status, Json.toJson(ErrorResponse("correlationId", code, "any message")), Map.empty)
 }
