@@ -296,6 +296,41 @@ class CreateRecordControllerIntegrationSpec
       )
     }
 
+    "return 400 Bad request when required request field is missing from assessment array" in {
+      withAuthorizedTrader()
+
+      val result = createRecordAndWait(invalidCreateRecordRequestDataForAssessmentArray)
+
+      result.status mustBe BAD_REQUEST
+      result.json mustBe Json.obj(
+        "correlationId" -> correlationId,
+        "code"          -> "BAD_REQUEST",
+        "message"       -> "Bad Request",
+        "errors"        -> Json.arr(
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Optional field assessmentId is in the wrong format",
+            "errorNumber" -> 15
+          ),
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Optional field primaryCategory is in the wrong format",
+            "errorNumber" -> 16
+          ),
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Optional field type is in the wrong format",
+            "errorNumber" -> 17
+          ),
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Optional field conditionId is in the wrong format",
+            "errorNumber" -> 18
+          )
+        )
+      )
+    }
+
   }
 
   private def createRecordAndWaitWithoutClientIdHeader() =
@@ -378,4 +413,43 @@ class CreateRecordControllerIntegrationSpec
       "message"     -> message,
       "errorNumber" -> errorNumber
     )
+
+  lazy val invalidCreateRecordRequestDataForAssessmentArray: JsValue = Json
+    .parse("""
+             |{
+             |    "actorId": "GB098765432112",
+             |    "traderRef": "BAN001001",
+             |    "comcode": "10410100",
+             |    "goodsDescription": "Organic bananas",
+             |    "countryOfOrigin": "EC",
+             |    "category": 1,
+             |    "assessments": [
+             |        {
+             |            "assessmentId": "abc123",
+             |            "primaryCategory": 1,
+             |            "condition": {
+             |                "type": "abc123",
+             |                "conditionId": "Y923",
+             |                "conditionDescription": "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
+             |                "conditionTraderText": "Excluded product"
+             |            }
+             |        },
+             |        {
+             |            "assessmentId": "",
+             |            "primaryCategory": "test",
+             |            "condition": {
+             |                "type": "",
+             |                "conditionId": "",
+             |                "conditionDescription": "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
+             |                "conditionTraderText": "Excluded product"
+             |            }
+             |        }
+             |    ],
+             |    "supplementaryUnit": 500,
+             |    "measurementUnit": "Square metre (m2)",
+             |    "comcodeEffectiveFromDate": "2024-11-18T23:20:19Z",
+             |    "comcodeEffectiveToDate": "2024-11-18T23:20:19Z"
+             |}
+             |""".stripMargin)
+
 }
