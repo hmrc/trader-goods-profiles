@@ -33,7 +33,7 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{APICreateRe
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.{CreateOrUpdateRecordResponseSupport, GetRecordResponseSupport}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.RouterError
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterUpdateRecordRequest
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.{UpdateProfileRequest, router}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.{APIUpdateProfileRequest, router}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.UpdateProfileResponse
 
@@ -448,7 +448,7 @@ class RouterServiceSpec
 
   "updateProfile" should {
     "update a profile" in {
-      val updateRequest  = UpdateProfileRequest(
+      val updateRequest  = APIUpdateProfileRequest(
         actorId = "GB987654321098",
         ukimsNumber = "XIUKIM47699357400020231115081800",
         nirmsNumber = Some("RMS-GB-123456"),
@@ -462,7 +462,7 @@ class RouterServiceSpec
         niphlNumber = "6 S12345"
       )
 
-      when(connector.put(any[String], any[UpdateProfileRequest])(any[HeaderCarrier]))
+      when(connector.put(any[String], any[APIUpdateProfileRequest])(any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(200, Json.toJson(updateResponse), Map.empty)))
 
       val result = sut.updateProfile("GB123456789012", updateRequest)
@@ -474,14 +474,14 @@ class RouterServiceSpec
     }
 
     "return an error when the response cannot be parsed as JSON" in {
-      val updateRequest = UpdateProfileRequest(
+      val updateRequest = APIUpdateProfileRequest(
         actorId = "GB987654321098",
         ukimsNumber = "XIUKIM47699357400020231115081800",
         nirmsNumber = Some("RMS-GB-123456"),
         niphlNumber = Some("6 S12345")
       )
 
-      when(connector.put(any[String], any[UpdateProfileRequest])(any[HeaderCarrier]))
+      when(connector.put(any[String], any[APIUpdateProfileRequest])(any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(200, "error")))
 
       val result = sut.updateProfile("GB123456789012", updateRequest)
@@ -494,14 +494,14 @@ class RouterServiceSpec
     }
 
     "return an error when the routerConnector returns an exception" in {
-      val updateRequest = UpdateProfileRequest(
+      val updateRequest = APIUpdateProfileRequest(
         actorId = "GB987654321098",
         ukimsNumber = "XIUKIM47699357400020231115081800",
         nirmsNumber = Some("RMS-GB-123456"),
         niphlNumber = Some("6 S12345")
       )
 
-      when(connector.put(any[String], any[UpdateProfileRequest])(any[HeaderCarrier]))
+      when(connector.put(any[String], any[APIUpdateProfileRequest])(any[HeaderCarrier]))
         .thenReturn(Future.failed(new RuntimeException("error")))
 
       val result = sut.updateProfile("GB123456789012", updateRequest)
@@ -526,14 +526,14 @@ class RouterServiceSpec
 
     forAll(table) { (description: String, status: Int, expectedResult: Int, code: String) =>
       s"$description" in {
-        val updateRequest = UpdateProfileRequest(
+        val updateRequest = APIUpdateProfileRequest(
           actorId = "GB987654321098",
           ukimsNumber = "XIUKIM47699357400020231115081800",
           nirmsNumber = Some("RMS-GB-123456"),
           niphlNumber = Some("6 S12345")
         )
 
-        when(connector.put(any[String], any[UpdateProfileRequest])(any[HeaderCarrier]))
+        when(connector.put(any[String], any[APIUpdateProfileRequest])(any[HeaderCarrier]))
           .thenReturn(Future.successful(createHttpResponse(status, code)))
 
         val result = sut.updateProfile("GB123456789012", updateRequest)

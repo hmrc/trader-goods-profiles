@@ -21,7 +21,7 @@ import play.api.libs.json._
 import play.api.mvc._
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.UpdateProfileRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.APIUpdateProfileRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 
 import javax.inject._
@@ -50,8 +50,8 @@ class MaintainProfileController @Inject() (
       )
     }
 
-  def validateUpdateProfileRequest(json: JsValue): Either[Result, UpdateProfileRequest] =
-    json.validate[UpdateProfileRequest].asEither.left.map { errors =>
+  def validateUpdateProfileRequest(json: JsValue): Either[Result, APIUpdateProfileRequest] =
+    json.validate[APIUpdateProfileRequest].asEither.left.map { errors =>
       BadRequest(
         Json.obj(
           "uuid"    -> uuidService.uuid,

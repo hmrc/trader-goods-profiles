@@ -25,7 +25,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.metrics.MetricsSupport
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.UpdateProfileRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.APIUpdateProfileRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterCreateRecordRequest, RouterUpdateRecordRequest}
 
 import javax.inject.Inject
@@ -104,7 +104,7 @@ class RouterConnector @Inject() (
         .execute[HttpResponse]
     }
 
-  def put(eori: String, updateProfileRequest: UpdateProfileRequest)(implicit
+  def put(eori: String, updateProfileRequest: APIUpdateProfileRequest)(implicit
     hc: HeaderCarrier
   ): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.maintainprofile.connector") { _ =>
