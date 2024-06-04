@@ -140,6 +140,41 @@ class UpdateRecordControllerIntegrationSpec
 
     }
 
+    "return 400 Bad request when required request field is missing from assessment array" in {
+      withAuthorizedTrader()
+
+      val result = updateRecordAndWait(invalidUpdateRecordRequestDataForAssessmentArray)
+
+      result.status mustBe BAD_REQUEST
+      result.json mustBe Json.obj(
+        "correlationId" -> correlationId,
+        "code"          -> "BAD_REQUEST",
+        "message"       -> "Bad Request",
+        "errors"        -> Json.arr(
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Optional field assessmentId is in the wrong format",
+            "errorNumber" -> 15
+          ),
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Optional field primaryCategory is in the wrong format",
+            "errorNumber" -> 16
+          ),
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Optional field type is in the wrong format",
+            "errorNumber" -> 17
+          ),
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Optional field conditionId is in the wrong format",
+            "errorNumber" -> 18
+          )
+        )
+      )
+    }
+
     "return Forbidden when X-Client-ID header is missing" in {
       withAuthorizedTrader()
 
@@ -280,4 +315,43 @@ class UpdateRecordControllerIntegrationSpec
       "code"          -> code,
       "message"       -> message
     )
+
+  lazy val invalidUpdateRecordRequestDataForAssessmentArray: JsValue = Json
+    .parse("""
+             |{
+             |    "recordId": "b2fa315b-2d31-4629-90fc-a7b1a5119873",
+             |    "actorId": "GB098765432112",
+             |    "traderRef": "BAN001001",
+             |    "comcode": "10410100",
+             |    "goodsDescription": "Organic bananas",
+             |    "countryOfOrigin": "EC",
+             |    "category": 1,
+             |    "assessments": [
+             |        {
+             |            "assessmentId": "abc123",
+             |            "primaryCategory": 1,
+             |            "condition": {
+             |                "type": "abc123",
+             |                "conditionId": "Y923",
+             |                "conditionDescription": "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
+             |                "conditionTraderText": "Excluded product"
+             |            }
+             |        },
+             |        {
+             |            "assessmentId": "",
+             |            "primaryCategory": "test",
+             |            "condition": {
+             |                "type": "",
+             |                "conditionId": "",
+             |                "conditionDescription": "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
+             |                "conditionTraderText": "Excluded product"
+             |            }
+             |        }
+             |    ],
+             |    "supplementaryUnit": 500,
+             |    "measurementUnit": "Square metre (m2)",
+             |    "comcodeEffectiveFromDate": "2024-11-18T23:20:19Z",
+             |    "comcodeEffectiveToDate": "2024-11-18T23:20:19Z"
+             |}
+             |""".stripMargin)
 }

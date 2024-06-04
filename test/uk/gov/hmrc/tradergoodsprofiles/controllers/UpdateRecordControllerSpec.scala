@@ -23,7 +23,7 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.Results.InternalServerError
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
@@ -105,6 +105,43 @@ class UpdateRecordControllerSpec
       )
     }
 
+    "return 400 Bad request when required request field is missing from assessment array" in {
+
+      val expectedJsonResponse = Json.obj(
+        "correlationId" -> correlationId,
+        "code"          -> "BAD_REQUEST",
+        "message"       -> "Bad Request",
+        "errors"        -> Json.arr(
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Optional field assessmentId is in the wrong format",
+            "errorNumber" -> 15
+          ),
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Optional field primaryCategory is in the wrong format",
+            "errorNumber" -> 16
+          ),
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Optional field type is in the wrong format",
+            "errorNumber" -> 17
+          ),
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Optional field conditionId is in the wrong format",
+            "errorNumber" -> 18
+          )
+        )
+      )
+
+      val result =
+        sut.updateRecord(eoriNumber, recordId)(request.withBody(invalidUpdateRecordRequestDataForAssessmentArray))
+
+      status(result) mustBe BAD_REQUEST
+      contentAsJson(result) mustBe expectedJsonResponse
+    }
+
     "return 400 when JSON body doesn’t match the schema" in {
       val invalidJsonRequest = Json.obj(
         "traderRef"                -> "SKU123456",
@@ -168,4 +205,44 @@ class UpdateRecordControllerSpec
         )
       )
     )
+
+  lazy val invalidUpdateRecordRequestDataForAssessmentArray: JsValue = Json
+    .parse("""
+             |{
+             |    "recordId": "b2fa315b-2d31-4629-90fc-a7b1a5119873",
+             |    "actorId": "GB098765432112",
+             |    "traderRef": "BAN001001",
+             |    "comcode": "10410100",
+             |    "goodsDescription": "Organic bananas",
+             |    "countryOfOrigin": "EC",
+             |    "category": 1,
+             |    "assessments": [
+             |        {
+             |            "assessmentId": "abc123",
+             |            "primaryCategory": 1,
+             |            "condition": {
+             |                "type": "abc123",
+             |                "conditionId": "Y923",
+             |                "conditionDescription": "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
+             |                "conditionTraderText": "Excluded product"
+             |            }
+             |        },
+             |        {
+             |            "assessmentId": "",
+             |            "primaryCategory": "test",
+             |            "condition": {
+             |                "type": "",
+             |                "conditionId": "",
+             |                "conditionDescription": "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
+             |                "conditionTraderText": "Excluded product"
+             |            }
+             |        }
+             |    ],
+             |    "supplementaryUnit": 500,
+             |    "measurementUnit": "Square metre (m2)",
+             |    "comcodeEffectiveFromDate": "2024-11-18T23:20:19Z",
+             |    "comcodeEffectiveToDate": "2024-11-18T23:20:19Z"
+             |}
+             |""".stripMargin)
+
 }
