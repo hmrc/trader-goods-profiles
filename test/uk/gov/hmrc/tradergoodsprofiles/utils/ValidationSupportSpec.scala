@@ -17,11 +17,18 @@
 package uk.gov.hmrc.tradergoodsprofiles.utils
 
 import org.scalatestplus.play.PlaySpec
-import play.api.libs.json.{JsPath, JsonValidationError}
+import play.api.libs.json.{JsPath, Json, JsonValidationError}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.Error
-import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.convertError
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.{APICreateRecordRequest, RequestAccreditationRequest}
+import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
+import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.{convertError, validateRequestBody}
+
+import scala.reflect.runtime.universe.typeTag
 
 class ValidationSupportSpec extends PlaySpec {
+
+  implicit val uuidService = new UuidService {}
+  implicit val tt          = typeTag[APICreateRecordRequest]
 
   "convertError" should {
     "for actorId" in {
@@ -65,6 +72,44 @@ class ValidationSupportSpec extends PlaySpec {
       val result = convertError(errors)
 
       result mustBe expectedErrors
+    }
+  }
+
+  "validateRequestBody" should {
+    "should successfully validate a type" in {
+      val error = JsonValidationError("error.path.missing")
+      val path  = JsPath \ "actorId"
+
+      val errors         = scala.collection.Seq(
+        (path, scala.collection.Seq(error))
+      )
+      val expectedErrors = Seq(
+        Error("INVALID_REQUEST_PARAMETER", "Mandatory field actorId was missing from body or is in the wrong format", 8)
+      )
+
+      val result = convertError(errors)
+
+      result mustBe expectedErrors
+    }
+  }
+
+  "validateRequestBody" should {
+    "return Right(request) when JSON is valid" in {
+      val json =
+        Json.obj(
+          "actorId"        -> "XI123456789001",
+          "requestorName"  -> "Mr.Phil Edwards",
+          "requestorEmail" -> "Phil.Edwards@gmail.com"
+        )
+
+      val result = validateRequestBody[RequestAccreditationRequest](json, uuidService)
+      result mustBe a[Right[_, _]]
+    }
+
+    "return Left(ErrorResponse) when JSON is invalid" in {
+      val json   = Json.obj()
+      val result = validateRequestBody[APICreateRecordRequest](json, uuidService)
+      result mustBe a[Left[_, _]]
     }
   }
 

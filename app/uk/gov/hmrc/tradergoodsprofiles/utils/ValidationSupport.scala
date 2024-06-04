@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.utils
 
-import play.api.libs.json.{JsError, JsPath, JsSuccess, JsValue, JsonValidationError, Reads}
+import play.api.libs.json._
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{Error, ErrorResponse}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
+import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
 
 import scala.reflect.runtime.universe.TypeTag
 
@@ -31,35 +32,57 @@ object ValidationSupport {
     "/goodsDescription",
     "/countryOfOrigin",
     "/category",
+    "/assessments/assessmentId",
+    "/assessments/primaryCategory",
+    "/assessments/condition/type",
+    "/assessments/condition/conditionId",
+    "/assessments/condition/conditionDescription",
+    "/assessments/condition/conditionTraderText",
     "/supplementaryUnit",
+    "/measurementUnit",
     "/comcodeEffectiveFromDate",
     "/comcodeEffectiveToDate"
   )
 
   private val fieldsToErrorCode: Map[String, (String, String, Int)] = Map(
-    "/actorId"                  -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidActorMessage, ApplicationConstants.InvalidActorId),
-    "/traderRef"                -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingTraderRef, ApplicationConstants.InvalidOrMissingTraderRefCode),
-    "/comcode"                  -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcode, ApplicationConstants.InvalidOrMissingComcodeCode),
-    "/goodsDescription"         -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingGoodsDescription, ApplicationConstants.InvalidOrMissingGoodsDescriptionCode),
-    "/countryOfOrigin"          -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingCountryOfOrigin, ApplicationConstants.InvalidOrMissingCountryOfOriginCode),
-    "/category"                 -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingCategory, ApplicationConstants.InvalidOrMissingCategoryCode),
-    "/supplementaryUnit"        -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingSupplementaryUnit, ApplicationConstants.InvalidOrMissingSupplementaryUnitCode),
-    "/comcodeEffectiveFromDate" -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDateCode),
-    "/comcodeEffectiveToDate"   -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcodeEffectiveToDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveToDateCode)
+    "/actorId"                                    -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidActorMessage, ApplicationConstants.InvalidActorId),
+    "/traderRef"                                  -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingTraderRef, ApplicationConstants.InvalidOrMissingTraderRefCode),
+    "/comcode"                                    -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcode, ApplicationConstants.InvalidOrMissingComcodeCode),
+    "/goodsDescription"                           -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingGoodsDescription, ApplicationConstants.InvalidOrMissingGoodsDescriptionCode),
+    "/countryOfOrigin"                            -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingCountryOfOrigin, ApplicationConstants.InvalidOrMissingCountryOfOriginCode),
+    "/category"                                   -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingCategory, ApplicationConstants.InvalidOrMissingCategoryCode),
+    "/assessments/assessmentId"                   -> (ApplicationConstants.InvalidRequestParameter, InvalidOrMissingAssessmentId, InvalidOrMissingAssessmentIdCode),
+    "/assessments/primaryCategory"                -> (ApplicationConstants.InvalidRequestParameter, InvalidAssessmentPrimaryCategory, InvalidAssessmentPrimaryCategoryCode),
+    "/assessments/condition/type"                 -> (ApplicationConstants.InvalidRequestParameter, InvalidAssessmentPrimaryCategoryConditionType, InvalidAssessmentPrimaryCategoryConditionTypeCode),
+    "/assessments/condition/conditionId"          -> (ApplicationConstants.InvalidRequestParameter, InvalidAssessmentPrimaryCategoryConditionId, InvalidAssessmentPrimaryCategoryConditionIdCode),
+    "/assessments/condition/conditionDescription" -> (ApplicationConstants.InvalidRequestParameter, InvalidAssessmentPrimaryCategoryConditionDescription, InvalidAssessmentPrimaryCategoryConditionDescriptionCode),
+    "/assessments/condition/conditionTraderText"  -> (ApplicationConstants.InvalidRequestParameter, InvalidAssessmentPrimaryCategoryConditionTraderText, InvalidAssessmentPrimaryCategoryConditionTraderTextCode),
+    "/supplementaryUnit"                          -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingSupplementaryUnit, ApplicationConstants.InvalidOrMissingSupplementaryUnitCode),
+    "/measurementUnit"                            -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingMeasurementUnit, ApplicationConstants.InvalidOrMissingMeasurementUnitCode),
+    "/comcodeEffectiveFromDate"                   -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDateCode),
+    "/comcodeEffectiveToDate"                     -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcodeEffectiveToDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveToDateCode)
   )
 
   def convertError(
     errors: scala.collection.Seq[(JsPath, scala.collection.Seq[JsonValidationError])]
   ): Seq[Error] =
-    errors
-      .flatMap { case (path, _) =>
-        fieldsToErrorCode.get(path.toString).map { case (code, message, errorNumber) =>
-          (fieldOrder.indexOf(path.toString), Error(code, message, errorNumber))
+    extractSimplePaths(errors)
+      .flatMap { case key =>
+        fieldsToErrorCode.get(key).map { case (code, message, errorNumber) =>
+          (fieldOrder.indexOf(key), Error(code, message, errorNumber))
         }
       }
       .toSeq
       .sortBy(_._1)
       .map(_._2)
+
+  private def extractSimplePaths(
+    errors: scala.collection.Seq[(JsPath, collection.Seq[JsonValidationError])]
+  ): collection.Seq[String] =
+    errors
+      .map(_._1)
+      .map(_.path.filter(_.isInstanceOf[KeyPathNode]))
+      .map(_.mkString)
 
   def validateRequestBody[T](
     json: JsValue,

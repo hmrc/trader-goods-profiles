@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.models
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
+import play.api.libs.json.Reads.verifying
+import play.api.libs.json._
 
 case class Condition(
   `type`: Option[String],
@@ -26,5 +28,16 @@ case class Condition(
 )
 
 object Condition {
-  implicit val format: Format[Condition] = Json.format[Condition]
+  def nonEmptyString: Reads[String] = verifying[String](_.nonEmpty)
+
+  implicit val reads: Reads[Condition] = (
+    (JsPath \ "type").readNullable[String](nonEmptyString) and
+      (JsPath \ "conditionId").readNullable[String](nonEmptyString) and
+      (JsPath \ "conditionDescription").readNullable[String](nonEmptyString) and
+      (JsPath \ "conditionTraderText").readNullable[String](nonEmptyString)
+  )(Condition.apply _)
+
+  implicit val writes: OWrites[Condition] = Json.writes[Condition]
+
+  implicit val format: OFormat[Condition] = OFormat(reads, writes)
 }

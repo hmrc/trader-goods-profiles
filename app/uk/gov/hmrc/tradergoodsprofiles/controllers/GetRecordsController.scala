@@ -26,7 +26,6 @@ import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
 
 import java.time.Instant
-import java.time.format.DateTimeFormatter
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -80,11 +79,7 @@ class GetRecordsController @Inject() (
   private def validateQueryParameterLastUpdatedDate(
     lastUpdatedDate: Option[String]
   ): Either[ErrorResponse, Option[String]] =
-    Try(lastUpdatedDate.map { dateTime =>
-      val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
-      formatter.parse(dateTime)
-      Instant.parse(dateTime).toString
-    }).toEither.left.map { _ =>
+    Try(lastUpdatedDate.map(dateTime => Instant.parse(dateTime).toString)).toEither.left.map { _ =>
       ErrorResponse.badRequestErrorResponse(
         uuidService.uuid,
         Some(Seq(Error(InvalidRequestParameter, InvalidLastUpdatedDate, InvalidLastUpdatedDateCode)))

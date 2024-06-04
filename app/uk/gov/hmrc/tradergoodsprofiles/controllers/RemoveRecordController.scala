@@ -16,19 +16,17 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
-import cats.data.EitherT
-import cats.implicits.toBifunctorOps
 import play.api.libs.json.Format.GenericFormat
 import play.api.libs.json.Json.toJson
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, ControllerComponents, Request, Result}
+import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.{BadRequestErrorsResponse, Error, ErrorResponse}
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.{Error, ErrorResponse}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.RemoveRecordRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
-import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.{convertError, validateRequestBody}
+import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.validateRequestBody
 
 import java.util.UUID
 import javax.inject.{Inject, Singleton}

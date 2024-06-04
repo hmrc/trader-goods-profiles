@@ -301,10 +301,10 @@ class RouterServiceSpec
       when(connector.removeRecord("GB123456789012", "recordId", "GB123456789012"))
         .thenReturn(Future.successful(httpResponse))
 
-      val result = sut.removeRecord("GB123456789012", "recordId", "GB123456789012").value
+      val result = sut.removeRecord("GB123456789012", "recordId", "GB123456789012")
 
-      result.map { res =>
-        res mustBe Future.successful(Right(OK))
+      whenReady(result) {
+        _.value mustBe OK
       }
     }
 
