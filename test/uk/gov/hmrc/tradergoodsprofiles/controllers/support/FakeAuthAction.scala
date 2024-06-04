@@ -19,7 +19,6 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers.support
 import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.mvc._
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.AuthAction
-import uk.gov.hmrc.tradergoodsprofiles.models.auth.EnrolmentRequest
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -27,17 +26,17 @@ object FakeAuth {
   class FakeSuccessAuthAction extends AuthAction {
     override def apply(
       eori: String
-    ): ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest] =
-      new ActionBuilder[EnrolmentRequest, AnyContent] with ActionFunction[Request, EnrolmentRequest] {
+    ): ActionBuilder[Request, AnyContent] with ActionFunction[Request, Request] =
+      new ActionBuilder[Request, AnyContent] with ActionFunction[Request, Request] {
 
         override val parser: BodyParsers.Default         = mock[BodyParsers.Default]
         protected def executionContext: ExecutionContext = ExecutionContext.global
 
         override def invokeBlock[A](
           request: Request[A],
-          block: EnrolmentRequest[A] => Future[Result]
+          block: Request[A] => Future[Result]
         ): Future[Result] =
-          block(EnrolmentRequest(request))
+          block(request)
       }
   }
 }
