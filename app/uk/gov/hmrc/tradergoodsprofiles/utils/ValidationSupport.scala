@@ -18,10 +18,11 @@ package uk.gov.hmrc.tradergoodsprofiles.utils
 
 import play.api.libs.json._
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{Error, ErrorResponse}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.UpdateRecordRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
 
-import scala.reflect.runtime.universe.TypeTag
+import scala.reflect.runtime.universe.{TypeTag, typeOf}
 
 object ValidationSupport {
 
@@ -44,7 +45,7 @@ object ValidationSupport {
     "/comcodeEffectiveToDate"
   )
 
-  private val fieldsToErrorCode: Map[String, (String, String, Int)] = Map(
+  private val mandatoryFieldsToErrorCode: Map[String, (String, String, Int)] = Map(
     "/actorId"                                    -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidActorMessage, ApplicationConstants.InvalidActorId),
     "/traderRef"                                  -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingTraderRef, ApplicationConstants.InvalidOrMissingTraderRefCode),
     "/comcode"                                    -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcode, ApplicationConstants.InvalidOrMissingComcodeCode),
@@ -63,13 +64,39 @@ object ValidationSupport {
     "/comcodeEffectiveToDate"                     -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcodeEffectiveToDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveToDateCode)
   )
 
-  def convertError(
+  private val optionalFieldsToErrorCode: Map[String, (String, String, Int)] = Map(
+    "/actorId"                                    -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidActorMessage, ApplicationConstants.InvalidActorId),
+    "/traderRef"                                  -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingOptionalTraderRef, ApplicationConstants.InvalidOrMissingTraderRefCode),
+    "/comcode"                                    -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingOptionalComcode, ApplicationConstants.InvalidOrMissingComcodeCode),
+    "/goodsDescription"                           -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingOptionalGoodsDescription, ApplicationConstants.InvalidOrMissingGoodsDescriptionCode),
+    "/countryOfOrigin"                            -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingOptionalCountryOfOrigin, ApplicationConstants.InvalidOrMissingCountryOfOriginCode),
+    "/category"                                   -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingOptionalCategory, ApplicationConstants.InvalidOrMissingCategoryCode),
+    "/assessments/assessmentId"                   -> (ApplicationConstants.InvalidRequestParameter, InvalidOrMissingAssessmentId, InvalidOrMissingAssessmentIdCode),
+    "/assessments/primaryCategory"                -> (ApplicationConstants.InvalidRequestParameter, InvalidAssessmentPrimaryCategory, InvalidAssessmentPrimaryCategoryCode),
+    "/assessments/condition/type"                 -> (ApplicationConstants.InvalidRequestParameter, InvalidAssessmentPrimaryCategoryConditionType, InvalidAssessmentPrimaryCategoryConditionTypeCode),
+    "/assessments/condition/conditionId"          -> (ApplicationConstants.InvalidRequestParameter, InvalidAssessmentPrimaryCategoryConditionId, InvalidAssessmentPrimaryCategoryConditionIdCode),
+    "/assessments/condition/conditionDescription" -> (ApplicationConstants.InvalidRequestParameter, InvalidAssessmentPrimaryCategoryConditionDescription, InvalidAssessmentPrimaryCategoryConditionDescriptionCode),
+    "/assessments/condition/conditionTraderText"  -> (ApplicationConstants.InvalidRequestParameter, InvalidAssessmentPrimaryCategoryConditionTraderText, InvalidAssessmentPrimaryCategoryConditionTraderTextCode),
+    "/supplementaryUnit"                          -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingSupplementaryUnit, ApplicationConstants.InvalidOrMissingSupplementaryUnitCode),
+    "/measurementUnit"                            -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingMeasurementUnit, ApplicationConstants.InvalidOrMissingMeasurementUnitCode),
+    "/comcodeEffectiveFromDate"                   -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingOptionalComcodeEffectiveFromDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDateCode),
+    "/comcodeEffectiveToDate"                     -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcodeEffectiveToDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveToDateCode)
+  )
+
+  def convertError[T](
     errors: scala.collection.Seq[(JsPath, scala.collection.Seq[JsonValidationError])]
-  ): Seq[Error] =
+  )(implicit tt: TypeTag[T]): Seq[Error] =
     extractSimplePaths(errors)
       .flatMap { case key =>
-        fieldsToErrorCode.get(key).map { case (code, message, errorNumber) =>
-          (fieldOrder.indexOf(key), Error(code, message, errorNumber))
+        tt.tpe match {
+          case t if t =:= typeOf[UpdateRecordRequest] =>
+            optionalFieldsToErrorCode.get(key).map { case (code, message, errorNumber) =>
+              (fieldOrder.indexOf(key), Error(code, message, errorNumber))
+            }
+          case _                                      =>
+            mandatoryFieldsToErrorCode.get(key).map { case (code, message, errorNumber) =>
+              (fieldOrder.indexOf(key), Error(code, message, errorNumber))
+            }
         }
       }
       .toSeq

@@ -31,19 +31,24 @@ object ApplicationConstants {
   val InvalidRecordId                                          = 25
   val InvalidRecordIdMessage                                   = "The recordId has been provided in the wrong format"
   val InvalidOrMissingTraderRef                                = "Mandatory field traderRef was missing from body or is in the wrong format"
+  val InvalidOrMissingOptionalTraderRef                        = "Optional field traderRef was missing from body or is in the wrong format"
   val InvalidOrMissingTraderRefCode                            = 9
   val InvalidOrMissingComcode                                  = "Mandatory field comcode was missing from body or is in the wrong format"
+  val InvalidOrMissingOptionalComcode                          = "Optional field comcode was missing from body or is in the wrong format"
   val InvalidOrMissingComcodeCode                              = 11
   val InvalidOrMissingGoodsDescription                         =
     "Mandatory field goodsDescription was missing from body or is in the wrong format"
+  val InvalidOrMissingOptionalGoodsDescription                 =
+    "Optional field goodsDescription was missing from body or is in the wrong format"
   val InvalidOrMissingGoodsDescriptionCode                     = 12
   val InvalidOrMissingCountryOfOrigin                          =
     "Mandatory field countryOfOrigin was missing from body or is in the wrong format"
+  val InvalidOrMissingOptionalCountryOfOrigin                  =
+    "Optional field countryOfOrigin was missing from body or is in the wrong format"
   val InvalidOrMissingCountryOfOriginCode                      = 13
   val InvalidOrMissingCategory                                 = "Mandatory field category was missing from body or is in the wrong format"
+  val InvalidOrMissingOptionalCategory                         = "Optional field category was missing from body or is in the wrong format"
   val InvalidOrMissingCategoryCode                             = 14
-  val InvalidOrMissingComcodeEffectiveFromDate                 =
-    "Mandatory field comcodeEffectiveFromDate was missing from body or is in the wrong format"
   val InvalidOrMissingAssessmentIdCode                         = 15
   val InvalidOrMissingAssessmentId                             = "Optional field assessmentId is in the wrong format"
   val InvalidAssessmentPrimaryCategoryCode                     = 16
@@ -64,6 +69,10 @@ object ApplicationConstants {
   val InvalidOrMissingMeasurementUnitCode                      = 22
   val InvalidOrMissingMeasurementUnit                          = "Optional field measurementUnit is in the wrong format"
   val InvalidOrMissingComcodeEffectiveFromDateCode             = 23
+  val InvalidOrMissingComcodeEffectiveFromDate                 =
+    "Mandatory field comcodeEffectiveFromDate was missing from body or is in the wrong format"
+  val InvalidOrMissingOptionalComcodeEffectiveFromDate         =
+    "Optional field comcodeEffectiveFromDate was missing from body or is in the wrong format"
   val InvalidLastUpdatedDate                                   = "The URL parameter lastUpdatedDate is in the wrong format"
   val InvalidLastUpdatedDateCode                               = 28
   val InvalidOrMissingComcodeEffectiveToDate                   = "Optional field comcodeEffectiveToDate is in the wrong format"
