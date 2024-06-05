@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.models.requests
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.functional.syntax._
+import play.api.libs.json.Reads.verifying
+import play.api.libs.json._
 
 case class APIUpdateProfileRequest(
   actorId: String,
@@ -26,5 +28,17 @@ case class APIUpdateProfileRequest(
 )
 
 object APIUpdateProfileRequest {
-  implicit val format: OFormat[APIUpdateProfileRequest] = Json.format[APIUpdateProfileRequest]
+
+  def nonEmptyString: Reads[String] = verifying[String](_.nonEmpty)
+
+  implicit val reads: Reads[APIUpdateProfileRequest] = (
+    (JsPath \ "actorId").read[String](nonEmptyString) and
+      (JsPath \ "ukimsNumber").read[String](nonEmptyString) and
+      (JsPath \ "nirmsNumber").readNullable[String] and
+      (JsPath \ "niphlNumber").readNullable[String]
+  )(APIUpdateProfileRequest.apply _)
+
+  implicit val writes: OWrites[APIUpdateProfileRequest] = Json.writes[APIUpdateProfileRequest]
+
+  implicit val format: OFormat[APIUpdateProfileRequest] = OFormat(reads, writes)
 }
