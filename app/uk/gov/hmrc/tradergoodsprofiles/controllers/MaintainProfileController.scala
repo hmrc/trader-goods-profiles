@@ -22,7 +22,7 @@ import play.api.mvc._
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.BadRequestErrorsResponse
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.APIUpdateProfileRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.APIMaintainProfileRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.convertError
 
@@ -52,8 +52,8 @@ class MaintainProfileController @Inject() (
       }
     }
 
-  def validateUpdateProfileRequest(json: JsValue): Either[Result, APIUpdateProfileRequest] =
-    json.validate[APIUpdateProfileRequest].asEither.left.map { errors =>
+  def validateUpdateProfileRequest(json: JsValue): Either[Result, APIMaintainProfileRequest] =
+    json.validate[APIMaintainProfileRequest].asEither.left.map { errors =>
       BadRequestErrorsResponse(uuidService.uuid, Some(convertError(errors))).toResult
     }
 }

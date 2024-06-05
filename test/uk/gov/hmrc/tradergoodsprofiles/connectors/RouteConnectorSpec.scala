@@ -34,7 +34,7 @@ import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.{AppConfig, Constants}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{RouterCreateRecordRequestSupport, RouterUpdateRecordRequestSupport}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterUpdateProfileRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterMaintainProfileRequest
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -267,7 +267,7 @@ class RouteConnectorSpec
   "maintain profile" should {
 
     "return 200 when the profile is successfully updated" in {
-      val routerUpdateProfileRequest = RouterUpdateProfileRequest(
+      val routerUpdateProfileRequest = RouterMaintainProfileRequest(
         eori = "GB123456789012",
         actorId = "GB987654321098",
         ukimsNumber = "XIUKIM47699357400020231115081800",
@@ -286,7 +286,7 @@ class RouteConnectorSpec
     }
 
     "send a PUT request with the right url and body" in {
-      val routerUpdateProfileRequest = RouterUpdateProfileRequest(
+      val routerUpdateProfileRequest = RouterMaintainProfileRequest(
         eori = "GB123456789012",
         actorId = "GB987654321098",
         ukimsNumber = "XIUKIM47699357400020231115081800",

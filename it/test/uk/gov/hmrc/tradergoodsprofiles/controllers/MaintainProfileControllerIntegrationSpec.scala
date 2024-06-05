@@ -34,7 +34,7 @@ import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.APIUpdateProfileRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.APIMaintainProfileRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.UpdateProfileResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
@@ -59,7 +59,7 @@ class MaintainProfileControllerIntegrationSpec
   private val url       = s"http://localhost:$port/$eoriNumber"
   private val routerUrl = s"/trader-goods-profiles-router/profile/maintain"
 
-  private val updateProfileRequest = APIUpdateProfileRequest(
+  private val updateProfileRequest = APIMaintainProfileRequest(
     actorId = "GB987654321098",
     ukimsNumber = "XIUKIM47699357400020231115081800",
     nirmsNumber = Some("RMS-GB-123456"),

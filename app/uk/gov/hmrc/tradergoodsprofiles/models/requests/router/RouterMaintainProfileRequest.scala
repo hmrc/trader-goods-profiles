@@ -17,9 +17,9 @@
 package uk.gov.hmrc.tradergoodsprofiles.models.requests.router
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.APIUpdateProfileRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.APIMaintainProfileRequest
 
-case class RouterUpdateProfileRequest(
+case class RouterMaintainProfileRequest(
   eori: String,
   actorId: String,
   ukimsNumber: String,
@@ -27,11 +27,11 @@ case class RouterUpdateProfileRequest(
   niphlNumber: Option[String]
 )
 
-object RouterUpdateProfileRequest {
-  implicit val format: OFormat[RouterUpdateProfileRequest] = Json.format[RouterUpdateProfileRequest]
+object RouterMaintainProfileRequest {
+  implicit val format: OFormat[RouterMaintainProfileRequest] = Json.format[RouterMaintainProfileRequest]
 
-  def apply(eori: String, apiRequest: APIUpdateProfileRequest): RouterUpdateProfileRequest =
-    RouterUpdateProfileRequest(
+  def apply(eori: String, apiRequest: APIMaintainProfileRequest): RouterMaintainProfileRequest =
+    RouterMaintainProfileRequest(
       eori = eori,
       actorId = apiRequest.actorId,
       ukimsNumber = apiRequest.ukimsNumber,

@@ -25,7 +25,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.metrics.MetricsSupport
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterCreateRecordRequest, RouterUpdateProfileRequest, RouterUpdateRecordRequest}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterCreateRecordRequest, RouterMaintainProfileRequest, RouterUpdateRecordRequest}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -103,7 +103,7 @@ class RouterConnector @Inject() (
         .execute[HttpResponse]
     }
 
-  def routerMaintainProfile(routerUpdateProfileRequest: RouterUpdateProfileRequest)(implicit
+  def routerMaintainProfile(routerUpdateProfileRequest: RouterMaintainProfileRequest)(implicit
     hc: HeaderCarrier
   ): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.maintainprofile.connector") { _ =>

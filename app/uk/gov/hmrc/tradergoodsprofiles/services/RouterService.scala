@@ -27,7 +27,7 @@ import uk.gov.hmrc.http.HttpReads.is2xx
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{RouterError, ServerErrorResponse}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterUpdateRecordRequest
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.{APICreateRecordRequest, APIUpdateProfileRequest, UpdateRecordRequest, router}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.{APICreateRecordRequest, APIMaintainProfileRequest, UpdateRecordRequest, router}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.{CreateOrUpdateRecordResponse, GetRecordResponse, GetRecordsResponse}
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.UpdateProfileResponse
 
@@ -56,7 +56,7 @@ trait RouterService {
     hc: HeaderCarrier
   ): EitherT[Future, Result, GetRecordsResponse]
 
-  def updateProfile(eori: String, updateRequest: APIUpdateProfileRequest)(implicit
+  def updateProfile(eori: String, updateRequest: APIMaintainProfileRequest)(implicit
     hc: HeaderCarrier
   ): Future[Either[Result, UpdateProfileResponse]]
 }
@@ -196,10 +196,10 @@ class RouterServiceImpl @Inject() (
     )
   }
 
-  def updateProfile(eori: String, updateRequest: APIUpdateProfileRequest)(implicit
+  def updateProfile(eori: String, updateRequest: APIMaintainProfileRequest)(implicit
     hc: HeaderCarrier
   ): Future[Either[Result, UpdateProfileResponse]] = {
-    val routerUpdateProfileRequest = router.RouterUpdateProfileRequest(eori, updateRequest)
+    val routerUpdateProfileRequest = router.RouterMaintainProfileRequest(eori, updateRequest)
     routerConnector
       .routerMaintainProfile(routerUpdateProfileRequest)
       .map { httpResponse =>
