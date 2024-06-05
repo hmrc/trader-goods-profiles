@@ -16,20 +16,17 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.utils
 
-import org.scalatestplus.play.PlaySpec
+import org.scalatest.matchers.should.Matchers._
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsPath, Json, JsonValidationError}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.Error
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.{APICreateRecordRequest, RequestAccreditationRequest}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.{convertError, validateRequestBody}
 
-import scala.reflect.runtime.universe
-import scala.reflect.runtime.universe.typeTag
+class ValidationSupportSpec extends AnyWordSpec {
 
-class ValidationSupportSpec extends PlaySpec {
-
-  implicit val uuidService: UuidService                     = new UuidService {}
-  implicit val tt: universe.TypeTag[APICreateRecordRequest] = typeTag[APICreateRecordRequest]
+  implicit val uuidService: UuidService = new UuidService {}
 
   "convertError" should {
     "for actorId" in {
@@ -45,7 +42,7 @@ class ValidationSupportSpec extends PlaySpec {
 
       val result = convertError(errors)
 
-      result mustBe expectedErrors
+      result shouldBe expectedErrors
     }
 
     "for traderRef and comcode" in {
@@ -72,7 +69,7 @@ class ValidationSupportSpec extends PlaySpec {
 
       val result = convertError(errors)
 
-      result mustBe expectedErrors
+      result shouldBe expectedErrors
     }
   }
 
@@ -90,11 +87,18 @@ class ValidationSupportSpec extends PlaySpec {
 
       val result = convertError(errors)
 
-      result mustBe expectedErrors
+      result shouldBe expectedErrors
     }
-  }
 
-  "validateRequestBody" should {
+    "return Left(ErrorResponse) when JSON is invalid" in {
+      val json   = Json.obj(
+        "requestorName"  -> "Mr.Phil Edwards",
+        "requestorEmail" -> "Phil.Edwards@gmail.com"
+      )
+      val result = validateRequestBody[APICreateRecordRequest](json, uuidService)
+      result shouldBe a[Left[_, _]]
+    }
+
     "return Right(request) when JSON is valid" in {
       val json =
         Json.obj(
@@ -104,13 +108,7 @@ class ValidationSupportSpec extends PlaySpec {
         )
 
       val result = validateRequestBody[RequestAccreditationRequest](json, uuidService)
-      result mustBe a[Right[_, _]]
-    }
-
-    "return Left(ErrorResponse) when JSON is invalid" in {
-      val json   = Json.obj()
-      val result = validateRequestBody[APICreateRecordRequest](json, uuidService)
-      result mustBe a[Left[_, _]]
+      result shouldBe a[Right[_, _]]
     }
   }
 
