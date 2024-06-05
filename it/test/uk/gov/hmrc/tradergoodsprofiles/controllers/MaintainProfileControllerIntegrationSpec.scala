@@ -29,7 +29,8 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments}
+import uk.gov.hmrc.auth.core.AffinityGroup.Agent
+import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
@@ -129,14 +130,227 @@ class MaintainProfileControllerIntegrationSpec
       }
     }
 
-    "return 400 Bad Request when the JSON body is invalid" in {
+    "return 400 Bad Request when Accept header is invalid" in {
+      withAuthorizedTrader()
+
+      val result = await(
+        wsClient
+          .url(url)
+          .withHttpHeaders(
+            "X-Client-ID"  -> "clientId",
+            "Content-Type" -> "application/json"
+          )
+          .put(requestBody)
+      )
+
+      result.status mustBe BAD_REQUEST
+      result.json mustBe createExpectedError(
+        "INVALID_HEADER_PARAMETER",
+        "Accept was missing from Header or is in wrong format",
+        4
+      )
+    }
+
+    "return 415 Unsupported Media Type when Content-Type header is empty or invalid" in {
+      withAuthorizedTrader()
+
+      val result = await(
+        wsClient
+          .url(url)
+          .withHttpHeaders(
+            "X-Client-ID"  -> "clientId",
+            "Accept"       -> "application/vnd.hmrc.1.0+json",
+            "Content-Type" -> ""
+          )
+          .put(requestBody)
+      )
+
+      result.status mustBe UNSUPPORTED_MEDIA_TYPE
+      result.json mustBe Json.obj(
+        "statusCode" -> 415,
+        "message"    -> "Expecting text/json or application/json body"
+      )
+    }
+
+    "return 400 Bad Request when X-Client-ID header is missing" in {
+      withAuthorizedTrader()
+
+      val result = await(
+        wsClient
+          .url(url)
+          .withHttpHeaders(
+            "Accept"       -> "application/vnd.hmrc.1.0+json",
+            "Content-Type" -> "application/json"
+          )
+          .put(requestBody)
+      )
+
+      result.status mustBe BAD_REQUEST
+      result.json mustBe createExpectedError(
+        "INVALID_HEADER_PARAMETER",
+        "X-Client-ID was missing from Header or is in wrong format",
+        6000
+      )
+    }
+
+    "return 400 Bad Request when actorId is missing from body or is in the wrong format" in {
+      withAuthorizedTrader()
+      val invalidJson = Json.parse("""
+          |{
+          | "ukimsNumber": "XIUKIM47699357400020231115081800",
+          | "nirmsNumber": "RMS-GB-123456",
+          | "niphlNumber": "6 S12345"
+          |}
+          |""".stripMargin)
+
+      val result = updateProfileAndWait(invalidJson)
+
+      result.status mustBe BAD_REQUEST
+      result.json mustBe Json.obj(
+        "correlationId" -> correlationId,
+        "code"          -> "BAD_REQUEST",
+        "message"       -> "Bad Request",
+        "errors"        -> Json.arr(
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Mandatory field actorId was missing from body or is in the wrong format",
+            "errorNumber" -> 8
+          )
+        )
+      )
+    }
+
+    "return 400 Bad Request when ukimsNumber is missing from body or is in the wrong format" in {
+      withAuthorizedTrader()
+      val invalidJson = Json.parse("""
+          |{
+          | "actorId": "GB987654321098",
+          | "nirmsNumber": "RMS-GB-123456",
+          | "niphlNumber": "6 S12345"
+          |}
+          |""".stripMargin)
+
+      val result = updateProfileAndWait(invalidJson)
+
+      result.status mustBe BAD_REQUEST
+      result.json mustBe Json.obj(
+        "correlationId" -> correlationId,
+        "code"          -> "BAD_REQUEST",
+        "message"       -> "Bad Request",
+        "errors"        -> Json.arr(
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Mandatory field ukimsNumber was missing from body or is in the wrong format",
+            "errorNumber" -> 33
+          )
+        )
+      )
+    }
+
+    "return 400 Bad Request when optional field nirmsNumber is in the wrong format" in {
+      withAuthorizedTrader()
+      val invalidJson = Json.parse("""
+          |{
+          | "actorId": "GB987654321098",
+          | "ukimsNumber": "XIUKIM47699357400020231115081800",
+          | "nirmsNumber": 123456,
+          | "niphlNumber": "6 S12345"
+          |}
+          |""".stripMargin)
+
+      val result = updateProfileAndWait(invalidJson)
+
+      result.status mustBe BAD_REQUEST
+      result.json mustBe Json.obj(
+        "correlationId" -> correlationId,
+        "code"          -> "BAD_REQUEST",
+        "message"       -> "Bad Request",
+        "errors"        -> Json.arr(
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Optional field nirmsNumber is in the wrong format",
+            "errorNumber" -> 34
+          )
+        )
+      )
+    }
+
+    "return 400 Bad Request when optional field niphlNumber is in the wrong format" in {
+      withAuthorizedTrader()
+      val invalidJson = Json.parse("""
+          |{
+          | "actorId": "GB987654321098",
+          | "ukimsNumber": "XIUKIM47699357400020231115081800",
+          | "nirmsNumber": "RMS-GB-123456",
+          | "niphlNumber": 123456
+          |}
+          |""".stripMargin)
+
+      val result = updateProfileAndWait(invalidJson)
+
+      result.status mustBe BAD_REQUEST
+      result.json mustBe Json.obj(
+        "correlationId" -> correlationId,
+        "code"          -> "BAD_REQUEST",
+        "message"       -> "Bad Request",
+        "errors"        -> Json.arr(
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Optional field niphlNumber is in the wrong format",
+            "errorNumber" -> 35
+          )
+        )
+      )
+    }
+
+    "return 400 Bad Request when multiple mandatory fields are missing from body" in {
       withAuthorizedTrader()
       val invalidJson = Json.parse("""{"invalid": "json"}""")
 
       val result = updateProfileAndWait(invalidJson)
 
       result.status mustBe BAD_REQUEST
-      // TODO: Assert actual validation error response and include more test cases for invalid or missing fields
+      result.json mustBe Json.obj(
+        "correlationId" -> correlationId,
+        "code"          -> "BAD_REQUEST",
+        "message"       -> "Bad Request",
+        "errors"        -> Json.arr(
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Mandatory field actorId was missing from body or is in the wrong format",
+            "errorNumber" -> 8
+          ),
+          Json.obj(
+            "code"        -> "INVALID_REQUEST_PARAMETER",
+            "message"     -> "Mandatory field ukimsNumber was missing from body or is in the wrong format",
+            "errorNumber" -> 33
+          )
+        )
+      )
+    }
+
+    "return 403 Forbidden when EORI number is not authorized" in {
+      withAuthorizedTrader(enrolment = Enrolment("OTHER-ENROLMENT-KEY"))
+
+      val result = updateProfileAndWait()
+
+      result.status mustBe FORBIDDEN
+      result.json mustBe updateProfileExpectedJson(
+        "FORBIDDEN",
+        "EORI number is incorrect"
+      )
+    }
+
+    "return 403 Forbidden when identifier does not exist" in {
+      withUnauthorizedEmptyIdentifier()
+
+      val result = updateProfileAndWait()
+
+      result.status mustBe FORBIDDEN
+      result.json mustBe updateProfileExpectedJson(
+        "FORBIDDEN",
+        "EORI number is incorrect"
+      )
     }
 
     "return 401 Unauthorized when invalid enrolment" in {
@@ -147,7 +361,31 @@ class MaintainProfileControllerIntegrationSpec
       result.status mustBe UNAUTHORIZED
       result.json mustBe updateProfileExpectedJson(
         "UNAUTHORIZED",
-        s"The details signed in do not have a Trader Goods Profile"
+        "The details signed in do not have a Trader Goods Profile"
+      )
+    }
+
+    "return 401 Unauthorized when affinity group is Agent" in {
+      authorizeWithAffinityGroup(Some(Agent))
+
+      val result = updateProfileAndWait()
+
+      result.status mustBe UNAUTHORIZED
+      result.json mustBe updateProfileExpectedJson(
+        "UNAUTHORIZED",
+        s"Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'"
+      )
+    }
+
+    "return 401 Unauthorized when affinity group is empty" in {
+      authorizeWithAffinityGroup(None)
+
+      val result = updateProfileAndWait()
+
+      result.status mustBe UNAUTHORIZED
+      result.json mustBe updateProfileExpectedJson(
+        "UNAUTHORIZED",
+        "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'"
       )
     }
 
@@ -184,6 +422,20 @@ class MaintainProfileControllerIntegrationSpec
             .withStatus(status)
             .withBody(responseBody)
         )
+    )
+
+  private def createExpectedError(code: String, message: String, errorNumber: Int): Any =
+    Json.obj(
+      "correlationId" -> correlationId,
+      "code"          -> "BAD_REQUEST",
+      "message"       -> "Bad Request",
+      "errors"        -> Seq(
+        Json.obj(
+          "code"        -> code,
+          "message"     -> message,
+          "errorNumber" -> errorNumber
+        )
+      )
     )
 
   private def updateProfileExpectedJson(code: String, message: String): Any =
