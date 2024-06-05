@@ -1168,7 +1168,7 @@ components:
         $ref: '#/components/schemas/eori'
       description: >-
         The traders' EORI number. The first 2 letters are the country code, like
-        GB or XI, followed by 12 or 15 digits.
+        GB followed by 12 or 15 digits.
     updatedSinceParam:
       in: query
       name: updatedSince
