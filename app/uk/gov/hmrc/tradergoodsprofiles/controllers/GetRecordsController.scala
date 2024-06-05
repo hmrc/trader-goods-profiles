@@ -16,12 +16,14 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
+import cats.data.EitherT
 import play.api.libs.json.Json
-import play.api.libs.json.Json.toJson
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{Error, ErrorResponse}
+import uk.gov.hmrc.tradergoodsprofiles.models.response.{GetRecordResponse, GetRecordsResponse}
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
 
@@ -29,7 +31,7 @@ import java.time.Instant
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 @Singleton
 class GetRecordsController @Inject() (
@@ -43,17 +45,10 @@ class GetRecordsController @Inject() (
 
   def getRecord(eori: String, recordId: String): Action[AnyContent] =
     (authAction(eori) andThen validateHeaderAction).async { implicit request =>
-      validateRecordId(recordId) match {
-        case Left(errorResponse)      =>
-          Future.successful(BadRequest(Json.toJson(errorResponse)))
-        case Right(validatedRecordId) =>
-          routerService.getRecord(eori, validatedRecordId).map {
-            case Left(serviceError) =>
-              Status(serviceError.status)(toJson(serviceError.errorResponse))
-            case Right(response)    =>
-              Ok(Json.toJson(response))
-          }
-      }
+      (for {
+        _      <- validateRecordId(recordId)
+        record <- sendGetRecord(eori, recordId)
+      } yield Ok(Json.toJson(record))).merge
     }
 
   def getRecords(
@@ -63,34 +58,55 @@ class GetRecordsController @Inject() (
     size: Option[Int]
   ): Action[AnyContent] =
     (authAction(eori) andThen validateHeaderAction).async { implicit request =>
-      validateQueryParameterLastUpdatedDate(lastUpdatedDate) match {
-        case Left(errorResponse)  =>
-          Future.successful(BadRequest(Json.toJson(errorResponse)))
-        case Right(validatedDate) =>
-          routerService.getRecords(eori, validatedDate, page, size).map {
-            case Left(serviceError) =>
-              Status(serviceError.status)(toJson(serviceError.errorResponse))
-            case Right(response)    =>
-              Ok(Json.toJson(response))
-          }
-      }
+      (for {
+        _      <- validateQueryParameterLastUpdatedDate(lastUpdatedDate)
+        record <- sendGetRecords(eori, lastUpdatedDate, page, size)
+      } yield Ok(Json.toJson(record))).merge
     }
 
   private def validateQueryParameterLastUpdatedDate(
     lastUpdatedDate: Option[String]
-  ): Either[ErrorResponse, Option[String]] =
-    Try(lastUpdatedDate.map(dateTime => Instant.parse(dateTime).toString)).toEither.left.map { _ =>
-      ErrorResponse.badRequestErrorResponse(
-        uuidService.uuid,
-        Some(Seq(Error(InvalidRequestParameter, InvalidLastUpdatedDate, InvalidLastUpdatedDateCode)))
-      )
-    }
+  ): EitherT[Future, Result, Option[Instant]] = {
+    val eitherResult: Try[Option[Instant]] = Try(lastUpdatedDate.map(dateTime => Instant.parse(dateTime)))
+    EitherT.fromEither[Future](
+      eitherResult match {
+        case Success(instantOpt) => Right(instantOpt)
+        case Failure(_)          =>
+          val errorResponse = ErrorResponse.badRequestErrorResponse(
+            uuidService.uuid,
+            Some(Seq(Error(InvalidRequestParameter, InvalidLastUpdatedDate, InvalidLastUpdatedDateCode)))
+          )
+          Left(BadRequest(Json.toJson(errorResponse)))
+      }
+    )
+  }
 
-  private def validateRecordId(recordId: String): Either[ErrorResponse, String] =
-    Try(UUID.fromString(recordId).toString).toEither.left.map { _ =>
-      ErrorResponse.badRequestErrorResponse(
-        uuidService.uuid,
-        Some(Seq(Error(InvalidRequestParameter, InvalidRecordIdMessage, InvalidRecordId)))
-      )
+  private def validateRecordId(recordId: String): EitherT[Future, Result, String] = {
+    val eitherResult: Try[String] = Try(UUID.fromString(recordId).toString)
+    eitherResult match {
+      case Success(validRecordId) => EitherT.rightT[Future, Result](validRecordId)
+      case Failure(_)             =>
+        val errorResponse = ErrorResponse.badRequestErrorResponse(
+          uuidService.uuid,
+          Some(Seq(Error(InvalidRequestParameter, InvalidRecordIdMessage, InvalidRecordId)))
+        )
+        EitherT.leftT[Future, String](BadRequest(Json.toJson(errorResponse)))
     }
+  }
+
+  private def sendGetRecord(
+    eori: String,
+    recordId: String
+  )(implicit hc: HeaderCarrier): EitherT[Future, Result, GetRecordResponse] =
+    EitherT(routerService.getRecord(eori, recordId)).leftMap(r => Status(r.status)(Json.toJson(r.errorResponse)))
+
+  private def sendGetRecords(
+    eori: String,
+    lastUpdatedDate: Option[String],
+    page: Option[Int],
+    size: Option[Int]
+  )(implicit hc: HeaderCarrier): EitherT[Future, Result, GetRecordsResponse] =
+    EitherT(routerService.getRecords(eori, lastUpdatedDate, page, size)).leftMap(r =>
+      Status(r.status)(Json.toJson(r.errorResponse))
+    )
 }

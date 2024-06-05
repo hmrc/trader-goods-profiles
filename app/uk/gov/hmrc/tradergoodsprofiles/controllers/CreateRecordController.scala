@@ -16,13 +16,15 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
+import cats.data.EitherT
 import play.api.Logging
-import play.api.libs.json.Json.toJson
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, ControllerComponents}
+import play.api.mvc.{Action, ControllerComponents, Request, Result}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.APICreateRecordRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.response.CreateOrUpdateRecordResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.validateRequestBody
 
@@ -42,16 +44,22 @@ class CreateRecordController @Inject() (
 
   def createRecord(eori: String): Action[JsValue] =
     (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
-      validateRequestBody[APICreateRecordRequest](request.body, uuidService) match {
-        case Left(errorResponse)        =>
-          Future.successful(BadRequest(Json.toJson(errorResponse)))
-        case Right(updateRecordRequest) =>
-          routerService.createRecord(eori, updateRecordRequest).map {
-            case Left(serviceError) =>
-              Status(serviceError.status)(toJson(serviceError.errorResponse))
-            case Right(response)    =>
-              Created(Json.toJson(response))
-          }
-      }
+      (for {
+        createRecordRequest <- validateBody(request)
+        response            <- sendCreate(eori, createRecordRequest)
+      } yield Created(Json.toJson(response))).merge
     }
+
+  private def validateBody(request: Request[JsValue]): EitherT[Future, Result, APICreateRecordRequest] =
+    EitherT
+      .fromEither[Future](validateRequestBody[APICreateRecordRequest](request.body, uuidService))
+      .leftMap(r => BadRequest(Json.toJson(r)))
+
+  private def sendCreate(
+    eori: String,
+    createRecordRequest: APICreateRecordRequest
+  )(implicit hc: HeaderCarrier): EitherT[Future, Result, CreateOrUpdateRecordResponse] =
+    EitherT(routerService.createRecord(eori, createRecordRequest)).leftMap(r =>
+      Status(r.status)(Json.toJson(r.errorResponse))
+    )
 }

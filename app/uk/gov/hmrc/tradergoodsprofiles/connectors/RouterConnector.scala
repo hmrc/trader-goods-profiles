@@ -40,6 +40,7 @@ class RouterConnector @Inject() (
 )(implicit ec: ExecutionContext)
     extends MetricsSupport
     with Logging {
+  val routerBaseRoute: String = "/trader-goods-profiles-router"
 
   def get(eori: String, recordId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.getrecord.connector") { _ =>
@@ -118,8 +119,6 @@ class RouterConnector @Inject() (
         .withClientId
         .execute[HttpResponse]
     }
-
-  val routerBaseRoute: String = "/trader-goods-profiles-router"
 
   private def routerRoute(eoriNumber: String, recordId: String): UrlPath =
     UrlPath.parse(
