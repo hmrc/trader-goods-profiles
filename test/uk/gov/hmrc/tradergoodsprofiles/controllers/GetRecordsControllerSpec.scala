@@ -261,14 +261,14 @@ class GetRecordsControllerSpec
       timestamp,
       Some(timestamp),
       1,
-      true,
-      false,
+      active = true,
+      toReview = false,
       Some("Commodity code changed"),
       "IMMI declarable",
       "XIUKIM47699357400020231115081800",
       "RMS-GB-123456",
       "6 S12345",
-      false,
+      locked = false,
       timestamp,
       timestamp
     )

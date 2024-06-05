@@ -8,4 +8,4 @@ GET     /:eori/records                              uk.gov.hmrc.tradergoodsprofi
 PATCH   /:eori/records/:recordId                    uk.gov.hmrc.tradergoodsprofiles.controllers.UpdateRecordController.updateRecord(eori: String, recordId: String)
 POST    /:eori/records/:recordId/accreditations     uk.gov.hmrc.tradergoodsprofiles.controllers.RequestAccreditationsController.requestAccreditation(eori: String, recordId: String)
 
-PUT     /:eori                     uk.gov.hmrc.tradergoodsprofiles.controllers.MaintainProfileController.updateProfile(eori: String)
+PUT     /:eori                                      uk.gov.hmrc.tradergoodsprofiles.controllers.MaintainProfileController.updateProfile(eori: String)
