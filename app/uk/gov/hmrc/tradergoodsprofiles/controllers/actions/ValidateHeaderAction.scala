@@ -18,7 +18,6 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers.actions
 
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.mvc.{ActionFilter, Request, Result}
-import uk.gov.hmrc.tradergoodsprofiles.config.Constants
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.BadRequestErrorResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
@@ -86,7 +85,7 @@ class ValidateHeaderAction @Inject() (uuidService: UuidService)(implicit ec: Exe
     )
 
   private def validateClientIdHeader(request: Request[_]): Future[Boolean] =
-    request.headers.get(Constants.XClientIdHeader) match {
+    request.headers.get(XClientIdHeader) match {
       case Some(_) => successful(true)
       case _       => successful(false)
     }

@@ -17,21 +17,22 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import cats.data.EitherT
-import cats.implicits.toBifunctorOps
 import play.api.libs.json.Format.GenericFormat
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents, Request, Result}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.{BadRequestErrorsResponse, Error}
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.{Error, ErrorResponse}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.RemoveRecordRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
+import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.validateRequestBody
 
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 @Singleton
 class RemoveRecordController @Inject() (
@@ -44,34 +45,38 @@ class RemoveRecordController @Inject() (
     extends BackendController(cc) {
   def removeRecord(eori: String, recordId: String): Action[JsValue] =
     (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
-      val result = for {
-        removeRecordRequest <- removeRecordRequest(request)
-        _                   <- validateRecordId(recordId)
-        _                   <- routerService.removeRecord(eori, recordId, removeRecordRequest.actorId)
-      } yield Ok
-
-      result.merge
+      (for {
+        updateRecordRequest <- validateBody(request)
+        validRecordId       <- validateRecordId(recordId)
+        response            <- sendRemove(eori, validRecordId, updateRecordRequest)
+      } yield Ok(Json.toJson(response))).merge
     }
 
-  private def removeRecordRequest(
-    request: Request[JsValue]
-  )(implicit ec: ExecutionContext): EitherT[Future, Result, RemoveRecordRequest] =
-    EitherT.fromEither(
-      request.body.validate[RemoveRecordRequest].asEither.leftMap { errors =>
-        BadRequestErrorsResponse(
-          uuidService.uuid,
-          Some(Seq(Error(InvalidRequestParameter, InvalidActorMessage, InvalidActorId)))
-        ).toResult
-      }
-    )
+  private def validateBody(request: Request[JsValue]): EitherT[Future, Result, RemoveRecordRequest] =
+    EitherT
+      .fromEither[Future](validateRequestBody[RemoveRecordRequest](request.body, uuidService))
+      .leftMap(r => BadRequest(Json.toJson(r)))
 
-  def validateRecordId(recordId: String): EitherT[Future, Result, String] =
-    EitherT.fromEither[Future](
-      Try(UUID.fromString(recordId).toString).toEither.left.map(_ =>
-        BadRequestErrorsResponse(
+  def validateRecordId(recordId: String): EitherT[Future, Result, String] = {
+    val eitherResult: Try[String] = Try(UUID.fromString(recordId).toString)
+    eitherResult match {
+      case Success(validRecordId) => EitherT.rightT[Future, Result](validRecordId)
+      case Failure(_)             =>
+        val errorResponse = ErrorResponse.badRequestErrorResponse(
           uuidService.uuid,
           Some(Seq(Error(InvalidRequestParameter, InvalidRecordIdMessage, InvalidRecordId)))
-        ).toResult
-      )
+        )
+        EitherT.leftT[Future, String](BadRequest(Json.toJson(errorResponse)))
+    }
+  }
+
+  private def sendRemove(
+    eori: String,
+    recordId: String,
+    removeRecordRequest: RemoveRecordRequest
+  )(implicit hc: HeaderCarrier): EitherT[Future, Result, Int] =
+    EitherT(routerService.removeRecord(eori, recordId, removeRecordRequest.actorId)).leftMap(r =>
+      Status(r.status)(Json.toJson(r.errorResponse))
     )
+
 }
