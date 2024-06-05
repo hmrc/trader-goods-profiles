@@ -21,8 +21,10 @@ import play.api.libs.json._
 import play.api.mvc._
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.BadRequestErrorsResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.APIUpdateProfileRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
+import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.convertError
 
 import javax.inject._
 import scala.concurrent.{ExecutionContext, Future}
@@ -40,24 +42,18 @@ class MaintainProfileController @Inject() (
 
   def updateProfile(eori: String): Action[JsValue] =
     (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
-      validateUpdateProfileRequest(request.body).fold(
-        error => Future.successful(error),
-        updateRequest =>
+      validateUpdateProfileRequest(request.body) match {
+        case Left(errorResult)    => Future.successful(errorResult)
+        case Right(updateRequest) =>
           routerService.updateProfile(eori, updateRequest).map {
             case Right(response) => Ok(Json.toJson(response))
             case Left(error)     => error
           }
-      )
+      }
     }
 
   def validateUpdateProfileRequest(json: JsValue): Either[Result, APIUpdateProfileRequest] =
     json.validate[APIUpdateProfileRequest].asEither.left.map { errors =>
-      BadRequest(
-        Json.obj(
-          "uuid"    -> uuidService.uuid,
-          "message" -> "Invalid JSON",
-          "errors"  -> JsError.toJson(errors) // TODO: Implement actual validation
-        )
-      )
+      BadRequestErrorsResponse(uuidService.uuid, Some(convertError(errors))).toResult
     }
 }

@@ -21,7 +21,7 @@ import org.mockito.MockitoSugar.{mock, reset, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.Results.InternalServerError
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
@@ -31,6 +31,7 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessA
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.APIUpdateProfileRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.UpdateProfileResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
+import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -93,17 +94,70 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
       contentAsJson(result) mustBe Json.toJson(updateProfileResponse)
     }
 
-    "return 400 Bad Request when the JSON body is invalid" in {
-      val invalidJson = Json.parse("""{"invalid": "json"}""")
+    "return 400 Bad Request when mandatory field actorId is missing from body or is in the wrong format" in {
+      val invalidJsonRequest = Json.obj(
+        "ukimsNumber" -> "XIUKIM47699357400020231115081800",
+        "nirmsNumber" -> "RMS-GB-123456",
+        "niphlNumber" -> "6 S12345"
+      )
 
-      val request = FakeRequest()
-        .withHeaders(requestHeaders: _*)
-        .withBody(invalidJson)
-
-      val result = sut.updateProfile(eori)(request)
+      val result = sut.updateProfile(eori)(FakeRequest().withHeaders(requestHeaders: _*).withBody(invalidJsonRequest))
 
       status(result) mustBe BAD_REQUEST
-      //TODO: Assert actual error response
+      contentAsJson(result) mustBe createMissingFieldExpectedJson(
+        ApplicationConstants.InvalidActorMessage,
+        ApplicationConstants.InvalidActorId
+      )
+    }
+
+    "return 400 Bad Request when mandatory field ukimsNumber is missing from body or is in the wrong format" in {
+      val invalidJsonRequest = Json.obj(
+        "actorId"     -> "GB987654321098",
+        "nirmsNumber" -> "RMS-GB-123456",
+        "niphlNumber" -> "6 S12345"
+      )
+
+      val result = sut.updateProfile(eori)(FakeRequest().withHeaders(requestHeaders: _*).withBody(invalidJsonRequest))
+
+      status(result) mustBe BAD_REQUEST
+      contentAsJson(result) mustBe createMissingFieldExpectedJson(
+        ApplicationConstants.InvalidOrMissingUkimsNumber,
+        ApplicationConstants.InvalidOrMissingUkimsNumberCode
+      )
+    }
+
+    "return 400 Bad Request when optional field nirmsNumber is in the wrong format" in {
+      val invalidJsonRequest = Json.obj(
+        "actorId"     -> "GB987654321098",
+        "ukimsNumber" -> "XIUKIM47699357400020231115081800",
+        "nirmsNumber" -> 123456,
+        "niphlNumber" -> "6 S12345"
+      )
+
+      val result = sut.updateProfile(eori)(FakeRequest().withHeaders(requestHeaders: _*).withBody(invalidJsonRequest))
+
+      status(result) mustBe BAD_REQUEST
+      contentAsJson(result) mustBe createMissingFieldExpectedJson(
+        ApplicationConstants.InvalidOrMissingNirmsNumber,
+        ApplicationConstants.InvalidOrMissingNirmsNumberCode
+      )
+    }
+
+    "return 400 Bad Request when optional field niphlNumber is in the wrong format" in {
+      val invalidJsonRequest = Json.obj(
+        "actorId"     -> "GB987654321098",
+        "ukimsNumber" -> "XIUKIM47699357400020231115081800",
+        "nirmsNumber" -> "RMS-GB-123456",
+        "niphlNumber" -> 123456
+      )
+
+      val result = sut.updateProfile(eori)(FakeRequest().withHeaders(requestHeaders: _*).withBody(invalidJsonRequest))
+
+      status(result) mustBe BAD_REQUEST
+      contentAsJson(result) mustBe createMissingFieldExpectedJson(
+        ApplicationConstants.InvalidOrMissingNiphlNumber,
+        ApplicationConstants.InvalidOrMissingNiphlNumberCode
+      )
     }
 
     "return 500 Internal Server Error when the service layer fails" in {
@@ -125,8 +179,21 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
       val result = sut.updateProfile(eori)(request)
 
       status(result) mustBe INTERNAL_SERVER_ERROR
-      val jsonResponse = contentAsJson(result)
-      jsonResponse mustBe expectedJson
+      contentAsJson(result) mustBe expectedJson
     }
   }
+
+  private def createMissingFieldExpectedJson(errorMessage: String, errorNumber: Int): JsObject =
+    Json.obj(
+      "correlationId" -> correlationId,
+      "code"          -> "BAD_REQUEST",
+      "message"       -> "Bad Request",
+      "errors"        -> Seq(
+        Json.obj(
+          "code"        -> "INVALID_REQUEST_PARAMETER",
+          "message"     -> errorMessage,
+          "errorNumber" -> errorNumber
+        )
+      )
+    )
 }
