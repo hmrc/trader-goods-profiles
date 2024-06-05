@@ -56,7 +56,7 @@ class MaintainProfileControllerIntegrationSpec
   private val correlationId           = "d677693e-9981-4ee3-8574-654981ebe606"
 
   private val url       = s"http://localhost:$port/$eoriNumber"
-  private val routerUrl = s"/trader-goods-profiles-router/$eoriNumber/profile/maintain"
+  private val routerUrl = s"/trader-goods-profiles-router/profile/maintain"
 
   private val updateProfileRequest = APIUpdateProfileRequest(
     actorId = "GB987654321098",

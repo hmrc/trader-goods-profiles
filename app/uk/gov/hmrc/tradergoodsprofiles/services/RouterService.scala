@@ -198,9 +198,10 @@ class RouterServiceImpl @Inject() (
 
   def updateProfile(eori: String, updateRequest: APIUpdateProfileRequest)(implicit
     hc: HeaderCarrier
-  ): Future[Either[Result, UpdateProfileResponse]] =
+  ): Future[Either[Result, UpdateProfileResponse]] = {
+    val routerUpdateProfileRequest = router.RouterUpdateProfileRequest(eori, updateRequest)
     routerConnector
-      .put(eori, updateRequest)
+      .routerMaintainProfile(routerUpdateProfileRequest)
       .map { httpResponse =>
         httpResponse.status match {
           case status if is2xx(status) =>
@@ -213,7 +214,7 @@ class RouterServiceImpl @Inject() (
         logger.error(s"Exception when updating profile for eori number $eori: ${ex.getMessage}", ex)
         Left(ServerErrorResponse(uuidService.uuid, "Could not update profile due to an internal error").toResult)
       }
-
+  }
   private def handleError(
     responseBody: String,
     status: Int,

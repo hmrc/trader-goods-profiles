@@ -32,7 +32,7 @@ import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{APICreateRecordRequestSupport, RouterCreateRecordRequestSupport, UpdateRecordRequestSupport}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.{CreateOrUpdateRecordResponseSupport, GetRecordResponseSupport}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.RouterError
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterUpdateRecordRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterUpdateProfileRequest, RouterUpdateRecordRequest}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.{APIUpdateProfileRequest, router}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.UpdateProfileResponse
@@ -462,14 +462,16 @@ class RouterServiceSpec
         niphlNumber = "6 S12345"
       )
 
-      when(connector.put(any[String], any[APIUpdateProfileRequest])(any[HeaderCarrier]))
+      when(connector.routerMaintainProfile(any[RouterUpdateProfileRequest])(any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(200, Json.toJson(updateResponse), Map.empty)))
 
       val result = sut.updateProfile("GB123456789012", updateRequest)
 
       whenReady(result) { res =>
         res mustBe Right(updateResponse)
-        verify(connector).put(eqTo("GB123456789012"), eqTo(updateRequest))(any[HeaderCarrier])
+        verify(connector).routerMaintainProfile(
+          eqTo(router.RouterUpdateProfileRequest("GB123456789012", updateRequest))
+        )(any[HeaderCarrier])
       }
     }
 
@@ -481,7 +483,7 @@ class RouterServiceSpec
         niphlNumber = Some("6 S12345")
       )
 
-      when(connector.put(any[String], any[APIUpdateProfileRequest])(any[HeaderCarrier]))
+      when(connector.routerMaintainProfile(any[RouterUpdateProfileRequest])(any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(200, "error")))
 
       val result = sut.updateProfile("GB123456789012", updateRequest)
@@ -501,7 +503,7 @@ class RouterServiceSpec
         niphlNumber = Some("6 S12345")
       )
 
-      when(connector.put(any[String], any[APIUpdateProfileRequest])(any[HeaderCarrier]))
+      when(connector.routerMaintainProfile(any[RouterUpdateProfileRequest])(any[HeaderCarrier]))
         .thenReturn(Future.failed(new RuntimeException("error")))
 
       val result = sut.updateProfile("GB123456789012", updateRequest)
@@ -533,7 +535,7 @@ class RouterServiceSpec
           niphlNumber = Some("6 S12345")
         )
 
-        when(connector.put(any[String], any[APIUpdateProfileRequest])(any[HeaderCarrier]))
+        when(connector.routerMaintainProfile(any[RouterUpdateProfileRequest])(any[HeaderCarrier]))
           .thenReturn(Future.successful(createHttpResponse(status, code)))
 
         val result = sut.updateProfile("GB123456789012", updateRequest)

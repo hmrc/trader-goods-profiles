@@ -46,9 +46,9 @@ trait BaseConnector {
       s"$routerBaseRoute/records"
     )
 
-  def updateProfileRoute(eoriNumber: String): UrlPath =
+  def routerMaintainProfileRoute(): UrlPath =
     UrlPath.parse(
-      s"$routerBaseRoute/$eoriNumber/profile/maintain"
+      s"$routerBaseRoute/profile/maintain"
     )
 
   implicit class HttpResponseHelpers(requestBuilder: RequestBuilder) {
