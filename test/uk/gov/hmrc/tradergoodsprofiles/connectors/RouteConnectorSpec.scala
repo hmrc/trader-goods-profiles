@@ -300,7 +300,7 @@ class RouteConnectorSpec
       await(sut.put("GB123456789012", updateProfileRequest))
 
       val expectedUrl =
-        UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/maintainprofile/v1/GB123456789012")
+        UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/GB123456789012/profile/maintain")
       verify(httpClient).put(eqTo(url"$expectedUrl"))(any)
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       verify(requestBuilder).withBody(eqTo(Json.toJson(updateProfileRequest)))(any, any, any)
