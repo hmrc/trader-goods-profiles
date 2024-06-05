@@ -29,7 +29,24 @@ case class ErrorResponse(
 
 object ErrorResponse {
   implicit val format: OFormat[ErrorResponse] = Json.format[ErrorResponse]
+
+  def serverErrorResponse(correlationId: String, message: String): ErrorResponse =
+    ErrorResponse(
+      correlationId,
+      "INTERNAL_SERVER_ERROR",
+      message
+    )
+
+  def badRequestErrorResponse(correlationId: String, errors: Option[Seq[Error]]): ErrorResponse =
+    ErrorResponse(
+      correlationId,
+      "BAD_REQUEST",
+      "Bad Request",
+      errors
+    )
 }
+
+case class ServiceError(status: Int, errorResponse: ErrorResponse)
 
 case class ForbiddenErrorResponse(correlationId: String, message: String) {
   def toResult: Result =
@@ -71,22 +88,8 @@ case class ServerErrorResponse(correlationId: String, message: String) {
 }
 
 case class BadRequestErrorResponse(correlationId: String, code: String, message: String, errorNumber: Int) {
-  val errors           = Some(Seq(Error(code, message, errorNumber)))
-  def toResult: Result =
-    BadRequest(
-      Json.toJson(
-        ErrorResponse(
-          correlationId,
-          "BAD_REQUEST",
-          "Bad Request",
-          errors
-        )
-      )
-    )
-}
-
-case class BadRequestErrorsResponse(correlationId: String, errors: Option[Seq[Error]]) {
-  def toResult: Result =
+  val errors: Option[Seq[Error]] = Some(Seq(Error(code, message, errorNumber)))
+  def toResult: Result           =
     BadRequest(
       Json.toJson(
         ErrorResponse(

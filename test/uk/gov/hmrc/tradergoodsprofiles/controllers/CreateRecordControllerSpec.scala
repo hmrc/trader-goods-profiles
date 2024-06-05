@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
-import cats.data.EitherT
 import org.mockito.ArgumentMatchersSugar.any
 import org.mockito.MockitoSugar.{reset, when}
 import org.scalatest.BeforeAndAfterEach
@@ -24,7 +23,6 @@ import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status.{BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR}
 import play.api.libs.json.{JsObject, JsValue, Json}
-import play.api.mvc.Results.InternalServerError
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
@@ -32,12 +30,13 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.APICreateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateOrUpdateRecordResponseSupport
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants
 
 import java.time.Instant
 import java.util.UUID
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class CreateRecordControllerSpec
     extends PlaySpec
@@ -71,7 +70,7 @@ class CreateRecordControllerSpec
     reset(uuidService, routerService)
     when(uuidService.uuid).thenReturn(correlationId)
     when(routerService.createRecord(any, any)(any))
-      .thenReturn(EitherT.fromEither(Right(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))))
+      .thenReturn(Future.successful(Right(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))))
   }
 
   "createRecord" should {
@@ -394,14 +393,20 @@ class CreateRecordControllerSpec
     "return 500 when the router service returns an error" in {
       val createRequest = createAPICreateRecordRequest()
 
-      val expectedJson = Json.obj(
-        "timestamp" -> timestamp,
-        "code"      -> "INTERNAL_SERVER_ERROR",
-        "message"   -> "Sorry, the service is unavailable. You'll be able to use the service later"
+      val expectedJson  = Json.obj(
+        "correlationId" -> correlationId,
+        "code"          -> "INTERNAL_SERVER_ERROR",
+        "message"       -> "Sorry, the service is unavailable. You'll be able to use the service later"
       )
+      val errorResponse =
+        ErrorResponse.serverErrorResponse(
+          uuidService.uuid,
+          "Sorry, the service is unavailable. You'll be able to use the service later"
+        )
+      val serviceError  = ServiceError(INTERNAL_SERVER_ERROR, errorResponse)
 
       when(routerService.createRecord(any, any)(any))
-        .thenReturn(EitherT.leftT(InternalServerError(expectedJson)))
+        .thenReturn(Future.successful(Left(serviceError)))
 
       val result = sut.createRecord(eoriNumber)(request.withBody(Json.toJson(createRequest)))
 

@@ -17,22 +17,23 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import cats.data.EitherT
+import com.google.inject.Singleton
 import play.api.Logging
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.OFormat.oFormatFromReadsAndOWrites
+import play.api.libs.json._
 import play.api.mvc.{Action, ControllerComponents, Request, Result}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.APICreateRecordRequest
-import uk.gov.hmrc.tradergoodsprofiles.models.response.CreateOrUpdateRecordResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.RequestAccreditationRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.validateRequestBody
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class CreateRecordController @Inject() (
+class RequestAccreditationsController @Inject() (
   authAction: AuthAction,
   validateHeaderAction: ValidateHeaderAction,
   uuidService: UuidService,
@@ -42,24 +43,25 @@ class CreateRecordController @Inject() (
     extends BackendController(cc)
     with Logging {
 
-  def createRecord(eori: String): Action[JsValue] =
+  def requestAccreditation(eori: String, recordId: String): Action[JsValue] =
     (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
       (for {
-        createRecordRequest <- validateBody(request)
-        response            <- sendCreate(eori, createRecordRequest)
+        accreditationRequest <- validateBody(request)
+        response             <- sendAccreditation(eori, recordId, accreditationRequest)
       } yield Created(Json.toJson(response))).merge
     }
 
-  private def validateBody(request: Request[JsValue]): EitherT[Future, Result, APICreateRecordRequest] =
+  private def validateBody(request: Request[JsValue]): EitherT[Future, Result, RequestAccreditationRequest] =
     EitherT
-      .fromEither[Future](validateRequestBody[APICreateRecordRequest](request.body, uuidService))
+      .fromEither[Future](validateRequestBody[RequestAccreditationRequest](request.body, uuidService))
       .leftMap(r => BadRequest(Json.toJson(r)))
 
-  private def sendCreate(
+  private def sendAccreditation(
     eori: String,
-    createRecordRequest: APICreateRecordRequest
-  )(implicit hc: HeaderCarrier): EitherT[Future, Result, CreateOrUpdateRecordResponse] =
-    EitherT(routerService.createRecord(eori, createRecordRequest)).leftMap(r =>
+    recordId: String,
+    accreditationRequest: RequestAccreditationRequest
+  )(implicit hc: HeaderCarrier): EitherT[Future, Result, Int] =
+    EitherT(routerService.requestAccreditation(eori, recordId, accreditationRequest)).leftMap(r =>
       Status(r.status)(Json.toJson(r.errorResponse))
     )
 }

@@ -32,8 +32,10 @@ import play.api.libs.json.Json
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
-import uk.gov.hmrc.tradergoodsprofiles.config.{AppConfig, Constants}
+import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{RouterCreateRecordRequestSupport, RouterUpdateRecordRequestSupport}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterRequestAccreditationRequest
+import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.XClientIdHeader
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterMaintainProfileRequest
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -47,7 +49,7 @@ class RouteConnectorSpec
     with RouterUpdateRecordRequestSupport {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
-  implicit val hc: HeaderCarrier    = HeaderCarrier(otherHeaders = Seq(Constants.XClientIdHeader -> "clientId"))
+  implicit val hc: HeaderCarrier    = HeaderCarrier(otherHeaders = Seq(XClientIdHeader -> "clientId"))
 
   private val httpClient                      = mock[HttpClientV2]
   private val appConfig                       = mock[AppConfig]
@@ -160,7 +162,7 @@ class RouteConnectorSpec
     }
   }
 
-  "post" should {
+  "create" should {
 
     "return 201 when the record is successfully created" in {
       val createRecordRequest = createRouterCreateRecordRequest()
@@ -170,7 +172,7 @@ class RouteConnectorSpec
       when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "message")))
 
-      val result = await(sut.post(createRecordRequest))
+      val result = await(sut.createRecord(createRecordRequest))
 
       result.status mustBe CREATED
     }
@@ -183,7 +185,7 @@ class RouteConnectorSpec
       when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "message")))
 
-      await(sut.post(createRecordRequest))
+      await(sut.createRecord(createRecordRequest))
 
       val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/records")
       verify(httpClient).post(eqTo(url"$expectedUrl"))(any)
@@ -202,14 +204,14 @@ class RouteConnectorSpec
   "remove" should {
 
     "return 200" in {
-      val result = await(sut.put("eoriNumber", "recordId", "actorId"))
+      val result = await(sut.removeRecord("eoriNumber", "recordId", "actorId"))
 
       result.status mustBe OK
     }
 
     "send a PUT request with the right url and body" in {
 
-      await(sut.put("eoriNumber", "recordId", "actorId"))
+      await(sut.removeRecord("eoriNumber", "recordId", "actorId"))
 
       val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/eoriNumber/records/recordId")
       verify(httpClient).put(eqTo(url"$expectedUrl"))(any)
@@ -235,7 +237,7 @@ class RouteConnectorSpec
       when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(200, "message")))
 
-      val result = await(sut.put(updateRecordRequest))
+      val result = await(sut.updateRecord(updateRecordRequest))
 
       result.status mustBe OK
     }
@@ -248,7 +250,7 @@ class RouteConnectorSpec
       when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(200, "message")))
 
-      await(sut.put(updateRecordRequest))
+      await(sut.updateRecord(updateRecordRequest))
 
       val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/records")
       verify(httpClient).put(eqTo(url"$expectedUrl"))(any)
@@ -263,6 +265,52 @@ class RouteConnectorSpec
       }
     }
   }
+
+  "request accreditation" should {
+
+    "return 201 when accreditation is successfully requested" in {
+      val requestAccreditationRequest = createRouterRequestAccreditationRequest()
+
+      when(httpClient.post(any)(any)).thenReturn(requestBuilder)
+      when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
+      when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "")))
+
+      val result = await(sut.requestAccreditation(requestAccreditationRequest))
+
+      result.status mustBe CREATED
+    }
+
+    "send a request with the right url and body" in {
+      val requestAccreditationRequest = createRouterRequestAccreditationRequest()
+
+      when(httpClient.post(any)(any)).thenReturn(requestBuilder)
+      when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
+      when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "message")))
+
+      await(sut.requestAccreditation(requestAccreditationRequest))
+
+      val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/createaccreditation")
+      verify(httpClient).post(eqTo(url"$expectedUrl"))(any)
+      verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+      verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
+      verify(requestBuilder).withBody(eqTo(Json.toJson(requestAccreditationRequest)))(any, any, any)
+      verify(requestBuilder).execute(any, any)
+
+      withClue("process the response within a timer") {
+        verify(metricsRegistry).timer(eqTo("tgp.requestaccreditation.connector-timer"))
+        verify(timerContext).stop()
+      }
+    }
+  }
+
+  def createRouterRequestAccreditationRequest(): RouterRequestAccreditationRequest = RouterRequestAccreditationRequest(
+    eori = "GB987654321098",
+    requestorName = "Mr.Phil Edwards",
+    recordId = "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f",
+    requestorEmail = "Phil.Edwards@gmail.com"
+  )
 
   "maintain profile" should {
 

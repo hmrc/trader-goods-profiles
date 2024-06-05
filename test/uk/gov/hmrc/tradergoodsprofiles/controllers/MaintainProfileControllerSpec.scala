@@ -22,12 +22,12 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.{JsObject, JsValue, Json}
-import play.api.mvc.Results.InternalServerError
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.APIMaintainProfileRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.UpdateProfileResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
@@ -163,14 +163,19 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
     "return 500 Internal Server Error when the service layer fails" in {
       withAuthorizedTrader()
 
-      val expectedJson = Json.obj(
+      val expectedJson  = Json.obj(
         "correlationId" -> correlationId,
         "code"          -> "INTERNAL_SERVER_ERROR",
         "message"       -> "Internal Server Error"
       )
+      val errorResponse = ErrorResponse.serverErrorResponse(
+        uuidService.uuid,
+        "Internal Server Error"
+      )
+      val serviceError  = ServiceError(INTERNAL_SERVER_ERROR, errorResponse)
 
       when(routerService.updateProfile(any, any)(any))
-        .thenReturn(Future.successful(Left(InternalServerError(expectedJson))))
+        .thenReturn(Future.successful(Left(serviceError)))
 
       val request = FakeRequest()
         .withHeaders(requestHeaders: _*)
@@ -181,6 +186,7 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
       status(result) mustBe INTERNAL_SERVER_ERROR
       contentAsJson(result) mustBe expectedJson
     }
+
   }
 
   private def createMissingFieldExpectedJson(errorMessage: String, errorNumber: Int): JsObject =

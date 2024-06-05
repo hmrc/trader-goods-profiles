@@ -17,6 +17,7 @@
 package uk.gov.hmrc.tradergoodsprofiles.utils
 
 object ApplicationConstants {
+  val XClientIdHeader                                          = "X-Client-ID"
   val InvalidHeaderParameter                                   = "INVALID_HEADER_PARAMETER"
   val InvalidRequestParameter                                  = "INVALID_REQUEST_PARAMETER"
   val InvalidHeaderClientId                                    = 6000
