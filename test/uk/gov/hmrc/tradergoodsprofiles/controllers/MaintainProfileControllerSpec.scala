@@ -28,7 +28,7 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.APIMaintainProfileRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.MaintainProfileRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.UpdateProfileResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants
@@ -50,7 +50,7 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
   private val uuidService   = mock[UuidService]
   private val routerService = mock[RouterService]
 
-  private val updateProfileRequest = APIMaintainProfileRequest(
+  private val updateProfileRequest = MaintainProfileRequest(
     actorId = "GB987654321098",
     ukimsNumber = "XIUKIM47699357400020231115081800",
     nirmsNumber = Some("RMS-GB-123456"),
@@ -77,7 +77,7 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
     super.beforeEach()
     reset(uuidService, routerService)
     when(uuidService.uuid).thenReturn(correlationId)
-    when(routerService.updateProfile(mockEq(eori), any[APIMaintainProfileRequest])(any()))
+    when(routerService.updateProfile(mockEq(eori), any[MaintainProfileRequest])(any()))
       .thenReturn(Future.successful(Right(updateProfileResponse)))
   }
 

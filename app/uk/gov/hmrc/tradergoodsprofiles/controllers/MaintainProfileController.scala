@@ -23,7 +23,7 @@ import play.api.mvc.{Action, ControllerComponents, Request, Result}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.APIMaintainProfileRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.MaintainProfileRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.UpdateProfileResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.validateRequestBody
@@ -50,14 +50,14 @@ class MaintainProfileController @Inject() (
       } yield Ok(Json.toJson(response))).merge
     }
 
-  private def validateBody(request: Request[JsValue]): EitherT[Future, Result, APIMaintainProfileRequest] =
+  private def validateBody(request: Request[JsValue]): EitherT[Future, Result, MaintainProfileRequest] =
     EitherT
-      .fromEither[Future](validateRequestBody[APIMaintainProfileRequest](request.body, uuidService))
+      .fromEither[Future](validateRequestBody[MaintainProfileRequest](request.body, uuidService))
       .leftMap(r => BadRequest(Json.toJson(r)))
 
   private def sendUpdate(
     eori: String,
-    updateProfileRequest: APIMaintainProfileRequest
+    updateProfileRequest: MaintainProfileRequest
   )(implicit hc: HeaderCarrier): EitherT[Future, Result, UpdateProfileResponse] =
     EitherT(routerService.updateProfile(eori, updateProfileRequest)).leftMap(r =>
       Status(r.status)(Json.toJson(r.errorResponse))

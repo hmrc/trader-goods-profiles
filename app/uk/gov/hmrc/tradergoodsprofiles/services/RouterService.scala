@@ -25,7 +25,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests._
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterMaintainProfileRequest, RouterRequestAccreditationRequest, RouterUpdateRecordRequest}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterRequestAccreditationRequest, RouterUpdateRecordRequest}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.{CreateOrUpdateRecordResponse, GetRecordResponse, GetRecordsResponse}
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.UpdateProfileResponse
 
@@ -257,12 +257,11 @@ class RouterService @Inject() (
       }
   }
 
-  def updateProfile(eori: String, updateRequest: APIMaintainProfileRequest)(implicit
+  def updateProfile(eori: String, updateRequest: MaintainProfileRequest)(implicit
     hc: HeaderCarrier
-  ): Future[Either[ServiceError, UpdateProfileResponse]] = {
-    val routerUpdateProfileRequest = RouterMaintainProfileRequest(eori, updateRequest)
+  ): Future[Either[ServiceError, UpdateProfileResponse]] =
     routerConnector
-      .routerMaintainProfile(routerUpdateProfileRequest)
+      .routerMaintainProfile(eori, updateRequest)
       .map { httpResponse =>
         httpResponse.status match {
           case status if is2xx(status) =>
@@ -292,7 +291,6 @@ class RouterService @Inject() (
           )
         )
       }
-  }
 
   private def handleErrors(
     response: HttpResponse,

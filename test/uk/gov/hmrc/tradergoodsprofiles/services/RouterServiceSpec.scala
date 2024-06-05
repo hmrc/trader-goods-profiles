@@ -31,8 +31,8 @@ import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{APICreateRecordRequestSupport, RouterCreateRecordRequestSupport, UpdateRecordRequestSupport}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.{CreateOrUpdateRecordResponseSupport, GetRecordResponseSupport}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterMaintainProfileRequest, RouterRequestAccreditationRequest, RouterUpdateRecordRequest}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.{APIMaintainProfileRequest, RequestAccreditationRequest, router}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterRequestAccreditationRequest, RouterUpdateRecordRequest}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.{MaintainProfileRequest, RequestAccreditationRequest, router}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.UpdateProfileResponse
 
@@ -480,7 +480,7 @@ class RouterServiceSpec
 
   "updateProfile" should {
     "update a profile" in {
-      val updateRequest  = APIMaintainProfileRequest(
+      val updateRequest  = MaintainProfileRequest(
         actorId = "GB987654321098",
         ukimsNumber = "XIUKIM47699357400020231115081800",
         nirmsNumber = Some("RMS-GB-123456"),
@@ -494,7 +494,7 @@ class RouterServiceSpec
         niphlNumber = "6 S12345"
       )
 
-      when(connector.routerMaintainProfile(any[RouterMaintainProfileRequest])(any[HeaderCarrier]))
+      when(connector.routerMaintainProfile(any[String], any[MaintainProfileRequest])(any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(200, Json.toJson(updateResponse), Map.empty)))
 
       val result = sut.updateProfile("GB123456789012", updateRequest)
@@ -502,20 +502,21 @@ class RouterServiceSpec
       whenReady(result) { res =>
         res mustBe Right(updateResponse)
         verify(connector).routerMaintainProfile(
-          eqTo(router.RouterMaintainProfileRequest("GB123456789012", updateRequest))
+          eqTo("GB123456789012"),
+          eqTo(updateRequest)
         )(any[HeaderCarrier])
       }
     }
 
     "return an error when the response cannot be parsed as JSON" in {
-      val updateRequest = APIMaintainProfileRequest(
+      val updateRequest = MaintainProfileRequest(
         actorId = "GB987654321098",
         ukimsNumber = "XIUKIM47699357400020231115081800",
         nirmsNumber = Some("RMS-GB-123456"),
         niphlNumber = Some("6 S12345")
       )
 
-      when(connector.routerMaintainProfile(any[RouterMaintainProfileRequest])(any[HeaderCarrier]))
+      when(connector.routerMaintainProfile(any[String], any[MaintainProfileRequest])(any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(200, "error")))
 
       val result = sut.updateProfile("GB123456789012", updateRequest)
@@ -533,14 +534,14 @@ class RouterServiceSpec
     }
 
     "return an error when the routerConnector returns an exception" in {
-      val updateRequest = APIMaintainProfileRequest(
+      val updateRequest = MaintainProfileRequest(
         actorId = "GB987654321098",
         ukimsNumber = "XIUKIM47699357400020231115081800",
         nirmsNumber = Some("RMS-GB-123456"),
         niphlNumber = Some("6 S12345")
       )
 
-      when(connector.routerMaintainProfile(any[RouterMaintainProfileRequest])(any[HeaderCarrier]))
+      when(connector.routerMaintainProfile(any[String], any[MaintainProfileRequest])(any[HeaderCarrier]))
         .thenReturn(Future.failed(new RuntimeException("error")))
 
       val result = sut.updateProfile("GB123456789012", updateRequest)
@@ -566,14 +567,14 @@ class RouterServiceSpec
 
     forAll(table) { (description: String, status: Int, expectedResult: Int, code: String) =>
       s"$description" in {
-        val updateRequest = APIMaintainProfileRequest(
+        val updateRequest = MaintainProfileRequest(
           actorId = "GB987654321098",
           ukimsNumber = "XIUKIM47699357400020231115081800",
           nirmsNumber = Some("RMS-GB-123456"),
           niphlNumber = Some("6 S12345")
         )
 
-        when(connector.routerMaintainProfile(any[RouterMaintainProfileRequest])(any[HeaderCarrier]))
+        when(connector.routerMaintainProfile(any[String], any[MaintainProfileRequest])(any[HeaderCarrier]))
           .thenReturn(Future.successful(createHttpResponse(status, code)))
 
         val result = sut.updateProfile("GB123456789012", updateRequest)

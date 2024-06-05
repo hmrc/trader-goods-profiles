@@ -20,25 +20,25 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads.verifying
 import play.api.libs.json._
 
-case class APIMaintainProfileRequest(
+case class MaintainProfileRequest(
   actorId: String,
   ukimsNumber: String,
   nirmsNumber: Option[String],
   niphlNumber: Option[String]
 )
 
-object APIMaintainProfileRequest {
+object MaintainProfileRequest {
 
   def nonEmptyString: Reads[String] = verifying[String](_.nonEmpty)
 
-  implicit val reads: Reads[APIMaintainProfileRequest] = (
+  implicit val reads: Reads[MaintainProfileRequest] = (
     (JsPath \ "actorId").read[String](nonEmptyString) and
       (JsPath \ "ukimsNumber").read[String](nonEmptyString) and
       (JsPath \ "nirmsNumber").readNullable[String] and
       (JsPath \ "niphlNumber").readNullable[String]
-  )(APIMaintainProfileRequest.apply _)
+  )(MaintainProfileRequest.apply _)
 
-  implicit val writes: OWrites[APIMaintainProfileRequest] = Json.writes[APIMaintainProfileRequest]
+  implicit val writes: OWrites[MaintainProfileRequest] = Json.writes[MaintainProfileRequest]
 
-  implicit val format: OFormat[APIMaintainProfileRequest] = OFormat(reads, writes)
+  implicit val format: OFormat[MaintainProfileRequest] = OFormat(reads, writes)
 }
