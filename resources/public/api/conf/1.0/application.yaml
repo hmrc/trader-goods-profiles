@@ -857,7 +857,7 @@ components:
       example: GB123456789012
       description: >-
         The traders' EORI number. The first 2 letters are the country code, like
-        GB or XI, followed by 12 or 15 digits.
+        GB followed by 12 or 15 digits.
     actorId:
       type: string
       pattern: ^[A-Z]{2}\d{12,15}$
