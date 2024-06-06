@@ -34,6 +34,7 @@ import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{RouterCreateRecordRequestSupport, RouterUpdateRecordRequestSupport}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.MaintainProfileRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterRequestAccreditationRequest
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.XClientIdHeader
 
@@ -310,4 +311,58 @@ class RouteConnectorSpec
     recordId = "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f",
     requestorEmail = "Phil.Edwards@gmail.com"
   )
+
+  "maintain profile" should {
+
+    "return 200 when the profile is successfully updated" in {
+      val eori = "GB123456789012"
+
+      val updateProfileRequest = MaintainProfileRequest(
+        actorId = "GB987654321098",
+        ukimsNumber = "XIUKIM47699357400020231115081800",
+        nirmsNumber = Some("RMS-GB-123456"),
+        niphlNumber = Some("6 S12345")
+      )
+
+      when(httpClient.put(any)(any)).thenReturn(requestBuilder)
+      when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
+      when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(200, "message")))
+
+      val result = await(sut.routerMaintainProfile(eori, updateProfileRequest))
+
+      result.status mustBe OK
+    }
+
+    "send a PUT request with the right url and body" in {
+      val eori = "GB123456789012"
+
+      val updateProfileRequest = MaintainProfileRequest(
+        actorId = "GB987654321098",
+        ukimsNumber = "XIUKIM47699357400020231115081800",
+        nirmsNumber = Some("RMS-GB-123456"),
+        niphlNumber = Some("6 S12345")
+      )
+
+      when(httpClient.put(any)(any)).thenReturn(requestBuilder)
+      when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
+      when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
+      when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(200, "message")))
+
+      await(sut.routerMaintainProfile(eori, updateProfileRequest))
+
+      val expectedUrl =
+        UrlPath.parse(s"http://localhost:23123/trader-goods-profiles-router/traders/$eori")
+      verify(httpClient).put(eqTo(url"$expectedUrl"))(any)
+      verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+      verify(requestBuilder).withBody(eqTo(Json.toJson(updateProfileRequest)))(any, any, any)
+      verify(requestBuilder).execute(any, any)
+
+      withClue("process the response within a timer") {
+        verify(metricsRegistry).timer(eqTo("tgp.maintainprofile.connector-timer"))
+        verify(timerContext).stop()
+      }
+    }
+  }
+
 }

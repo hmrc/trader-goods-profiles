@@ -27,6 +27,7 @@ import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.metrics.MetricsSupport
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.MaintainProfileRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterCreateRecordRequest, RouterRequestAccreditationRequest, RouterUpdateRecordRequest}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.XClientIdHeader
 
@@ -106,6 +107,20 @@ class RouterConnector @Inject() (
         .execute[HttpResponse]
     }
 
+  def routerMaintainProfile(eori: String, updateProfileRequest: MaintainProfileRequest)(implicit
+    hc: HeaderCarrier
+  ): Future[HttpResponse] =
+    withMetricsTimerAsync("tgp.maintainprofile.connector") { _ =>
+      val url      = appConfig.routerUrl.withPath(routerMaintainProfileRoute(eori))
+      val jsonData = Json.toJson(updateProfileRequest)
+      httpClient
+        .put(url"$url")
+        .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+        .withBody(jsonData)
+        .withClientId
+        .execute[HttpResponse]
+    }
+
   def requestAccreditation(
     accreditationRequest: RouterRequestAccreditationRequest
   )(implicit hc: HeaderCarrier): Future[HttpResponse] =
@@ -143,6 +158,11 @@ class RouterConnector @Inject() (
   private def routerAccreditationRoute(): UrlPath =
     UrlPath.parse(
       s"$routerBaseRoute/createaccreditation"
+    )
+
+  private def routerMaintainProfileRoute(eoriNumber: String): UrlPath =
+    UrlPath.parse(
+      s"$routerBaseRoute/traders/$eoriNumber"
     )
 
   implicit class HttpResponseHelpers(requestBuilder: RequestBuilder) {

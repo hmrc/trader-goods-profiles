@@ -42,7 +42,10 @@ object ValidationSupport {
     "/supplementaryUnit",
     "/measurementUnit",
     "/comcodeEffectiveFromDate",
-    "/comcodeEffectiveToDate"
+    "/comcodeEffectiveToDate",
+    "/ukimsNumber",
+    "/nirmsNumber",
+    "/niphlNumber"
   )
 
   private val mandatoryFieldsToErrorCode: Map[String, (String, String, Int)] = Map(
@@ -61,7 +64,10 @@ object ValidationSupport {
     "/supplementaryUnit"                          -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingSupplementaryUnit, ApplicationConstants.InvalidOrMissingSupplementaryUnitCode),
     "/measurementUnit"                            -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingMeasurementUnit, ApplicationConstants.InvalidOrMissingMeasurementUnitCode),
     "/comcodeEffectiveFromDate"                   -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveFromDateCode),
-    "/comcodeEffectiveToDate"                     -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcodeEffectiveToDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveToDateCode)
+    "/comcodeEffectiveToDate"                     -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcodeEffectiveToDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveToDateCode),
+    "/ukimsNumber"                                -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingUkimsNumber, ApplicationConstants.InvalidOrMissingUkimsNumberCode),
+    "/nirmsNumber"                                -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingNirmsNumber, ApplicationConstants.InvalidOrMissingNirmsNumberCode),
+    "/niphlNumber"                                -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingNiphlNumber, ApplicationConstants.InvalidOrMissingNiphlNumberCode)
   )
 
   private val optionalFieldsToErrorCode: Map[String, (String, String, Int)] = Map(

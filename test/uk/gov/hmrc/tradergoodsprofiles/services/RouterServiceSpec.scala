@@ -32,8 +32,9 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{APICreateRe
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.{CreateOrUpdateRecordResponseSupport, GetRecordResponseSupport}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterRequestAccreditationRequest, RouterUpdateRecordRequest}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.{RequestAccreditationRequest, router}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.{MaintainProfileRequest, RequestAccreditationRequest, router}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
@@ -473,6 +474,114 @@ class RouterServiceSpec
               _.left.value.status mustBe expectedResult
             }
           }
+      }
+    }
+  }
+
+  "updateProfile" should {
+    "update a profile" in {
+      val updateRequest  = MaintainProfileRequest(
+        actorId = "GB987654321098",
+        ukimsNumber = "XIUKIM47699357400020231115081800",
+        nirmsNumber = Some("RMS-GB-123456"),
+        niphlNumber = Some("6 S12345")
+      )
+      val updateResponse = MaintainProfileResponse(
+        eori = "GB123456789012",
+        actorId = "GB987654321098",
+        ukimsNumber = Some("XIUKIM47699357400020231115081800"),
+        nirmsNumber = Some("RMS-GB-123456"),
+        niphlNumber = Some("6 S12345")
+      )
+
+      when(connector.routerMaintainProfile(any[String], any[MaintainProfileRequest])(any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(200, Json.toJson(updateResponse), Map.empty)))
+
+      val result = sut.updateProfile("GB123456789012", updateRequest)
+
+      whenReady(result) { res =>
+        res mustBe Right(updateResponse)
+        verify(connector).routerMaintainProfile(
+          eqTo("GB123456789012"),
+          eqTo(updateRequest)
+        )(any[HeaderCarrier])
+      }
+    }
+
+    "return an error when the response cannot be parsed as JSON" in {
+      val updateRequest = MaintainProfileRequest(
+        actorId = "GB987654321098",
+        ukimsNumber = "XIUKIM47699357400020231115081800",
+        nirmsNumber = Some("RMS-GB-123456"),
+        niphlNumber = Some("6 S12345")
+      )
+
+      when(connector.routerMaintainProfile(any[String], any[MaintainProfileRequest])(any[HeaderCarrier]))
+        .thenReturn(Future.successful(HttpResponse(200, "error")))
+
+      val result = sut.updateProfile("GB123456789012", updateRequest)
+
+      whenReady(result) {
+        _.left.value mustBe ServiceError(
+          INTERNAL_SERVER_ERROR,
+          ErrorResponse(
+            correlationId,
+            "INTERNAL_SERVER_ERROR",
+            "Response body could not be parsed as JSON, body: error"
+          )
+        )
+      }
+    }
+
+    "return an error when the routerConnector returns an exception" in {
+      val updateRequest = MaintainProfileRequest(
+        actorId = "GB987654321098",
+        ukimsNumber = "XIUKIM47699357400020231115081800",
+        nirmsNumber = Some("RMS-GB-123456"),
+        niphlNumber = Some("6 S12345")
+      )
+
+      when(connector.routerMaintainProfile(any[String], any[MaintainProfileRequest])(any[HeaderCarrier]))
+        .thenReturn(Future.failed(new RuntimeException("error")))
+
+      val result = sut.updateProfile("GB123456789012", updateRequest)
+
+      whenReady(result) {
+        _.left.value mustBe ServiceError(
+          INTERNAL_SERVER_ERROR,
+          ErrorResponse(
+            correlationId,
+            "INTERNAL_SERVER_ERROR",
+            "Could not update profile due to an internal error"
+          )
+        )
+      }
+    }
+
+    val table = Table(
+      ("description", "status", "expectedResult", "code"),
+      ("return bad request", 400, 400, "BAD_REQUEST"),
+      ("return Forbidden", 403, 403, "FORBIDDEN"),
+      ("return Not Found", 404, 404, "NOT_FOUND")
+    )
+
+    forAll(table) { (description: String, status: Int, expectedResult: Int, code: String) =>
+      s"$description" in {
+        val updateRequest = MaintainProfileRequest(
+          actorId = "GB987654321098",
+          ukimsNumber = "XIUKIM47699357400020231115081800",
+          nirmsNumber = Some("RMS-GB-123456"),
+          niphlNumber = Some("6 S12345")
+        )
+
+        when(connector.routerMaintainProfile(any[String], any[MaintainProfileRequest])(any[HeaderCarrier]))
+          .thenReturn(Future.successful(createHttpResponse(status, code)))
+
+        val result = sut.updateProfile("GB123456789012", updateRequest)
+
+        whenReady(result) {
+          _.left.value.status mustBe expectedResult
+        }
       }
     }
   }

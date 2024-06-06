@@ -22,7 +22,7 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
@@ -38,7 +38,7 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
-  lazy val removeRecordRequestData = Json
+  lazy val removeRecordRequestData: JsValue = Json
     .parse("""
              |{
              |    "actorId": "GB098765432112"
