@@ -151,7 +151,7 @@ class RouterService @Inject() (
   ): Future[Either[ServiceError, CreateOrUpdateRecordResponse]] = {
     val routerCreateRecordRequest = router.RouterCreateRecordRequest(eori, createRequest)
     routerConnector
-      .createRecord(routerCreateRecordRequest)
+      .createRecord(eori, routerCreateRecordRequest)
       .map { httpResponse =>
         httpResponse.status match {
           case status if is2xx(status) =>

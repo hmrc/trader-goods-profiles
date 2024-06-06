@@ -57,13 +57,13 @@ class CreateRecordControllerIntegrationSpec
   implicit val ec: ExecutionContext = ExecutionContext.global
 
   private lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
-  private lazy val timestamp          = Instant.parse("2024-06-08T12:12:12.456789Z")
+  private val timestamp               = Instant.parse("2024-06-08T12:12:12.456789Z")
   private val recordId                = UUID.randomUUID().toString
   private val uuidService             = mock[UuidService]
   private val correlationId           = "d677693e-9981-4ee3-8574-654981ebe606"
 
   private val url              = s"http://localhost:$port/$eoriNumber/records"
-  private val routerUrl        = s"/trader-goods-profiles-router/records"
+  private val routerUrl        = s"/trader-goods-profiles-router/traders/$eoriNumber/records"
   private val requestBody      = Json.toJson(createAPICreateRecordRequest())
   private val expectedResponse = Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
 
