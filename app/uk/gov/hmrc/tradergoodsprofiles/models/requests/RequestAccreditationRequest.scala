@@ -20,6 +20,8 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads.verifying
 import play.api.libs.json._
 
+import scala.util.matching.Regex
+
 case class RequestAccreditationRequest(
   actorId: String,
   requestorName: String,
@@ -27,10 +29,14 @@ case class RequestAccreditationRequest(
 )
 
 object RequestAccreditationRequest {
-  def nonEmptyString: Reads[String] = verifying[String](_.nonEmpty)
+  private val actorIdPattern: Regex            = raw"[A-Z]{2}\d{12,15}".r
+  def isValidActorId(actorId: String): Boolean = actorIdPattern.matches(actorId)
+  def nonEmptyString: Reads[String]            = verifying[String](_.nonEmpty)
+
+  val validActorId: Reads[String] = verifying(isValidActorId)
 
   implicit val reads: Reads[RequestAccreditationRequest] = (
-    (JsPath \ "actorId").read[String](nonEmptyString) and
+    (JsPath \ "actorId").read[String](validActorId) and
       (JsPath \ "requestorName").read[String](nonEmptyString) and
       (JsPath \ "requestorEmail").read[String](nonEmptyString)
   )(RequestAccreditationRequest.apply _)
