@@ -24,7 +24,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.MaintainProfileRequest
-import uk.gov.hmrc.tradergoodsprofiles.models.responses.UpdateProfileResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.validateRequestBody
 
@@ -58,7 +58,7 @@ class MaintainProfileController @Inject() (
   private def sendUpdate(
     eori: String,
     updateProfileRequest: MaintainProfileRequest
-  )(implicit hc: HeaderCarrier): EitherT[Future, Result, UpdateProfileResponse] =
+  )(implicit hc: HeaderCarrier): EitherT[Future, Result, MaintainProfileResponse] =
     EitherT(routerService.updateProfile(eori, updateProfileRequest)).leftMap(r =>
       Status(r.status)(Json.toJson(r.errorResponse))
     )

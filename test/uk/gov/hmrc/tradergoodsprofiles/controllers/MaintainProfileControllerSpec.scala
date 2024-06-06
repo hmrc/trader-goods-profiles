@@ -29,7 +29,7 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.MaintainProfileRequest
-import uk.gov.hmrc.tradergoodsprofiles.models.responses.UpdateProfileResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants
 
@@ -57,12 +57,12 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
     niphlNumber = Some("6 S12345")
   )
 
-  private val updateProfileResponse = UpdateProfileResponse(
+  private val updateProfileResponse = MaintainProfileResponse(
     eori,
     "GB987654321098",
-    "XIUKIM47699357400020231115081800",
-    "RMS-GB-123456",
-    "6 S12345"
+    Some("XIUKIM47699357400020231115081800"),
+    Some("RMS-GB-123456"),
+    Some("6 S12345")
   )
 
   private val sut = new MaintainProfileController(

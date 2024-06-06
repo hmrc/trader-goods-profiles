@@ -35,7 +35,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.MaintainProfileRequest
-import uk.gov.hmrc.tradergoodsprofiles.models.responses.UpdateProfileResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
 
@@ -66,12 +66,12 @@ class MaintainProfileControllerIntegrationSpec
     niphlNumber = Some("6 S12345")
   )
 
-  private val updateProfileResponse = UpdateProfileResponse(
+  private val updateProfileResponse = MaintainProfileResponse(
     eoriNumber,
     "GB987654321098",
-    "XIUKIM47699357400020231115081800",
-    "RMS-GB-123456",
-    "6 S12345"
+    Some("XIUKIM47699357400020231115081800"),
+    Some("RMS-GB-123456"),
+    Some("6 S12345")
   )
 
   private val requestBody      = Json.toJson(updateProfileRequest)

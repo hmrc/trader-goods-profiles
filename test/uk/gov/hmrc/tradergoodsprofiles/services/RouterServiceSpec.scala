@@ -34,7 +34,7 @@ import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceErro
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterRequestAccreditationRequest, RouterUpdateRecordRequest}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.{MaintainProfileRequest, RequestAccreditationRequest, router}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
-import uk.gov.hmrc.tradergoodsprofiles.models.responses.UpdateProfileResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
@@ -486,12 +486,12 @@ class RouterServiceSpec
         nirmsNumber = Some("RMS-GB-123456"),
         niphlNumber = Some("6 S12345")
       )
-      val updateResponse = UpdateProfileResponse(
+      val updateResponse = MaintainProfileResponse(
         eori = "GB123456789012",
         actorId = "GB987654321098",
-        ukimsNumber = "XIUKIM47699357400020231115081800",
-        nirmsNumber = "RMS-GB-123456",
-        niphlNumber = "6 S12345"
+        ukimsNumber = Some("XIUKIM47699357400020231115081800"),
+        nirmsNumber = Some("RMS-GB-123456"),
+        niphlNumber = Some("6 S12345")
       )
 
       when(connector.routerMaintainProfile(any[String], any[MaintainProfileRequest])(any[HeaderCarrier]))

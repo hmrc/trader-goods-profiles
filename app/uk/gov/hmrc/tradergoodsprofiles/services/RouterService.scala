@@ -27,7 +27,7 @@ import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceErro
 import uk.gov.hmrc.tradergoodsprofiles.models.requests._
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterRequestAccreditationRequest, RouterUpdateRecordRequest}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.{CreateOrUpdateRecordResponse, GetRecordResponse, GetRecordsResponse}
-import uk.gov.hmrc.tradergoodsprofiles.models.responses.UpdateProfileResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.runtime.universe.{TypeTag, typeOf}
@@ -259,13 +259,13 @@ class RouterService @Inject() (
 
   def updateProfile(eori: String, updateRequest: MaintainProfileRequest)(implicit
     hc: HeaderCarrier
-  ): Future[Either[ServiceError, UpdateProfileResponse]] =
+  ): Future[Either[ServiceError, MaintainProfileResponse]] =
     routerConnector
       .routerMaintainProfile(eori, updateRequest)
       .map { httpResponse =>
         httpResponse.status match {
           case status if is2xx(status) =>
-            jsonAs[UpdateProfileResponse](httpResponse.body).fold(
+            jsonAs[MaintainProfileResponse](httpResponse.body).fold(
               error =>
                 Left(
                   ServiceError(

@@ -18,14 +18,14 @@ package uk.gov.hmrc.tradergoodsprofiles.models.responses
 
 import play.api.libs.json.{Json, OFormat}
 
-case class UpdateProfileResponse(
+case class MaintainProfileResponse(
   eori: String,
   actorId: String,
-  ukimsNumber: String,
-  nirmsNumber: String,
-  niphlNumber: String
+  ukimsNumber: Option[String],
+  nirmsNumber: Option[String],
+  niphlNumber: Option[String]
 )
 
-object UpdateProfileResponse {
-  implicit val format: OFormat[UpdateProfileResponse] = Json.format[UpdateProfileResponse]
+object MaintainProfileResponse {
+  implicit val format: OFormat[MaintainProfileResponse] = Json.format[MaintainProfileResponse]
 }
