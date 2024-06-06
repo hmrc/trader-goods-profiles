@@ -90,9 +90,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetTGPRecordResponseSchema'
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/xCorrelationIdHdr'
         '400':
           description: Bad Request; Incorrect request parameters provided.
         '401':
@@ -266,9 +263,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TGPGetRecordResponseSchema'
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/xCorrelationIdHdr'
         '400':
           description: Bad Request; Incorrect request parameters provided.
         '401':
@@ -732,7 +726,7 @@ components:
           eori: GB123456789012
           actorId: GB987654321098
           traderRef: SKU123456
-          comcode: 123456,
+          comcode: '0810100000'
           accreditationStatus: Not Requested
           goodsDescription: Bananas
           countryOfOrigin: GB
@@ -766,7 +760,7 @@ components:
           eori: GB123456789012
           actorId: GB987654321098
           traderRef: SKU123457
-          comcode: 123457
+          comcode: '0810100000'
           accreditationStatus: Not Requested
           goodsDescription: Apples
           countryOfOrigin: GB
@@ -803,7 +797,7 @@ components:
         - currentPage
         - totalPages
         - nextPage
-        - previousPage
+        - prevPage
       properties:
         totalRecords:
           type: integer
@@ -821,7 +815,7 @@ components:
           type: integer
           example: 2
           description: Number of the next page, null if on the last page
-        previousPage:
+        prevPage:
           type: integer
           example: 0
           description: Number of the previous page, null if on the last page
@@ -882,7 +876,7 @@ components:
       type: string
       minLength: 6
       maxLength: 10
-      example: 123456
+      example: '0810100000'
       description: >-
         A code specific to goods that is internationally recognised. Can be 6, 8
         or 10 digits.
