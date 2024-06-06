@@ -120,6 +120,16 @@ class RequestAccreditationControllerSpec extends PlaySpec with AuthTestSupport w
           "errors"        -> Seq(
             Json.obj(
               "code"        -> "INVALID_REQUEST_PARAMETER",
+              "message"     -> s"Mandatory field requestorEmail was missing from body or is in the wrong format",
+              "errorNumber" -> 1009
+            ),
+            Json.obj(
+              "code"        -> "INVALID_REQUEST_PARAMETER",
+              "message"     -> s"Mandatory field requestorName was missing from body or is in the wrong format",
+              "errorNumber" -> 1008
+            ),
+            Json.obj(
+              "code"        -> "INVALID_REQUEST_PARAMETER",
               "message"     -> s"Mandatory field actorId was missing from body or is in the wrong format",
               "errorNumber" -> 8
             )
