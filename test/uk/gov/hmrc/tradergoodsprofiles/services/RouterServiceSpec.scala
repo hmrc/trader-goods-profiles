@@ -179,20 +179,23 @@ class RouterServiceSpec
     "create a record" in {
       val createRequest = createAPICreateRecordRequest()
 
-      when(connector.createRecord(any)(any))
+      when(connector.createRecord(any, any)(any))
         .thenReturn(Future.successful(HttpResponse(201, Json.toJson(createResponse), Map.empty)))
 
       val result = sut.createRecord("GB123456789012", createRequest)
 
       whenReady(result) { _ =>
-        verify(connector).createRecord(eqTo(router.RouterCreateRecordRequest("GB123456789012", createRequest)))(any)
+        verify(connector).createRecord(
+          eqTo("GB123456789012"),
+          eqTo(router.RouterCreateRecordRequest("GB123456789012", createRequest))
+        )(any)
       }
     }
 
     "return CreateRecordResponse" in {
       val createRequest = createAPICreateRecordRequest()
 
-      when(connector.createRecord(any)(any))
+      when(connector.createRecord(any, any)(any))
         .thenReturn(Future.successful(HttpResponse(201, Json.toJson(createResponse), Map.empty)))
 
       val result = sut.createRecord("GB123456789012", createRequest)
@@ -204,7 +207,7 @@ class RouterServiceSpec
       "cannot parse the response" in {
         val createRequest = createAPICreateRecordRequest()
 
-        when(connector.createRecord(any)(any))
+        when(connector.createRecord(any, any)(any))
           .thenReturn(Future.successful(HttpResponse(201, Json.obj(), Map.empty)))
 
         val result = sut.createRecord("GB123456789012", createRequest)
@@ -225,7 +228,7 @@ class RouterServiceSpec
       "cannot parse the response as Json" in {
         val createRequest = createAPICreateRecordRequest()
 
-        when(connector.createRecord(any)(any))
+        when(connector.createRecord(any, any)(any))
           .thenReturn(Future.successful(HttpResponse(201, "error")))
 
         val result = sut.createRecord("GB123456789012", createRequest)
@@ -246,7 +249,7 @@ class RouterServiceSpec
       "routerConnector return an exception" in {
         val createRequest = createAPICreateRecordRequest()
 
-        when(connector.createRecord(any)(any))
+        when(connector.createRecord(any, any)(any))
           .thenReturn(Future.failed(new RuntimeException("error")))
 
         val result = sut.createRecord("GB123456789012", createRequest)
@@ -281,7 +284,7 @@ class RouterServiceSpec
           s"$description" in {
             val createRequest = createAPICreateRecordRequest()
 
-            when(connector.createRecord(any)(any))
+            when(connector.createRecord(any, any)(any))
               .thenReturn(Future.successful(createHttpResponse(status, code)))
 
             val result = sut.createRecord("GB123456789012", createRequest)
