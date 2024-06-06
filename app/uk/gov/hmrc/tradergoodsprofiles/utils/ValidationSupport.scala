@@ -67,7 +67,9 @@ object ValidationSupport {
     "/comcodeEffectiveToDate"                     -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingComcodeEffectiveToDate, ApplicationConstants.InvalidOrMissingComcodeEffectiveToDateCode),
     "/ukimsNumber"                                -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingUkimsNumber, ApplicationConstants.InvalidOrMissingUkimsNumberCode),
     "/nirmsNumber"                                -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingNirmsNumber, ApplicationConstants.InvalidOrMissingNirmsNumberCode),
-    "/niphlNumber"                                -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingNiphlNumber, ApplicationConstants.InvalidOrMissingNiphlNumberCode)
+    "/niphlNumber"                                -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingNiphlNumber, ApplicationConstants.InvalidOrMissingNiphlNumberCode),
+    "/requestorName"                              -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingRequestorName, ApplicationConstants.InvalidOrMissingRequestorNameCode),
+    "/requestorEmail"                             -> (ApplicationConstants.InvalidRequestParameter, ApplicationConstants.InvalidOrMissingRequestorEmail, ApplicationConstants.InvalidOrMissingRequestorEmailCode)
   )
 
   private val optionalFieldsToErrorCode: Map[String, (String, String, Int)] = Map(

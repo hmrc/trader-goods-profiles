@@ -84,4 +84,8 @@ object ApplicationConstants {
   val InvalidOrMissingNirmsNumber                              = "Optional field nirmsNumber is in the wrong format"
   val InvalidOrMissingNiphlNumberCode                          = 35
   val InvalidOrMissingNiphlNumber                              = "Optional field niphlNumber is in the wrong format"
+  val InvalidOrMissingRequestorNameCode                        = 1008
+  val InvalidOrMissingRequestorName                            = "Mandatory field requestorName was missing from body or is in the wrong format"
+  val InvalidOrMissingRequestorEmailCode                       = 1009
+  val InvalidOrMissingRequestorEmail                           = "Mandatory field requestorEmail was missing from body or is in the wrong format"
 }
