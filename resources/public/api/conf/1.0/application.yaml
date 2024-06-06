@@ -560,6 +560,7 @@ components:
           $ref: '#/components/schemas/requestorEmail'
     MaintainProfileRecordSchema:
       required:
+        - actorId
         - ukimsNumber
       type: object
       properties:
