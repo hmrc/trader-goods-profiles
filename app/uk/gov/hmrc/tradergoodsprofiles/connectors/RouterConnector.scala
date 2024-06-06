@@ -70,14 +70,16 @@ class RouterConnector @Inject() (
         .execute[HttpResponse]
     }
 
-  def createRecord(createRecordRequest: RouterCreateRecordRequest)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+  def createRecord(eori: String, createRecordRequest: RouterCreateRecordRequest)(implicit
+    hc: HeaderCarrier
+  ): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.createrecord.connector") { _ =>
-      val url      = appConfig.routerUrl.withPath(routerCreateOrUpdateRoute())
-      val jsonData = Json.toJson(createRecordRequest)
+      val url = appConfig.routerUrl.withPath(getCreateRecordUrlPath(eori))
+
       httpClient
         .post(url"$url")
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-        .withBody(jsonData)
+        .withBody(Json.toJson(createRecordRequest))
         .withClientId
         .execute[HttpResponse]
     }
@@ -96,7 +98,7 @@ class RouterConnector @Inject() (
 
   def updateRecord(updateRecordRequest: RouterUpdateRecordRequest)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.updaterecord.connector") { _ =>
-      val url      = appConfig.routerUrl.withPath(routerCreateOrUpdateRoute())
+      val url      = appConfig.routerUrl.withPath(routerCreateOrUpdateRoute)
       val jsonData = Json.toJson(updateRecordRequest)
       httpClient
         .put(url"$url")
@@ -135,12 +137,16 @@ class RouterConnector @Inject() (
     s"$uri"
   }
 
-  private def routerCreateOrUpdateRoute(): UrlPath =
+  private def routerCreateOrUpdateRoute: UrlPath =
     UrlPath.parse(
       s"$routerBaseRoute/records"
     )
 
-  private def routerAccreditationRoute(): UrlPath =
+  private def getCreateRecordUrlPath(eori: String): UrlPath =
+    UrlPath.parse(
+      s"$routerBaseRoute/traders/$eori/records"
+    )
+  private def routerAccreditationRoute(): UrlPath           =
     UrlPath.parse(
       s"$routerBaseRoute/createaccreditation"
     )

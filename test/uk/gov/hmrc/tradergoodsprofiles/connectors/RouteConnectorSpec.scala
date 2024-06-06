@@ -171,7 +171,7 @@ class RouteConnectorSpec
       when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "message")))
 
-      val result = await(sut.createRecord(createRecordRequest))
+      val result = await(sut.createRecord("eori", createRecordRequest))
 
       result.status mustBe CREATED
     }
@@ -184,9 +184,9 @@ class RouteConnectorSpec
       when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "message")))
 
-      await(sut.createRecord(createRecordRequest))
+      await(sut.createRecord("eoriNumber", createRecordRequest))
 
-      val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/records")
+      val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/traders/eoriNumber/records")
       verify(httpClient).post(eqTo(url"$expectedUrl"))(any)
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
