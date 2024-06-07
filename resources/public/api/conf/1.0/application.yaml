@@ -154,7 +154,7 @@ paths:
                       - code: INVALID_REQUEST_PARAMETER
                         message: >-
                           Record is locked and cannot be updated until
-                          accreditation request withdrawn.
+                          advice request withdrawn.
                         errorNumber: 27
                 recordIsAlreadyDeactivated:
                   value:
@@ -267,13 +267,13 @@ paths:
       security:
         - userRestricted:
             - trader-goods-profiles
-  /customs/traders/goods-profiles/{eori}/records/{recordId}/accreditations:
+  /customs/traders/goods-profiles/{eori}/records/{recordId}/advice:
     post:
       tags:
         - Goods records
       summary: Ask HMRC for advice if a commodity code is correct
       description: Ask HMRC for advice if a commodity code is correct
-      operationId: createTraderGoodsProfileRecordAccreditation
+      operationId: createTraderGoodsProfileRecordAdvice
       parameters:
         - $ref: '#/components/parameters/Content-Type'
         - $ref: '#/components/parameters/Accept'
@@ -284,7 +284,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateTGPRecordAccreditationSchema'
+              $ref: '#/components/schemas/CreateTGPRecordAdviceSchema'
         required: true
       responses:
         '201':
@@ -524,7 +524,7 @@ components:
       properties:
         actorId:
           $ref: '#/components/schemas/actorId'
-    CreateTGPRecordAccreditationSchema:
+    CreateTGPRecordAdviceSchema:
       type: object
       required:
         - actorId
@@ -558,7 +558,7 @@ components:
         - actorId
         - traderRef
         - comcode
-        - accreditationStatus
+        - adviceStatus
         - goodsDescription
         - countryOfOrigin
         - category
@@ -582,8 +582,8 @@ components:
           $ref: '#/components/schemas/traderRef'
         comcode:
           $ref: '#/components/schemas/comcode'
-        accreditationStatus:
-          $ref: '#/components/schemas/accreditationStatus'
+        adviceStatus:
+          $ref: '#/components/schemas/adviceStatus'
         goodsDescription:
           $ref: '#/components/schemas/goodsDescription'
         countryOfOrigin:
@@ -627,7 +627,7 @@ components:
         - actorId
         - traderRef
         - comcode
-        - accreditationStatus
+        - adviceStatus
         - goodsDescription
         - countryOfOrigin
         - category
@@ -652,8 +652,8 @@ components:
           $ref: '#/components/schemas/traderRef'
         comcode:
           $ref: '#/components/schemas/comcode'
-        accreditationStatus:
-          $ref: '#/components/schemas/accreditationStatus'
+        adviceStatus:
+          $ref: '#/components/schemas/adviceStatus'
         goodsDescription:
           $ref: '#/components/schemas/goodsDescription'
         countryOfOrigin:
@@ -713,7 +713,7 @@ components:
           actorId: GB987654321098
           traderRef: SKU123456
           comcode: '0810100000'
-          accreditationStatus: Not Requested
+          adviceStatus: Not Requested
           goodsDescription: Bananas
           countryOfOrigin: GB
           category: 2
@@ -747,7 +747,7 @@ components:
           actorId: GB987654321098
           traderRef: SKU123457
           comcode: '0810100000'
-          accreditationStatus: Not Requested
+          adviceStatus: Not Requested
           goodsDescription: Apples
           countryOfOrigin: GB
           category: 2
@@ -864,12 +864,12 @@ components:
       description: >-
         A code specific to goods that is internationally recognised. Can be 6, 8
         or 10 digits.
-    accreditationStatus:
+    adviceStatus:
       type: string
       minLength: 1
       maxLength: 35
       description: >-
-        Indicates the accreditation status of a record if the trader has
+        Indicates the advice status of a record if the trader has
         requested that HMRC review their commodity code.
       example: Not Requested
       enum:
@@ -1012,7 +1012,7 @@ components:
     locked:
       type: boolean
       example: false
-      description: Whether the record is locked for updating due to the accreditationStatus
+      description: Whether the record is locked for updating due to the adviceStatus
     createdDateTime:
       type: string
       format: date-time
