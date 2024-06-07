@@ -24,7 +24,7 @@ import java.time.Instant
 trait RouterCreateRecordRequestSupport {
 
   def createRouterCreateRecordRequest(
-    eori: String = "GB123456789012",
+    eori: String = "GB1234",
     actorId: String = "GB987654321098",
     traderRef: String = "SKU123456",
     comcode: String = "123456",

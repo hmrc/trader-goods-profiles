@@ -75,7 +75,7 @@ class UpdateRecordControllerSpec
 
   "updateRecord" should {
     "return 200 when the record is successfully updated" in {
-      val updateRequest = createUpdateRecordRequest()
+      val updateRequest = createUpdateRecordRequest
 
       val result = sut.updateRecord(eoriNumber, recordId)(request.withBody(Json.toJson(updateRequest)))
 
@@ -98,7 +98,6 @@ class UpdateRecordControllerSpec
       status(result) mustBe BAD_REQUEST
 
       contentAsJson(result) mustBe createMissingFieldExpectedJson(
-        "actorId",
         ApplicationConstants.InvalidActorMessage,
         ApplicationConstants.InvalidActorId
       )
@@ -159,7 +158,7 @@ class UpdateRecordControllerSpec
     }
 
     "return 500 when the router service returns an error" in {
-      val updateRequest = createUpdateRecordRequest()
+      val updateRequest = createUpdateRecordRequest
 
       val expectedJson  = Json.obj(
         "correlationId" -> uuidService.uuid,
@@ -183,7 +182,7 @@ class UpdateRecordControllerSpec
     }
   }
 
-  private def createMissingFieldExpectedJson(fieldName: String, errorMessage: String, errorNumber: Int): JsObject =
+  private def createMissingFieldExpectedJson(errorMessage: String, errorNumber: Int): JsObject =
     Json.obj(
       "correlationId" -> correlationId,
       "code"          -> "BAD_REQUEST",

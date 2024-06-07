@@ -63,8 +63,8 @@ class UpdateRecordControllerIntegrationSpec
   private val correlationId           = "d677693e-9981-4ee3-8574-654981ebe606"
 
   private val url              = s"http://localhost:$port/$eoriNumber/records/$recordId"
-  private val routerUrl        = s"/trader-goods-profiles-router/records"
-  private val requestBody      = Json.toJson(createUpdateRecordRequest())
+  private val routerUrl        = s"/trader-goods-profiles-router/traders/$eoriNumber/records/$recordId"
+  private val requestBody      = Json.toJson(createUpdateRecordRequest)
   private val expectedResponse = Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
 
   override lazy val app: Application = {
