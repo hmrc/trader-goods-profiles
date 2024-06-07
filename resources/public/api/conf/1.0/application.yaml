@@ -46,9 +46,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TGPRecordResponseSchema'
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/xCorrelationIdHdr'
         '400':
           description: Bad Request
           content:
@@ -130,9 +127,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TGPRecordResponseSchema'
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/xCorrelationIdHdr'
         '400':
           description: Bad Request
           content:
@@ -203,9 +197,6 @@ paths:
       responses:
         '200':
           description: OK;   Request completed successfully
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/xCorrelationIdHdr'
         '400':
           description: Bad Request
           content:
@@ -298,9 +289,6 @@ paths:
       responses:
         '201':
           description: TGP record was successfully submitted for advice
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/xCorrelationIdHdr'
         '400':
           description: Bad Request
           content:
@@ -362,9 +350,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MaintainProfileRecordResponse'
-          headers:
-            X-Correlation-ID:
-              $ref: '#/components/headers/xCorrelationIdHdr'
         '400':
           description: Bad Request
           content:
