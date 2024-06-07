@@ -1177,14 +1177,6 @@ components:
       schema:
         $ref: '#/components/schemas/recordId'
       description: ID of the record for the TGP Product in the TGP Core database (UUID)
-  headers:
-    xCorrelationIdHdr:
-      description: A unique id created at source, i.e. client to TGP Digital.
-      required: true
-      schema:
-        type: string
-        format: uuid
-        example: 8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f
   examples:
     StandardBadRequestExample:
       value:
