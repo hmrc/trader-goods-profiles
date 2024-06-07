@@ -5,6 +5,7 @@ ThisBuild / scalaVersion := "2.13.12"
 
 lazy val microservice = Project("trader-goods-profiles", file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
+  .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .settings(
     PlayKeys.playDefaultPort := 10902,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
@@ -20,6 +21,7 @@ lazy val microservice = Project("trader-goods-profiles", file("."))
 
 lazy val it = project
   .enablePlugins(PlayScala)
+  .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .dependsOn(microservice % "test->test")
   .settings(DefaultBuildSettings.itSettings())
   .settings(libraryDependencies ++= AppDependencies.it)
