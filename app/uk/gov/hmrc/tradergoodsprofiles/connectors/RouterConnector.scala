@@ -87,13 +87,12 @@ class RouterConnector @Inject() (
 
   def removeRecord(eori: String, recordId: String, actorId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.removerecord.connector") { _ =>
-      val url = appConfig.routerUrl.withPath(routerRoute(eori, recordId))
+      val url = appConfig.routerUrl.toUrl + routerRouteRemoveRecord(eori, recordId, actorId)
 
       httpClient
-        .put(url"$url")
+        .delete(url"$url")(hc)
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
         .withClientId
-        .withBody(Json.obj("actorId" -> actorId))
         .execute[HttpResponse]
     }
 
@@ -141,6 +140,11 @@ class RouterConnector @Inject() (
     UrlPath.parse(
       s"$routerBaseRoute/$eoriNumber/records/$recordId"
     )
+
+  private def routerRouteRemoveRecord(eoriNumber: String, recordId: String, actorId: String): String = {
+    val uri = uri"$routerBaseRoute/$eoriNumber/records/$recordId?actorId=$actorId"
+    s"$uri"
+  }
 
   private def routerRouteGetRecords(
     eoriNumber: String,
