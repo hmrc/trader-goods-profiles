@@ -41,7 +41,7 @@ trait CreateOrUpdateRecordResponseSupport {
       actorId = "GB987654321098",
       traderRef = "SKU123456",
       comcode = "123456",
-      accreditationStatus = "Not Requested",
+      adviceStatus = "Not Requested",
       goodsDescription = "Bananas",
       countryOfOrigin = "GB",
       category = 2,

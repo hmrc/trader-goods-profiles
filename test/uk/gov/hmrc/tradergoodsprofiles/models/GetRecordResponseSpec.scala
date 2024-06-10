@@ -62,7 +62,7 @@ class GetRecordResponseSpec extends PlaySpec with GetRecordResponseSupport {
       "recordId"                 -> "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f",
       "traderRef"                -> "SKU123456",
       "comcode"                  -> "123456",
-      "accreditationStatus"      -> "Not Requested",
+      "adviceStatus"             -> "Not Requested",
       "goodsDescription"         -> "Bananas",
       "countryOfOrigin"          -> "GB",
       "category"                 -> 2,

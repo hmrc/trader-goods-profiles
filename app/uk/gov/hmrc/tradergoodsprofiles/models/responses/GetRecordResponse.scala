@@ -28,7 +28,7 @@ case class GetRecordResponse(
   recordId: String,
   traderRef: String,
   comcode: String,
-  accreditationStatus: String,
+  adviceStatus: String,
   goodsDescription: String,
   countryOfOrigin: String,
   category: Int,
@@ -61,7 +61,7 @@ object GetRecordResponse {
         "recordId"                 -> Json.toJson(o.recordId),
         "traderRef"                -> Json.toJson(o.traderRef),
         "comcode"                  -> Json.toJson(o.comcode),
-        "accreditationStatus"      -> Json.toJson(o.accreditationStatus),
+        "adviceStatus"             -> Json.toJson(o.adviceStatus),
         "goodsDescription"         -> Json.toJson(o.goodsDescription),
         "countryOfOrigin"          -> Json.toJson(o.countryOfOrigin),
         "category"                 -> Json.toJson(o.category),
@@ -116,7 +116,7 @@ object GetRecordResponse {
       val actorId                  = read[String]("actorId")
       val traderRef                = read[String]("traderRef")
       val comcode                  = read[String]("comcode")
-      val accreditationStatus      = read[String]("accreditationStatus")
+      val adviceStatus             = read[String]("adviceStatus")
       val goodsDescription         = read[String]("goodsDescription")
       val countryOfOrigin          = read[String]("countryOfOrigin")
       val category                 = read[Int]("category")
@@ -143,7 +143,7 @@ object GetRecordResponse {
         recordId,
         traderRef,
         comcode,
-        accreditationStatus,
+        adviceStatus,
         goodsDescription,
         countryOfOrigin,
         category,
@@ -175,7 +175,7 @@ object GetRecordResponse {
             recordId.get,
             traderRef.get,
             comcode.get,
-            accreditationStatus.get,
+            adviceStatus.get,
             goodsDescription.get,
             countryOfOrigin.get,
             category.get,
