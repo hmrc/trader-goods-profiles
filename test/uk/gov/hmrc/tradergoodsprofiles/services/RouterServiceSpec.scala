@@ -31,6 +31,8 @@ import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{APICreateRecordRequestSupport, RouterCreateRecordRequestSupport, UpdateRecordRequestSupport}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.{CreateOrUpdateRecordResponseSupport, GetRecordResponseSupport}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterRequestAccreditationRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.{MaintainProfileRequest, RequestAccreditationRequest}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterRequestAdviceRequest, RouterUpdateRecordRequest}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.{MaintainProfileRequest, RequestAdviceRequest, router}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
@@ -187,7 +189,7 @@ class RouterServiceSpec
       whenReady(result) { _ =>
         verify(connector).createRecord(
           eqTo("GB123456789012"),
-          eqTo(router.RouterCreateRecordRequest("GB123456789012", createRequest))
+          eqTo(createRequest)
         )(any)
       }
     }

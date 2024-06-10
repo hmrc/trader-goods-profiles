@@ -28,7 +28,7 @@ import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status.{CREATED, OK}
 import play.api.http.{HeaderNames, MimeTypes}
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.Json
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
@@ -167,7 +167,7 @@ class RouterConnectorSpec
     "return 201 when the record is successfully created" in {
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "message")))
 
-      val result = await(sut.createRecord("eori", createRouterCreateRecordRequest()))
+      val result = await(sut.createRecord("eori", createRouterCreateRecordRequest))
 
       result.status mustBe CREATED
     }
@@ -175,13 +175,13 @@ class RouterConnectorSpec
     "send a request with the right url and body" in {
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "message")))
 
-      await(sut.createRecord("eoriNumber", createRouterCreateRecordRequest()))
+      await(sut.createRecord("eoriNumber", createRouterCreateRecordRequest))
 
       val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/traders/eoriNumber/records")
       verify(httpClient).post(eqTo(url"$expectedUrl"))(any)
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
-      verify(requestBuilder).withBody(eqTo(Json.toJson(createRouterCreateRecordRequest())))(any, any, any)
+      verify(requestBuilder).withBody(eqTo(Json.toJson(createRouterCreateRecordRequest)))(any, any, any)
       verify(requestBuilder).execute(any, any)
 
       withClue("process the response within a timer") {

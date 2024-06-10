@@ -27,8 +27,8 @@ import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.metrics.MetricsSupport
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.{MaintainProfileRequest, UpdateRecordRequest}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterCreateRecordRequest, RouterRequestAccreditationRequest}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterRequestAccreditationRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.{APICreateRecordRequest, MaintainProfileRequest, UpdateRecordRequest}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.XClientIdHeader
 
 import javax.inject.Inject
@@ -71,7 +71,7 @@ class RouterConnector @Inject() (
         .execute[HttpResponse]
     }
 
-  def createRecord(eori: String, createRecordRequest: RouterCreateRecordRequest)(implicit
+  def createRecord(eori: String, createRecordRequest: APICreateRecordRequest)(implicit
     hc: HeaderCarrier
   ): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.createrecord.connector") { _ =>

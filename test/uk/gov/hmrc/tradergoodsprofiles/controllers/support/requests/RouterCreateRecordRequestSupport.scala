@@ -16,54 +16,43 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests
 
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterCreateRecordRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.APICreateRecordRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.{Assessment, Condition}
 
 import java.time.Instant
 
 trait RouterCreateRecordRequestSupport {
 
-  def createRouterCreateRecordRequest(
-    eori: String = "GB1234",
-    actorId: String = "GB987654321098",
-    traderRef: String = "SKU123456",
-    comcode: String = "123456",
-    goodsDescription: String = "Bananas",
-    countryOfOrigin: String = "GB",
-    category: Int = 2,
-    assessments: Option[Seq[Assessment]] = Some(
-      Seq(
-        Assessment(
-          Some("a06846e9a5f61fa4ecf2c4e3b23631fc"),
-          Some(1),
-          Some(
-            Condition(
-              Some("certificate"),
-              Some("Y923"),
-              Some("Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law"),
-              Some("Excluded product")
+  def createRouterCreateRecordRequest =
+    APICreateRecordRequest(
+      "GB987654321098",
+      "SKU123456",
+      "123456",
+      "Bananas",
+      "GB",
+      2,
+      Some(
+        Seq(
+          Assessment(
+            Some("a06846e9a5f61fa4ecf2c4e3b23631fc"),
+            Some(1),
+            Some(
+              Condition(
+                Some("certificate"),
+                Some("Y923"),
+                Some(
+                  "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law"
+                ),
+                Some("Excluded product")
+              )
             )
           )
         )
-      )
-    ),
-    supplementaryUnit: Option[Int] = Some(13),
-    measurementUnit: Option[String] = Some("Kilograms"),
-    comcodeEffectiveFromDate: Instant = Instant.parse("2023-01-01T00:00:00Z"),
-    comcodeEffectiveToDate: Option[Instant] = Some(Instant.parse("2028-01-01T00:00:00Z"))
-  ): RouterCreateRecordRequest =
-    RouterCreateRecordRequest(
-      eori,
-      actorId,
-      traderRef,
-      comcode,
-      goodsDescription,
-      countryOfOrigin,
-      category,
-      assessments,
-      supplementaryUnit,
-      measurementUnit,
-      comcodeEffectiveFromDate,
-      comcodeEffectiveToDate
+      ),
+      Some(13),
+      Some("Kilograms"),
+      Instant.parse("2023-01-01T00:00:00Z"),
+      Some(Instant.parse("2028-01-01T00:00:00Z"))
     )
+
 }
