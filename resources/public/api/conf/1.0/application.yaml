@@ -1034,10 +1034,9 @@ components:
     requestorEmail:
       type: string
       format: email
-      minLength: 3
       maxLength: 254
       example: Phil.Edwards@gmail.com
-      description: The name of the user requesting advice from HMRC.
+      description: The email of the user requesting advice from HMRC.
     Assessment:
       type: object
       properties:
