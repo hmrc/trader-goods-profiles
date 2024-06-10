@@ -22,26 +22,26 @@ import play.api.libs.json._
 
 import scala.util.matching.Regex
 
-case class RequestAccreditationRequest(
+case class RequestAdviceRequest(
   actorId: String,
   requestorName: String,
   requestorEmail: String
 )
 
-object RequestAccreditationRequest {
+object RequestAdviceRequest {
   private val actorIdPattern: Regex            = raw"[A-Z]{2}\d{12,15}".r
   def isValidActorId(actorId: String): Boolean = actorIdPattern.matches(actorId)
   def nonEmptyString: Reads[String]            = verifying[String](_.nonEmpty)
 
   val validActorId: Reads[String] = verifying(isValidActorId)
 
-  implicit val reads: Reads[RequestAccreditationRequest] = (
+  implicit val reads: Reads[RequestAdviceRequest] = (
     (JsPath \ "actorId").read[String](validActorId) and
       (JsPath \ "requestorName").read[String](nonEmptyString) and
       (JsPath \ "requestorEmail").read[String](nonEmptyString)
-  )(RequestAccreditationRequest.apply _)
+  )(RequestAdviceRequest.apply _)
 
-  implicit val writes: OWrites[RequestAccreditationRequest] = Json.writes[RequestAccreditationRequest]
+  implicit val writes: OWrites[RequestAdviceRequest] = Json.writes[RequestAdviceRequest]
 
-  implicit val format: OFormat[RequestAccreditationRequest] = OFormat(reads, writes)
+  implicit val format: OFormat[RequestAdviceRequest] = OFormat(reads, writes)
 }

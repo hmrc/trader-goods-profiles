@@ -20,7 +20,7 @@ import org.scalatest.matchers.should.Matchers._
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsPath, Json, JsonValidationError}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.Error
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.{APICreateRecordRequest, RequestAccreditationRequest}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.{APICreateRecordRequest, RequestAdviceRequest}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.{convertError, validateRequestBody}
 
@@ -107,7 +107,7 @@ class ValidationSupportSpec extends AnyWordSpec {
           "requestorEmail" -> "Phil.Edwards@gmail.com"
         )
 
-      val result = validateRequestBody[RequestAccreditationRequest](json, uuidService)
+      val result = validateRequestBody[RequestAdviceRequest](json, uuidService)
       result shouldBe a[Right[_, _]]
     }
   }

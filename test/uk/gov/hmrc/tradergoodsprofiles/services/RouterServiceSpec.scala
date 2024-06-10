@@ -31,8 +31,8 @@ import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{APICreateRecordRequestSupport, RouterCreateRecordRequestSupport, UpdateRecordRequestSupport}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.{CreateOrUpdateRecordResponseSupport, GetRecordResponseSupport}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterRequestAccreditationRequest, RouterUpdateRecordRequest}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.{MaintainProfileRequest, RequestAccreditationRequest, router}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterRequestAdviceRequest, RouterUpdateRecordRequest}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.{MaintainProfileRequest, RequestAdviceRequest, router}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 
@@ -589,24 +589,24 @@ class RouterServiceSpec
     }
   }
 
-  "requestAccreditation" should {
-    "request accreditation" in {
-      val requestAccreditationRequest = createRequestAccreditationRequest()
+  "requestAdvice" should {
+    "request advice" in {
+      val requestAdviceRequest = createRequestAdviceRequest()
 
       val httpResponse = HttpResponse(Status.CREATED, "")
-      when(connector.requestAccreditation(any)(any))
+      when(connector.requestAdvice(any)(any))
         .thenReturn(Future.successful(httpResponse))
 
       val result =
-        sut.requestAccreditation("GB123456789012", "d677693e-9981-4ee3-8574-654981ebe606", requestAccreditationRequest)
+        sut.requestAdvice("GB123456789012", "d677693e-9981-4ee3-8574-654981ebe606", requestAdviceRequest)
 
       whenReady(result) { _ =>
-        verify(connector).requestAccreditation(
+        verify(connector).requestAdvice(
           eqTo(
-            RouterRequestAccreditationRequest(
+            RouterRequestAdviceRequest(
               "GB123456789012",
               "d677693e-9981-4ee3-8574-654981ebe606",
-              requestAccreditationRequest
+              requestAdviceRequest
             )
           )
         )(any)
@@ -616,16 +616,16 @@ class RouterServiceSpec
     "return an error" when {
 
       "routerConnector return an exception" in {
-        val requestAccreditationRequest = createRequestAccreditationRequest()
+        val requestAdviceRequest = createRequestAdviceRequest()
 
-        when(connector.requestAccreditation(any)(any))
+        when(connector.requestAdvice(any)(any))
           .thenReturn(Future.failed(new RuntimeException("error")))
 
         val result =
-          sut.requestAccreditation(
+          sut.requestAdvice(
             "GB123456789012",
             "d677693e-9981-4ee3-8574-654981ebe606",
-            requestAccreditationRequest
+            requestAdviceRequest
           )
 
         whenReady(result) {
@@ -634,7 +634,7 @@ class RouterServiceSpec
             ErrorResponse(
               correlationId,
               "INTERNAL_SERVER_ERROR",
-              "Could not request accreditation due to an internal error",
+              "Could not request advice due to an internal error",
               None
             )
           )
@@ -656,16 +656,16 @@ class RouterServiceSpec
           code: String
         ) =>
           s"$description" in {
-            val requestAccreditationRequest = createRequestAccreditationRequest()
+            val requestAdviceRequest = createRequestAdviceRequest()
 
-            when(connector.requestAccreditation(any)(any))
+            when(connector.requestAdvice(any)(any))
               .thenReturn(Future.successful(createHttpResponse(status, code)))
 
             val result =
-              sut.requestAccreditation(
+              sut.requestAdvice(
                 "GB123456789012",
                 "d677693e-9981-4ee3-8574-654981ebe606",
-                requestAccreditationRequest
+                requestAdviceRequest
               )
 
             whenReady(result) {
@@ -676,7 +676,7 @@ class RouterServiceSpec
     }
   }
 
-  def createRequestAccreditationRequest(): RequestAccreditationRequest = RequestAccreditationRequest(
+  def createRequestAdviceRequest(): RequestAdviceRequest = RequestAdviceRequest(
     actorId = "XI123456789001",
     requestorName = "Mr.Phil Edwards",
     requestorEmail = "Phil.Edwards@gmail.com"
