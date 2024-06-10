@@ -17,17 +17,14 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import cats.data.EitherT
-import play.api.libs.json.Format.GenericFormat
-import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, ControllerComponents, Request, Result}
+import play.api.libs.json.Json
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{Error, ErrorResponse}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.RemoveRecordRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
-import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.validateRequestBody
 
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
@@ -43,19 +40,17 @@ class RemoveRecordController @Inject() (
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
     extends BackendController(cc) {
-  def removeRecord(eori: String, recordId: String): Action[JsValue] =
-    (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
-      (for {
-        updateRecordRequest <- validateBody(request)
-        validRecordId       <- validateRecordId(recordId)
-        response            <- sendRemove(eori, validRecordId, updateRecordRequest)
-      } yield Ok(Json.toJson(response))).merge
-    }
 
-  private def validateBody(request: Request[JsValue]): EitherT[Future, Result, RemoveRecordRequest] =
-    EitherT
-      .fromEither[Future](validateRequestBody[RemoveRecordRequest](request.body, uuidService))
-      .leftMap(r => BadRequest(Json.toJson(r)))
+  def removeRecord(eori: String, recordId: String, actorId: String): Action[AnyContent] =
+    (authAction(eori) andThen validateHeaderAction).async { implicit request =>
+      (for {
+        validRecordId <- validateRecordId(recordId)
+        response      <- sendRemove(eori, validRecordId, actorId)
+      } yield response).value.map {
+        case Right(_)          => NoContent
+        case Left(errorResult) => errorResult
+      }
+    }
 
   def validateRecordId(recordId: String): EitherT[Future, Result, String] = {
     val eitherResult: Try[String] = Try(UUID.fromString(recordId).toString)
@@ -70,13 +65,14 @@ class RemoveRecordController @Inject() (
     }
   }
 
+  // TODO validate actorId?!?!
+
   private def sendRemove(
     eori: String,
     recordId: String,
-    removeRecordRequest: RemoveRecordRequest
-  )(implicit hc: HeaderCarrier): EitherT[Future, Result, Int] =
-    EitherT(routerService.removeRecord(eori, recordId, removeRecordRequest.actorId)).leftMap(r =>
-      Status(r.status)(Json.toJson(r.errorResponse))
-    )
-
+    actorId: String
+  )(implicit hc: HeaderCarrier): EitherT[Future, Result, Unit] =
+    EitherT(routerService.removeRecord(eori, recordId, actorId))
+      .leftMap(r => Status(r.status)(Json.toJson(r.errorResponse)))
+      .map(_ => ())
 }
