@@ -29,14 +29,14 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.RequestAccreditationRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.RequestAdviceRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants
 
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
-class RequestAccreditationControllerSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEach {
+class RequestAdviceControllerSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEach {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
@@ -49,7 +49,7 @@ class RequestAccreditationControllerSpec extends PlaySpec with AuthTestSupport w
   private val correlationId = "d677693e-9981-4ee3-8574-654981ebe606"
   private val uuidService   = mock[UuidService]
   private val routerService = mock[RouterService]
-  private val sut           = new RequestAccreditationsController(
+  private val sut           = new RequestAdviceController(
     new FakeSuccessAuthAction(),
     new ValidateHeaderAction(uuidService),
     uuidService,
@@ -61,15 +61,15 @@ class RequestAccreditationControllerSpec extends PlaySpec with AuthTestSupport w
     super.beforeEach()
     reset(uuidService, routerService)
     when(uuidService.uuid).thenReturn(correlationId)
-    when(routerService.requestAccreditation(any, any, any)(any))
+    when(routerService.requestAdvice(any, any, any)(any))
       .thenReturn(Future.successful(Right(CREATED)))
   }
 
-  "requestAccreditation" should {
-    "return 201 when accreditation is successfully requested" in {
-      val requestBody = createRequestAccreditationRequest()
+  "requestAdvice" should {
+    "return 201 when advice is successfully requested" in {
+      val requestBody = createRequestAdviceRequest()
 
-      val result = sut.requestAccreditation(eoriNumber, recordId)(request.withBody(Json.toJson(requestBody)))
+      val result = sut.requestAdvice(eoriNumber, recordId)(request.withBody(Json.toJson(requestBody)))
 
       status(result) mustBe CREATED
     }
@@ -80,7 +80,7 @@ class RequestAccreditationControllerSpec extends PlaySpec with AuthTestSupport w
         "requestorEmail" -> "Phil.Edwards@gmail.com"
       )
 
-      val result = sut.requestAccreditation(eoriNumber, recordId)(request.withBody(invalidJsonRequest))
+      val result = sut.requestAdvice(eoriNumber, recordId)(request.withBody(invalidJsonRequest))
 
       status(result) mustBe BAD_REQUEST
 
@@ -108,7 +108,7 @@ class RequestAccreditationControllerSpec extends PlaySpec with AuthTestSupport w
         "comcodeEffectiveFromDate" -> "2023-01-01T00:00:00Z"
       )
 
-      val result = sut.requestAccreditation(eoriNumber, recordId)(request.withBody(invalidJsonRequest))
+      val result = sut.requestAdvice(eoriNumber, recordId)(request.withBody(invalidJsonRequest))
 
       status(result) mustBe BAD_REQUEST
 
@@ -138,29 +138,29 @@ class RequestAccreditationControllerSpec extends PlaySpec with AuthTestSupport w
     }
 
     "return 500 when the router service returns an error" in {
-      val accreditationRequest = createRequestAccreditationRequest()
+      val adviceRequest = createRequestAdviceRequest()
 
       val expectedJson = Json.obj(
         "correlationId" -> correlationId,
         "code"          -> "INTERNAL_SERVER_ERROR",
-        "message"       -> "Could not request accreditation due to an internal error"
+        "message"       -> "Could not request advice due to an internal error"
       )
 
       val errorResponse =
-        ErrorResponse.serverErrorResponse(uuidService.uuid, "Could not request accreditation due to an internal error")
+        ErrorResponse.serverErrorResponse(uuidService.uuid, "Could not request advice due to an internal error")
       val serviceError  = ServiceError(INTERNAL_SERVER_ERROR, errorResponse)
 
-      when(routerService.requestAccreditation(any, any, any)(any))
+      when(routerService.requestAdvice(any, any, any)(any))
         .thenReturn(Future.successful(Left(serviceError)))
 
-      val result = sut.requestAccreditation(eoriNumber, recordId)(request.withBody(Json.toJson(accreditationRequest)))
+      val result = sut.requestAdvice(eoriNumber, recordId)(request.withBody(Json.toJson(adviceRequest)))
 
       status(result) mustBe INTERNAL_SERVER_ERROR
       contentAsJson(result) mustBe expectedJson
     }
   }
 
-  def createRequestAccreditationRequest(): RequestAccreditationRequest = RequestAccreditationRequest(
+  def createRequestAdviceRequest(): RequestAdviceRequest = RequestAdviceRequest(
     actorId = "XI123456789001",
     requestorName = "Mr.Phil Edwards",
     requestorEmail = "Phil.Edwards@gmail.com"

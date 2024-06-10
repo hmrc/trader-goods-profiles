@@ -25,7 +25,7 @@ import play.api.mvc.{Action, ControllerComponents, Request, Result}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.RequestAccreditationRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.RequestAdviceRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.validateRequestBody
 
@@ -33,7 +33,7 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class RequestAccreditationsController @Inject() (
+class RequestAdviceController @Inject() (
   authAction: AuthAction,
   validateHeaderAction: ValidateHeaderAction,
   uuidService: UuidService,
@@ -43,25 +43,25 @@ class RequestAccreditationsController @Inject() (
     extends BackendController(cc)
     with Logging {
 
-  def requestAccreditation(eori: String, recordId: String): Action[JsValue] =
+  def requestAdvice(eori: String, recordId: String): Action[JsValue] =
     (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
       (for {
-        accreditationRequest <- validateBody(request)
-        response             <- sendAccreditation(eori, recordId, accreditationRequest)
+        adviceRequest <- validateBody(request)
+        response      <- sendAdvice(eori, recordId, adviceRequest)
       } yield Created(Json.toJson(response))).merge
     }
 
-  private def validateBody(request: Request[JsValue]): EitherT[Future, Result, RequestAccreditationRequest] =
+  private def validateBody(request: Request[JsValue]): EitherT[Future, Result, RequestAdviceRequest] =
     EitherT
-      .fromEither[Future](validateRequestBody[RequestAccreditationRequest](request.body, uuidService))
+      .fromEither[Future](validateRequestBody[RequestAdviceRequest](request.body, uuidService))
       .leftMap(r => BadRequest(Json.toJson(r)))
 
-  private def sendAccreditation(
+  private def sendAdvice(
     eori: String,
     recordId: String,
-    accreditationRequest: RequestAccreditationRequest
+    adviceRequest: RequestAdviceRequest
   )(implicit hc: HeaderCarrier): EitherT[Future, Result, Int] =
-    EitherT(routerService.requestAccreditation(eori, recordId, accreditationRequest)).leftMap(r =>
+    EitherT(routerService.requestAdvice(eori, recordId, adviceRequest)).leftMap(r =>
       Status(r.status)(Json.toJson(r.errorResponse))
     )
 }

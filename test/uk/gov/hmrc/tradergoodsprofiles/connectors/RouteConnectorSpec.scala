@@ -35,7 +35,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{RouterCreateRecordRequestSupport, RouterUpdateRecordRequestSupport}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.MaintainProfileRequest
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterRequestAccreditationRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterRequestAdviceRequest
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.XClientIdHeader
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -266,46 +266,46 @@ class RouteConnectorSpec
     }
   }
 
-  "request accreditation" should {
+  "request advice" should {
 
-    "return 201 when accreditation is successfully requested" in {
-      val requestAccreditationRequest = createRouterRequestAccreditationRequest()
+    "return 201 when advice is successfully requested" in {
+      val requestAdviceRequest = createRouterRequestAdviceRequest()
 
       when(httpClient.post(any)(any)).thenReturn(requestBuilder)
       when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
       when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "")))
 
-      val result = await(sut.requestAccreditation(requestAccreditationRequest))
+      val result = await(sut.requestAdvice(requestAdviceRequest))
 
       result.status mustBe CREATED
     }
 
     "send a request with the right url and body" in {
-      val requestAccreditationRequest = createRouterRequestAccreditationRequest()
+      val requestAdviceRequest = createRouterRequestAdviceRequest()
 
       when(httpClient.post(any)(any)).thenReturn(requestBuilder)
       when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
       when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "message")))
 
-      await(sut.requestAccreditation(requestAccreditationRequest))
+      await(sut.requestAdvice(requestAdviceRequest))
 
       val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/createaccreditation")
       verify(httpClient).post(eqTo(url"$expectedUrl"))(any)
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
-      verify(requestBuilder).withBody(eqTo(Json.toJson(requestAccreditationRequest)))(any, any, any)
+      verify(requestBuilder).withBody(eqTo(Json.toJson(requestAdviceRequest)))(any, any, any)
       verify(requestBuilder).execute(any, any)
 
       withClue("process the response within a timer") {
-        verify(metricsRegistry).timer(eqTo("tgp.requestaccreditation.connector-timer"))
+        verify(metricsRegistry).timer(eqTo("tgp.requestadvice.connector-timer"))
         verify(timerContext).stop()
       }
     }
   }
 
-  def createRouterRequestAccreditationRequest(): RouterRequestAccreditationRequest = RouterRequestAccreditationRequest(
+  def createRouterRequestAdviceRequest(): RouterRequestAdviceRequest = RouterRequestAdviceRequest(
     eori = "GB987654321098",
     requestorName = "Mr.Phil Edwards",
     recordId = "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f",

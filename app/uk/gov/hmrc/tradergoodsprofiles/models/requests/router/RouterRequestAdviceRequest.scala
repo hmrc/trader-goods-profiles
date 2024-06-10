@@ -17,27 +17,27 @@
 package uk.gov.hmrc.tradergoodsprofiles.models.requests.router
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.RequestAccreditationRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.RequestAdviceRequest
 
-case class RouterRequestAccreditationRequest(
+case class RouterRequestAdviceRequest(
   eori: String,
   requestorName: String,
   recordId: String,
   requestorEmail: String
 )
 
-object RouterRequestAccreditationRequest {
-  implicit val format: OFormat[RouterRequestAccreditationRequest] = Json.format[RouterRequestAccreditationRequest]
+object RouterRequestAdviceRequest {
+  implicit val format: OFormat[RouterRequestAdviceRequest] = Json.format[RouterRequestAdviceRequest]
 
   def apply(
     eori: String,
     recordId: String,
-    accreditationRequest: RequestAccreditationRequest
-  ): RouterRequestAccreditationRequest =
-    RouterRequestAccreditationRequest(
+    adviceRequest: RequestAdviceRequest
+  ): RouterRequestAdviceRequest =
+    RouterRequestAdviceRequest(
       eori = eori,
-      requestorName = accreditationRequest.requestorName,
+      requestorName = adviceRequest.requestorName,
       recordId = recordId,
-      requestorEmail = accreditationRequest.requestorEmail
+      requestorEmail = adviceRequest.requestorEmail
     )
 }

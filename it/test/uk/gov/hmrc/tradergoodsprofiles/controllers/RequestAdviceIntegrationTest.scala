@@ -34,14 +34,14 @@ import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.RequestAccreditationRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.RequestAdviceRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 
-class RequestAccreditationIntegrationTest
+class RequestAdviceIntegrationTest
     extends PlaySpec
     with GuiceOneServerPerSuite
     with HttpClientV2Support
@@ -57,9 +57,9 @@ class RequestAccreditationIntegrationTest
   private val uuidService             = mock[UuidService]
   private val correlationId           = "d677693e-9981-4ee3-8574-654981ebe606"
 
-  private val url         = s"http://localhost:$port/$eoriNumber/records/$recordId/accreditations"
+  private val url         = s"http://localhost:$port/$eoriNumber/records/$recordId/advice"
   private val routerUrl   = s"/trader-goods-profiles-router/createaccreditation"
-  private val requestBody = Json.toJson(createRequestAccreditationRequest())
+  private val requestBody = Json.toJson(createRequestAdviceRequest())
 
   override lazy val app: Application = {
     wireMock.start()
@@ -99,11 +99,11 @@ class RequestAccreditationIntegrationTest
     wireMock.stop()
   }
 
-  "Request Accreditation" should {
-    "successfully request accreditation and return 201" in {
+  "Request Advice" should {
+    "successfully request advice and return 201" in {
       withAuthorizedTrader()
 
-      val result = requestAccreditationAndWait()
+      val result = requestAdviceAndWait()
 
       result.status mustBe CREATED
 
@@ -120,7 +120,7 @@ class RequestAccreditationIntegrationTest
       withAuthorizedTrader()
       val invalidRequestBody = Json.obj()
 
-      val result = requestAccreditationAndWait(invalidRequestBody)
+      val result = requestAdviceAndWait(invalidRequestBody)
 
       result.status mustBe BAD_REQUEST
       result.json mustBe Json.obj(
@@ -151,7 +151,7 @@ class RequestAccreditationIntegrationTest
     "return Bad Request when X-Client-ID header is missing" in {
       withAuthorizedTrader()
 
-      val result = requestAccreditationAndWaitWithoutClientIdHeader()
+      val result = requestAdviceAndWaitWithoutClientIdHeader()
 
       result.status mustBe BAD_REQUEST
       result.json mustBe Json.obj(
@@ -171,7 +171,7 @@ class RequestAccreditationIntegrationTest
     "return Forbidden when EORI number is not authorized" in {
       withAuthorizedTrader(enrolment = Enrolment("OTHER-ENROLMENT-KEY"))
 
-      val result = requestAccreditationAndWait()
+      val result = requestAdviceAndWait()
 
       result.status mustBe FORBIDDEN
       result.json mustBe expectedJson(
@@ -183,7 +183,7 @@ class RequestAccreditationIntegrationTest
     "return Forbidden when identifier does not exist" in {
       withUnauthorizedEmptyIdentifier()
 
-      val result = requestAccreditationAndWait()
+      val result = requestAdviceAndWait()
 
       result.status mustBe FORBIDDEN
       result.json mustBe expectedJson(
@@ -195,7 +195,7 @@ class RequestAccreditationIntegrationTest
     "return Unauthorized when invalid enrolment" in {
       withUnauthorizedTrader(InsufficientEnrolments())
 
-      val result = requestAccreditationAndWait()
+      val result = requestAdviceAndWait()
 
       result.status mustBe UNAUTHORIZED
       result.json mustBe expectedJson(
@@ -207,7 +207,7 @@ class RequestAccreditationIntegrationTest
     "return Unauthorized when affinity group is Agent" in {
       authorizeWithAffinityGroup(Some(Agent))
 
-      val result = requestAccreditationAndWait()
+      val result = requestAdviceAndWait()
 
       result.status mustBe UNAUTHORIZED
       result.json mustBe expectedJson(
@@ -219,7 +219,7 @@ class RequestAccreditationIntegrationTest
     "return Unauthorized when affinity group is empty" in {
       authorizeWithAffinityGroup(None)
 
-      val result = requestAccreditationAndWait()
+      val result = requestAdviceAndWait()
 
       result.status mustBe UNAUTHORIZED
       result.json mustBe expectedJson(
@@ -231,24 +231,24 @@ class RequestAccreditationIntegrationTest
     "return Internal server error if auth throws" in {
       withUnauthorizedTrader(new RuntimeException("runtime exception"))
 
-      val result = requestAccreditationAndWait()
+      val result = requestAdviceAndWait()
 
       result.status mustBe INTERNAL_SERVER_ERROR
       result.json mustBe expectedJson(
         "INTERNAL_SERVER_ERROR",
-        s"Internal server error for /$eoriNumber/records/$recordId/accreditations with error: runtime exception"
+        s"Internal server error for /$eoriNumber/records/$recordId/advice with error: runtime exception"
       )
     }
 
   }
 
-  def createRequestAccreditationRequest(): RequestAccreditationRequest = RequestAccreditationRequest(
+  def createRequestAdviceRequest(): RequestAdviceRequest = RequestAdviceRequest(
     actorId = "XI123456789001",
     requestorName = "Mr.Phil Edwards",
     requestorEmail = "Phil.Edwards@gmail.com"
   )
 
-  private def requestAccreditationAndWaitWithoutClientIdHeader() =
+  private def requestAdviceAndWaitWithoutClientIdHeader() =
     await(
       wsClient
         .url(url)
@@ -259,7 +259,7 @@ class RequestAccreditationIntegrationTest
         .post(requestBody)
     )
 
-  private def requestAccreditationAndWait(requestBody: JsValue = requestBody) =
+  private def requestAdviceAndWait(requestBody: JsValue = requestBody) =
     await(
       wsClient
         .url(url)

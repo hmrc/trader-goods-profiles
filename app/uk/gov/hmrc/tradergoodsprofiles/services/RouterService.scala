@@ -25,7 +25,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests._
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterRequestAccreditationRequest, RouterUpdateRecordRequest}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterRequestAdviceRequest, RouterUpdateRecordRequest}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.{CreateOrUpdateRecordResponse, GetRecordResponse, GetRecordsResponse}
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 
@@ -222,16 +222,16 @@ class RouterService @Inject() (
       }
   }
 
-  def requestAccreditation(
+  def requestAdvice(
     eori: String,
     recordId: String,
-    accreditationRequest: RequestAccreditationRequest
+    adviceRequest: RequestAdviceRequest
   )(implicit hc: HeaderCarrier): Future[Either[ServiceError, Int]] = {
 
-    val routerAccreditationRequest = RouterRequestAccreditationRequest(eori, recordId, accreditationRequest)
+    val routerAdviceRequest = RouterRequestAdviceRequest(eori, recordId, adviceRequest)
 
     routerConnector
-      .requestAccreditation(routerAccreditationRequest)
+      .requestAdvice(routerAdviceRequest)
       .map { httpResponse =>
         httpResponse.status match {
           case status if is2xx(status) =>
@@ -244,14 +244,14 @@ class RouterService @Inject() (
       }
       .recover { case ex: Throwable =>
         logger.error(
-          s"[RouterService] - Exception when requesting accreditation for eori number $eori with message ${ex.getMessage}",
+          s"[RouterService] - Exception when requesting advice for eori number $eori with message ${ex.getMessage}",
           ex
         )
         Left(
           ServiceError(
             INTERNAL_SERVER_ERROR,
             ErrorResponse
-              .serverErrorResponse(uuidService.uuid, "Could not request accreditation due to an internal error")
+              .serverErrorResponse(uuidService.uuid, "Could not request advice due to an internal error")
           )
         )
       }
