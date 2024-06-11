@@ -45,9 +45,9 @@ class RemoveRecordController @Inject() (
   def removeRecord(eori: String, recordId: String, actorId: String): Action[AnyContent] =
     (authAction(eori) andThen validateHeaderAction).async { implicit request =>
       (for {
-        validRecordId <- validateRecordId(recordId)
-        validActorId  <- validateActorId(actorId)
-        response      <- sendRemove(eori, validRecordId, validActorId)
+        _        <- validateRecordId(recordId)
+        _        <- validateActorId(actorId)
+        response <- sendRemove(eori, recordId, actorId)
       } yield response).value.map {
         case Right(_)          => NoContent
         case Left(errorResult) => errorResult
