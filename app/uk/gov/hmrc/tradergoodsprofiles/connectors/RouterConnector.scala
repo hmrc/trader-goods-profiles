@@ -41,7 +41,7 @@ class RouterConnector @Inject() (
 )(implicit ec: ExecutionContext)
     extends MetricsSupport
     with Logging {
-  val routerBaseRoute: String = "/trader-goods-profiles-router"
+  private val routerBaseRoute: String = "/trader-goods-profiles-router"
 
   def get(eori: String, recordId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.getrecord.connector") { _ =>
@@ -87,13 +87,12 @@ class RouterConnector @Inject() (
 
   def removeRecord(eori: String, recordId: String, actorId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.removerecord.connector") { _ =>
-      val url = appConfig.routerUrl.withPath(routerRoute(eori, recordId))
+      val url = appConfig.routerUrl.toUrl + routerRemoveEndpoint(eori, recordId, actorId)
 
       httpClient
-        .put(url"$url")
+        .delete(url"$url")
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
         .withClientId
-        .withBody(Json.obj("actorId" -> actorId))
         .execute[HttpResponse]
     }
 
@@ -141,6 +140,11 @@ class RouterConnector @Inject() (
     UrlPath.parse(
       s"$routerBaseRoute/$eoriNumber/records/$recordId"
     )
+
+  private def routerRemoveEndpoint(eoriNumber: String, recordId: String, actorId: String): String = {
+    val uri = uri"$routerBaseRoute/traders/$eoriNumber/records/$recordId?actorId=$actorId"
+    s"$uri"
+  }
 
   private def routerRouteGetRecords(
     eoriNumber: String,

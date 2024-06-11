@@ -48,7 +48,7 @@ class RemoveRecordController @Inject() (
       (for {
         updateRecordRequest <- validateBody(request)
         validRecordId       <- validateRecordId(recordId)
-        response            <- sendRemove(eori, validRecordId, updateRecordRequest)
+        response            <- sendRemove(eori, validRecordId, updateRecordRequest.actorId)
       } yield Ok(Json.toJson(response))).merge
     }
 
@@ -73,9 +73,9 @@ class RemoveRecordController @Inject() (
   private def sendRemove(
     eori: String,
     recordId: String,
-    removeRecordRequest: RemoveRecordRequest
+    actorId: String
   )(implicit hc: HeaderCarrier): EitherT[Future, Result, Int] =
-    EitherT(routerService.removeRecord(eori, recordId, removeRecordRequest.actorId)).leftMap(r =>
+    EitherT(routerService.removeRecord(eori, recordId, actorId)).leftMap(r =>
       Status(r.status)(Json.toJson(r.errorResponse))
     )
 

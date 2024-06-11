@@ -52,10 +52,11 @@ class RemoveRecordControllerIntegrationSpec
   private lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
   private val recordId                = UUID.randomUUID().toString
   private val uuidService             = mock[UuidService]
+  private val actorId                 = "GB123456789001"
   private val correlationId           = "d677693e-9981-4ee3-8574-654981ebe606"
 
   private val url            = s"http://localhost:$port/$eoriNumber/records/$recordId"
-  private val routerUrl      = s"/trader-goods-profiles-router/$eoriNumber/records/$recordId"
+  private val routerUrl      = s"/trader-goods-profiles-router/traders/$eoriNumber/records/$recordId?actorId=$actorId"
   private val routerResponse = OK
 
   override lazy val app: Application = {
@@ -93,6 +94,7 @@ class RemoveRecordControllerIntegrationSpec
   "remove record" should {
     "return 200" in {
       withAuthorizedTrader()
+
       val result = await(
         wsClient
           .url(url)
@@ -104,7 +106,6 @@ class RemoveRecordControllerIntegrationSpec
           .put(removeRecordRequest)
       )
       result.status mustBe OK
-
     }
 
     "return 200 with the headers" in {
@@ -125,7 +126,7 @@ class RemoveRecordControllerIntegrationSpec
 
       withClue("should add the right headers") {
         verify(
-          putRequestedFor(urlEqualTo(routerUrl))
+          deleteRequestedFor(urlEqualTo(routerUrl))
             .withHeader("Content-Type", equalTo("application/json"))
             .withHeader("X-Client-ID", equalTo("clientId"))
         )
@@ -319,9 +320,9 @@ class RemoveRecordControllerIntegrationSpec
 
   }
   lazy val removeRecordRequest: JsValue = Json
-    .parse("""
+    .parse(s"""
              |{
-             |  "actorId": "GB123456789001"
+             |  "actorId": "$actorId"
              |}
              |""".stripMargin)
 
@@ -369,7 +370,7 @@ class RemoveRecordControllerIntegrationSpec
   private def stubRouterRequest(status: Int, errorResponse: String) =
     wireMock.stubFor(
       WireMock
-        .put(routerUrl)
+        .delete(routerUrl)
         .willReturn(
           aResponse()
             .withStatus(status)
