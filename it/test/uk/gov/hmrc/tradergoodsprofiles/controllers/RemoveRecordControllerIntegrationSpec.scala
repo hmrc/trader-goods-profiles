@@ -137,7 +137,7 @@ class RemoveRecordControllerIntegrationSpec
     "return an error if router return an error" in {
       withAuthorizedTrader()
       val routerResponse = Json.obj(
-        "correlationId" -> "correlationId",
+        "correlationId" -> correlationId,
         "code"          -> "NOT_FOUND",
         "message"       -> "Not found"
       )
@@ -148,7 +148,7 @@ class RemoveRecordControllerIntegrationSpec
         "message"       -> "Not found"
       )
 
-      stubRouterRequest(404, "")
+      stubRouterRequest(404, routerResponse.toString())
 
       val result = removeRecordAndWait()
 
@@ -344,6 +344,7 @@ class RemoveRecordControllerIntegrationSpec
         .willReturn(
           aResponse()
             .withStatus(status)
+            .withBody(errorResponse)
         )
     )
 }

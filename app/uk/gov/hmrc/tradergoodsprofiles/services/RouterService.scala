@@ -302,36 +302,22 @@ class RouterService @Inject() (
       case _                                       => ""
     }
 
-    if (response.body.isEmpty) {
-      val errorMessage =
-        s"[RouterService] - Error processing request $errorContext, status '${response.status}' with no response body"
-      logger.error(errorMessage)
-      ServiceError(
-        response.status,
-        ErrorResponse(
-          correlationId = uuidService.uuid,
-          code = "NOT_FOUND",
-          message = "Not found"
-        )
+    logger.error(
+      s"[RouterService] - Error processing request $errorContext, status '${response.status}' with message: ${response.body}"
+    )
+    jsonAs[ErrorResponse](response.body)
+      .fold(
+        error =>
+          ServiceError(
+            INTERNAL_SERVER_ERROR,
+            error
+          ),
+        routerError =>
+          ServiceError(
+            response.status,
+            routerError
+          )
       )
-    } else {
-      logger.error(
-        s"[RouterService] - Error processing request $errorContext, status '${response.status}' with message: ${response.body}"
-      )
-      jsonAs[ErrorResponse](response.body)
-        .fold(
-          error =>
-            ServiceError(
-              INTERNAL_SERVER_ERROR,
-              error
-            ),
-          routerError =>
-            ServiceError(
-              response.status,
-              routerError
-            )
-        )
-    }
   }
 
   private def jsonAs[T](responseBody: String)(implicit reads: Reads[T], tt: TypeTag[T]) =
