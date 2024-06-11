@@ -90,7 +90,7 @@ class RouterConnector @Inject() (
       val url = appConfig.routerUrl.toUrl + routerRouteRemoveRecord(eori, recordId, actorId)
 
       httpClient
-        .delete(url"$url")(hc)
+        .delete(url"$url")
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
         .withClientId
         .execute[HttpResponse]
