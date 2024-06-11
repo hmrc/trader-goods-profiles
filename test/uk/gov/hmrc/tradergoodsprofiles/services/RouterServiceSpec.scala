@@ -324,7 +324,7 @@ class RouterServiceSpec
             ErrorResponse(
               "d677693e-9981-4ee3-8574-654981ebe606",
               "INTERNAL_SERVER_ERROR",
-              "Could not remove record for eori number eori and record ID recordId",
+              "Could not remove record for eori number eori, record ID recordId, and actor ID actorId",
               None
             )
           )

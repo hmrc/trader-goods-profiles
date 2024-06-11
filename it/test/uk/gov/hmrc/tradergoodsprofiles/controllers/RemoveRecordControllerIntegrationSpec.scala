@@ -77,7 +77,7 @@ class RemoveRecordControllerIntegrationSpec
     super.beforeEach()
 
     reset(authConnector)
-    stubRouterRequest(200, routerResponse.toString)
+    stubRouterRequest(NO_CONTENT, routerResponse.toString)
     when(uuidService.uuid).thenReturn(correlationId)
   }
 
@@ -133,30 +133,27 @@ class RemoveRecordControllerIntegrationSpec
       }
     }
 
-    // TODO: Fix the test below
-//    "return an error if router return an error" in {
-//      withAuthorizedTrader()
-//      val routerResponse = Json.obj(
-//        "correlationId" -> "correlationId",
-//        "code"          -> "NOT_FOUND",
-//        "message"       -> "Not found",
-//        "errors"        -> null
-//      )
-//
-//      val expectedErrorResponse = Json.obj(
-//        "correlationId" -> "correlationId",
-//        "code"          -> "NOT_FOUND",
-//        "message"       -> "Not found"
-//      )
-//
-//      stubRouterRequest(404, routerResponse.toString())
-//
-//      val result = removeRecordAndWait()
-//
-//      result.status mustBe NOT_FOUND
-//      result.json mustBe expectedErrorResponse
-//
-//    }
+    "return an error if router return an error" in {
+      withAuthorizedTrader()
+      val routerResponse = Json.obj(
+        "correlationId" -> "correlationId",
+        "code"          -> "NOT_FOUND",
+        "message"       -> "Not found"
+      )
+
+      val expectedErrorResponse = Json.obj(
+        "correlationId" -> correlationId,
+        "code"          -> "NOT_FOUND",
+        "message"       -> "Not found"
+      )
+
+      stubRouterRequest(404, "")
+
+      val result = removeRecordAndWait()
+
+      result.status mustBe NOT_FOUND
+      result.json mustBe expectedErrorResponse
+    }
 
     "authorise an enrolment with multiple identifier" in {
       val enrolment = Enrolment(enrolmentKey)
@@ -305,21 +302,6 @@ class RemoveRecordControllerIntegrationSpec
         25
       )
     }
-
-//    TODO: Remove - no json body is parsed
-//    "return an error if API return an error with non json message" in {
-//      withAuthorizedTrader()
-//      stubRouterRequest(404, "error")
-//
-//      val result = removeRecordAndWait()
-//
-//      result.status mustBe INTERNAL_SERVER_ERROR
-//      result.json mustBe Json.obj(
-//        "correlationId" -> correlationId,
-//        "code"          -> "INTERNAL_SERVER_ERROR",
-//        "message"       -> "Response body could not be parsed as JSON, body: error"
-//      )
-//    }
 
   }
 
