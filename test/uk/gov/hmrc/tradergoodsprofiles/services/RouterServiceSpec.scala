@@ -31,8 +31,8 @@ import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{APICreateRecordRequestSupport, RouterCreateRecordRequestSupport, UpdateRecordRequestSupport}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.{CreateOrUpdateRecordResponseSupport, GetRecordResponseSupport}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterRequestAdviceRequest, RouterUpdateRecordRequest}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.{MaintainProfileRequest, RequestAdviceRequest, router}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.{MaintainProfileRequest, RequestAdviceRequest}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterRequestAdviceRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 
@@ -187,7 +187,7 @@ class RouterServiceSpec
       whenReady(result) { _ =>
         verify(connector).createRecord(
           eqTo("GB123456789012"),
-          eqTo(router.RouterCreateRecordRequest("GB123456789012", createRequest))
+          eqTo(createRequest)
         )(any)
       }
     }
@@ -362,24 +362,26 @@ class RouterServiceSpec
 
   "updateRecord" should {
     "update a record" in {
-      val updateRequest = createUpdateRecordRequest()
+      val updateRequest = createUpdateRecordRequest
 
-      when(connector.updateRecord(any)(any))
+      when(connector.updateRecord(any, any, any)(any))
         .thenReturn(Future.successful(HttpResponse(200, Json.toJson(createResponse), Map.empty)))
 
       val result = sut.updateRecord("GB123456789012", "d677693e-9981-4ee3-8574-654981ebe606", updateRequest)
 
       whenReady(result) { _ =>
         verify(connector).updateRecord(
-          eqTo(RouterUpdateRecordRequest("GB123456789012", "d677693e-9981-4ee3-8574-654981ebe606", updateRequest))
+          eqTo("GB123456789012"),
+          eqTo("d677693e-9981-4ee3-8574-654981ebe606"),
+          eqTo(updateRequest)
         )(any)
       }
     }
 
     "return CreateOrUpdateRecordResponse" in {
-      val updateRequest = createUpdateRecordRequest()
+      val updateRequest = createUpdateRecordRequest
 
-      when(connector.updateRecord(any)(any))
+      when(connector.updateRecord(any, any, any)(any))
         .thenReturn(Future.successful(HttpResponse(200, Json.toJson(createResponse), Map.empty)))
 
       val result = sut.updateRecord("GB123456789012", "d677693e-9981-4ee3-8574-654981ebe606", updateRequest)
@@ -389,9 +391,9 @@ class RouterServiceSpec
 
     "return an error" when {
       "cannot parse the response" in {
-        val updateRequest = createUpdateRecordRequest()
+        val updateRequest = createUpdateRecordRequest
 
-        when(connector.updateRecord(any)(any))
+        when(connector.updateRecord(any, any, any)(any))
           .thenReturn(Future.successful(HttpResponse(200, Json.obj(), Map.empty)))
 
         val result = sut.updateRecord("GB123456789012", "d677693e-9981-4ee3-8574-654981ebe606", updateRequest)
@@ -410,9 +412,9 @@ class RouterServiceSpec
       }
 
       "cannot parse the response as Json" in {
-        val updateRequest = createUpdateRecordRequest()
+        val updateRequest = createUpdateRecordRequest
 
-        when(connector.updateRecord(any)(any))
+        when(connector.updateRecord(any, any, any)(any))
           .thenReturn(Future.successful(HttpResponse(200, "error")))
 
         val result = sut.updateRecord("GB123456789012", "d677693e-9981-4ee3-8574-654981ebe606", updateRequest)
@@ -431,9 +433,9 @@ class RouterServiceSpec
       }
 
       "routerConnector return an exception" in {
-        val updateRequest = createUpdateRecordRequest()
+        val updateRequest = createUpdateRecordRequest
 
-        when(connector.updateRecord(any)(any))
+        when(connector.updateRecord(any, any, any)(any))
           .thenReturn(Future.failed(new RuntimeException("error")))
 
         val result = sut.updateRecord("GB123456789012", "d677693e-9981-4ee3-8574-654981ebe606", updateRequest)
@@ -466,9 +468,9 @@ class RouterServiceSpec
           code: String
         ) =>
           s"$description" in {
-            val updateRequest = createUpdateRecordRequest()
+            val updateRequest = createUpdateRecordRequest
 
-            when(connector.updateRecord(any)(any))
+            when(connector.updateRecord(any, any, any)(any))
               .thenReturn(Future.successful(createHttpResponse(status, code)))
 
             val result = sut.updateRecord("GB123456789012", "d677693e-9981-4ee3-8574-654981ebe606", updateRequest)

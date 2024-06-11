@@ -23,45 +23,35 @@ import java.time.Instant
 
 trait UpdateRecordRequestSupport {
 
-  def createUpdateRecordRequest(
-    actorId: String = "GB987654321098",
-    traderRef: Option[String] = Some("SKU123456"),
-    comcode: Option[String] = Some("123456"),
-    goodsDescription: Option[String] = Some("Bananas"),
-    countryOfOrigin: Option[String] = Some("GB"),
-    category: Option[Int] = Some(2),
-    assessments: Option[Seq[Assessment]] = Some(
-      Seq(
-        Assessment(
-          Some("a06846e9a5f61fa4ecf2c4e3b23631fc"),
-          Some(1),
-          Some(
-            Condition(
-              Some("certificate"),
-              Some("Y923"),
-              Some("Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law"),
-              Some("Excluded product")
+  def createUpdateRecordRequest =
+    UpdateRecordRequest(
+      "GB987654321098",
+      Some("SKU123456"),
+      Some("123456"),
+      Some("Bananas"),
+      Some("GB"),
+      Some(2),
+      Some(
+        Seq(
+          Assessment(
+            Some("a06846e9a5f61fa4ecf2c4e3b23631fc"),
+            Some(1),
+            Some(
+              Condition(
+                Some("certificate"),
+                Some("Y923"),
+                Some(
+                  "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law"
+                ),
+                Some("Excluded product")
+              )
             )
           )
         )
-      )
-    ),
-    supplementaryUnit: Option[Int] = Some(13),
-    measurementUnit: Option[String] = Some("Kilograms"),
-    comcodeEffectiveFromDate: Option[Instant] = Some(Instant.parse("2023-01-01T00:00:00Z")),
-    comcodeEffectiveToDate: Option[Instant] = Some(Instant.parse("2028-01-01T00:00:00Z"))
-  ): UpdateRecordRequest =
-    UpdateRecordRequest(
-      actorId,
-      traderRef,
-      comcode,
-      goodsDescription,
-      countryOfOrigin,
-      category,
-      assessments,
-      supplementaryUnit,
-      measurementUnit,
-      comcodeEffectiveFromDate,
-      comcodeEffectiveToDate
+      ),
+      Some(13),
+      Some("Kilograms"),
+      Some(Instant.parse("2023-01-01T00:00:00Z")),
+      Some(Instant.parse("2028-01-01T00:00:00Z"))
     )
 }

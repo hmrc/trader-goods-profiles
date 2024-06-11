@@ -18,7 +18,6 @@ package uk.gov.hmrc.tradergoodsprofiles.models.requests.router
 
 import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.tradergoodsprofiles.models.Assessment
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.UpdateRecordRequest
 
 import java.time.Instant
 
@@ -40,21 +39,4 @@ case class RouterUpdateRecordRequest(
 
 object RouterUpdateRecordRequest {
   implicit val format: OFormat[RouterUpdateRecordRequest] = Json.format[RouterUpdateRecordRequest]
-
-  def apply(eori: String, recordId: String, updateRequest: UpdateRecordRequest): RouterUpdateRecordRequest =
-    RouterUpdateRecordRequest(
-      eori = eori,
-      recordId = recordId,
-      actorId = updateRequest.actorId,
-      traderRef = updateRequest.traderRef,
-      comcode = updateRequest.comcode,
-      goodsDescription = updateRequest.goodsDescription,
-      countryOfOrigin = updateRequest.countryOfOrigin,
-      category = updateRequest.category,
-      assessments = updateRequest.assessments,
-      supplementaryUnit = updateRequest.supplementaryUnit,
-      measurementUnit = updateRequest.measurementUnit,
-      comcodeEffectiveFromDate = updateRequest.comcodeEffectiveFromDate,
-      comcodeEffectiveToDate = updateRequest.comcodeEffectiveToDate
-    )
 }

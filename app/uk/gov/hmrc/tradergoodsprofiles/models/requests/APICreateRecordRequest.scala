@@ -55,7 +55,7 @@ object APICreateRecordRequest {
       (JsPath \ "comcodeEffectiveToDate").readNullable[Instant]
   )(APICreateRecordRequest.apply _)
 
-  implicit val writes: OWrites[APICreateRecordRequest] = Json.writes[APICreateRecordRequest]
+  implicit val writes: OWrites[APICreateRecordRequest] =
+    Json.writes[APICreateRecordRequest]
 
-  implicit val format: OFormat[APICreateRecordRequest] = OFormat(reads, writes)
 }
