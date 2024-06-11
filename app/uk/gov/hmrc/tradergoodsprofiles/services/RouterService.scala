@@ -149,8 +149,6 @@ class RouterService @Inject() (
   def createRecord(eori: String, createRequest: APICreateRecordRequest)(implicit
     hc: HeaderCarrier
   ): Future[Either[ServiceError, CreateOrUpdateRecordResponse]] =
-    //delete
-//    val routerCreateRecordRequest = RouterCreateRecordRequest(eori, createRequest)
     routerConnector
       .createRecord(eori, createRequest)
       .map { httpResponse =>
