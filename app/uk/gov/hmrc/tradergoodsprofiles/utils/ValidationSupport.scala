@@ -22,7 +22,10 @@ import uk.gov.hmrc.tradergoodsprofiles.models.requests.UpdateRecordRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
 
+import java.util.UUID
 import scala.reflect.runtime.universe.{TypeTag, typeOf}
+import scala.util.{Failure, Success, Try}
+import scala.util.matching.Regex
 
 object ValidationSupport {
 
@@ -131,4 +134,17 @@ object ValidationSupport {
           ErrorResponse.badRequestErrorResponse(uuidService.uuid, Some(convertError(errors)))
         )
     }
+
+  val actorIdPattern: Regex = raw"[A-Z]{2}\d{12,15}".r
+
+  def validateActorId(actorId: String): Either[Error, String] =
+    if (actorIdPattern.matches(actorId)) Right(actorId)
+    else
+      Left(
+        Error(
+          InvalidRequestParameter,
+          InvalidActorIdQueryParameter,
+          InvalidActorId
+        )
+      )
 }

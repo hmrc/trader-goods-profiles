@@ -30,6 +30,7 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
+import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants
 
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
@@ -51,6 +52,7 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
   )
   private val recordId                      = UUID.randomUUID().toString
   private val actorId                       = "GB987654321098"
+  private val invalidActorId                = "INVALID_ACTOR_ID"
   private val correlationId                 = "d677693e-9981-4ee3-8574-654981ebe606"
   private val uuidService                   = mock[UuidService]
   private val routerService                 = mock[RouterService]
@@ -107,7 +109,14 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
         contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
       }
 
-      "routerService return an error" in {
+      "actorId is invalid" in {
+        val result = sut.removeRecord(eoriNumber, recordId, invalidActorId)(request)
+
+        status(result) mustBe BAD_REQUEST
+        contentAsJson(result) mustBe createInvalidActorIdExpectedJson
+      }
+
+      "routerService returns an error" in {
         val expectedJson = Json.obj(
           "correlationId" -> "d677693e-9981-4ee3-8574-654981ebe606",
           "code"          -> "INTERNAL_SERVER_ERROR",
@@ -137,10 +146,23 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
       "errors"        -> Seq(
         Json.obj(
           "code"        -> "INVALID_REQUEST_PARAMETER",
-          "message"     -> "The recordId has been provided in the wrong format",
+          "message"     -> "Query parameter recordId is in the wrong format",
           "errorNumber" -> 25
         )
       )
     )
 
+  private def createInvalidActorIdExpectedJson: JsObject =
+    Json.obj(
+      "correlationId" -> correlationId,
+      "code"          -> "BAD_REQUEST",
+      "message"       -> "Bad Request",
+      "errors"        -> Seq(
+        Json.obj(
+          "code"        -> "INVALID_REQUEST_PARAMETER",
+          "message"     -> ApplicationConstants.InvalidActorIdQueryParameter,
+          "errorNumber" -> 8
+        )
+      )
+    )
 }

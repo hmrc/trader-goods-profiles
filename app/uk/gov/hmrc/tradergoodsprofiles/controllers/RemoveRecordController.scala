@@ -25,6 +25,7 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, Validate
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{Error, ErrorResponse}
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
+import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport
 
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
@@ -45,7 +46,8 @@ class RemoveRecordController @Inject() (
     (authAction(eori) andThen validateHeaderAction).async { implicit request =>
       (for {
         validRecordId <- validateRecordId(recordId)
-        response      <- sendRemove(eori, validRecordId, actorId)
+        validActorId  <- validateActorId(actorId)
+        response      <- sendRemove(eori, validRecordId, validActorId)
       } yield response).value.map {
         case Right(_)          => NoContent
         case Left(errorResult) => errorResult
@@ -59,13 +61,18 @@ class RemoveRecordController @Inject() (
       case Failure(_)             =>
         val errorResponse = ErrorResponse.badRequestErrorResponse(
           uuidService.uuid,
-          Some(Seq(Error(InvalidRequestParameter, InvalidRecordIdMessage, InvalidRecordId)))
+          Some(Seq(Error(InvalidRequestParameter, InvalidRecordIdQueryParameter, InvalidRecordId)))
         )
         EitherT.leftT[Future, String](BadRequest(Json.toJson(errorResponse)))
     }
   }
 
-  // TODO validate actorId?!?!
+  private def validateActorId(actorId: String): EitherT[Future, Result, String] =
+    EitherT.fromEither[Future](
+      ValidationSupport.validateActorId(actorId).left.map { error =>
+        BadRequest(Json.toJson(ErrorResponse.badRequestErrorResponse(uuidService.uuid, Some(Seq(error)))))
+      }
+    )
 
   private def sendRemove(
     eori: String,

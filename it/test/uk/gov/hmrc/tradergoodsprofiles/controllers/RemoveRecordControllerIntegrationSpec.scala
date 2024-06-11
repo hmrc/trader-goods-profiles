@@ -27,7 +27,7 @@ import play.api.Application
 import play.api.http.Status._
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
@@ -52,10 +52,12 @@ class RemoveRecordControllerIntegrationSpec
   private lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
   private val recordId                = UUID.randomUUID().toString
   private val actorId                 = "GB987654321098"
+  private val invalidActorId          = "INVALID_ACTOR_ID"
   private val uuidService             = mock[UuidService]
   private val correlationId           = "d677693e-9981-4ee3-8574-654981ebe606"
 
   private val url            = s"http://localhost:$port/$eoriNumber/records/$recordId?actorId=$actorId"
+  private val invalidUrl     = s"http://localhost:$port/$eoriNumber/records/$recordId?actorId=$invalidActorId"
   private val routerUrl      = s"/trader-goods-profiles-router/$eoriNumber/records/$recordId?actorId=$actorId"
   private val routerResponse = NO_CONTENT
 
@@ -105,7 +107,6 @@ class RemoveRecordControllerIntegrationSpec
           .delete()
       )
       result.status mustBe NO_CONTENT
-
     }
 
     "return 204 with the headers" in {
@@ -241,29 +242,19 @@ class RemoveRecordControllerIntegrationSpec
       )
     }
 
-    // TODO: Change this test to invalid query param
-//    "return BadRequest for invalid request body" in {
-//      withAuthorizedTrader()
-//      val emptyJsonBody = Json.obj()
-//      val result        = await(
-//        wsClient
-//          .url(url)
-//          .withHttpHeaders(
-//            "X-Client-ID"  -> "clientId",
-//            "Accept"       -> "application/vnd.hmrc.1.0+json",
-//            "Content-Type" -> "application/json"
-//          )
-//          .delete(emptyJsonBody)
-//      )
-//
-//      result.status mustBe BAD_REQUEST
-//      result.json mustBe createExpectedError(
-//        "INVALID_REQUEST_PARAMETER",
-//        "Mandatory field actorId was missing from body or is in the wrong format",
-//        8
-//      )
+    "return bad request when actorId is invalid" in {
+      withAuthorizedTrader()
 
-//    }
+      val result = removeRecordAndWait(invalidUrl)
+
+      result.status mustBe BAD_REQUEST
+      result.json mustBe createExpectedError(
+        "INVALID_REQUEST_PARAMETER",
+        "Query parameter actorId is in the wrong format",
+        8
+      )
+    }
+
     "return bad request when Accept header is invalid" in {
       withAuthorizedTrader()
 
@@ -298,7 +289,7 @@ class RemoveRecordControllerIntegrationSpec
       result.status mustBe BAD_REQUEST
       result.json mustBe createExpectedError(
         "INVALID_REQUEST_PARAMETER",
-        "The recordId has been provided in the wrong format",
+        "Query parameter recordId is in the wrong format",
         25
       )
     }
