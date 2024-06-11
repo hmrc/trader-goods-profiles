@@ -69,6 +69,7 @@ class RouterConnectorSpec
     when(appConfig.routerUrl).thenReturn(Url.parse("http://localhost:23123"))
     when(httpClient.get(any)(any)).thenReturn(requestBuilder)
     when(httpClient.post(any)(any)).thenReturn(requestBuilder)
+    when(httpClient.put(any)(any)).thenReturn(requestBuilder)
     when(httpClient.delete(any)(any)).thenReturn(requestBuilder)
     when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
     when(requestBuilder.withBody(any[Object])(any, any, any))
