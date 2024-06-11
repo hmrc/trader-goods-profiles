@@ -33,20 +33,20 @@ import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{RouterCreateRecordRequestSupport, RouterUpdateRecordRequestSupport}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{RouterCreateRecordRequestSupport, UpdateRecordRequestSupport}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.MaintainProfileRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterRequestAdviceRequest
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.XClientIdHeader
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class RouteConnectorSpec
+class RouterConnectorSpec
     extends PlaySpec
     with ScalaFutures
     with EitherValues
     with BeforeAndAfterEach
     with RouterCreateRecordRequestSupport
-    with RouterUpdateRecordRequestSupport {
+    with UpdateRecordRequestSupport {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
   implicit val hc: HeaderCarrier    = HeaderCarrier(otherHeaders = Seq(XClientIdHeader -> "clientId"))
@@ -165,33 +165,23 @@ class RouteConnectorSpec
   "create" should {
 
     "return 201 when the record is successfully created" in {
-      val createRecordRequest = createRouterCreateRecordRequest()
-
-      when(httpClient.post(any)(any)).thenReturn(requestBuilder)
-      when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
-      when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "message")))
 
-      val result = await(sut.createRecord("eori", createRecordRequest))
+      val result = await(sut.createRecord("eori", createRouterCreateRecordRequest))
 
       result.status mustBe CREATED
     }
 
     "send a request with the right url and body" in {
-      val createRecordRequest = createRouterCreateRecordRequest()
-
-      when(httpClient.post(any)(any)).thenReturn(requestBuilder)
-      when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
-      when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "message")))
 
-      await(sut.createRecord("eoriNumber", createRecordRequest))
+      await(sut.createRecord("eoriNumber", createRouterCreateRecordRequest))
 
       val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/traders/eoriNumber/records")
       verify(httpClient).post(eqTo(url"$expectedUrl"))(any)
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
-      verify(requestBuilder).withBody(eqTo(Json.toJson(createRecordRequest)))(any, any, any)
+      verify(requestBuilder).withBody(eqTo(Json.toJson(createRouterCreateRecordRequest)))(any, any, any)
       verify(requestBuilder).execute(any, any)
 
       withClue("process the response within a timer") {
@@ -232,34 +222,28 @@ class RouteConnectorSpec
 
   "update" should {
 
-    "return 200" in {
-      val updateRecordRequest = createRouterUpdateRecordRequest()
+    val eoriNumber = "GB123456789012"
+    val recordId   = "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f"
 
-      when(httpClient.put(any)(any)).thenReturn(requestBuilder)
-      when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
-      when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
+    "return 200" in {
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(200, "message")))
 
-      val result = await(sut.updateRecord(updateRecordRequest))
+      val result = await(sut.updateRecord(eoriNumber, recordId, createUpdateRecordRequest))
 
       result.status mustBe OK
     }
 
     "send a PUT request with the right url and body" in {
-      val updateRecordRequest = createRouterUpdateRecordRequest()
-
-      when(httpClient.put(any)(any)).thenReturn(requestBuilder)
-      when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
-      when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(200, "message")))
 
-      await(sut.updateRecord(updateRecordRequest))
+      await(sut.updateRecord(eoriNumber, recordId, createUpdateRecordRequest))
 
-      val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/records")
+      val expectedUrl =
+        UrlPath.parse(s"http://localhost:23123/trader-goods-profiles-router/traders/$eoriNumber/records/$recordId")
       verify(httpClient).put(eqTo(url"$expectedUrl"))(any)
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
-      verify(requestBuilder).withBody(eqTo(Json.toJson(updateRecordRequest)))(any, any, any)
+      verify(requestBuilder).withBody(eqTo(Json.toJson(createUpdateRecordRequest)))(any, any, any)
       verify(requestBuilder).execute(any, any)
 
       withClue("process the response within a timer") {
@@ -274,9 +258,6 @@ class RouteConnectorSpec
     "return 201 when advice is successfully requested" in {
       val requestAdviceRequest = createRouterRequestAdviceRequest()
 
-      when(httpClient.post(any)(any)).thenReturn(requestBuilder)
-      when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
-      when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "")))
 
       val result = await(sut.requestAdvice(requestAdviceRequest))
@@ -287,9 +268,6 @@ class RouteConnectorSpec
     "send a request with the right url and body" in {
       val requestAdviceRequest = createRouterRequestAdviceRequest()
 
-      when(httpClient.post(any)(any)).thenReturn(requestBuilder)
-      when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
-      when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "message")))
 
       await(sut.requestAdvice(requestAdviceRequest))
@@ -327,9 +305,6 @@ class RouteConnectorSpec
         niphlNumber = Some("6 S12345")
       )
 
-      when(httpClient.put(any)(any)).thenReturn(requestBuilder)
-      when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
-      when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(200, "message")))
 
       val result = await(sut.routerMaintainProfile(eori, updateProfileRequest))
@@ -347,9 +322,6 @@ class RouteConnectorSpec
         niphlNumber = Some("6 S12345")
       )
 
-      when(httpClient.put(any)(any)).thenReturn(requestBuilder)
-      when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
-      when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(200, "message")))
 
       await(sut.routerMaintainProfile(eori, updateProfileRequest))
