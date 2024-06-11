@@ -30,7 +30,7 @@ import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 @Singleton
 class RemoveRecordController @Inject() (
@@ -54,18 +54,19 @@ class RemoveRecordController @Inject() (
       }
     }
 
-  def validateRecordId(recordId: String): EitherT[Future, Result, String] = {
-    val eitherResult: Try[String] = Try(UUID.fromString(recordId).toString)
-    eitherResult match {
-      case Success(validRecordId) => EitherT.rightT[Future, Result](validRecordId)
-      case Failure(_)             =>
-        val errorResponse = ErrorResponse.badRequestErrorResponse(
-          uuidService.uuid,
-          Some(Seq(Error(InvalidRequestParameter, InvalidRecordIdQueryParameter, InvalidRecordId)))
+  def validateRecordId(recordId: String): EitherT[Future, Result, String] =
+    EitherT
+      .fromEither[Future](Try(UUID.fromString(recordId).toString).toEither)
+      .leftMap(_ =>
+        BadRequest(
+          Json.toJson(
+            ErrorResponse.badRequestErrorResponse(
+              uuidService.uuid,
+              Some(Seq(Error(InvalidRequestParameter, InvalidRecordIdQueryParameter, InvalidRecordId)))
+            )
+          )
         )
-        EitherT.leftT[Future, String](BadRequest(Json.toJson(errorResponse)))
-    }
-  }
+      )
 
   private def validateActorId(actorId: String): EitherT[Future, Result, String] =
     EitherT.fromEither[Future](
