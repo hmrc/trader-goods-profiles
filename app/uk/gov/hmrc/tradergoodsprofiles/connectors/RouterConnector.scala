@@ -27,7 +27,7 @@ import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.metrics.MetricsSupport
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterRequestAccreditationRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterRequestAdviceRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.{APICreateRecordRequest, MaintainProfileRequest, UpdateRecordRequest}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.XClientIdHeader
 

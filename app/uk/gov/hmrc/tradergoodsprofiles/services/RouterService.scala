@@ -25,7 +25,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests._
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterRequestAccreditationRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterRequestAdviceRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.response.{CreateOrUpdateRecordResponse, GetRecordResponse, GetRecordsResponse}
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 
@@ -219,7 +219,6 @@ class RouterService @Inject() (
           )
         )
       }
-  }
 
   def requestAdvice(
     eori: String,

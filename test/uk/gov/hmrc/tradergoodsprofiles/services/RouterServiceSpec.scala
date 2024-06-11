@@ -31,10 +31,8 @@ import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{APICreateRecordRequestSupport, RouterCreateRecordRequestSupport, UpdateRecordRequestSupport}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.{CreateOrUpdateRecordResponseSupport, GetRecordResponseSupport}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterRequestAccreditationRequest
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.{MaintainProfileRequest, RequestAccreditationRequest}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.{RouterRequestAdviceRequest, RouterUpdateRecordRequest}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.{MaintainProfileRequest, RequestAdviceRequest, router}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.{MaintainProfileRequest, RequestAdviceRequest}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterRequestAdviceRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 
