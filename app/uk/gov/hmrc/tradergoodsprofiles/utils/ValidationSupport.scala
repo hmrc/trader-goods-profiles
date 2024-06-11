@@ -22,9 +22,7 @@ import uk.gov.hmrc.tradergoodsprofiles.models.requests.UpdateRecordRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
 
-import java.util.UUID
 import scala.reflect.runtime.universe.{TypeTag, typeOf}
-import scala.util.{Failure, Success, Try}
 import scala.util.matching.Regex
 
 object ValidationSupport {
