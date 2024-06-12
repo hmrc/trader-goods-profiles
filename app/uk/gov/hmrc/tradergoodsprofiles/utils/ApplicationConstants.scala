@@ -88,4 +88,6 @@ object ApplicationConstants {
   val InvalidOrMissingRequestorName                            = "Mandatory field requestorName was missing from body or is in the wrong format"
   val InvalidOrMissingRequestorEmailCode                       = 1009
   val InvalidOrMissingRequestorEmail                           = "Mandatory field requestorEmail was missing from body or is in the wrong format"
+  val InvalidRecordIdQueryParameter                            = "Query parameter recordId is in the wrong format"
+  val InvalidActorIdQueryParameter                             = "Query parameter actorId is in the wrong format"
 }

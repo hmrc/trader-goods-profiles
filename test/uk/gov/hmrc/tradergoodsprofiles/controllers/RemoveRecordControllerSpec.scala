@@ -21,8 +21,8 @@ import org.mockito.MockitoSugar.{reset, verify, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NO_CONTENT, OK}
+import play.api.libs.json.{JsObject, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
@@ -30,6 +30,7 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
+import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants
 
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
@@ -38,15 +39,7 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
-  lazy val removeRecordRequestData: JsValue = Json
-    .parse("""
-             |{
-             |    "actorId": "GB098765432112"
-             |}
-             |""".stripMargin)
-
   private val request = FakeRequest()
-    .withBody(removeRecordRequestData)
     .withHeaders(
       "Accept"       -> "application/vnd.hmrc.1.0+json",
       "Content-Type" -> "application/json",
@@ -58,6 +51,8 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
     "Content-Type" -> "application/json"
   )
   private val recordId                      = UUID.randomUUID().toString
+  private val actorId                       = "GB987654321098"
+  private val invalidActorId                = "INVALID_ACTOR_ID"
   private val correlationId                 = "d677693e-9981-4ee3-8574-654981ebe606"
   private val uuidService                   = mock[UuidService]
   private val routerService                 = mock[RouterService]
@@ -79,43 +74,49 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
   }
 
   "removeRecord" should {
-    "return 200" in {
-      val result = sut.removeRecord(eoriNumber, recordId)(request)
-
-      status(result) mustBe OK
+    "return 204" in {
+      val result = sut.removeRecord(eoriNumber, recordId, actorId)(request)
+      status(result) mustBe NO_CONTENT
     }
 
     "remove the record from router" in {
-      val result = sut.removeRecord(eoriNumber, recordId)(request)
+      val result = sut.removeRecord(eoriNumber, recordId, actorId)(request)
 
-      status(result) mustBe OK
-      verify(routerService).removeRecord(eqTo(eoriNumber), eqTo(recordId), eqTo("GB098765432112"))(any)
+      status(result) mustBe NO_CONTENT
+      verify(routerService).removeRecord(eqTo(eoriNumber), eqTo(recordId), eqTo(actorId))(any)
     }
 
     "return an error" when {
 
       "recordId is not a UUID" in {
-        val result = sut.removeRecord(eoriNumber, "1234-abc")(request)
+        val result = sut.removeRecord(eoriNumber, "1234-abc", actorId)(request)
 
         status(result) mustBe BAD_REQUEST
         contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
       }
 
       "recordId is null" in {
-        val result = sut.removeRecord(eoriNumber, null)(request)
+        val result = sut.removeRecord(eoriNumber, null, actorId)(request)
 
         status(result) mustBe BAD_REQUEST
         contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
       }
 
       "recordId is empty" in {
-        val result = sut.removeRecord(eoriNumber, " ")(request)
+        val result = sut.removeRecord(eoriNumber, " ", actorId)(request)
 
         status(result) mustBe BAD_REQUEST
         contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
       }
 
-      "routerService return an error" in {
+      "actorId is invalid" in {
+        val result = sut.removeRecord(eoriNumber, recordId, invalidActorId)(request)
+
+        status(result) mustBe BAD_REQUEST
+        contentAsJson(result) mustBe createInvalidActorIdExpectedJson
+      }
+
+      "routerService returns an error" in {
         val expectedJson = Json.obj(
           "correlationId" -> "d677693e-9981-4ee3-8574-654981ebe606",
           "code"          -> "INTERNAL_SERVER_ERROR",
@@ -129,7 +130,7 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
         when(routerService.removeRecord(any, any, any)(any))
           .thenReturn(Future.successful(Left(serviceError)))
 
-        val result = sut.removeRecord(eoriNumber, recordId)(request)
+        val result = sut.removeRecord(eoriNumber, recordId, actorId)(request)
 
         status(result) mustBe INTERNAL_SERVER_ERROR
         contentAsJson(result) mustBe expectedJson
@@ -145,10 +146,23 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
       "errors"        -> Seq(
         Json.obj(
           "code"        -> "INVALID_REQUEST_PARAMETER",
-          "message"     -> "The recordId has been provided in the wrong format",
+          "message"     -> "Query parameter recordId is in the wrong format",
           "errorNumber" -> 25
         )
       )
     )
 
+  private def createInvalidActorIdExpectedJson: JsObject =
+    Json.obj(
+      "correlationId" -> correlationId,
+      "code"          -> "BAD_REQUEST",
+      "message"       -> "Bad Request",
+      "errors"        -> Seq(
+        Json.obj(
+          "code"        -> "INVALID_REQUEST_PARAMETER",
+          "message"     -> ApplicationConstants.InvalidActorIdQueryParameter,
+          "errorNumber" -> 8
+        )
+      )
+    )
 }

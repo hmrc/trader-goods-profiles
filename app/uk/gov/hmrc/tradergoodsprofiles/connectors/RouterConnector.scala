@@ -17,7 +17,7 @@
 package uk.gov.hmrc.tradergoodsprofiles.connectors
 
 import com.codahale.metrics.MetricRegistry
-import io.lemonlabs.uri.UrlPath
+import io.lemonlabs.uri.{QueryString, Url, UrlPath}
 import play.api.Logging
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.libs.json.Json
@@ -87,13 +87,12 @@ class RouterConnector @Inject() (
 
   def removeRecord(eori: String, recordId: String, actorId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.removerecord.connector") { _ =>
-      val url = appConfig.routerUrl.withPath(routerRoute(eori, recordId))
+      val url = routerRouteRemoveRecord(eori, recordId, actorId)
 
       httpClient
-        .put(url"$url")
+        .delete(url"$url")
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
         .withClientId
-        .withBody(Json.obj("actorId" -> actorId))
         .execute[HttpResponse]
     }
 
@@ -143,6 +142,11 @@ class RouterConnector @Inject() (
     UrlPath.parse(
       s"$routerBaseRoute/$eoriNumber/records/$recordId"
     )
+
+  private def routerRouteRemoveRecord(eoriNumber: String, recordId: String, actorId: String): Url =
+    appConfig.routerUrl
+      .withPath(UrlPath.parse(s"$routerBaseRoute/$eoriNumber/records/$recordId"))
+      .withQueryString(QueryString.fromPairs("actorId" -> actorId))
 
   private def routerRouteGetRecords(
     eoriNumber: String,
