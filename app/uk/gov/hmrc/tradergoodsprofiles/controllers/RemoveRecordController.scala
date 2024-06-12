@@ -62,7 +62,7 @@ class RemoveRecordController @Inject() (
           Json.toJson(
             ErrorResponse.badRequestErrorResponse(
               uuidService.uuid,
-              Some(Seq(Error(InvalidRequestParameter, InvalidRecordIdQueryParameter, InvalidRecordId)))
+              Some(Seq(Error(InvalidRequestParameter, InvalidRecordIdMessage, InvalidRecordId)))
             )
           )
         )

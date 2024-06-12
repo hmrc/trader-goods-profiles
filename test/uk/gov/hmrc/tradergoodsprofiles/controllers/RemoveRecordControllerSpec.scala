@@ -116,6 +116,13 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
         contentAsJson(result) mustBe createInvalidActorIdExpectedJson
       }
 
+      "actorId is empty" in {
+        val result = sut.removeRecord(eoriNumber, recordId, "")(request)
+
+        status(result) mustBe BAD_REQUEST
+        contentAsJson(result) mustBe createInvalidActorIdExpectedJson
+      }
+
       "routerService returns an error" in {
         val expectedJson = Json.obj(
           "correlationId" -> "d677693e-9981-4ee3-8574-654981ebe606",
@@ -146,7 +153,7 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
       "errors"        -> Seq(
         Json.obj(
           "code"        -> "INVALID_REQUEST_PARAMETER",
-          "message"     -> "Query parameter recordId is in the wrong format",
+          "message"     -> "The recordId has been provided in the wrong format",
           "errorNumber" -> 25
         )
       )
