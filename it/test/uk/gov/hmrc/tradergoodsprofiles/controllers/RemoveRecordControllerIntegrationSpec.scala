@@ -58,7 +58,7 @@ class RemoveRecordControllerIntegrationSpec
 
   private val url            = s"http://localhost:$port/$eoriNumber/records/$recordId?actorId=$actorId"
   private val invalidUrl     = s"http://localhost:$port/$eoriNumber/records/$recordId?actorId=$invalidActorId"
-  private val routerUrl      = s"/trader-goods-profiles-router/$eoriNumber/records/$recordId?actorId=$actorId"
+  private val routerUrl      = s"/trader-goods-profiles-router/traders/$eoriNumber/records/$recordId?actorId=$actorId"
   private val routerResponse = NO_CONTENT
 
   override lazy val app: Application = {
