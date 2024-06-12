@@ -96,32 +96,16 @@ class RemoveRecordControllerIntegrationSpec
   "remove record" should {
     "return 204" in {
       withAuthorizedTrader()
-      val result = await(
-        wsClient
-          .url(url)
-          .withHttpHeaders(
-            "X-Client-ID"  -> "clientId",
-            "Accept"       -> "application/vnd.hmrc.1.0+json",
-            "Content-Type" -> "application/json"
-          )
-          .delete()
-      )
+
+      val result = removeRecordAndWait()
+
       result.status mustBe NO_CONTENT
     }
 
     "return 204 with the headers" in {
       withAuthorizedTrader()
 
-      val result = await(
-        wsClient
-          .url(url)
-          .withHttpHeaders(
-            "X-Client-ID"  -> "clientId",
-            "Accept"       -> "application/vnd.hmrc.1.0+json",
-            "Content-Type" -> "application/json"
-          )
-          .delete()
-      )
+      val result = removeRecordAndWait()
 
       result.status mustBe routerResponse
 
