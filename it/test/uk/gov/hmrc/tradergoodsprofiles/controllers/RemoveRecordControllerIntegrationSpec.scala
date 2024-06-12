@@ -273,7 +273,7 @@ class RemoveRecordControllerIntegrationSpec
       result.status mustBe BAD_REQUEST
       result.json mustBe createExpectedError(
         "INVALID_REQUEST_PARAMETER",
-        "Query parameter recordId is in the wrong format",
+        "The recordId has been provided in the wrong format",
         25
       )
     }

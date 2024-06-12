@@ -176,7 +176,7 @@ paths:
       security:
         - userRestricted:
             - trader-goods-profiles
-    put:
+    delete:
       tags:
         - Goods records
       summary: Remove a trader's goods record
@@ -188,15 +188,15 @@ paths:
         - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/eoriParam'
         - $ref: '#/components/parameters/recordParam'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RemoveTGPRecordSchema'
-        required: true
+        - name: actorId
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/actorId'
+          description: The actorId of the user making the change
       responses:
-        '200':
-          description: OK;   Request completed successfully
+        '204':
+          description: No Content; Request completed successfully
         '400':
           description: Bad Request
           content:
@@ -220,10 +220,11 @@ paths:
                     message: Bad request
                     errors:
                       - code: INVALID_REQUEST_PARAMETER
-                        message: >-
-                          Mandatory field goodsDescription was missing from body or
-                          is in the wrong format
-                        errorNumber: 12
+                        message: The recordId has been provided in the wrong format
+                        errorNumber: 25
+                      - code: INVALID_REQUEST_PARAMETER
+                        message: Query parameter actorId is in the wrong format
+                        errorNumber: 8
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
