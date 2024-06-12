@@ -208,7 +208,7 @@ class RouterConnectorSpec
       await(sut.removeRecord("eoriNumber", "recordId", "actorId"))
 
       val expectedUrl =
-        "http://localhost:23123/trader-goods-profiles-router/eoriNumber/records/recordId?actorId=actorId"
+        "http://localhost:23123/trader-goods-profiles-router/traders/eoriNumber/records/recordId?actorId=actorId"
       verify(httpClient).delete(eqTo(url"$expectedUrl"))(any)
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")

@@ -145,7 +145,7 @@ class RouterConnector @Inject() (
 
   private def routerRouteRemoveRecord(eoriNumber: String, recordId: String, actorId: String): Url =
     appConfig.routerUrl
-      .withPath(UrlPath.parse(s"$routerBaseRoute/$eoriNumber/records/$recordId"))
+      .withPath(UrlPath.parse(s"$routerBaseRoute/traders/$eoriNumber/records/$recordId"))
       .withQueryString(QueryString.fromPairs("actorId" -> actorId))
 
   private def routerRouteGetRecords(
