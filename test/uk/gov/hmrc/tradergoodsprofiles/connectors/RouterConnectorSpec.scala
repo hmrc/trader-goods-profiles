@@ -96,7 +96,8 @@ class RouterConnectorSpec
 
       await(sut.get("eoriNumber", "recordId"))
 
-      val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/eoriNumber/records/recordId")
+      val expectedUrl =
+        UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/traders/eoriNumber/records/recordId")
       verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
@@ -132,7 +133,7 @@ class RouterConnectorSpec
 
       await(sut.getRecords("eoriNumber"))
 
-      val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/eoriNumber")
+      val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/traders/eoriNumber")
       verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
@@ -149,7 +150,7 @@ class RouterConnectorSpec
       await(sut.getRecords("eoriNumber", Some("2024-06-08T12:12:12.456789Z"), Some(1), Some(1)))
 
       val expectedUrl =
-        "http://localhost:23123/trader-goods-profiles-router/eoriNumber?lastUpdatedDate=2024-06-08T12:12:12.456789Z&page=1&size=1"
+        "http://localhost:23123/trader-goods-profiles-router/traders/eoriNumber?lastUpdatedDate=2024-06-08T12:12:12.456789Z&page=1&size=1"
 
       verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)

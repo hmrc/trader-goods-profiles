@@ -17,11 +17,12 @@
 package uk.gov.hmrc.tradergoodsprofiles.connectors
 
 import com.codahale.metrics.MetricRegistry
-import io.lemonlabs.uri.{QueryString, Url, UrlPath}
+import io.lemonlabs.uri.typesafe.QueryKey.stringQueryKey
+import io.lemonlabs.uri._
+import io.lemonlabs.uri.config.{ExcludeNones, UriConfig}
 import play.api.Logging
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.libs.json.Json
-import sttp.model.Uri.UriContext
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
@@ -41,7 +42,9 @@ class RouterConnector @Inject() (
 )(implicit ec: ExecutionContext)
     extends MetricsSupport
     with Logging {
-  val routerBaseRoute: String = "/trader-goods-profiles-router"
+
+  implicit val config: UriConfig = UriConfig(renderQuery = ExcludeNones)
+  val routerBaseRoute: String    = "/trader-goods-profiles-router"
 
   def get(eori: String, recordId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.getrecord.connector") { _ =>
@@ -63,7 +66,7 @@ class RouterConnector @Inject() (
     hc: HeaderCarrier
   ): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.getrecords.connector") { _ =>
-      val url = appConfig.routerUrl.toUrl + routerRouteGetRecords(eori, lastUpdatedDate, page, size)
+      val url = routerRouteGetRecords(eori, lastUpdatedDate, page, size)
       httpClient
         .get(url"$url")
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
@@ -139,7 +142,7 @@ class RouterConnector @Inject() (
 
   private def routerRoute(eoriNumber: String, recordId: String): UrlPath =
     UrlPath.parse(
-      s"$routerBaseRoute/$eoriNumber/records/$recordId"
+      s"$routerBaseRoute/traders/$eoriNumber/records/$recordId"
     )
 
   private def routerRouteRemoveRecord(eoriNumber: String, recordId: String, actorId: String): Url =
@@ -153,8 +156,20 @@ class RouterConnector @Inject() (
     page: Option[Int] = None,
     size: Option[Int] = None
   ): String = {
-    val uri = uri"$routerBaseRoute/$eoriNumber?lastUpdatedDate=$lastUpdatedDate&page=$page&size=$size"
-    s"$uri"
+
+    val params = List(
+      lastUpdatedDate.map(d => s"lastUpdatedDate=$d"),
+      page.map(p => s"page=$p"),
+      size.map(s => s"size=$s")
+    ).flatten match {
+      case Nil   => ""
+      case other => other.mkString("?", "&", "")
+    }
+
+    val urlPath = appConfig.routerUrl
+      .withPath(UrlPath.parse(s"$routerBaseRoute/traders/$eoriNumber"))
+
+    s"${urlPath.toString()}$params"
   }
 
   private def routerUpdateRecordUrlPath(eori: String, recordId: String): UrlPath =
