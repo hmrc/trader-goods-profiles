@@ -234,7 +234,7 @@ class RemoveRecordControllerIntegrationSpec
       result.status mustBe BAD_REQUEST
       result.json mustBe createExpectedError(
         "INVALID_REQUEST_PARAMETER",
-        "Query parameter actorId is in the wrong format",
+        "Mandatory query parameter actorId was missing or is in the wrong format",
         8
       )
     }
