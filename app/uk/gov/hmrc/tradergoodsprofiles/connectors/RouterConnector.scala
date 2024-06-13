@@ -91,7 +91,6 @@ class RouterConnector @Inject() (
 
       httpClient
         .delete(url"$url")
-        .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
         .withClientId
         .execute[HttpResponse]
     }

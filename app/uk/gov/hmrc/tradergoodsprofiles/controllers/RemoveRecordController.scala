@@ -42,11 +42,11 @@ class RemoveRecordController @Inject() (
 )(implicit ec: ExecutionContext)
     extends BackendController(cc) {
 
-  def removeRecord(eori: String, recordId: String, actorId: String): Action[AnyContent] =
+  def removeRecord(eori: String, recordId: String, actorId: Option[String]): Action[AnyContent] =
     (authAction(eori) andThen validateHeaderAction).async { implicit request =>
       (for {
         _        <- validateRecordId(recordId)
-        _        <- validateActorId(actorId)
+        actorId  <- validateActorId(actorId)
         response <- sendRemove(eori, recordId, actorId)
       } yield response).value.map {
         case Right(_)          => NoContent
@@ -68,7 +68,7 @@ class RemoveRecordController @Inject() (
         )
       )
 
-  private def validateActorId(actorId: String): EitherT[Future, Result, String] =
+  private def validateActorId(actorId: Option[String]): EitherT[Future, Result, String] =
     EitherT.fromEither[Future](
       ValidationSupport.validateActorId(actorId).left.map { error =>
         BadRequest(Json.toJson(ErrorResponse.badRequestErrorResponse(uuidService.uuid, Some(Seq(error)))))

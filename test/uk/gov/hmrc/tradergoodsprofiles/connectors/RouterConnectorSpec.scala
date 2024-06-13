@@ -210,8 +210,7 @@ class RouterConnectorSpec
       val expectedUrl =
         "http://localhost:23123/trader-goods-profiles-router/traders/eoriNumber/records/recordId?actorId=actorId"
       verify(httpClient).delete(eqTo(url"$expectedUrl"))(any)
-      verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-      verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
+      verify(requestBuilder).setHeader("X-Client-ID" -> "clientId")
       verify(requestBuilder).execute(any, any)
 
       withClue("process the response within a timer") {

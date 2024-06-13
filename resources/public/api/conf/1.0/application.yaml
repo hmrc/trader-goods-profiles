@@ -183,7 +183,6 @@ paths:
       description: Remove a Trader's goods record
       operationId: removeTraderGoodsProfileRecord
       parameters:
-        - $ref: '#/components/parameters/Content-Type'
         - $ref: '#/components/parameters/Accept'
         - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/eoriParam'

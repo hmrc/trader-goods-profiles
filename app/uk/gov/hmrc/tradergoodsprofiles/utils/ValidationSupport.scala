@@ -135,14 +135,16 @@ object ValidationSupport {
 
   val actorIdPattern: Regex = raw"[A-Z]{2}\d{12,15}".r
 
-  def validateActorId(actorId: String): Either[Error, String] =
-    if (actorIdPattern.matches(actorId)) Right(actorId)
-    else
-      Left(
-        Error(
-          InvalidRequestParameter,
-          InvalidActorIdQueryParameter,
-          InvalidActorId
+  def validateActorId(actorIdOpt: Option[String]): Either[Error, String] =
+    actorIdOpt match {
+      case Some(actorId) if actorIdPattern.matches(actorId) => Right(actorId)
+      case _                                                =>
+        Left(
+          Error(
+            InvalidRequestParameter,
+            InvalidActorIdQueryParameter,
+            InvalidActorId
+          )
         )
-      )
+    }
 }

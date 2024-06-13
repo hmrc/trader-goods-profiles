@@ -75,12 +75,12 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
 
   "removeRecord" should {
     "return 204" in {
-      val result = sut.removeRecord(eoriNumber, recordId, actorId)(request)
+      val result = sut.removeRecord(eoriNumber, recordId, Some(actorId))(request)
       status(result) mustBe NO_CONTENT
     }
 
     "remove the record from router" in {
-      val result = sut.removeRecord(eoriNumber, recordId, actorId)(request)
+      val result = sut.removeRecord(eoriNumber, recordId, Some(actorId))(request)
 
       status(result) mustBe NO_CONTENT
       verify(routerService).removeRecord(eqTo(eoriNumber), eqTo(recordId), eqTo(actorId))(any)
@@ -89,35 +89,42 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
     "return an error" when {
 
       "recordId is not a UUID" in {
-        val result = sut.removeRecord(eoriNumber, "1234-abc", actorId)(request)
+        val result = sut.removeRecord(eoriNumber, "1234-abc", Some(actorId))(request)
 
         status(result) mustBe BAD_REQUEST
         contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
       }
 
       "recordId is null" in {
-        val result = sut.removeRecord(eoriNumber, null, actorId)(request)
+        val result = sut.removeRecord(eoriNumber, null, Some(actorId))(request)
 
         status(result) mustBe BAD_REQUEST
         contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
       }
 
       "recordId is empty" in {
-        val result = sut.removeRecord(eoriNumber, " ", actorId)(request)
+        val result = sut.removeRecord(eoriNumber, " ", Some(actorId))(request)
 
         status(result) mustBe BAD_REQUEST
         contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
       }
 
       "actorId is invalid" in {
-        val result = sut.removeRecord(eoriNumber, recordId, invalidActorId)(request)
+        val result = sut.removeRecord(eoriNumber, recordId, Some(invalidActorId))(request)
 
         status(result) mustBe BAD_REQUEST
         contentAsJson(result) mustBe createInvalidActorIdExpectedJson
       }
 
       "actorId is empty" in {
-        val result = sut.removeRecord(eoriNumber, recordId, "")(request)
+        val result = sut.removeRecord(eoriNumber, recordId, Some(""))(request)
+
+        status(result) mustBe BAD_REQUEST
+        contentAsJson(result) mustBe createInvalidActorIdExpectedJson
+      }
+
+      "actorId is missing" in {
+        val result = sut.removeRecord(eoriNumber, recordId, None)(request)
 
         status(result) mustBe BAD_REQUEST
         contentAsJson(result) mustBe createInvalidActorIdExpectedJson
@@ -137,7 +144,7 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
         when(routerService.removeRecord(any, any, any)(any))
           .thenReturn(Future.successful(Left(serviceError)))
 
-        val result = sut.removeRecord(eoriNumber, recordId, actorId)(request)
+        val result = sut.removeRecord(eoriNumber, recordId, Some(actorId))(request)
 
         status(result) mustBe INTERNAL_SERVER_ERROR
         contentAsJson(result) mustBe expectedJson
