@@ -152,9 +152,9 @@ class RouterConnector @Inject() (
 
   private def routerGetRecordsOptionalUrl(
     eoriNumber: String,
-    lastUpdatedDate: Option[String] = None,
-    page: Option[Int] = None,
-    size: Option[Int] = None
+    lastUpdatedDate: Option[String],
+    page: Option[Int],
+    size: Option[Int]
   ): String = {
 
     val params = List(
