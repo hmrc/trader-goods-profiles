@@ -59,7 +59,7 @@ class ValidateHeaderAction @Inject() (uuidService: UuidService)(implicit ec: Exe
       case _                                       => successful(false)
     }
 
-  private def invalidContentTypeResult                                        =
+  private def invalidContentTypeResult =
     Some(
       BadRequestErrorResponse(
         uuidService.uuid,
@@ -68,10 +68,16 @@ class ValidateHeaderAction @Inject() (uuidService: UuidService)(implicit ec: Exe
         InvalidHeaderContentType
       ).toResult
     )
+
   private def validateContentTypeHeader(request: Request[_]): Future[Boolean] =
-    request.headers.get(HeaderNames.CONTENT_TYPE) match {
-      case Some(header) if header.equals(MimeTypes.JSON) => successful(true)
-      case _                                             => successful(false)
+    request.method match {
+      case "DELETE" if request.uri.matches(".+/records/.+") =>
+        successful(true)
+      case _                                                =>
+        request.headers.get(HeaderNames.CONTENT_TYPE) match {
+          case Some(header) if header.equals(MimeTypes.JSON) => successful(true)
+          case _                                             => successful(false)
+        }
     }
 
   private def invalidClientIdResult =

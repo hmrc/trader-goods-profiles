@@ -112,7 +112,6 @@ class RemoveRecordControllerIntegrationSpec
       withClue("should add the right headers") {
         verify(
           deleteRequestedFor(urlEqualTo(routerUrl))
-            .withHeader("Content-Type", equalTo("application/json"))
             .withHeader("X-Client-ID", equalTo("clientId"))
         )
       }
@@ -287,7 +286,6 @@ class RemoveRecordControllerIntegrationSpec
         .withHttpHeaders(
           "X-Client-ID"  -> "clientId",
           "Accept"       -> "application/vnd.hmrc.1.0+json",
-          "Content-Type" -> "application/json"
         )
         .delete()
     )
