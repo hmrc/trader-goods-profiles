@@ -31,7 +31,7 @@ case class APICreateRecordRequest(
   countryOfOrigin: String,
   category: Int,
   assessments: Option[Seq[Assessment]] = None,
-  supplementaryUnit: Option[Int] = None,
+  supplementaryUnit: Option[BigDecimal] = None,
   measurementUnit: Option[String] = None,
   comcodeEffectiveFromDate: Instant,
   comcodeEffectiveToDate: Option[Instant] = None
@@ -49,7 +49,7 @@ object APICreateRecordRequest {
       (JsPath \ "countryOfOrigin").read[String](nonEmptyString) and
       (JsPath \ "category").read[Int](verifying[Int](category => category >= 1 && category <= 3)) and
       (JsPath \ "assessments").readNullable[Seq[Assessment]] and
-      (JsPath \ "supplementaryUnit").readNullable[Int] and
+      (JsPath \ "supplementaryUnit").readNullable[BigDecimal] and
       (JsPath \ "measurementUnit").readNullable[String] and
       (JsPath \ "comcodeEffectiveFromDate").read[Instant] and
       (JsPath \ "comcodeEffectiveToDate").readNullable[Instant]

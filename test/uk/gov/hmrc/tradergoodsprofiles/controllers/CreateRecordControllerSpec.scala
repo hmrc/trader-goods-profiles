@@ -271,7 +271,7 @@ class CreateRecordControllerSpec
                  |            }
                  |        }
                  |    ],
-                 |    "supplementaryUnit": 2147483648,
+                 |    "supplementaryUnit": "12kg",
                  |    "measurementUnit": "Square metre (m2)",
                  |    "comcodeEffectiveFromDate": "2024-11-18T23:20:19Z",
                  |    "comcodeEffectiveToDate": "2024-11-18T23:20:19Z"
