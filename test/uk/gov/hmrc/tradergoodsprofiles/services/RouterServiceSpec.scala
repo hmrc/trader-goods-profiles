@@ -31,8 +31,8 @@ import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{APICreateRecordRequestSupport, RouterCreateRecordRequestSupport, UpdateRecordRequestSupport}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.{CreateOrUpdateRecordResponseSupport, GetRecordResponseSupport}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.{MaintainProfileRequest, RequestAdviceRequest}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterRequestAdviceRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.{MaintainProfileRequest, RequestAdviceRequest}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 
@@ -60,6 +60,9 @@ class RouterServiceSpec
   private val createResponse = createCreateOrUpdateRecordResponse("recordId", "GB123456789012", Instant.now)
   private val uuidService    = mock[UuidService]
   private val correlationId  = "d677693e-9981-4ee3-8574-654981ebe606"
+
+  private val eori     = "GB123456789012"
+  private val recordId = "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f"
 
   private val sut = new RouterService(connector, uuidService)
 
@@ -596,7 +599,7 @@ class RouterServiceSpec
       val requestAdviceRequest = createRequestAdviceRequest()
 
       val httpResponse = HttpResponse(Status.CREATED, "")
-      when(connector.requestAdvice(any)(any))
+      when(connector.requestAdvice(any, any, any)(any))
         .thenReturn(Future.successful(httpResponse))
 
       val result =
@@ -605,12 +608,10 @@ class RouterServiceSpec
       whenReady(result) { _ =>
         verify(connector).requestAdvice(
           eqTo(
-            RouterRequestAdviceRequest(
-              "GB123456789012",
-              "d677693e-9981-4ee3-8574-654981ebe606",
-              requestAdviceRequest
-            )
-          )
+            RouterRequestAdviceRequest(requestAdviceRequest)
+          ),
+          eqTo("GB123456789012"),
+          eqTo("d677693e-9981-4ee3-8574-654981ebe606")
         )(any)
       }
     }
@@ -620,7 +621,7 @@ class RouterServiceSpec
       "routerConnector return an exception" in {
         val requestAdviceRequest = createRequestAdviceRequest()
 
-        when(connector.requestAdvice(any)(any))
+        when(connector.requestAdvice(any, any, any)(any))
           .thenReturn(Future.failed(new RuntimeException("error")))
 
         val result =
@@ -660,15 +661,11 @@ class RouterServiceSpec
           s"$description" in {
             val requestAdviceRequest = createRequestAdviceRequest()
 
-            when(connector.requestAdvice(any)(any))
+            when(connector.requestAdvice(any, any, any)(any))
               .thenReturn(Future.successful(createHttpResponse(status, code)))
 
             val result =
-              sut.requestAdvice(
-                "GB123456789012",
-                "d677693e-9981-4ee3-8574-654981ebe606",
-                requestAdviceRequest
-              )
+              sut.requestAdvice(eori, recordId, requestAdviceRequest)
 
             whenReady(result) {
               _.left.value.status mustBe expectedResult

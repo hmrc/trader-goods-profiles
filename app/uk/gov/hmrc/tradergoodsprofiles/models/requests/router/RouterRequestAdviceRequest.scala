@@ -20,9 +20,7 @@ import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.RequestAdviceRequest
 
 case class RouterRequestAdviceRequest(
-  eori: String,
   requestorName: String,
-  recordId: String,
   requestorEmail: String
 )
 
@@ -30,14 +28,10 @@ object RouterRequestAdviceRequest {
   implicit val format: OFormat[RouterRequestAdviceRequest] = Json.format[RouterRequestAdviceRequest]
 
   def apply(
-    eori: String,
-    recordId: String,
     adviceRequest: RequestAdviceRequest
   ): RouterRequestAdviceRequest =
     RouterRequestAdviceRequest(
-      eori = eori,
       requestorName = adviceRequest.requestorName,
-      recordId = recordId,
       requestorEmail = adviceRequest.requestorEmail
     )
 }

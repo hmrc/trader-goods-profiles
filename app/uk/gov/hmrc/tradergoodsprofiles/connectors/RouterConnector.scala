@@ -105,7 +105,7 @@ class RouterConnector @Inject() (
       val url      = appConfig.routerUrl.withPath(routerUpdateRecordUrlPath(eori, recordId))
       val jsonData = Json.toJson(updateRecordRequest)
       httpClient
-        .put(url"$url")
+        .patch(url"$url")
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
         .withBody(jsonData)
         .withClientId
@@ -127,10 +127,12 @@ class RouterConnector @Inject() (
     }
 
   def requestAdvice(
-    adviceRequest: RouterRequestAdviceRequest
+    adviceRequest: RouterRequestAdviceRequest,
+    eori: String,
+    recordId: String
   )(implicit hc: HeaderCarrier): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.requestadvice.connector") { _ =>
-      val url      = appConfig.routerUrl.withPath(routerAdviceUrlPath())
+      val url      = appConfig.routerUrl.withPath(routerAdviceUrlPath(eori, recordId))
       val jsonData = Json.toJson(adviceRequest)
       httpClient
         .post(url"$url")
@@ -167,7 +169,7 @@ class RouterConnector @Inject() (
     }
 
     val urlPath = appConfig.routerUrl
-      .withPath(UrlPath.parse(s"$routerBaseRoute/traders/$eoriNumber"))
+      .withPath(UrlPath.parse(s"$routerBaseRoute/traders/$eoriNumber/records"))
 
     s"${urlPath.toString()}$params"
   }
@@ -182,9 +184,9 @@ class RouterConnector @Inject() (
       s"$routerBaseRoute/traders/$eori/records"
     )
 
-  private def routerAdviceUrlPath(): UrlPath =
+  private def routerAdviceUrlPath(eori: String, recordId: String): UrlPath =
     UrlPath.parse(
-      s"$routerBaseRoute/createaccreditation"
+      s"$routerBaseRoute/traders/$eori/records/$recordId/advice"
     )
 
   private def routerMaintainProfileUrlPath(eoriNumber: String): UrlPath =
