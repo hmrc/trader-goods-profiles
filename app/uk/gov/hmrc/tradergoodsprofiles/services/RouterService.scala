@@ -88,13 +88,13 @@ class RouterService @Inject() (
             Right(status)
           case _                       =>
             Left(
-              handleErrors(httpResponse, Some(eoriNumber), Some(recordId))
+              handleErrors(httpResponse, Some(eoriNumber), Some(recordId), Some(actorId))
             )
         }
       }
       .recover { case ex: Throwable =>
         logger.error(
-          s"[RouterService] - Exception when removing record for eori number $eoriNumber and record ID $recordId, with message ${ex.getMessage}",
+          s"[RouterService] - Exception when removing record for eori number $eoriNumber, record ID $recordId, and actor ID $actorId, with message ${ex.getMessage}",
           ex
         )
         Left(
@@ -103,7 +103,7 @@ class RouterService @Inject() (
             ErrorResponse
               .serverErrorResponse(
                 uuidService.uuid,
-                s"Could not remove record for eori number $eoriNumber and record ID $recordId"
+                s"Could not remove record for eori number $eoriNumber, record ID $recordId, and actor ID $actorId"
               )
           )
         )
@@ -286,15 +286,19 @@ class RouterService @Inject() (
   private def handleErrors(
     response: HttpResponse,
     eoriNumber: Option[String] = None,
-    recordId: Option[String] = None
+    recordId: Option[String] = None,
+    actorId: Option[String] = None
   ): ServiceError = {
-    val errorContext = (eoriNumber, recordId) match {
-      case (Some(eori), Some(record)) => s"for eori number '$eori' and record ID '$record'"
-      case (Some(eori), None)         => s"for eori number '$eori'"
-      case _                          => ""
+    val errorContext = (eoriNumber, recordId, actorId) match {
+      case (Some(eori), Some(record), Some(actor)) =>
+        s"for eori number '$eori', record ID '$record', and actor ID '$actor'"
+      case (Some(eori), Some(record), None)        => s"for eori number '$eori' and record ID '$record'"
+      case (Some(eori), None, None)                => s"for eori number '$eori'"
+      case _                                       => ""
     }
+
     logger.error(
-      s"[RouterService] - Error processing request $errorContext, status '$response.status' with message: ${response.body}"
+      s"[RouterService] - Error processing request $errorContext, status '${response.status}' with message: ${response.body}"
     )
     jsonAs[ErrorResponse](response.body)
       .fold(

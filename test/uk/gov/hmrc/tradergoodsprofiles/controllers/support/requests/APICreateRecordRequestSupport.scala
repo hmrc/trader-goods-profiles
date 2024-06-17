@@ -46,7 +46,7 @@ trait APICreateRecordRequestSupport {
         )
       )
     ),
-    supplementaryUnit: Option[Int] = Some(13),
+    supplementaryUnit: Option[BigDecimal] = Some(13.12),
     measurementUnit: Option[String] = Some("Kilograms"),
     comcodeEffectiveFromDate: Instant = Instant.parse("2023-01-01T00:00:00Z"),
     comcodeEffectiveToDate: Option[Instant] = Some(Instant.parse("2028-01-01T00:00:00Z"))

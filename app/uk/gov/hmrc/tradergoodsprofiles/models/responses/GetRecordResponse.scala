@@ -33,7 +33,7 @@ case class GetRecordResponse(
   countryOfOrigin: String,
   category: Int,
   assessments: Option[Seq[Assessment]],
-  supplementaryUnit: Option[Int],
+  supplementaryUnit: Option[BigDecimal],
   measurementUnit: Option[String],
   comcodeEffectiveFromDate: Instant,
   comcodeEffectiveToDate: Option[Instant],
@@ -121,7 +121,7 @@ object GetRecordResponse {
       val countryOfOrigin          = read[String]("countryOfOrigin")
       val category                 = read[Int]("category")
       val assessments              = readOption[Seq[Assessment]]("assessments")
-      val supplementaryUnit        = readOption[Int]("supplementaryUnit")
+      val supplementaryUnit        = readOption[BigDecimal]("supplementaryUnit")
       val measurementUnit          = readOption[String]("measurementUnit")
       val comcodeEffectiveFromDate = read[Instant]("comcodeEffectiveFromDate")
       val comcodeEffectiveToDate   = readOption[Instant]("comcodeEffectiveToDate")

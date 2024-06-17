@@ -26,16 +26,15 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, EitherValues}
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
-import play.api.http.Status.{CREATED, OK}
+import play.api.http.Status.{CREATED, NO_CONTENT, OK}
 import play.api.http.{HeaderNames, MimeTypes}
-import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.Request
-import play.api.test.FakeRequest
+import play.api.libs.json.Json
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{RemoveRecordRequestSupport, RouterCreateRecordRequestSupport, UpdateRecordRequestSupport}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{RouterCreateRecordRequestSupport, UpdateRecordRequestSupport}
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.MaintainProfileRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterRequestAdviceRequest
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.XClientIdHeader
 
@@ -47,8 +46,7 @@ class RouterConnectorSpec
     with EitherValues
     with BeforeAndAfterEach
     with RouterCreateRecordRequestSupport
-    with UpdateRecordRequestSupport
-    with RemoveRecordRequestSupport {
+    with UpdateRecordRequestSupport {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
   implicit val hc: HeaderCarrier    = HeaderCarrier(otherHeaders = Seq(XClientIdHeader -> "clientId"))
@@ -72,6 +70,7 @@ class RouterConnectorSpec
     when(httpClient.get(any)(any)).thenReturn(requestBuilder)
     when(httpClient.post(any)(any)).thenReturn(requestBuilder)
     when(httpClient.put(any)(any)).thenReturn(requestBuilder)
+    when(httpClient.delete(any)(any)).thenReturn(requestBuilder)
     when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
     when(requestBuilder.withBody(any[Object])(any, any, any))
       .thenReturn(requestBuilder)
@@ -97,7 +96,8 @@ class RouterConnectorSpec
 
       await(sut.get("eoriNumber", "recordId"))
 
-      val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/eoriNumber/records/recordId")
+      val expectedUrl =
+        UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/traders/eoriNumber/records/recordId")
       verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
@@ -133,7 +133,7 @@ class RouterConnectorSpec
 
       await(sut.getRecords("eoriNumber"))
 
-      val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/eoriNumber")
+      val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/traders/eoriNumber")
       verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
@@ -150,7 +150,7 @@ class RouterConnectorSpec
       await(sut.getRecords("eoriNumber", Some("2024-06-08T12:12:12.456789Z"), Some(1), Some(1)))
 
       val expectedUrl =
-        "http://localhost:23123/trader-goods-profiles-router/eoriNumber?lastUpdatedDate=2024-06-08T12:12:12.456789Z&page=1&size=1"
+        "http://localhost:23123/trader-goods-profiles-router/traders/eoriNumber?lastUpdatedDate=2024-06-08T12:12:12.456789Z&page=1&size=1"
 
       verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
@@ -195,21 +195,23 @@ class RouterConnectorSpec
 
   "remove" should {
 
-    "return 200" in {
-      val result = await(sut.removeRecord("eoriNumber", "recordId", removeRequest))
+    "return 204" in {
+      when(requestBuilder.execute[HttpResponse](any, any))
+        .thenReturn(Future.successful(HttpResponse(204, "")))
 
-      result.status mustBe OK
+      val result = await(sut.removeRecord("eoriNumber", "recordId", "actorId"))
+
+      result.status mustBe NO_CONTENT
     }
 
-    "send a PUT request with the right url and body" in {
+    "send a DELETE request with the right url and body" in {
 
-      await(sut.removeRecord("eoriNumber", "recordId", removeRequest))
+      await(sut.removeRecord("eoriNumber", "recordId", "actorId"))
 
-      val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/eoriNumber/records/recordId")
-      verify(httpClient).put(eqTo(url"$expectedUrl"))(any)
-      verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-      verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
-      verify(requestBuilder).withBody(Json.obj("actorId" -> (removeRequest.body \ "actorId").asOpt[String]))
+      val expectedUrl =
+        "http://localhost:23123/trader-goods-profiles-router/traders/eoriNumber/records/recordId?actorId=actorId"
+      verify(httpClient).delete(eqTo(url"$expectedUrl"))(any)
+      verify(requestBuilder).setHeader("X-Client-ID" -> "clientId")
       verify(requestBuilder).execute(any, any)
 
       withClue("process the response within a timer") {
@@ -255,22 +257,21 @@ class RouterConnectorSpec
   "request advice" should {
 
     "return 201 when advice is successfully requested" in {
+      val requestAdviceRequest = createRouterRequestAdviceRequest()
 
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "")))
 
-      val result = await(sut.requestAdvice("eoriNumber", "recordId", createRouterRequestAdviceRequest))
+      val result = await(sut.requestAdvice(requestAdviceRequest))
 
       result.status mustBe CREATED
     }
 
     "send a request with the right url and body" in {
-      val requestAdviceRequest = createRouterRequestAdviceRequestData()
+      val requestAdviceRequest = createRouterRequestAdviceRequest()
 
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "message")))
 
-      await(
-        sut.requestAdvice("GB987654321098", "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f", createRouterRequestAdviceRequest)
-      )
+      await(sut.requestAdvice(requestAdviceRequest))
 
       val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/createaccreditation")
       verify(httpClient).post(eqTo(url"$expectedUrl"))(any)
@@ -286,27 +287,12 @@ class RouterConnectorSpec
     }
   }
 
-  def createRouterRequestAdviceRequestData(): RouterRequestAdviceRequest = RouterRequestAdviceRequest(
+  def createRouterRequestAdviceRequest(): RouterRequestAdviceRequest = RouterRequestAdviceRequest(
     eori = "GB987654321098",
-    requestorName = Some("Mr.Phil Edwards"),
+    requestorName = "Mr.Phil Edwards",
     recordId = "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f",
-    requestorEmail = Some("Phil.Edwards@gmail.com")
+    requestorEmail = "Phil.Edwards@gmail.com"
   )
-
-  def requestAdviceData: JsValue = Json
-    .parse("""
-             |{
-             |    "eori": "GB987654321098",
-             |    "requestorName": "Mr.Phil Edwards",
-             |    "recordId": "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f",
-             |    "requestorEmail": "Phil.Edwards@gmail.com"
-             |
-             |}
-             |""".stripMargin)
-
-  def requestAdviceJsonRequest: Request[JsValue]         =
-    FakeRequest().withBody(requestAdviceData)
-  val createRouterRequestAdviceRequest: Request[JsValue] = requestAdviceJsonRequest
 
   "maintain profile" should {
 

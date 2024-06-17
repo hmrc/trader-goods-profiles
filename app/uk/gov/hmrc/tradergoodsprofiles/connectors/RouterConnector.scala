@@ -17,18 +17,19 @@
 package uk.gov.hmrc.tradergoodsprofiles.connectors
 
 import com.codahale.metrics.MetricRegistry
-import io.lemonlabs.uri.UrlPath
+import io.lemonlabs.uri.typesafe.QueryKey.stringQueryKey
+import io.lemonlabs.uri._
+import io.lemonlabs.uri.config.{ExcludeNones, UriConfig}
 import play.api.Logging
 import play.api.http.{HeaderNames, MimeTypes}
-import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.Request
-import sttp.model.Uri.UriContext
+import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.metrics.MetricsSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterRequestAdviceRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.{APICreateRecordRequest, MaintainProfileRequest, UpdateRecordRequest}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.XClientIdHeader
 
 import javax.inject.Inject
@@ -41,11 +42,13 @@ class RouterConnector @Inject() (
 )(implicit ec: ExecutionContext)
     extends MetricsSupport
     with Logging {
-  val routerBaseRoute: String = "/trader-goods-profiles-router"
+
+  implicit val config: UriConfig = UriConfig(renderQuery = ExcludeNones)
+  val routerBaseRoute: String    = "/trader-goods-profiles-router"
 
   def get(eori: String, recordId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.getrecord.connector") { _ =>
-      val url = appConfig.routerUrl.withPath(routerRoute(eori, recordId))
+      val url = appConfig.routerUrl.withPath(routerGetRecordUrlPath(eori, recordId))
 
       httpClient
         .get(url"$url")
@@ -63,7 +66,7 @@ class RouterConnector @Inject() (
     hc: HeaderCarrier
   ): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.getrecords.connector") { _ =>
-      val url = appConfig.routerUrl.toUrl + routerRouteGetRecords(eori, lastUpdatedDate, page, size)
+      val url = routerGetRecordsOptionalUrl(eori, lastUpdatedDate, page, size)
       httpClient
         .get(url"$url")
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
@@ -85,17 +88,13 @@ class RouterConnector @Inject() (
         .execute[HttpResponse]
     }
 
-  def removeRecord(eori: String, recordId: String, request: Request[JsValue])(implicit
-    hc: HeaderCarrier
-  ): Future[HttpResponse] =
+  def removeRecord(eori: String, recordId: String, actorId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.removerecord.connector") { _ =>
-      val url = appConfig.routerUrl.withPath(routerRoute(eori, recordId))
+      val url = routerRemoveRecordUrl(eori, recordId, actorId)
 
       httpClient
-        .put(url"$url")
-        .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+        .delete(url"$url")
         .withClientId
-        .withBody(Json.obj("actorId" -> (request.body \ "actorId").asOpt[String]))
         .execute[HttpResponse]
     }
 
@@ -116,6 +115,8 @@ class RouterConnector @Inject() (
     hc: HeaderCarrier
   ): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.maintainprofile.connector") { _ =>
+      val url      = appConfig.routerUrl.withPath(routerMaintainProfileUrlPath(eori))
+      val jsonData = Json.toJson(updateProfileRequest)
       val url      = appConfig.routerUrl.withPath(routerMaintainProfileRoute(eori))
       val jsonData = Json.toJson(updateProfileRequest.body)
       httpClient
@@ -127,13 +128,11 @@ class RouterConnector @Inject() (
     }
 
   def requestAdvice(
-    eori: String,
-    recordId: String,
-    adviceRequest: Request[JsValue]
+    adviceRequest: RouterRequestAdviceRequest
   )(implicit hc: HeaderCarrier): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.requestadvice.connector") { _ =>
-      val url      = appConfig.routerUrl.withPath(routerAdviceRoute())
-      val jsonData = Json.toJson(RouterRequestAdviceRequest(eori, recordId, adviceRequest))
+      val url      = appConfig.routerUrl.withPath(routerAdviceUrlPath())
+      val jsonData = Json.toJson(adviceRequest)
       httpClient
         .post(url"$url")
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
@@ -142,19 +141,36 @@ class RouterConnector @Inject() (
         .execute[HttpResponse]
     }
 
-  private def routerRoute(eoriNumber: String, recordId: String): UrlPath =
+  private def routerGetRecordUrlPath(eoriNumber: String, recordId: String): UrlPath =
     UrlPath.parse(
-      s"$routerBaseRoute/$eoriNumber/records/$recordId"
+      s"$routerBaseRoute/traders/$eoriNumber/records/$recordId"
     )
 
-  private def routerRouteGetRecords(
+  private def routerRemoveRecordUrl(eoriNumber: String, recordId: String, actorId: String): Url =
+    appConfig.routerUrl
+      .withPath(UrlPath.parse(s"$routerBaseRoute/traders/$eoriNumber/records/$recordId"))
+      .withQueryString(QueryString.fromPairs("actorId" -> actorId))
+
+  private def routerGetRecordsOptionalUrl(
     eoriNumber: String,
-    lastUpdatedDate: Option[String] = None,
-    page: Option[Int] = None,
-    size: Option[Int] = None
+    lastUpdatedDate: Option[String],
+    page: Option[Int],
+    size: Option[Int]
   ): String = {
-    val uri = uri"$routerBaseRoute/$eoriNumber?lastUpdatedDate=$lastUpdatedDate&page=$page&size=$size"
-    s"$uri"
+
+    val params = List(
+      lastUpdatedDate.map(d => s"lastUpdatedDate=$d"),
+      page.map(p => s"page=$p"),
+      size.map(s => s"size=$s")
+    ).flatten match {
+      case Nil   => ""
+      case other => other.mkString("?", "&", "")
+    }
+
+    val urlPath = appConfig.routerUrl
+      .withPath(UrlPath.parse(s"$routerBaseRoute/traders/$eoriNumber"))
+
+    s"${urlPath.toString()}$params"
   }
 
   private def routerUpdateRecordUrlPath(eori: String, recordId: String): UrlPath =
@@ -167,12 +183,12 @@ class RouterConnector @Inject() (
       s"$routerBaseRoute/traders/$eori/records"
     )
 
-  private def routerAdviceRoute(): UrlPath =
+  private def routerAdviceUrlPath(): UrlPath =
     UrlPath.parse(
       s"$routerBaseRoute/createaccreditation"
     )
 
-  private def routerMaintainProfileRoute(eoriNumber: String): UrlPath =
+  private def routerMaintainProfileUrlPath(eoriNumber: String): UrlPath =
     UrlPath.parse(
       s"$routerBaseRoute/traders/$eoriNumber"
     )

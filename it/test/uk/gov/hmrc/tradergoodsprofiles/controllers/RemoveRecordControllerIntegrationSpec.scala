@@ -27,7 +27,7 @@ import play.api.Application
 import play.api.http.Status._
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
@@ -51,12 +51,15 @@ class RemoveRecordControllerIntegrationSpec
 
   private lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
   private val recordId                = UUID.randomUUID().toString
+  private val actorId                 = "GB987654321098"
+  private val invalidActorId          = "INVALID_ACTOR_ID"
   private val uuidService             = mock[UuidService]
   private val correlationId           = "d677693e-9981-4ee3-8574-654981ebe606"
 
-  private val url            = s"http://localhost:$port/$eoriNumber/records/$recordId"
-  private val routerUrl      = s"/trader-goods-profiles-router/$eoriNumber/records/$recordId"
-  private val routerResponse = OK
+  private val url            = s"http://localhost:$port/$eoriNumber/records/$recordId?actorId=$actorId"
+  private val invalidUrl     = s"http://localhost:$port/$eoriNumber/records/$recordId?actorId=$invalidActorId"
+  private val routerUrl      = s"/trader-goods-profiles-router/traders/$eoriNumber/records/$recordId?actorId=$actorId"
+  private val routerResponse = NO_CONTENT
 
   override lazy val app: Application = {
     wireMock.start()
@@ -76,7 +79,7 @@ class RemoveRecordControllerIntegrationSpec
     super.beforeEach()
 
     reset(authConnector)
-    stubRouterRequest(200, routerResponse.toString)
+    stubRouterRequest(NO_CONTENT, routerResponse.toString)
     when(uuidService.uuid).thenReturn(correlationId)
   }
 
@@ -91,42 +94,24 @@ class RemoveRecordControllerIntegrationSpec
   }
 
   "remove record" should {
-    "return 200" in {
+    "return 204" in {
       withAuthorizedTrader()
-      val result = await(
-        wsClient
-          .url(url)
-          .withHttpHeaders(
-            "X-Client-ID"  -> "clientId",
-            "Accept"       -> "application/vnd.hmrc.1.0+json",
-            "Content-Type" -> "application/json"
-          )
-          .put(removeRecordRequest)
-      )
-      result.status mustBe OK
 
+      val result = removeRecordAndWait()
+
+      result.status mustBe NO_CONTENT
     }
 
-    "return 200 with the headers" in {
+    "return 204 with the headers" in {
       withAuthorizedTrader()
 
-      val result = await(
-        wsClient
-          .url(url)
-          .withHttpHeaders(
-            "X-Client-ID"  -> "clientId",
-            "Accept"       -> "application/vnd.hmrc.1.0+json",
-            "Content-Type" -> "application/json"
-          )
-          .put(removeRecordRequest)
-      )
+      val result = removeRecordAndWait()
 
       result.status mustBe routerResponse
 
       withClue("should add the right headers") {
         verify(
-          putRequestedFor(urlEqualTo(routerUrl))
-            .withHeader("Content-Type", equalTo("application/json"))
+          deleteRequestedFor(urlEqualTo(routerUrl))
             .withHeader("X-Client-ID", equalTo("clientId"))
         )
       }
@@ -135,25 +120,23 @@ class RemoveRecordControllerIntegrationSpec
     "return an error if router return an error" in {
       withAuthorizedTrader()
       val routerResponse = Json.obj(
-        "correlationId" -> "correlationId",
+        "correlationId" -> correlationId,
         "code"          -> "NOT_FOUND",
-        "message"       -> "Not found",
-        "errors"        -> null
+        "message"       -> "Not found"
       )
 
       val expectedErrorResponse = Json.obj(
-        "correlationId" -> "correlationId",
+        "correlationId" -> correlationId,
         "code"          -> "NOT_FOUND",
         "message"       -> "Not found"
       )
 
       stubRouterRequest(404, routerResponse.toString())
 
-      val result = getRecordAndWait()
+      val result = removeRecordAndWait()
 
       result.status mustBe NOT_FOUND
       result.json mustBe expectedErrorResponse
-
     }
 
     "authorise an enrolment with multiple identifier" in {
@@ -163,15 +146,15 @@ class RemoveRecordControllerIntegrationSpec
 
       withAuthorizedTrader(enrolment)
 
-      val result = getRecordAndWait()
+      val result = removeRecordAndWait()
 
-      result.status mustBe OK
+      result.status mustBe NO_CONTENT
     }
 
     "return Unauthorised when invalid enrolment" in {
       withUnauthorizedTrader(InsufficientEnrolments())
 
-      val result = getRecordAndWait()
+      val result = removeRecordAndWait()
 
       result.status mustBe UNAUTHORIZED
       result.json mustBe createExpectedJson(
@@ -183,7 +166,7 @@ class RemoveRecordControllerIntegrationSpec
     "return Unauthorised when affinityGroup is Agent" in {
       authorizeWithAffinityGroup(Some(Agent))
 
-      val result = getRecordAndWait()
+      val result = removeRecordAndWait()
 
       result.status mustBe UNAUTHORIZED
       result.json mustBe createExpectedJson(
@@ -195,7 +178,7 @@ class RemoveRecordControllerIntegrationSpec
     "return Unauthorised when affinityGroup empty" in {
       authorizeWithAffinityGroup(None)
 
-      val result = getRecordAndWait()
+      val result = removeRecordAndWait()
 
       result.status mustBe UNAUTHORIZED
       result.json mustBe createExpectedJson(
@@ -207,7 +190,7 @@ class RemoveRecordControllerIntegrationSpec
     "return forbidden if identifier does not exist" in {
       withUnauthorizedEmptyIdentifier()
 
-      val result = getRecordAndWait()
+      val result = removeRecordAndWait()
 
       result.status mustBe FORBIDDEN
       result.json mustBe createExpectedJson(
@@ -219,7 +202,7 @@ class RemoveRecordControllerIntegrationSpec
     "return forbidden if identifier is not authorised" in {
       withAuthorizedTrader()
 
-      val result = getRecordAndWait(s"http://localhost:$port/wrongEoriNumber/records/$recordId")
+      val result = removeRecordAndWait(s"http://localhost:$port/wrongEoriNumber/records/$recordId?actorId=$actorId")
 
       result.status mustBe FORBIDDEN
       result.json mustBe createExpectedJson(
@@ -232,7 +215,7 @@ class RemoveRecordControllerIntegrationSpec
       withAuthorizedTrader()
 
       val headers = Seq("Content-Type" -> "application/json", "Accept" -> "application/vnd.hmrc.1.0+json")
-      val result  = getRecordAndWait(url, headers: _*)
+      val result  = removeRecordAndWait(url, headers: _*)
 
       result.status mustBe BAD_REQUEST
       result.json mustBe createExpectedError(
@@ -242,11 +225,24 @@ class RemoveRecordControllerIntegrationSpec
       )
     }
 
+    "return bad request when actorId is invalid" in {
+      withAuthorizedTrader()
+
+      val result = removeRecordAndWait(invalidUrl)
+
+      result.status mustBe BAD_REQUEST
+      result.json mustBe createExpectedError(
+        "INVALID_REQUEST_PARAMETER",
+        "Mandatory query parameter actorId was missing or is in the wrong format",
+        8
+      )
+    }
+
     "return bad request when Accept header is invalid" in {
       withAuthorizedTrader()
 
       val headers = Seq("X-Client-ID" -> "clientId", "Content-Type" -> "application/json")
-      val result  = getRecordAndWait(url, headers: _*)
+      val result  = removeRecordAndWait(url, headers: _*)
 
       result.status mustBe BAD_REQUEST
       result.json mustBe createExpectedError(
@@ -259,12 +255,12 @@ class RemoveRecordControllerIntegrationSpec
     "return internal server error if auth throw" in {
       withUnauthorizedTrader(new RuntimeException("runtime exception"))
 
-      val result = getRecordAndWait()
+      val result = removeRecordAndWait()
 
       result.status mustBe INTERNAL_SERVER_ERROR
       result.json mustBe createExpectedJson(
         "INTERNAL_SERVER_ERROR",
-        s"Internal server error for /$eoriNumber/records/$recordId with error: runtime exception"
+        s"Internal server error for /$eoriNumber/records/$recordId?actorId=$actorId with error: runtime exception"
       )
     }
 
@@ -279,7 +275,7 @@ class RemoveRecordControllerIntegrationSpec
       )
       withAuthorizedTrader()
 
-      val result = getRecordAndWait(s"http://localhost:$port/$eoriNumber/records/abcdfg-12gt")
+      val result = removeRecordAndWait(s"http://localhost:$port/$eoriNumber/records/abcdfg-12gt?actorId=$actorId")
 
       result.status mustBe BAD_REQUEST
       result.json mustBe createExpectedError(
@@ -289,46 +285,25 @@ class RemoveRecordControllerIntegrationSpec
       )
     }
 
-    "return an error if API return an error with non json message" in {
-      withAuthorizedTrader()
-      stubRouterRequest(404, "error")
-
-      val result = getRecordAndWait()
-
-      result.status mustBe INTERNAL_SERVER_ERROR
-      result.json mustBe Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "INTERNAL_SERVER_ERROR",
-        "message"       -> "Response body could not be parsed as JSON, body: error"
-      )
-    }
-
   }
-  lazy val removeRecordRequest: JsValue = Json
-    .parse("""
-             |{
-             |  "actorId": "GB123456789001"
-             |}
-             |""".stripMargin)
 
-  private def getRecordAndWait(url: String = url) =
+  private def removeRecordAndWait(url: String = url) =
     await(
       wsClient
         .url(url)
         .withHttpHeaders(
           "X-Client-ID"  -> "clientId",
           "Accept"       -> "application/vnd.hmrc.1.0+json",
-          "Content-Type" -> "application/json"
         )
-        .put(removeRecordRequest)
+        .delete()
     )
 
-  private def getRecordAndWait(url: String, headers: (String, String)*) =
+  private def removeRecordAndWait(url: String, headers: (String, String)*) =
     await(
       wsClient
         .url(url)
         .withHttpHeaders(headers: _*)
-        .put(removeRecordRequest)
+        .delete()
     )
 
   private def createExpectedError(code: String, message: String, errorNumber: Int): Any =
@@ -355,7 +330,7 @@ class RemoveRecordControllerIntegrationSpec
   private def stubRouterRequest(status: Int, errorResponse: String) =
     wireMock.stubFor(
       WireMock
-        .put(routerUrl)
+        .delete(routerUrl)
         .willReturn(
           aResponse()
             .withStatus(status)
@@ -365,7 +340,8 @@ class RemoveRecordControllerIntegrationSpec
 
   private def stubForRouterBadRequest(status: Int, responseBody: String) =
     wireMock.stubFor(
-      put(s"/trader-goods-profiles-router/$eoriNumber/records/abcdfg-12gt")
+      WireMock
+        .delete(s"/trader-goods-profiles-router/$eoriNumber/records/abcdfg-12gt")
         .willReturn(
           aResponse()
             .withStatus(status)

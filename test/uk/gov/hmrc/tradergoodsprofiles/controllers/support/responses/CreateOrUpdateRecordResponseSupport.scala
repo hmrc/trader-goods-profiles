@@ -46,7 +46,7 @@ trait CreateOrUpdateRecordResponseSupport {
       countryOfOrigin = "GB",
       category = 2,
       assessments = Some(Seq(assessment)),
-      supplementaryUnit = Some(13),
+      supplementaryUnit = Some(13.12),
       measurementUnit = Some("Kilograms"),
       comcodeEffectiveFromDate = timestamp,
       comcodeEffectiveToDate = Some(timestamp),

@@ -16,46 +16,45 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.models.requests
 
-import play.api.libs.functional.syntax._
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.Reads.verifying
 import play.api.libs.json._
 import uk.gov.hmrc.tradergoodsprofiles.models.Assessment
 
 import java.time.Instant
 
-case class APICreateRecordRequest(
+case class UpdateRecordRequest(
   actorId: String,
-  traderRef: String,
-  comcode: String,
-  goodsDescription: String,
-  countryOfOrigin: String,
-  category: Int,
-  assessments: Option[Seq[Assessment]] = None,
-  supplementaryUnit: Option[BigDecimal] = None,
-  measurementUnit: Option[String] = None,
-  comcodeEffectiveFromDate: Instant,
-  comcodeEffectiveToDate: Option[Instant] = None
+  traderRef: Option[String],
+  comcode: Option[String],
+  goodsDescription: Option[String],
+  countryOfOrigin: Option[String],
+  category: Option[Int],
+  assessments: Option[Seq[Assessment]],
+  supplementaryUnit: Option[BigDecimal],
+  measurementUnit: Option[String],
+  comcodeEffectiveFromDate: Option[Instant],
+  comcodeEffectiveToDate: Option[Instant]
 )
 
-object APICreateRecordRequest {
-
+object UpdateRecordRequest {
   def nonEmptyString: Reads[String] = verifying[String](_.nonEmpty)
 
-  implicit val reads: Reads[APICreateRecordRequest] = (
+  implicit val reads: Reads[UpdateRecordRequest] = (
     (JsPath \ "actorId").read[String](nonEmptyString) and
-      (JsPath \ "traderRef").read[String](nonEmptyString) and
-      (JsPath \ "comcode").read[String](nonEmptyString) and
-      (JsPath \ "goodsDescription").read[String](nonEmptyString) and
-      (JsPath \ "countryOfOrigin").read[String](nonEmptyString) and
-      (JsPath \ "category").read[Int](verifying[Int](category => category >= 1 && category <= 3)) and
+      (JsPath \ "traderRef").readNullable[String](nonEmptyString) and
+      (JsPath \ "comcode").readNullable[String](nonEmptyString) and
+      (JsPath \ "goodsDescription").readNullable[String](nonEmptyString) and
+      (JsPath \ "countryOfOrigin").readNullable[String](nonEmptyString) and
+      (JsPath \ "category").readNullable[Int](verifying[Int](category => category >= 1 && category <= 3)) and
       (JsPath \ "assessments").readNullable[Seq[Assessment]] and
       (JsPath \ "supplementaryUnit").readNullable[BigDecimal] and
       (JsPath \ "measurementUnit").readNullable[String] and
-      (JsPath \ "comcodeEffectiveFromDate").read[Instant] and
+      (JsPath \ "comcodeEffectiveFromDate").readNullable[Instant] and
       (JsPath \ "comcodeEffectiveToDate").readNullable[Instant]
-  )(APICreateRecordRequest.apply _)
+  )(UpdateRecordRequest.apply _)
 
-  implicit val writes: OWrites[APICreateRecordRequest] =
-    Json.writes[APICreateRecordRequest]
+  implicit val writes: OWrites[UpdateRecordRequest] = Json.writes[UpdateRecordRequest]
 
+  implicit val format: OFormat[UpdateRecordRequest] = OFormat(reads, writes)
 }
