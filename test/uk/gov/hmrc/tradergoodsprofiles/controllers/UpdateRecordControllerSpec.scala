@@ -21,8 +21,8 @@ import org.mockito.MockitoSugar.{reset, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
@@ -32,7 +32,6 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.UpdateRecord
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateOrUpdateRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
-import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants
 
 import java.time.Instant
 import java.util.UUID
@@ -60,7 +59,6 @@ class UpdateRecordControllerSpec
   private val sut           = new UpdateRecordController(
     new FakeSuccessAuthAction(),
     new ValidateHeaderAction(uuidService),
-    uuidService,
     routerService,
     stubControllerComponents()
   )
@@ -81,80 +79,6 @@ class UpdateRecordControllerSpec
 
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
-    }
-
-    "return 400 when actorId is missing" in {
-      val invalidJsonRequest = Json.obj(
-        "traderRef"                -> "SKU123456",
-        "comcode"                  -> "123456",
-        "goodsDescription"         -> "Bananas",
-        "countryOfOrigin"          -> "GB",
-        "category"                 -> 2,
-        "comcodeEffectiveFromDate" -> "2023-01-01T00:00:00Z"
-      )
-
-      val result = sut.updateRecord(eoriNumber, recordId)(request.withBody(invalidJsonRequest))
-
-      status(result) mustBe BAD_REQUEST
-
-      contentAsJson(result) mustBe createMissingFieldExpectedJson(
-        ApplicationConstants.InvalidActorMessage,
-        ApplicationConstants.InvalidActorId
-      )
-    }
-
-    "return 400 Bad request when required request field is missing from assessment array" in {
-
-      val expectedJsonResponse = Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "BAD_REQUEST",
-        "message"       -> "Bad Request",
-        "errors"        -> Json.arr(
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field assessmentId is in the wrong format",
-            "errorNumber" -> 15
-          ),
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field primaryCategory is in the wrong format",
-            "errorNumber" -> 16
-          ),
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field type is in the wrong format",
-            "errorNumber" -> 17
-          ),
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field conditionId is in the wrong format",
-            "errorNumber" -> 18
-          )
-        )
-      )
-
-      val result =
-        sut.updateRecord(eoriNumber, recordId)(request.withBody(invalidUpdateRecordRequestDataForAssessmentArray))
-
-      status(result) mustBe BAD_REQUEST
-      contentAsJson(result) mustBe expectedJsonResponse
-    }
-
-    "return 400 when JSON body doesn’t match the schema" in {
-      val invalidJsonRequest = Json.obj(
-        "traderRef"                -> "SKU123456",
-        "comcode"                  -> "123456",
-        "goodsDescription"         -> "Bananas",
-        "countryOfOrigin"          -> "GB",
-        "category"                 -> 2,
-        "comcodeEffectiveFromDate" -> "2023-01-01T00:00:00Z"
-      )
-
-      val result = sut.updateRecord(eoriNumber, recordId)(request.withBody(invalidJsonRequest))
-
-      status(result) mustBe BAD_REQUEST
-
-      contentAsJson(result) mustBe createInvalidJsonExpectedJson("actorId", 8)
     }
 
     "return 500 when the router service returns an error" in {
@@ -181,34 +105,6 @@ class UpdateRecordControllerSpec
       contentAsJson(result) mustBe expectedJson
     }
   }
-
-  private def createMissingFieldExpectedJson(errorMessage: String, errorNumber: Int): JsObject =
-    Json.obj(
-      "correlationId" -> correlationId,
-      "code"          -> "BAD_REQUEST",
-      "message"       -> "Bad Request",
-      "errors"        -> Seq(
-        Json.obj(
-          "code"        -> "INVALID_REQUEST_PARAMETER",
-          "message"     -> errorMessage,
-          "errorNumber" -> errorNumber
-        )
-      )
-    )
-
-  private def createInvalidJsonExpectedJson(field: String, errorNumber: Int): JsObject =
-    Json.obj(
-      "correlationId" -> correlationId,
-      "code"          -> "BAD_REQUEST",
-      "message"       -> "Bad Request",
-      "errors"        -> Seq(
-        Json.obj(
-          "code"        -> "INVALID_REQUEST_PARAMETER",
-          "message"     -> s"Mandatory field $field was missing from body or is in the wrong format",
-          "errorNumber" -> errorNumber
-        )
-      )
-    )
 
   lazy val invalidUpdateRecordRequestDataForAssessmentArray: JsValue = Json
     .parse("""

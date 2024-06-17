@@ -20,7 +20,8 @@ import com.codahale.metrics.MetricRegistry
 import io.lemonlabs.uri.UrlPath
 import play.api.Logging
 import play.api.http.{HeaderNames, MimeTypes}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.Request
 import sttp.model.Uri.UriContext
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
@@ -28,7 +29,6 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.metrics.MetricsSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterRequestAdviceRequest
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.{APICreateRecordRequest, MaintainProfileRequest, UpdateRecordRequest}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.XClientIdHeader
 
 import javax.inject.Inject
@@ -71,7 +71,7 @@ class RouterConnector @Inject() (
         .execute[HttpResponse]
     }
 
-  def createRecord(eori: String, createRecordRequest: APICreateRecordRequest)(implicit
+  def createRecord(eori: String, request: Request[JsValue])(implicit
     hc: HeaderCarrier
   ): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.createrecord.connector") { _ =>
@@ -80,12 +80,14 @@ class RouterConnector @Inject() (
       httpClient
         .post(url"$url")
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-        .withBody(Json.toJson(createRecordRequest))
+        .withBody(request.body)
         .withClientId
         .execute[HttpResponse]
     }
 
-  def removeRecord(eori: String, recordId: String, actorId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+  def removeRecord(eori: String, recordId: String, request: Request[JsValue])(implicit
+    hc: HeaderCarrier
+  ): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.removerecord.connector") { _ =>
       val url = appConfig.routerUrl.withPath(routerRoute(eori, recordId))
 
@@ -93,30 +95,29 @@ class RouterConnector @Inject() (
         .put(url"$url")
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
         .withClientId
-        .withBody(Json.obj("actorId" -> actorId))
+        .withBody(Json.obj("actorId" -> (request.body \ "actorId").asOpt[String]))
         .execute[HttpResponse]
     }
 
-  def updateRecord(eori: String, recordId: String, updateRecordRequest: UpdateRecordRequest)(implicit
+  def updateRecord(eori: String, recordId: String, request: Request[JsValue])(implicit
     hc: HeaderCarrier
   ): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.updaterecord.connector") { _ =>
-      val url      = appConfig.routerUrl.withPath(routerUpdateRecordUrlPath(eori, recordId))
-      val jsonData = Json.toJson(updateRecordRequest)
+      val url = appConfig.routerUrl.withPath(routerUpdateRecordUrlPath(eori, recordId))
       httpClient
         .put(url"$url")
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-        .withBody(jsonData)
+        .withBody(request.body)
         .withClientId
         .execute[HttpResponse]
     }
 
-  def routerMaintainProfile(eori: String, updateProfileRequest: MaintainProfileRequest)(implicit
+  def routerMaintainProfile(eori: String, updateProfileRequest: Request[JsValue])(implicit
     hc: HeaderCarrier
   ): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.maintainprofile.connector") { _ =>
       val url      = appConfig.routerUrl.withPath(routerMaintainProfileRoute(eori))
-      val jsonData = Json.toJson(updateProfileRequest)
+      val jsonData = Json.toJson(updateProfileRequest.body)
       httpClient
         .put(url"$url")
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
@@ -126,11 +127,13 @@ class RouterConnector @Inject() (
     }
 
   def requestAdvice(
-    adviceRequest: RouterRequestAdviceRequest
+    eori: String,
+    recordId: String,
+    adviceRequest: Request[JsValue]
   )(implicit hc: HeaderCarrier): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.requestadvice.connector") { _ =>
       val url      = appConfig.routerUrl.withPath(routerAdviceRoute())
-      val jsonData = Json.toJson(adviceRequest)
+      val jsonData = Json.toJson(RouterRequestAdviceRequest(eori, recordId, adviceRequest))
       httpClient
         .post(url"$url")
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)

@@ -16,42 +16,41 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests
 
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.UpdateRecordRequest
-import uk.gov.hmrc.tradergoodsprofiles.models.{Assessment, Condition}
-
-import java.time.Instant
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.Request
+import play.api.test.FakeRequest
 
 trait UpdateRecordRequestSupport {
 
-  def createUpdateRecordRequest =
-    UpdateRecordRequest(
-      "GB987654321098",
-      Some("SKU123456"),
-      Some("123456"),
-      Some("Bananas"),
-      Some("GB"),
-      Some(2),
-      Some(
-        Seq(
-          Assessment(
-            Some("a06846e9a5f61fa4ecf2c4e3b23631fc"),
-            Some(1),
-            Some(
-              Condition(
-                Some("certificate"),
-                Some("Y923"),
-                Some(
-                  "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law"
-                ),
-                Some("Excluded product")
-              )
-            )
-          )
-        )
-      ),
-      Some(13),
-      Some("Kilograms"),
-      Some(Instant.parse("2023-01-01T00:00:00Z")),
-      Some(Instant.parse("2028-01-01T00:00:00Z"))
-    )
+  def createUpdateRecordRequest: JsValue = Json
+    .parse("""
+             |{
+             |    "actorId": "GB987654321098",
+             |    "traderRef": "SKU123456",
+             |    "comcode": "123456",
+             |    "goodsDescription": "Bananas",
+             |    "countryOfOrigin": "GB",
+             |    "category": 2,
+             |    "assessments": [
+             |        {
+             |            "assessmentId": "a06846e9a5f61fa4ecf2c4e3b23631fc",
+             |            "primaryCategory": 1,
+             |            "condition": {
+             |                "type": "certificate",
+             |                "conditionId": "Y923",
+             |                "conditionDescription": "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
+             |                "conditionTraderText": "Excluded product"
+             |            }
+             |        }
+             |    ],
+             |    "supplementaryUnit": 13,
+             |    "measurementUnit": "Kilograms",
+             |    "comcodeEffectiveFromDate": "2024-11-18T23:20:19Z",
+             |    "comcodeEffectiveToDate": "2024-11-18T23:20:19Z"
+             |}
+             |""".stripMargin)
+
+  def updateJsonRequest: Request[JsValue] =
+    FakeRequest().withBody(createUpdateRecordRequest)
+
 }

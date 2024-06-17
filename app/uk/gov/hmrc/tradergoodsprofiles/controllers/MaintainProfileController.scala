@@ -23,10 +23,8 @@ import play.api.mvc.{Action, ControllerComponents, Request, Result}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.MaintainProfileRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
-import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
-import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.validateRequestBody
+import uk.gov.hmrc.tradergoodsprofiles.services.RouterService
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -35,7 +33,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class MaintainProfileController @Inject() (
   authAction: AuthAction,
   validateHeaderAction: ValidateHeaderAction,
-  uuidService: UuidService,
   routerService: RouterService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
@@ -45,19 +42,13 @@ class MaintainProfileController @Inject() (
   def updateProfile(eori: String): Action[JsValue] =
     (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
       (for {
-        updateProfileRequest <- validateBody(request)
-        response             <- sendUpdate(eori, updateProfileRequest)
+        response <- sendUpdate(eori, request)
       } yield Ok(Json.toJson(response))).merge
     }
 
-  private def validateBody(request: Request[JsValue]): EitherT[Future, Result, MaintainProfileRequest] =
-    EitherT
-      .fromEither[Future](validateRequestBody[MaintainProfileRequest](request.body, uuidService))
-      .leftMap(r => BadRequest(Json.toJson(r)))
-
   private def sendUpdate(
     eori: String,
-    updateProfileRequest: MaintainProfileRequest
+    updateProfileRequest: Request[JsValue]
   )(implicit hc: HeaderCarrier): EitherT[Future, Result, MaintainProfileResponse] =
     EitherT(routerService.updateProfile(eori, updateProfileRequest)).leftMap(r =>
       Status(r.status)(Json.toJson(r.errorResponse))

@@ -20,12 +20,11 @@ import com.google.inject.Inject
 import play.api.Logging
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json._
+import play.api.mvc.Request
 import uk.gov.hmrc.http.HttpReads.is2xx
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests._
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterRequestAdviceRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.response.{CreateOrUpdateRecordResponse, GetRecordResponse, GetRecordsResponse}
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 
@@ -78,11 +77,11 @@ class RouterService @Inject() (
         )
       }
 
-  def removeRecord(eoriNumber: String, recordId: String, actorId: String)(implicit
+  def removeRecord(eoriNumber: String, recordId: String, request: Request[JsValue])(implicit
     hc: HeaderCarrier
   ): Future[Either[ServiceError, Int]] =
     routerConnector
-      .removeRecord(eoriNumber, recordId, actorId)
+      .removeRecord(eoriNumber, recordId, request)
       .map { httpResponse =>
         httpResponse.status match {
           case status if is2xx(status) =>
@@ -146,11 +145,11 @@ class RouterService @Inject() (
         )
       }
 
-  def createRecord(eori: String, createRequest: APICreateRecordRequest)(implicit
+  def createRecord(eori: String, request: Request[JsValue])(implicit
     hc: HeaderCarrier
   ): Future[Either[ServiceError, CreateOrUpdateRecordResponse]] =
     routerConnector
-      .createRecord(eori, createRequest)
+      .createRecord(eori, request)
       .map { httpResponse =>
         httpResponse.status match {
           case status if is2xx(status) =>
@@ -182,11 +181,11 @@ class RouterService @Inject() (
         )
       }
 
-  def updateRecord(eori: String, recordId: String, updateRequest: UpdateRecordRequest)(implicit
+  def updateRecord(eori: String, recordId: String, request: Request[JsValue])(implicit
     hc: HeaderCarrier
   ): Future[Either[ServiceError, CreateOrUpdateRecordResponse]] =
     routerConnector
-      .updateRecord(eori, recordId, updateRequest)
+      .updateRecord(eori, recordId, request)
       .map { httpResponse =>
         httpResponse.status match {
           case status if is2xx(status) =>
@@ -221,13 +220,10 @@ class RouterService @Inject() (
   def requestAdvice(
     eori: String,
     recordId: String,
-    adviceRequest: RequestAdviceRequest
-  )(implicit hc: HeaderCarrier): Future[Either[ServiceError, Int]] = {
-
-    val routerAdviceRequest = RouterRequestAdviceRequest(eori, recordId, adviceRequest)
-
+    request: Request[JsValue]
+  )(implicit hc: HeaderCarrier): Future[Either[ServiceError, Int]] =
     routerConnector
-      .requestAdvice(routerAdviceRequest)
+      .requestAdvice(eori, recordId, request)
       .map { httpResponse =>
         httpResponse.status match {
           case status if is2xx(status) =>
@@ -251,9 +247,8 @@ class RouterService @Inject() (
           )
         )
       }
-  }
 
-  def updateProfile(eori: String, updateRequest: MaintainProfileRequest)(implicit
+  def updateProfile(eori: String, updateRequest: Request[JsValue])(implicit
     hc: HeaderCarrier
   ): Future[Either[ServiceError, MaintainProfileResponse]] =
     routerConnector

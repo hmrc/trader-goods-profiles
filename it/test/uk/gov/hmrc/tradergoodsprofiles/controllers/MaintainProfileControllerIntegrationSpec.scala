@@ -193,7 +193,8 @@ class MaintainProfileControllerIntegrationSpec
       )
     }
 
-    "return 400 Bad Request when actorId is missing from body or is in the wrong format" in {
+    "return 400 Bad Request from router when actorId is missing from body or is in the wrong format" in {
+      stubForRouterBadRequest(BAD_REQUEST, Some(routerError.toString()))
       withAuthorizedTrader()
       val invalidJson = Json.parse("""
           |{
@@ -206,127 +207,7 @@ class MaintainProfileControllerIntegrationSpec
       val result = updateProfileAndWait(invalidJson)
 
       result.status mustBe BAD_REQUEST
-      result.json mustBe Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "BAD_REQUEST",
-        "message"       -> "Bad Request",
-        "errors"        -> Json.arr(
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Mandatory field actorId was missing from body or is in the wrong format",
-            "errorNumber" -> 8
-          )
-        )
-      )
-    }
-
-    "return 400 Bad Request when ukimsNumber is missing from body or is in the wrong format" in {
-      withAuthorizedTrader()
-      val invalidJson = Json.parse("""
-          |{
-          | "actorId": "GB987654321098",
-          | "nirmsNumber": "RMS-GB-123456",
-          | "niphlNumber": "6 S12345"
-          |}
-          |""".stripMargin)
-
-      val result = updateProfileAndWait(invalidJson)
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "BAD_REQUEST",
-        "message"       -> "Bad Request",
-        "errors"        -> Json.arr(
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Mandatory field ukimsNumber was missing from body or is in the wrong format",
-            "errorNumber" -> 33
-          )
-        )
-      )
-    }
-
-    "return 400 Bad Request when optional field nirmsNumber is in the wrong format" in {
-      withAuthorizedTrader()
-      val invalidJson = Json.parse("""
-          |{
-          | "actorId": "GB987654321098",
-          | "ukimsNumber": "XIUKIM47699357400020231115081800",
-          | "nirmsNumber": 123456,
-          | "niphlNumber": "6 S12345"
-          |}
-          |""".stripMargin)
-
-      val result = updateProfileAndWait(invalidJson)
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "BAD_REQUEST",
-        "message"       -> "Bad Request",
-        "errors"        -> Json.arr(
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field nirmsNumber is in the wrong format",
-            "errorNumber" -> 34
-          )
-        )
-      )
-    }
-
-    "return 400 Bad Request when optional field niphlNumber is in the wrong format" in {
-      withAuthorizedTrader()
-      val invalidJson = Json.parse("""
-          |{
-          | "actorId": "GB987654321098",
-          | "ukimsNumber": "XIUKIM47699357400020231115081800",
-          | "nirmsNumber": "RMS-GB-123456",
-          | "niphlNumber": 123456
-          |}
-          |""".stripMargin)
-
-      val result = updateProfileAndWait(invalidJson)
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "BAD_REQUEST",
-        "message"       -> "Bad Request",
-        "errors"        -> Json.arr(
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field niphlNumber is in the wrong format",
-            "errorNumber" -> 35
-          )
-        )
-      )
-    }
-
-    "return 400 Bad Request when multiple mandatory fields are missing from body" in {
-      withAuthorizedTrader()
-      val invalidJson = Json.parse("""{"invalid": "json"}""")
-
-      val result = updateProfileAndWait(invalidJson)
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "BAD_REQUEST",
-        "message"       -> "Bad Request",
-        "errors"        -> Json.arr(
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Mandatory field actorId was missing from body or is in the wrong format",
-            "errorNumber" -> 8
-          ),
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Mandatory field ukimsNumber was missing from body or is in the wrong format",
-            "errorNumber" -> 33
-          )
-        )
-      )
+      result.json mustBe routerError
     }
 
     "return 403 Forbidden when EORI number is not authorized" in {
@@ -402,6 +283,18 @@ class MaintainProfileControllerIntegrationSpec
     }
   }
 
+  val routerError                                                      = Json.obj(
+    "correlationId" -> correlationId,
+    "code"          -> "BAD_REQUEST",
+    "message"       -> "Bad Request",
+    "errors"        -> Json.arr(
+      Json.obj(
+        "code"        -> "INVALID_REQUEST_PARAMETER",
+        "message"     -> "Mandatory field actorId was missing from body or is in the wrong format",
+        "errorNumber" -> 8
+      )
+    )
+  )
   private def updateProfileAndWait(requestBody: JsValue = requestBody) =
     await(
       wsClient
@@ -438,10 +331,19 @@ class MaintainProfileControllerIntegrationSpec
       )
     )
 
-  private def updateProfileExpectedJson(code: String, message: String): Any =
+  private def updateProfileExpectedJson(code: String, message: String): Any             =
     Json.obj(
       "correlationId" -> correlationId,
       "code"          -> code,
       "message"       -> message
+    )
+  private def stubForRouterBadRequest(status: Int, responseBody: Option[String] = None) =
+    wireMock.stubFor(
+      put(urlEqualTo(routerUrl))
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withBody(responseBody.orNull)
+        )
     )
 }

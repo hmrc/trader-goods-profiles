@@ -28,13 +28,14 @@ import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status.{CREATED, OK}
 import play.api.http.{HeaderNames, MimeTypes}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.Request
+import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{RouterCreateRecordRequestSupport, UpdateRecordRequestSupport}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.MaintainProfileRequest
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{RemoveRecordRequestSupport, RouterCreateRecordRequestSupport, UpdateRecordRequestSupport}
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterRequestAdviceRequest
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.XClientIdHeader
 
@@ -46,7 +47,8 @@ class RouterConnectorSpec
     with EitherValues
     with BeforeAndAfterEach
     with RouterCreateRecordRequestSupport
-    with UpdateRecordRequestSupport {
+    with UpdateRecordRequestSupport
+    with RemoveRecordRequestSupport {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
   implicit val hc: HeaderCarrier    = HeaderCarrier(otherHeaders = Seq(XClientIdHeader -> "clientId"))
@@ -166,22 +168,22 @@ class RouterConnectorSpec
 
     "return 201 when the record is successfully created" in {
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "message")))
-
-      val result = await(sut.createRecord("eori", createRouterCreateRecordRequest))
+      val request: Request[JsValue] = createJsonRequest
+      val result                    = await(sut.createRecord("eori", request))
 
       result.status mustBe CREATED
     }
 
     "send a request with the right url and body" in {
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "message")))
-
-      await(sut.createRecord("eoriNumber", createRouterCreateRecordRequest))
+      val request: Request[JsValue] = createJsonRequest
+      await(sut.createRecord("eoriNumber", request))
 
       val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/traders/eoriNumber/records")
       verify(httpClient).post(eqTo(url"$expectedUrl"))(any)
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
-      verify(requestBuilder).withBody(eqTo(Json.toJson(createRouterCreateRecordRequest)))(any, any, any)
+      verify(requestBuilder).withBody(eqTo(createRouterCreateRecordRequest))(any, any, any)
       verify(requestBuilder).execute(any, any)
 
       withClue("process the response within a timer") {
@@ -194,20 +196,20 @@ class RouterConnectorSpec
   "remove" should {
 
     "return 200" in {
-      val result = await(sut.removeRecord("eoriNumber", "recordId", "actorId"))
+      val result = await(sut.removeRecord("eoriNumber", "recordId", removeRequest))
 
       result.status mustBe OK
     }
 
     "send a PUT request with the right url and body" in {
 
-      await(sut.removeRecord("eoriNumber", "recordId", "actorId"))
+      await(sut.removeRecord("eoriNumber", "recordId", removeRequest))
 
       val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/eoriNumber/records/recordId")
       verify(httpClient).put(eqTo(url"$expectedUrl"))(any)
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
-      verify(requestBuilder).withBody(Json.obj("actorId" -> "actorId"))
+      verify(requestBuilder).withBody(Json.obj("actorId" -> (removeRequest.body \ "actorId").asOpt[String]))
       verify(requestBuilder).execute(any, any)
 
       withClue("process the response within a timer") {
@@ -224,16 +226,16 @@ class RouterConnectorSpec
 
     "return 200" in {
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(200, "message")))
-
-      val result = await(sut.updateRecord(eoriNumber, recordId, createUpdateRecordRequest))
+      val request: Request[JsValue] = updateJsonRequest
+      val result                    = await(sut.updateRecord(eoriNumber, recordId, request))
 
       result.status mustBe OK
     }
 
     "send a PUT request with the right url and body" in {
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(200, "message")))
-
-      await(sut.updateRecord(eoriNumber, recordId, createUpdateRecordRequest))
+      val request: Request[JsValue] = updateJsonRequest
+      await(sut.updateRecord(eoriNumber, recordId, request))
 
       val expectedUrl =
         UrlPath.parse(s"http://localhost:23123/trader-goods-profiles-router/traders/$eoriNumber/records/$recordId")
@@ -253,21 +255,22 @@ class RouterConnectorSpec
   "request advice" should {
 
     "return 201 when advice is successfully requested" in {
-      val requestAdviceRequest = createRouterRequestAdviceRequest()
 
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "")))
 
-      val result = await(sut.requestAdvice(requestAdviceRequest))
+      val result = await(sut.requestAdvice("eoriNumber", "recordId", createRouterRequestAdviceRequest))
 
       result.status mustBe CREATED
     }
 
     "send a request with the right url and body" in {
-      val requestAdviceRequest = createRouterRequestAdviceRequest()
+      val requestAdviceRequest = createRouterRequestAdviceRequestData()
 
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "message")))
 
-      await(sut.requestAdvice(requestAdviceRequest))
+      await(
+        sut.requestAdvice("GB987654321098", "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f", createRouterRequestAdviceRequest)
+      )
 
       val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/createaccreditation")
       verify(httpClient).post(eqTo(url"$expectedUrl"))(any)
@@ -283,28 +286,50 @@ class RouterConnectorSpec
     }
   }
 
-  def createRouterRequestAdviceRequest(): RouterRequestAdviceRequest = RouterRequestAdviceRequest(
+  def createRouterRequestAdviceRequestData(): RouterRequestAdviceRequest = RouterRequestAdviceRequest(
     eori = "GB987654321098",
-    requestorName = "Mr.Phil Edwards",
+    requestorName = Some("Mr.Phil Edwards"),
     recordId = "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f",
-    requestorEmail = "Phil.Edwards@gmail.com"
+    requestorEmail = Some("Phil.Edwards@gmail.com")
   )
+
+  def requestAdviceData: JsValue = Json
+    .parse("""
+             |{
+             |    "eori": "GB987654321098",
+             |    "requestorName": "Mr.Phil Edwards",
+             |    "recordId": "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f",
+             |    "requestorEmail": "Phil.Edwards@gmail.com"
+             |
+             |}
+             |""".stripMargin)
+
+  def requestAdviceJsonRequest: Request[JsValue]         =
+    FakeRequest().withBody(requestAdviceData)
+  val createRouterRequestAdviceRequest: Request[JsValue] = requestAdviceJsonRequest
 
   "maintain profile" should {
 
     "return 200 when the profile is successfully updated" in {
       val eori = "GB123456789012"
 
-      val updateProfileRequest = MaintainProfileRequest(
-        actorId = "GB987654321098",
-        ukimsNumber = "XIUKIM47699357400020231115081800",
-        nirmsNumber = Some("RMS-GB-123456"),
-        niphlNumber = Some("6 S12345")
-      )
+      lazy val updateProfileRequest: JsValue = Json
+        .parse("""
+                 |{
+                 |    "actorId": "GB987654321098",
+                 |    "ukimsNumber": "XIUKIM47699357400020231115081800",
+                 |    "nirmsNumber": "RMS-GB-123456",
+                 |    "niphlNumber": "6 S12345"
+                 |}
+                 |""".stripMargin)
+
+      def updateJsonRequest: Request[JsValue] =
+        FakeRequest().withBody(updateProfileRequest)
+      val updateRequest: Request[JsValue]     = updateJsonRequest
 
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(200, "message")))
 
-      val result = await(sut.routerMaintainProfile(eori, updateProfileRequest))
+      val result = await(sut.routerMaintainProfile(eori, updateRequest))
 
       result.status mustBe OK
     }
@@ -312,16 +337,23 @@ class RouterConnectorSpec
     "send a PUT request with the right url and body" in {
       val eori = "GB123456789012"
 
-      val updateProfileRequest = MaintainProfileRequest(
-        actorId = "GB987654321098",
-        ukimsNumber = "XIUKIM47699357400020231115081800",
-        nirmsNumber = Some("RMS-GB-123456"),
-        niphlNumber = Some("6 S12345")
-      )
+      lazy val updateProfileRequest: JsValue = Json
+        .parse("""
+                 |{
+                 |    "actorId": "GB987654321098",
+                 |    "ukimsNumber": "XIUKIM47699357400020231115081800",
+                 |    "nirmsNumber": "RMS-GB-123456",
+                 |    "niphlNumber": "6 S12345"
+                 |}
+                 |""".stripMargin)
+
+      def updateJsonRequest: Request[JsValue] =
+        FakeRequest().withBody(updateProfileRequest)
+      val updateRequest: Request[JsValue]     = updateJsonRequest
 
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(200, "message")))
 
-      await(sut.routerMaintainProfile(eori, updateProfileRequest))
+      await(sut.routerMaintainProfile(eori, updateRequest))
 
       val expectedUrl =
         UrlPath.parse(s"http://localhost:23123/trader-goods-profiles-router/traders/$eori")

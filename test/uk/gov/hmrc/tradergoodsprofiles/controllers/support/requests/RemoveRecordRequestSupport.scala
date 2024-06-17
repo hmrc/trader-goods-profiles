@@ -14,12 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.tradergoodsprofiles.models.requests
+package uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.Request
+import play.api.test.FakeRequest
 
-case class RemoveRecordRequest(actorId: String)
+trait RemoveRecordRequestSupport {
 
-object RemoveRecordRequest {
-  implicit val format: OFormat[RemoveRecordRequest] = Json.format[RemoveRecordRequest]
+  lazy val removeRecordData: JsValue = Json
+    .parse("""
+             |{
+             |    "actorId": "GB098765432112"
+             |}
+             |""".stripMargin)
+
+  def removeJsonRequest: Request[JsValue] =
+    FakeRequest().withBody(removeRecordData)
+  val removeRequest: Request[JsValue]     = removeJsonRequest
 }

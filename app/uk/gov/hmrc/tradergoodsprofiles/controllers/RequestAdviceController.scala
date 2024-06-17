@@ -25,9 +25,7 @@ import play.api.mvc.{Action, ControllerComponents, Request, Result}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.RequestAdviceRequest
-import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
-import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.validateRequestBody
+import uk.gov.hmrc.tradergoodsprofiles.services.RouterService
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -36,7 +34,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class RequestAdviceController @Inject() (
   authAction: AuthAction,
   validateHeaderAction: ValidateHeaderAction,
-  uuidService: UuidService,
   routerService: RouterService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
@@ -46,20 +43,14 @@ class RequestAdviceController @Inject() (
   def requestAdvice(eori: String, recordId: String): Action[JsValue] =
     (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
       (for {
-        adviceRequest <- validateBody(request)
-        response      <- sendAdvice(eori, recordId, adviceRequest)
+        response <- sendAdvice(eori, recordId, request)
       } yield Created(Json.toJson(response))).merge
     }
-
-  private def validateBody(request: Request[JsValue]): EitherT[Future, Result, RequestAdviceRequest] =
-    EitherT
-      .fromEither[Future](validateRequestBody[RequestAdviceRequest](request.body, uuidService))
-      .leftMap(r => BadRequest(Json.toJson(r)))
 
   private def sendAdvice(
     eori: String,
     recordId: String,
-    adviceRequest: RequestAdviceRequest
+    adviceRequest: Request[JsValue]
   )(implicit hc: HeaderCarrier): EitherT[Future, Result, Int] =
     EitherT(routerService.requestAdvice(eori, recordId, adviceRequest)).leftMap(r =>
       Status(r.status)(Json.toJson(r.errorResponse))

@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.models.requests.router
 
-import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.RequestAdviceRequest
+import play.api.libs.json.{JsValue, Json, OFormat}
+import play.api.mvc.Request
 
 case class RouterRequestAdviceRequest(
   eori: String,
-  requestorName: String,
+  requestorName: Option[String],
   recordId: String,
-  requestorEmail: String
+  requestorEmail: Option[String]
 )
 
 object RouterRequestAdviceRequest {
@@ -32,12 +32,13 @@ object RouterRequestAdviceRequest {
   def apply(
     eori: String,
     recordId: String,
-    adviceRequest: RequestAdviceRequest
+    adviceRequest: Request[JsValue]
   ): RouterRequestAdviceRequest =
     RouterRequestAdviceRequest(
       eori = eori,
-      requestorName = adviceRequest.requestorName,
+      requestorName = (adviceRequest.body \ "requestorName").asOpt[String],
       recordId = recordId,
-      requestorEmail = adviceRequest.requestorEmail
+      requestorEmail = (adviceRequest.body \ "requestorEmail").asOpt[String]
     )
+
 }

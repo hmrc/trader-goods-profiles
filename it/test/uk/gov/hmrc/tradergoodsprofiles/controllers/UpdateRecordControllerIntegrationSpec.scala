@@ -118,61 +118,14 @@ class UpdateRecordControllerIntegrationSpec
       }
     }
 
-    "return BadRequest for invalid request body" in {
-      withAuthorizedTrader()
-      val invalidRequestBody = Json.obj()
-
-      val result = updateRecordAndWait(invalidRequestBody)
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "BAD_REQUEST",
-        "message"       -> "Bad Request",
-        "errors"        -> Seq(
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Mandatory field actorId was missing from body or is in the wrong format",
-            "errorNumber" -> 8
-          )
-        )
-      )
-
-    }
-
-    "return 400 Bad request when required request field is missing from assessment array" in {
+    "return 400 Bad request from router when required request field is missing from assessment array" in {
+      stubForRouterBadRequest(400, routerError.toString)
       withAuthorizedTrader()
 
       val result = updateRecordAndWait(invalidUpdateRecordRequestDataForAssessmentArray)
 
       result.status mustBe BAD_REQUEST
-      result.json mustBe Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "BAD_REQUEST",
-        "message"       -> "Bad Request",
-        "errors"        -> Json.arr(
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field assessmentId is in the wrong format",
-            "errorNumber" -> 15
-          ),
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field primaryCategory is in the wrong format",
-            "errorNumber" -> 16
-          ),
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field type is in the wrong format",
-            "errorNumber" -> 17
-          ),
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field conditionId is in the wrong format",
-            "errorNumber" -> 18
-          )
-        )
-      )
+      result.json mustBe routerError
     }
 
     "return Forbidden when X-Client-ID header is missing" in {
@@ -261,7 +214,33 @@ class UpdateRecordControllerIntegrationSpec
     }
 
   }
-
+  val routerError                                        = Json.obj(
+    "correlationId" -> correlationId,
+    "code"          -> "BAD_REQUEST",
+    "message"       -> "Bad Request",
+    "errors"        -> Json.arr(
+      Json.obj(
+        "code"        -> "INVALID_REQUEST_PARAMETER",
+        "message"     -> "Optional field assessmentId is in the wrong format",
+        "errorNumber" -> 15
+      ),
+      Json.obj(
+        "code"        -> "INVALID_REQUEST_PARAMETER",
+        "message"     -> "Optional field primaryCategory is in the wrong format",
+        "errorNumber" -> 16
+      ),
+      Json.obj(
+        "code"        -> "INVALID_REQUEST_PARAMETER",
+        "message"     -> "Optional field type is in the wrong format",
+        "errorNumber" -> 17
+      ),
+      Json.obj(
+        "code"        -> "INVALID_REQUEST_PARAMETER",
+        "message"     -> "Optional field conditionId is in the wrong format",
+        "errorNumber" -> 18
+      )
+    )
+  )
   private def updateRecordAndWaitWithoutClientIdHeader() =
     await(
       wsClient
@@ -316,7 +295,16 @@ class UpdateRecordControllerIntegrationSpec
       "message"       -> message
     )
 
-  lazy val invalidUpdateRecordRequestDataForAssessmentArray: JsValue = Json
+  private def stubForRouterBadRequest(status: Int, responseBody: String) =
+    wireMock.stubFor(
+      put(routerUrl)
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withBody(responseBody)
+        )
+    )
+  lazy val invalidUpdateRecordRequestDataForAssessmentArray: JsValue     = Json
     .parse("""
              |{
              |    "recordId": "b2fa315b-2d31-4629-90fc-a7b1a5119873",

@@ -184,31 +184,15 @@ class CreateRecordControllerIntegrationSpec
         6000
       )
     }
-
-    "return BadRequest for invalid request body" in {
+    "return BadRequest from router for invalid request body" in {
+      stubForRouterBadRequest(BAD_REQUEST, Some(routerError.toString()))
       withAuthorizedTrader()
       val invalidRequestBody = Json.obj()
 
       val result = createRecordAndWait(invalidRequestBody)
 
       result.status mustBe BAD_REQUEST
-      result.json mustBe Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "BAD_REQUEST",
-        "message"       -> "Bad Request",
-        "errors"        -> Seq(
-          createBadRequestJson("Mandatory field actorId was missing from body or is in the wrong format", 8),
-          createBadRequestJson("Mandatory field traderRef was missing from body or is in the wrong format", 9),
-          createBadRequestJson("Mandatory field comcode was missing from body or is in the wrong format", 11),
-          createBadRequestJson("Mandatory field goodsDescription was missing from body or is in the wrong format", 12),
-          createBadRequestJson("Mandatory field countryOfOrigin was missing from body or is in the wrong format", 13),
-          createBadRequestJson("Mandatory field category was missing from body or is in the wrong format", 14),
-          createBadRequestJson(
-            "Mandatory field comcodeEffectiveFromDate was missing from body or is in the wrong format",
-            23
-          )
-        )
-      )
+      result.json mustBe routerError
     }
 
     "return Forbidden when X-Client-ID header is missing" in {
@@ -296,42 +280,25 @@ class CreateRecordControllerIntegrationSpec
       )
     }
 
-    "return 400 Bad request when required request field is missing from assessment array" in {
-      withAuthorizedTrader()
-
-      val result = createRecordAndWait(invalidCreateRecordRequestDataForAssessmentArray)
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "BAD_REQUEST",
-        "message"       -> "Bad Request",
-        "errors"        -> Json.arr(
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field assessmentId is in the wrong format",
-            "errorNumber" -> 15
-          ),
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field primaryCategory is in the wrong format",
-            "errorNumber" -> 16
-          ),
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field type is in the wrong format",
-            "errorNumber" -> 17
-          ),
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field conditionId is in the wrong format",
-            "errorNumber" -> 18
-          )
-        )
-      )
-    }
-
   }
+
+  val routerError = Json.obj(
+    "correlationId" -> correlationId,
+    "code"          -> "BAD_REQUEST",
+    "message"       -> "Bad Request",
+    "errors"        -> Seq(
+      createBadRequestJson("Mandatory field actorId was missing from body or is in the wrong format", 8),
+      createBadRequestJson("Mandatory field traderRef was missing from body or is in the wrong format", 9),
+      createBadRequestJson("Mandatory field comcode was missing from body or is in the wrong format", 11),
+      createBadRequestJson("Mandatory field goodsDescription was missing from body or is in the wrong format", 12),
+      createBadRequestJson("Mandatory field countryOfOrigin was missing from body or is in the wrong format", 13),
+      createBadRequestJson("Mandatory field category was missing from body or is in the wrong format", 14),
+      createBadRequestJson(
+        "Mandatory field comcodeEffectiveFromDate was missing from body or is in the wrong format",
+        23
+      )
+    )
+  )
 
   private def createRecordAndWaitWithoutClientIdHeader() =
     await(
@@ -383,6 +350,16 @@ class CreateRecordControllerIntegrationSpec
           aResponse()
             .withStatus(status)
             .withBody(responseBody)
+        )
+    )
+
+  private def stubForRouterBadRequest(status: Int, responseBody: Option[String] = None) =
+    wireMock.stubFor(
+      post(urlEqualTo(routerUrl))
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withBody(responseBody.orNull)
         )
     )
 

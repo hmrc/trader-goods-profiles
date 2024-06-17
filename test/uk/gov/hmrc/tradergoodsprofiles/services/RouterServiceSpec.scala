@@ -25,14 +25,15 @@ import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.Request
+import play.api.test.FakeRequest
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{APICreateRecordRequestSupport, RouterCreateRecordRequestSupport, UpdateRecordRequestSupport}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{APICreateRecordRequestSupport, RemoveRecordRequestSupport, RouterCreateRecordRequestSupport, UpdateRecordRequestSupport}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.{CreateOrUpdateRecordResponseSupport, GetRecordResponseSupport}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.{MaintainProfileRequest, RequestAdviceRequest}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterRequestAdviceRequest
+import uk.gov.hmrc.tradergoodsprofiles.models.requests.{RequestAdviceRequest}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 
@@ -50,7 +51,8 @@ class RouterServiceSpec
     with ScalaFutures
     with EitherValues
     with IntegrationPatience
-    with BeforeAndAfterEach {
+    with BeforeAndAfterEach
+    with RemoveRecordRequestSupport {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
   implicit val hc: HeaderCarrier    = HeaderCarrier()
@@ -177,7 +179,7 @@ class RouterServiceSpec
 
   "createRecord" should {
     "create a record" in {
-      val createRequest = createAPICreateRecordRequest()
+      val createRequest: Request[JsValue] = createJsonRequest
 
       when(connector.createRecord(any, any)(any))
         .thenReturn(Future.successful(HttpResponse(201, Json.toJson(createResponse), Map.empty)))
@@ -193,7 +195,7 @@ class RouterServiceSpec
     }
 
     "return CreateRecordResponse" in {
-      val createRequest = createAPICreateRecordRequest()
+      val createRequest: Request[JsValue] = createJsonRequest
 
       when(connector.createRecord(any, any)(any))
         .thenReturn(Future.successful(HttpResponse(201, Json.toJson(createResponse), Map.empty)))
@@ -205,7 +207,7 @@ class RouterServiceSpec
 
     "return an error" when {
       "cannot parse the response" in {
-        val createRequest = createAPICreateRecordRequest()
+        val createRequest: Request[JsValue] = createJsonRequest
 
         when(connector.createRecord(any, any)(any))
           .thenReturn(Future.successful(HttpResponse(201, Json.obj(), Map.empty)))
@@ -226,7 +228,7 @@ class RouterServiceSpec
       }
 
       "cannot parse the response as Json" in {
-        val createRequest = createAPICreateRecordRequest()
+        val createRequest: Request[JsValue] = createJsonRequest
 
         when(connector.createRecord(any, any)(any))
           .thenReturn(Future.successful(HttpResponse(201, "error")))
@@ -247,7 +249,7 @@ class RouterServiceSpec
       }
 
       "routerConnector return an exception" in {
-        val createRequest = createAPICreateRecordRequest()
+        val createRequest: Request[JsValue] = createJsonRequest
 
         when(connector.createRecord(any, any)(any))
           .thenReturn(Future.failed(new RuntimeException("error")))
@@ -282,7 +284,7 @@ class RouterServiceSpec
           code: String
         ) =>
           s"$description" in {
-            val createRequest = createAPICreateRecordRequest()
+            val createRequest: Request[JsValue] = createJsonRequest
 
             when(connector.createRecord(any, any)(any))
               .thenReturn(Future.successful(createHttpResponse(status, code)))
@@ -300,10 +302,10 @@ class RouterServiceSpec
   "removeRecord" should {
     "return 200 OK " in {
       val httpResponse = HttpResponse(Status.OK, "")
-      when(connector.removeRecord("GB123456789012", "recordId", "GB123456789012"))
+      when(connector.removeRecord("GB123456789012", "recordId", removeRequest))
         .thenReturn(Future.successful(httpResponse))
 
-      val result = sut.removeRecord("GB123456789012", "recordId", "GB123456789012")
+      val result = sut.removeRecord("GB123456789012", "recordId", removeRequest)
 
       whenReady(result) {
         _.value mustBe OK
@@ -316,7 +318,7 @@ class RouterServiceSpec
         when(connector.removeRecord(any, any, any)(any))
           .thenReturn(Future.failed(new RuntimeException("error")))
 
-        val result = sut.removeRecord("eori", "recordId", "actorId")
+        val result = sut.removeRecord("eori", "recordId", removeRequest)
 
         whenReady(result) {
           _.left.value mustBe ServiceError(
@@ -350,7 +352,7 @@ class RouterServiceSpec
             when(connector.removeRecord(any, any, any)(any))
               .thenReturn(Future.successful(createHttpResponse(status, code)))
 
-            val result = sut.removeRecord("eori", "recordId", "actorId")
+            val result = sut.removeRecord("eori", "recordId", removeRequest)
 
             whenReady(result) {
               _.left.value.status mustBe expectedResult
@@ -362,7 +364,7 @@ class RouterServiceSpec
 
   "updateRecord" should {
     "update a record" in {
-      val updateRequest = createUpdateRecordRequest
+      val updateRequest: Request[JsValue] = updateJsonRequest
 
       when(connector.updateRecord(any, any, any)(any))
         .thenReturn(Future.successful(HttpResponse(200, Json.toJson(createResponse), Map.empty)))
@@ -379,7 +381,7 @@ class RouterServiceSpec
     }
 
     "return CreateOrUpdateRecordResponse" in {
-      val updateRequest = createUpdateRecordRequest
+      val updateRequest: Request[JsValue] = updateJsonRequest
 
       when(connector.updateRecord(any, any, any)(any))
         .thenReturn(Future.successful(HttpResponse(200, Json.toJson(createResponse), Map.empty)))
@@ -391,7 +393,7 @@ class RouterServiceSpec
 
     "return an error" when {
       "cannot parse the response" in {
-        val updateRequest = createUpdateRecordRequest
+        val updateRequest: Request[JsValue] = updateJsonRequest
 
         when(connector.updateRecord(any, any, any)(any))
           .thenReturn(Future.successful(HttpResponse(200, Json.obj(), Map.empty)))
@@ -412,7 +414,7 @@ class RouterServiceSpec
       }
 
       "cannot parse the response as Json" in {
-        val updateRequest = createUpdateRecordRequest
+        val updateRequest: Request[JsValue] = updateJsonRequest
 
         when(connector.updateRecord(any, any, any)(any))
           .thenReturn(Future.successful(HttpResponse(200, "error")))
@@ -433,7 +435,7 @@ class RouterServiceSpec
       }
 
       "routerConnector return an exception" in {
-        val updateRequest = createUpdateRecordRequest
+        val updateRequest: Request[JsValue] = updateJsonRequest
 
         when(connector.updateRecord(any, any, any)(any))
           .thenReturn(Future.failed(new RuntimeException("error")))
@@ -468,7 +470,7 @@ class RouterServiceSpec
           code: String
         ) =>
           s"$description" in {
-            val updateRequest = createUpdateRecordRequest
+            val updateRequest: Request[JsValue] = updateJsonRequest
 
             when(connector.updateRecord(any, any, any)(any))
               .thenReturn(Future.successful(createHttpResponse(status, code)))
@@ -485,12 +487,20 @@ class RouterServiceSpec
 
   "updateProfile" should {
     "update a profile" in {
-      val updateRequest  = MaintainProfileRequest(
-        actorId = "GB987654321098",
-        ukimsNumber = "XIUKIM47699357400020231115081800",
-        nirmsNumber = Some("RMS-GB-123456"),
-        niphlNumber = Some("6 S12345")
-      )
+      lazy val updateProfileRequest: JsValue = Json
+        .parse("""
+                 |{
+                 |    "actorId": "GB987654321098",
+                 |    "ukimsNumber": "XIUKIM47699357400020231115081800",
+                 |    "nirmsNumber": "RMS-GB-123456",
+                 |    "niphlNumber": "6 S12345"
+                 |}
+                 |""".stripMargin)
+
+      def updateJsonRequest: Request[JsValue] =
+        FakeRequest().withBody(updateProfileRequest)
+      val updateRequest: Request[JsValue]     = updateJsonRequest
+
       val updateResponse = MaintainProfileResponse(
         eori = "GB123456789012",
         actorId = "GB987654321098",
@@ -499,7 +509,7 @@ class RouterServiceSpec
         niphlNumber = Some("6 S12345")
       )
 
-      when(connector.routerMaintainProfile(any[String], any[MaintainProfileRequest])(any[HeaderCarrier]))
+      when(connector.routerMaintainProfile(any[String], any[Request[JsValue]])(any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(200, Json.toJson(updateResponse), Map.empty)))
 
       val result = sut.updateProfile("GB123456789012", updateRequest)
@@ -514,14 +524,21 @@ class RouterServiceSpec
     }
 
     "return an error when the response cannot be parsed as JSON" in {
-      val updateRequest = MaintainProfileRequest(
-        actorId = "GB987654321098",
-        ukimsNumber = "XIUKIM47699357400020231115081800",
-        nirmsNumber = Some("RMS-GB-123456"),
-        niphlNumber = Some("6 S12345")
-      )
+      lazy val updateProfileRequest: JsValue = Json
+        .parse("""
+                 |{
+                 |    "actorId": "GB987654321098",
+                 |    "ukimsNumber": "XIUKIM47699357400020231115081800",
+                 |    "nirmsNumber": "RMS-GB-123456",
+                 |    "niphlNumber": "6 S12345"
+                 |}
+                 |""".stripMargin)
 
-      when(connector.routerMaintainProfile(any[String], any[MaintainProfileRequest])(any[HeaderCarrier]))
+      def updateJsonRequest: Request[JsValue] =
+        FakeRequest().withBody(updateProfileRequest)
+      val updateRequest: Request[JsValue]     = updateJsonRequest
+
+      when(connector.routerMaintainProfile(any[String], any[Request[JsValue]])(any[HeaderCarrier]))
         .thenReturn(Future.successful(HttpResponse(200, "error")))
 
       val result = sut.updateProfile("GB123456789012", updateRequest)
@@ -539,14 +556,21 @@ class RouterServiceSpec
     }
 
     "return an error when the routerConnector returns an exception" in {
-      val updateRequest = MaintainProfileRequest(
-        actorId = "GB987654321098",
-        ukimsNumber = "XIUKIM47699357400020231115081800",
-        nirmsNumber = Some("RMS-GB-123456"),
-        niphlNumber = Some("6 S12345")
-      )
+      lazy val updateProfileRequest: JsValue = Json
+        .parse("""
+                 |{
+                 |    "actorId": "GB987654321098",
+                 |    "ukimsNumber": "XIUKIM47699357400020231115081800",
+                 |    "nirmsNumber": "RMS-GB-123456",
+                 |    "niphlNumber": "6 S12345"
+                 |}
+                 |""".stripMargin)
 
-      when(connector.routerMaintainProfile(any[String], any[MaintainProfileRequest])(any[HeaderCarrier]))
+      def updateJsonRequest: Request[JsValue] =
+        FakeRequest().withBody(updateProfileRequest)
+      val updateRequest: Request[JsValue]     = updateJsonRequest
+
+      when(connector.routerMaintainProfile(any[String], any[Request[JsValue]])(any[HeaderCarrier]))
         .thenReturn(Future.failed(new RuntimeException("error")))
 
       val result = sut.updateProfile("GB123456789012", updateRequest)
@@ -572,14 +596,21 @@ class RouterServiceSpec
 
     forAll(table) { (description: String, status: Int, expectedResult: Int, code: String) =>
       s"$description" in {
-        val updateRequest = MaintainProfileRequest(
-          actorId = "GB987654321098",
-          ukimsNumber = "XIUKIM47699357400020231115081800",
-          nirmsNumber = Some("RMS-GB-123456"),
-          niphlNumber = Some("6 S12345")
-        )
+        lazy val updateProfileRequest: JsValue = Json
+          .parse("""
+                   |{
+                   |    "actorId": "GB987654321098",
+                   |    "ukimsNumber": "XIUKIM47699357400020231115081800",
+                   |    "nirmsNumber": "RMS-GB-123456",
+                   |    "niphlNumber": "6 S12345"
+                   |}
+                   |""".stripMargin)
 
-        when(connector.routerMaintainProfile(any[String], any[MaintainProfileRequest])(any[HeaderCarrier]))
+        def updateJsonRequest: Request[JsValue] =
+          FakeRequest().withBody(updateProfileRequest)
+        val updateRequest: Request[JsValue]     = updateJsonRequest
+
+        when(connector.routerMaintainProfile(any[String], any[Request[JsValue]])(any[HeaderCarrier]))
           .thenReturn(Future.successful(createHttpResponse(status, code)))
 
         val result = sut.updateProfile("GB123456789012", updateRequest)
@@ -593,24 +624,18 @@ class RouterServiceSpec
 
   "requestAdvice" should {
     "request advice" in {
-      val requestAdviceRequest = createRequestAdviceRequest()
-
       val httpResponse = HttpResponse(Status.CREATED, "")
-      when(connector.requestAdvice(any)(any))
+      when(connector.requestAdvice(any, any, any)(any))
         .thenReturn(Future.successful(httpResponse))
 
       val result =
-        sut.requestAdvice("GB123456789012", "d677693e-9981-4ee3-8574-654981ebe606", requestAdviceRequest)
+        sut.requestAdvice("GB123456789012", "d677693e-9981-4ee3-8574-654981ebe606", createRequestAdviceRequest)
 
       whenReady(result) { _ =>
         verify(connector).requestAdvice(
-          eqTo(
-            RouterRequestAdviceRequest(
-              "GB123456789012",
-              "d677693e-9981-4ee3-8574-654981ebe606",
-              requestAdviceRequest
-            )
-          )
+          eqTo("GB123456789012"),
+          eqTo("d677693e-9981-4ee3-8574-654981ebe606"),
+          eqTo(createRequestAdviceRequest)
         )(any)
       }
     }
@@ -618,16 +643,14 @@ class RouterServiceSpec
     "return an error" when {
 
       "routerConnector return an exception" in {
-        val requestAdviceRequest = createRequestAdviceRequest()
-
-        when(connector.requestAdvice(any)(any))
+        when(connector.requestAdvice(any, any, any)(any))
           .thenReturn(Future.failed(new RuntimeException("error")))
 
         val result =
           sut.requestAdvice(
             "GB123456789012",
             "d677693e-9981-4ee3-8574-654981ebe606",
-            requestAdviceRequest
+            createRequestAdviceRequest
           )
 
         whenReady(result) {
@@ -658,16 +681,14 @@ class RouterServiceSpec
           code: String
         ) =>
           s"$description" in {
-            val requestAdviceRequest = createRequestAdviceRequest()
-
-            when(connector.requestAdvice(any)(any))
+            when(connector.requestAdvice(any, any, any)(any))
               .thenReturn(Future.successful(createHttpResponse(status, code)))
 
             val result =
               sut.requestAdvice(
                 "GB123456789012",
                 "d677693e-9981-4ee3-8574-654981ebe606",
-                requestAdviceRequest
+                createRequestAdviceRequest
               )
 
             whenReady(result) {
@@ -678,11 +699,25 @@ class RouterServiceSpec
     }
   }
 
-  def createRequestAdviceRequest(): RequestAdviceRequest = RequestAdviceRequest(
+  def createRequestAdviceRequest2222(): RequestAdviceRequest = RequestAdviceRequest(
     actorId = "XI123456789001",
     requestorName = "Mr.Phil Edwards",
     requestorEmail = "Phil.Edwards@gmail.com"
   )
+
+  lazy val requestAdviceData: JsValue = Json
+    .parse("""
+             |{
+             |    "actorId": "XI123456789001",
+             |    "requestorName": "Mr.Phil Edwards",
+             |    "requestorEmail": "Phil.Edwards@gmail.com"
+             |
+             |}
+             |""".stripMargin)
+
+  def requestAdviceJsonRequest: Request[JsValue]   =
+    FakeRequest().withBody(requestAdviceData)
+  val createRequestAdviceRequest: Request[JsValue] = requestAdviceJsonRequest
 
   private def createHttpResponse(status: Int, code: String) =
     HttpResponse(status, Json.toJson(ErrorResponse("correlationId", code, "any message")), Map.empty)

@@ -242,28 +242,6 @@ class RemoveRecordControllerIntegrationSpec
       )
     }
 
-    "return BadRequest for invalid request body" in {
-      withAuthorizedTrader()
-      val emptyJsonBody = Json.obj()
-      val result        = await(
-        wsClient
-          .url(url)
-          .withHttpHeaders(
-            "X-Client-ID"  -> "clientId",
-            "Accept"       -> "application/vnd.hmrc.1.0+json",
-            "Content-Type" -> "application/json"
-          )
-          .put(emptyJsonBody)
-      )
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe createExpectedError(
-        "INVALID_REQUEST_PARAMETER",
-        "Mandatory field actorId was missing from body or is in the wrong format",
-        8
-      )
-
-    }
     "return bad request when Accept header is invalid" in {
       withAuthorizedTrader()
 
@@ -290,7 +268,15 @@ class RemoveRecordControllerIntegrationSpec
       )
     }
 
-    "return an BAD_REQUEST (400) if recordId is invalid" in {
+    "return BAD_REQUEST (400) from router if recordId is invalid" in {
+      stubForRouterBadRequest(
+        400,
+        createExpectedError(
+          "INVALID_REQUEST_PARAMETER",
+          "The recordId has been provided in the wrong format",
+          25
+        ).toString
+      )
       withAuthorizedTrader()
 
       val result = getRecordAndWait(s"http://localhost:$port/$eoriNumber/records/abcdfg-12gt")
@@ -374,6 +360,16 @@ class RemoveRecordControllerIntegrationSpec
           aResponse()
             .withStatus(status)
             .withBody(errorResponse)
+        )
+    )
+
+  private def stubForRouterBadRequest(status: Int, responseBody: String) =
+    wireMock.stubFor(
+      put(s"/trader-goods-profiles-router/$eoriNumber/records/abcdfg-12gt")
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withBody(responseBody)
         )
     )
 }

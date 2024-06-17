@@ -21,20 +21,25 @@ import org.mockito.MockitoSugar.{reset, verify, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.RemoveRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
-class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEach {
+class RemoveRecordControllerSpec
+    extends PlaySpec
+    with AuthTestSupport
+    with BeforeAndAfterEach
+    with RemoveRecordRequestSupport {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
@@ -64,7 +69,6 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
   private val sut                           = new RemoveRecordController(
     new FakeSuccessAuthAction(),
     new ValidateHeaderAction(uuidService),
-    uuidService,
     routerService,
     stubControllerComponents()
   )
@@ -89,31 +93,10 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
       val result = sut.removeRecord(eoriNumber, recordId)(request)
 
       status(result) mustBe OK
-      verify(routerService).removeRecord(eqTo(eoriNumber), eqTo(recordId), eqTo("GB098765432112"))(any)
+      verify(routerService).removeRecord(eqTo(eoriNumber), eqTo(recordId), eqTo(request))(any)
     }
 
     "return an error" when {
-
-      "recordId is not a UUID" in {
-        val result = sut.removeRecord(eoriNumber, "1234-abc")(request)
-
-        status(result) mustBe BAD_REQUEST
-        contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
-      }
-
-      "recordId is null" in {
-        val result = sut.removeRecord(eoriNumber, null)(request)
-
-        status(result) mustBe BAD_REQUEST
-        contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
-      }
-
-      "recordId is empty" in {
-        val result = sut.removeRecord(eoriNumber, " ")(request)
-
-        status(result) mustBe BAD_REQUEST
-        contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
-      }
 
       "routerService return an error" in {
         val expectedJson = Json.obj(
@@ -136,19 +119,5 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
       }
     }
   }
-
-  private def createInvalidRequestParameterExpectedJson: JsObject =
-    Json.obj(
-      "correlationId" -> correlationId,
-      "code"          -> "BAD_REQUEST",
-      "message"       -> "Bad Request",
-      "errors"        -> Seq(
-        Json.obj(
-          "code"        -> "INVALID_REQUEST_PARAMETER",
-          "message"     -> "The recordId has been provided in the wrong format",
-          "errorNumber" -> 25
-        )
-      )
-    )
 
 }
