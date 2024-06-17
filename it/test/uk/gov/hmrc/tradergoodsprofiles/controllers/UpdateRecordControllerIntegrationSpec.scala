@@ -111,7 +111,7 @@ class UpdateRecordControllerIntegrationSpec
 
       withClue("should add the right headers") {
         verify(
-          putRequestedFor(urlEqualTo(routerUrl))
+          patchRequestedFor(urlEqualTo(routerUrl))
             .withHeader("Content-Type", equalTo("application/json"))
             .withHeader("X-Client-ID", equalTo("clientId"))
         )
@@ -287,7 +287,7 @@ class UpdateRecordControllerIntegrationSpec
 
   private def stubRouterRequest(status: Int, responseBody: String) =
     wireMock.stubFor(
-      put(urlEqualTo(routerUrl))
+      patch(urlEqualTo(routerUrl))
         .willReturn(
           aResponse()
             .withStatus(status)

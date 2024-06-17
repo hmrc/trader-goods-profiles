@@ -64,7 +64,7 @@ class GetRecordsControllerIntegrationSpec
   private val getSingleRecordUrl               = s"http://localhost:$port/$eoriNumber/records/$recordId"
   private val getMultipleRecordsUrl            = s"http://localhost:$port/$eoriNumber/records"
   private val getSingleRecordRouterUrl         = s"/trader-goods-profiles-router/traders/$eoriNumber/records/$recordId"
-  private val getMultipleRecordsRouterUrl      = s"/trader-goods-profiles-router/traders/$eoriNumber"
+  private val getMultipleRecordsRouterUrl      = s"/trader-goods-profiles-router/traders/$eoriNumber/records"
   private val getSingleRecordRouterResponse    = Json.toJson(createGetRecordResponse(eoriNumber, recordId, timestamp))
   private val getMultipleRecordsRouterResponse = Json.toJson(createGetRecordsResponse(eoriNumber))
   private val getMultipleRecordsCallerResponse =
