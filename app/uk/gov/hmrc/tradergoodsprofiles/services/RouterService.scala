@@ -224,10 +224,10 @@ class RouterService @Inject() (
     adviceRequest: RequestAdviceRequest
   )(implicit hc: HeaderCarrier): Future[Either[ServiceError, Int]] = {
 
-    val routerAdviceRequest = RouterRequestAdviceRequest(eori, recordId, adviceRequest)
+    val routerAdviceRequest = RouterRequestAdviceRequest(adviceRequest)
 
     routerConnector
-      .requestAdvice(routerAdviceRequest)
+      .requestAdvice(routerAdviceRequest, eori, recordId)
       .map { httpResponse =>
         httpResponse.status match {
           case status if is2xx(status) =>

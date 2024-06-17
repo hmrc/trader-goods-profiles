@@ -6,6 +6,6 @@ POST    /:eori/records                              uk.gov.hmrc.tradergoodsprofi
 DELETE  /:eori/records/:recordId                    uk.gov.hmrc.tradergoodsprofiles.controllers.RemoveRecordController.removeRecord(eori: String, recordId: String, actorId: Option[String])
 GET     /:eori/records                              uk.gov.hmrc.tradergoodsprofiles.controllers.GetRecordsController.getRecords(eori: String, lastUpdatedDate:Option[String] ?= None, page: Option[Int] ?= None, size: Option[Int] ?= None)
 PATCH   /:eori/records/:recordId                    uk.gov.hmrc.tradergoodsprofiles.controllers.UpdateRecordController.updateRecord(eori: String, recordId: String)
-POST    /:eori/records/:recordId/advice     uk.gov.hmrc.tradergoodsprofiles.controllers.RequestAdviceController.requestAdvice(eori: String, recordId: String)
+POST    /:eori/records/:recordId/advice             uk.gov.hmrc.tradergoodsprofiles.controllers.RequestAdviceController.requestAdvice(eori: String, recordId: String)
 
 PUT     /:eori                                      uk.gov.hmrc.tradergoodsprofiles.controllers.MaintainProfileController.updateProfile(eori: String)

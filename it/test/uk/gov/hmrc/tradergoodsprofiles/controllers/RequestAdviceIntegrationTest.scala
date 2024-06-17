@@ -58,7 +58,7 @@ class RequestAdviceIntegrationTest
   private val correlationId           = "d677693e-9981-4ee3-8574-654981ebe606"
 
   private val url         = s"http://localhost:$port/$eoriNumber/records/$recordId/advice"
-  private val routerUrl   = s"/trader-goods-profiles-router/createaccreditation"
+  private val routerUrl   = s"/trader-goods-profiles-router/traders/$eoriNumber/records/$recordId/advice"
   private val requestBody = Json.toJson(createRequestAdviceRequest())
 
   override lazy val app: Application = {
