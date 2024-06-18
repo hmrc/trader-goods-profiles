@@ -324,12 +324,6 @@ class CreateRecordControllerIntegrationSpec
     )
   )
   private def createRecordWithoutConditionAndWait(requestBody: JsValue = createRecordWithoutCondition) =
-//    val updatedAssessments = (requestBody \ "assessments").asOpt[JsArray].map { assessments =>
-//      JsArray(assessments.value.map { assessment =>
-//        assessment.as[JsObject] - "condition"
-//      })
-//    }
-//    requestBody.as[JsObject] ++ Json.obj("assessments" -> updatedAssessments)
     await(
       wsClient
         .url(url)
@@ -438,17 +432,7 @@ class CreateRecordControllerIntegrationSpec
              |    "assessments": [
              |        {
              |            "assessmentId": "abc123",
-             |            "primaryCategory": 1,
-             |            "condition": {
-             |                "type": "abc123",
-             |                "conditionId": "Y923",
-             |                "conditionDescription": "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
-             |                "conditionTraderText": "Excluded product"
-             |            }
-             |        },
-             |        {
-             |            "assessmentId": "",
-             |            "primaryCategory": "test"
+             |            "primaryCategory": 1
              |        }
              |    ],
              |    "supplementaryUnit": 500,
