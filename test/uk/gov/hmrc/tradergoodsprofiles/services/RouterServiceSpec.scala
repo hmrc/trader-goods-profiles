@@ -302,10 +302,10 @@ class RouterServiceSpec
   "removeRecord" should {
     "return 200 OK " in {
       val httpResponse = HttpResponse(Status.OK, "")
-      when(connector.removeRecord("GB123456789012", "recordId", removeRequest))
+      when(connector.removeRecord("GB123456789012", "recordId", "actorId"))
         .thenReturn(Future.successful(httpResponse))
 
-      val result = sut.removeRecord("GB123456789012", "recordId", removeRequest)
+      val result = sut.removeRecord("GB123456789012", "recordId", "actorId")
 
       whenReady(result) {
         _.value mustBe OK
@@ -318,7 +318,7 @@ class RouterServiceSpec
         when(connector.removeRecord(any, any, any)(any))
           .thenReturn(Future.failed(new RuntimeException("error")))
 
-        val result = sut.removeRecord("eori", "recordId", removeRequest)
+        val result = sut.removeRecord("eori", "recordId", "actorId")
 
         whenReady(result) {
           _.left.value mustBe ServiceError(
@@ -352,7 +352,7 @@ class RouterServiceSpec
             when(connector.removeRecord(any, any, any)(any))
               .thenReturn(Future.successful(createHttpResponse(status, code)))
 
-            val result = sut.removeRecord("eori", "recordId", removeRequest)
+            val result = sut.removeRecord("eori", "recordId", "actorId")
 
             whenReady(result) {
               _.left.value.status mustBe expectedResult

@@ -77,11 +77,11 @@ class RouterService @Inject() (
         )
       }
 
-  def removeRecord(eoriNumber: String, recordId: String, request: Request[JsValue])(implicit
+  def removeRecord(eoriNumber: String, recordId: String, actorId: String)(implicit
     hc: HeaderCarrier
   ): Future[Either[ServiceError, Int]] =
     routerConnector
-      .removeRecord(eoriNumber, recordId, request)
+      .removeRecord(eoriNumber, recordId, actorId)
       .map { httpResponse =>
         httpResponse.status match {
           case status if is2xx(status) =>

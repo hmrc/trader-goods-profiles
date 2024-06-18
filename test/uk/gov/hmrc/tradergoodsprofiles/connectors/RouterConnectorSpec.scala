@@ -28,7 +28,9 @@ import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status.{CREATED, NO_CONTENT, OK}
 import play.api.http.{HeaderNames, MimeTypes}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.Request
+import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
@@ -257,21 +259,22 @@ class RouterConnectorSpec
   "request advice" should {
 
     "return 201 when advice is successfully requested" in {
-      val requestAdviceRequest = createRouterRequestAdviceRequest()
 
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "")))
 
-      val result = await(sut.requestAdvice(requestAdviceRequest))
+      val result = await(sut.requestAdvice("eoriNumber", "recordId", createRouterRequestAdviceRequest))
 
       result.status mustBe CREATED
     }
 
     "send a request with the right url and body" in {
-      val requestAdviceRequest = createRouterRequestAdviceRequest()
+      val requestAdviceRequest = createRouterRequestAdviceRequestData()
 
       when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "message")))
 
-      await(sut.requestAdvice(requestAdviceRequest))
+      await(
+        sut.requestAdvice("GB987654321098", "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f", createRouterRequestAdviceRequest)
+      )
 
       val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/createaccreditation")
       verify(httpClient).post(eqTo(url"$expectedUrl"))(any)
@@ -287,12 +290,26 @@ class RouterConnectorSpec
     }
   }
 
-  def createRouterRequestAdviceRequest(): RouterRequestAdviceRequest = RouterRequestAdviceRequest(
+  def createRouterRequestAdviceRequestData(): RouterRequestAdviceRequest = RouterRequestAdviceRequest(
     eori = "GB987654321098",
-    requestorName = "Mr.Phil Edwards",
+    requestorName = Some("Mr.Phil Edwards"),
     recordId = "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f",
-    requestorEmail = "Phil.Edwards@gmail.com"
+    requestorEmail = Some("Phil.Edwards@gmail.com")
   )
+  def requestAdviceData: JsValue                                         = Json
+    .parse("""
+             |{
+             |    "eori": "GB987654321098",
+             |    "requestorName": "Mr.Phil Edwards",
+             |    "recordId": "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f",
+             |    "requestorEmail": "Phil.Edwards@gmail.com"
+             |
+             |}
+             |""".stripMargin)
+
+  def requestAdviceJsonRequest: Request[JsValue]         =
+    FakeRequest().withBody(requestAdviceData)
+  val createRouterRequestAdviceRequest: Request[JsValue] = requestAdviceJsonRequest
 
   "maintain profile" should {
 

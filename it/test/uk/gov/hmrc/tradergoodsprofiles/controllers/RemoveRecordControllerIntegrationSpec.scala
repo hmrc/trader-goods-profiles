@@ -225,19 +225,6 @@ class RemoveRecordControllerIntegrationSpec
       )
     }
 
-    "return bad request when actorId is invalid" in {
-      withAuthorizedTrader()
-
-      val result = removeRecordAndWait(invalidUrl)
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe createExpectedError(
-        "INVALID_REQUEST_PARAMETER",
-        "Mandatory query parameter actorId was missing or is in the wrong format",
-        8
-      )
-    }
-
     "return bad request when Accept header is invalid" in {
       withAuthorizedTrader()
 
@@ -341,7 +328,7 @@ class RemoveRecordControllerIntegrationSpec
   private def stubForRouterBadRequest(status: Int, responseBody: String) =
     wireMock.stubFor(
       WireMock
-        .delete(s"/trader-goods-profiles-router/$eoriNumber/records/abcdfg-12gt")
+        .delete(s"/trader-goods-profiles-router/traders/$eoriNumber/records/abcdfg-12gt?actorId=$actorId")
         .willReturn(
           aResponse()
             .withStatus(status)

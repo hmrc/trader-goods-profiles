@@ -22,14 +22,14 @@ import io.lemonlabs.uri._
 import io.lemonlabs.uri.config.{ExcludeNones, UriConfig}
 import play.api.Logging
 import play.api.http.{HeaderNames, MimeTypes}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.Request
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.metrics.MetricsSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterRequestAdviceRequest
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.{APICreateRecordRequest, MaintainProfileRequest, UpdateRecordRequest}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.XClientIdHeader
 
 import javax.inject.Inject
@@ -116,8 +116,6 @@ class RouterConnector @Inject() (
   ): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.maintainprofile.connector") { _ =>
       val url      = appConfig.routerUrl.withPath(routerMaintainProfileUrlPath(eori))
-      val jsonData = Json.toJson(updateProfileRequest)
-      val url      = appConfig.routerUrl.withPath(routerMaintainProfileRoute(eori))
       val jsonData = Json.toJson(updateProfileRequest.body)
       httpClient
         .put(url"$url")
@@ -128,11 +126,13 @@ class RouterConnector @Inject() (
     }
 
   def requestAdvice(
-    adviceRequest: RouterRequestAdviceRequest
+    eori: String,
+    recordId: String,
+    adviceRequest: Request[JsValue]
   )(implicit hc: HeaderCarrier): Future[HttpResponse] =
     withMetricsTimerAsync("tgp.requestadvice.connector") { _ =>
       val url      = appConfig.routerUrl.withPath(routerAdviceUrlPath())
-      val jsonData = Json.toJson(adviceRequest)
+      val jsonData = Json.toJson(RouterRequestAdviceRequest(eori, recordId, adviceRequest))
       httpClient
         .post(url"$url")
         .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)

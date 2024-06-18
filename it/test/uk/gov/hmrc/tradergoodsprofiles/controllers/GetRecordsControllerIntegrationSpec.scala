@@ -719,7 +719,7 @@ class GetRecordsControllerIntegrationSpec
 
   private def stubForRouterBadRequest(status: Int, responseBody: String) =
     wireMock.stubFor(
-      get(s"/trader-goods-profiles-router/$eoriNumber/records/1234522")
+      get(s"/trader-goods-profiles-router/traders/$eoriNumber/records/1234522")
         .willReturn(
           aResponse()
             .withStatus(status)
