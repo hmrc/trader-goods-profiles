@@ -16,11 +16,8 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.connectors
 
-import com.codahale.metrics.{Counter, MetricRegistry, Timer}
 import io.lemonlabs.uri.{Url, UrlPath}
-import org.mockito.ArgumentMatchers.endsWith
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
-import org.mockito.Mockito.RETURNS_DEEP_STUBS
 import org.mockito.MockitoSugar.{reset, verify, when}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, EitherValues}
@@ -51,22 +48,18 @@ class RouterConnectorSpec
   implicit val ec: ExecutionContext = ExecutionContext.global
   implicit val hc: HeaderCarrier    = HeaderCarrier(otherHeaders = Seq(XClientIdHeader -> "clientId"))
 
-  private val httpClient                      = mock[HttpClientV2]
-  private val appConfig                       = mock[AppConfig]
-  private val requestBuilder                  = mock[RequestBuilder]
-  private val timerContext                    = mock[Timer.Context]
-  private val successCounter                  = mock[Counter]
-  private val failureCounter                  = mock[Counter]
-  private val metricsRegistry: MetricRegistry = mock[MetricRegistry](RETURNS_DEEP_STUBS)
-  private val eori                            = "GB123456789012"
-  private val recordId                        = "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f"
+  private val httpClient     = mock[HttpClientV2]
+  private val appConfig      = mock[AppConfig]
+  private val requestBuilder = mock[RequestBuilder]
+  private val eori           = "GB123456789012"
+  private val recordId       = "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f"
 
-  private val sut = new RouterConnector(httpClient, appConfig, metricsRegistry)
+  private val sut = new RouterConnector(httpClient, appConfig)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(httpClient, appConfig, requestBuilder, metricsRegistry, timerContext)
+    reset(httpClient, appConfig, requestBuilder)
 
     when(appConfig.routerUrl).thenReturn(Url.parse("http://localhost:23123"))
     when(httpClient.get(any)(any)).thenReturn(requestBuilder)
@@ -80,11 +73,6 @@ class RouterConnectorSpec
     when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
     when(requestBuilder.execute[HttpResponse](any, any))
       .thenReturn(Future.successful(HttpResponse(200, "message")))
-
-    when(metricsRegistry.counter(endsWith("success-counter"))) thenReturn successCounter
-    when(metricsRegistry.counter(endsWith("failed-counter"))) thenReturn failureCounter
-    when(metricsRegistry.timer(any).time()) thenReturn timerContext
-    when(timerContext.stop()) thenReturn 0L
   }
 
   "get single record" should {
@@ -105,11 +93,6 @@ class RouterConnectorSpec
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
       verify(requestBuilder).execute(any, any)
-
-      withClue("process the response within a timer") {
-        verify(metricsRegistry).timer(eqTo("tgp.getrecord.connector-timer"))
-        verify(timerContext).stop()
-      }
     }
   }
   "get multiple records" should {
@@ -141,11 +124,6 @@ class RouterConnectorSpec
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
       verify(requestBuilder).execute(any, any)
-
-      withClue("process the response within a timer") {
-        verify(metricsRegistry).timer(eqTo("tgp.getrecords.connector-timer"))
-        verify(timerContext).stop()
-      }
     }
 
     "send a request with the right url with optional query parameter" in {
@@ -159,11 +137,6 @@ class RouterConnectorSpec
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
       verify(requestBuilder).execute(any, any)
-
-      withClue("process the response within a timer") {
-        verify(metricsRegistry).timer(eqTo("tgp.getrecords.connector-timer"))
-        verify(timerContext).stop()
-      }
     }
   }
 
@@ -188,11 +161,6 @@ class RouterConnectorSpec
       verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
       verify(requestBuilder).withBody(eqTo(Json.toJson(createRouterCreateRecordRequest)))(any, any, any)
       verify(requestBuilder).execute(any, any)
-
-      withClue("process the response within a timer") {
-        verify(metricsRegistry).timer(eqTo("tgp.createrecord.connector-timer"))
-        verify(timerContext).stop()
-      }
     }
   }
 
@@ -216,11 +184,6 @@ class RouterConnectorSpec
       verify(httpClient).delete(eqTo(url"$expectedUrl"))(any)
       verify(requestBuilder).setHeader("X-Client-ID" -> "clientId")
       verify(requestBuilder).execute(any, any)
-
-      withClue("process the response within a timer") {
-        verify(metricsRegistry).timer(eqTo("tgp.removerecord.connector-timer"))
-        verify(timerContext).stop()
-      }
     }
   }
 
@@ -246,11 +209,6 @@ class RouterConnectorSpec
       verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
       verify(requestBuilder).withBody(eqTo(Json.toJson(createUpdateRecordRequest)))(any, any, any)
       verify(requestBuilder).execute(any, any)
-
-      withClue("process the response within a timer") {
-        verify(metricsRegistry).timer(eqTo("tgp.updaterecord.connector-timer"))
-        verify(timerContext).stop()
-      }
     }
   }
 
@@ -280,11 +238,6 @@ class RouterConnectorSpec
       verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
       verify(requestBuilder).withBody(eqTo(Json.toJson(requestAdviceRequest)))(any, any, any)
       verify(requestBuilder).execute(any, any)
-
-      withClue("process the response within a timer") {
-        verify(metricsRegistry).timer(eqTo("tgp.requestadvice.connector-timer"))
-        verify(timerContext).stop()
-      }
     }
   }
 
@@ -332,11 +285,6 @@ class RouterConnectorSpec
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       verify(requestBuilder).withBody(eqTo(Json.toJson(updateProfileRequest)))(any, any, any)
       verify(requestBuilder).execute(any, any)
-
-      withClue("process the response within a timer") {
-        verify(metricsRegistry).timer(eqTo("tgp.maintainprofile.connector-timer"))
-        verify(timerContext).stop()
-      }
     }
   }
 
