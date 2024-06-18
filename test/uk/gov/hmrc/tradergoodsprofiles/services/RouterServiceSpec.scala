@@ -30,10 +30,9 @@ import play.api.mvc.Request
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{APICreateRecordRequestSupport, RouterCreateRecordRequestSupport, UpdateRecordRequestSupport}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{RouterCreateRecordRequestSupport, UpdateRecordRequestSupport}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.{CreateOrUpdateRecordResponseSupport, GetRecordResponseSupport}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.RequestAdviceRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 
@@ -45,7 +44,6 @@ class RouterServiceSpec
     extends PlaySpec
     with GetRecordResponseSupport
     with CreateOrUpdateRecordResponseSupport
-    with APICreateRecordRequestSupport
     with RouterCreateRecordRequestSupport
     with UpdateRecordRequestSupport
     with ScalaFutures

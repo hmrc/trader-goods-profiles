@@ -22,14 +22,13 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status.{CREATED, INTERNAL_SERVER_ERROR}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.RequestAdviceRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 
 import java.util.UUID
@@ -65,7 +64,7 @@ class RequestAdviceControllerSpec extends PlaySpec with AuthTestSupport with Bef
 
   "requestAdvice" should {
     "return 201 when advice is successfully requested" in {
-      val requestBody = createRequestAdviceRequest()
+      val requestBody = createRequestAdviceRequest
 
       val result = sut.requestAdvice(eoriNumber, recordId)(request.withBody(Json.toJson(requestBody)))
 
@@ -73,7 +72,7 @@ class RequestAdviceControllerSpec extends PlaySpec with AuthTestSupport with Bef
     }
 
     "return 500 when the router service returns an error" in {
-      val adviceRequest = createRequestAdviceRequest()
+      val adviceRequest = createRequestAdviceRequest
 
       val expectedJson = Json.obj(
         "correlationId" -> correlationId,
@@ -95,9 +94,13 @@ class RequestAdviceControllerSpec extends PlaySpec with AuthTestSupport with Bef
     }
   }
 
-  def createRequestAdviceRequest(): RequestAdviceRequest = RequestAdviceRequest(
-    actorId = "XI123456789001",
-    requestorName = "Mr.Phil Edwards",
-    requestorEmail = "Phil.Edwards@gmail.com"
-  )
+  def createRequestAdviceRequest: JsValue = Json
+    .parse("""
+             |{
+             |    "actorId": "XI123456789001",
+             |    "ukimsNumber": "Mr.Phil Edwards",
+             |    "nirmsNumber": "Phil.Edwards@gmail.com"
+             |
+             |}
+             |""".stripMargin)
 }

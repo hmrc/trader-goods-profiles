@@ -34,7 +34,6 @@ import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.MaintainProfileRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
@@ -59,12 +58,16 @@ class MaintainProfileControllerIntegrationSpec
   private val url       = s"http://localhost:$port/$eoriNumber"
   private val routerUrl = s"/trader-goods-profiles-router/traders/$eoriNumber"
 
-  private val updateProfileRequest = MaintainProfileRequest(
-    actorId = "GB987654321098",
-    ukimsNumber = "XIUKIM47699357400020231115081800",
-    nirmsNumber = Some("RMS-GB-123456"),
-    niphlNumber = Some("6 S12345")
-  )
+  def updateProfileRequest: JsValue = Json
+    .parse("""
+             |{
+             |    "actorId": "GB987654321098",
+             |    "ukimsNumber": "XIUKIM47699357400020231115081800",
+             |    "nirmsNumber": "RMS-GB-123456",
+             |    "niphlNumber": "6 S12345"
+             |
+             |}
+             |""".stripMargin)
 
   private val updateProfileResponse = MaintainProfileResponse(
     eoriNumber,
@@ -74,7 +77,7 @@ class MaintainProfileControllerIntegrationSpec
     Some("6 S12345")
   )
 
-  private val requestBody      = Json.toJson(updateProfileRequest)
+  private val requestBody      = updateProfileRequest
   private val expectedResponse = Json.toJson(updateProfileResponse)
 
   override lazy val app: Application = {
@@ -430,7 +433,7 @@ class MaintainProfileControllerIntegrationSpec
       "message"       -> message
     )
 
-  val routerError = Json.obj(
+  val routerError                                                                       = Json.obj(
     "correlationId" -> correlationId,
     "code"          -> "BAD_REQUEST",
     "message"       -> "Bad Request",

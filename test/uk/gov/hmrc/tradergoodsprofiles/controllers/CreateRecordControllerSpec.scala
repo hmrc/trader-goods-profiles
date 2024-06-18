@@ -28,7 +28,7 @@ import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubCo
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.APICreateRecordRequestSupport
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.UpdateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateOrUpdateRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
@@ -40,8 +40,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class CreateRecordControllerSpec
     extends PlaySpec
     with AuthTestSupport
+    with UpdateRecordRequestSupport
     with CreateOrUpdateRecordResponseSupport
-    with APICreateRecordRequestSupport
     with BeforeAndAfterEach {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
@@ -73,16 +73,14 @@ class CreateRecordControllerSpec
 
   "createRecord" should {
     "return 201 when the record is successfully created" in {
-      val createRequest = createAPICreateRecordRequest()
 
-      val result = sut.createRecord(eoriNumber)(request.withBody(Json.toJson(createRequest)))
+      val result = sut.createRecord(eoriNumber)(request.withBody(createUpdateRecordRequestData))
 
       status(result) mustBe CREATED
       contentAsJson(result) mustBe Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
     }
 
     "return 500 when the router service returns an error" in {
-      val createRequest = createAPICreateRecordRequest()
 
       val expectedJson  = Json.obj(
         "correlationId" -> correlationId,
@@ -99,7 +97,7 @@ class CreateRecordControllerSpec
       when(routerService.createRecord(any, any)(any))
         .thenReturn(Future.successful(Left(serviceError)))
 
-      val result = sut.createRecord(eoriNumber)(request.withBody(Json.toJson(createRequest)))
+      val result = sut.createRecord(eoriNumber)(request.withBody(createUpdateRecordRequestData))
 
       status(result) mustBe INTERNAL_SERVER_ERROR
       contentAsJson(result) mustBe expectedJson

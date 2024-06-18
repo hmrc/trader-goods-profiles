@@ -34,7 +34,6 @@ import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.RequestAdviceRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
 
@@ -59,7 +58,7 @@ class RequestAdviceIntegrationTest
 
   private val url         = s"http://localhost:$port/$eoriNumber/records/$recordId/advice"
   private val routerUrl   = s"/trader-goods-profiles-router/traders/$eoriNumber/records/$recordId/advice"
-  private val requestBody = Json.toJson(createRequestAdviceRequest())
+  private val requestBody = createRequestAdviceRequest
 
   override lazy val app: Application = {
     wireMock.start()
@@ -222,11 +221,15 @@ class RequestAdviceIntegrationTest
 
   }
 
-  def createRequestAdviceRequest(): RequestAdviceRequest = RequestAdviceRequest(
-    actorId = "XI123456789001",
-    requestorName = "Mr.Phil Edwards",
-    requestorEmail = "Phil.Edwards@gmail.com"
-  )
+  def createRequestAdviceRequest: JsValue = Json
+    .parse("""
+             |{
+             |    "actorId": "XI123456789001",
+             |    "ukimsNumber": "Mr.Phil Edwards",
+             |    "nirmsNumber": "Phil.Edwards@gmail.com"
+             |
+             |}
+             |""".stripMargin)
 
   private def requestAdviceAndWaitWithoutClientIdHeader() =
     await(
@@ -258,7 +261,7 @@ class RequestAdviceIntegrationTest
       "message"       -> message
     )
 
-  val routerError = Json.obj(
+  val routerError                                                        = Json.obj(
     "correlationId" -> correlationId,
     "code"          -> "BAD_REQUEST",
     "message"       -> "Bad Request",

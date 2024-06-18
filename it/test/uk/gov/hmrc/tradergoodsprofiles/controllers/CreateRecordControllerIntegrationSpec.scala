@@ -26,16 +26,15 @@ import play.api.Application
 import play.api.http.Status._
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
+import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSClient
-import play.api.mvc.Request
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{APICreateRecordRequestSupport, UpdateRecordRequestSupport}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.UpdateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateOrUpdateRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
@@ -51,7 +50,6 @@ class CreateRecordControllerIntegrationSpec
     with AuthTestSupport
     with WireMockServerSpec
     with CreateOrUpdateRecordResponseSupport
-    with APICreateRecordRequestSupport
     with UpdateRecordRequestSupport
     with BeforeAndAfterEach
     with BeforeAndAfterAll {
@@ -308,7 +306,7 @@ class CreateRecordControllerIntegrationSpec
         .post(requestBody)
     )
 
-  val routerError = Json.obj(
+  val routerError                                                                                      = Json.obj(
     "correlationId" -> correlationId,
     "code"          -> "BAD_REQUEST",
     "message"       -> "Bad Request",
@@ -325,14 +323,13 @@ class CreateRecordControllerIntegrationSpec
       )
     )
   )
-  private def createRecordWithoutConditionAndWait(requestBody: JsValue = createRecordWithoutCondition) = {
+  private def createRecordWithoutConditionAndWait(requestBody: JsValue = createRecordWithoutCondition) =
 //    val updatedAssessments = (requestBody \ "assessments").asOpt[JsArray].map { assessments =>
 //      JsArray(assessments.value.map { assessment =>
 //        assessment.as[JsObject] - "condition"
 //      })
 //    }
 //    requestBody.as[JsObject] ++ Json.obj("assessments" -> updatedAssessments)
-
     await(
       wsClient
         .url(url)
@@ -343,7 +340,6 @@ class CreateRecordControllerIntegrationSpec
         )
         .post(requestBody)
     )
-  }
 
   private def stubRouterRequest(status: Int, responseBody: String) =
     wireMock.stubFor(
@@ -383,7 +379,6 @@ class CreateRecordControllerIntegrationSpec
       "errorNumber" -> errorNumber
     )
 
-
   private def stubForRouterBadRequest(status: Int, responseBody: Option[String] = None) =
     wireMock.stubFor(
       post(urlEqualTo(routerUrl))
@@ -393,7 +388,7 @@ class CreateRecordControllerIntegrationSpec
             .withBody(responseBody.orNull)
         )
     )
-  lazy val invalidCreateRecordRequestDataForAssessmentArray: JsValue = Json
+  lazy val invalidCreateRecordRequestDataForAssessmentArray: JsValue                    = Json
     .parse("""
              |{
              |    "actorId": "GB098765432112",
