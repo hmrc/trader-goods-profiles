@@ -21,15 +21,15 @@ import org.mockito.MockitoSugar.{reset, verify, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
-import play.api.libs.json.{JsObject, Json}
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
+import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.GetRecordResponseSupport
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.{Error, ErrorResponse, ServiceError}
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.{GetRecordsResponse, GoodsItemRecords, Pagination}
 import uk.gov.hmrc.tradergoodsprofiles.models.{Assessment, Condition}
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
@@ -59,7 +59,6 @@ class GetRecordsControllerSpec
   private val sut           = new GetRecordsController(
     new FakeSuccessAuthAction(),
     new ValidateHeaderAction(uuidService),
-    uuidService,
     routerService,
     stubControllerComponents()
   )
@@ -90,27 +89,6 @@ class GetRecordsControllerSpec
     }
 
     "return an error" when {
-
-      "recordId is not a UUID" in {
-        val result = sut.getRecord(eoriNumber, "1234-abc")(request)
-
-        status(result) mustBe BAD_REQUEST
-        contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
-      }
-
-      "recordId is null" in {
-        val result = sut.getRecord(eoriNumber, null)(request)
-
-        status(result) mustBe BAD_REQUEST
-        contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
-      }
-
-      "recordId is empty" in {
-        val result = sut.getRecord(eoriNumber, " ")(request)
-
-        status(result) mustBe BAD_REQUEST
-        contentAsJson(result) mustBe createInvalidRequestParameterExpectedJson
-      }
 
       "routerService return an error" in {
         val expectedJson = Json.obj(
@@ -183,55 +161,9 @@ class GetRecordsControllerSpec
         status(result) mustBe INTERNAL_SERVER_ERROR
         contentAsJson(result) mustBe expectedJson
       }
-      "bad request for invalid lastUpdatedDate query param" in {
-        val expectedJson = Json.obj(
-          "correlationId" -> correlationId,
-          "code"          -> "BAD_REQUEST",
-          "message"       -> "Bad Request",
-          "errors"        -> Seq(
-            Json.obj(
-              "code"        -> "INVALID_REQUEST_PARAMETER",
-              "message"     -> "The URL parameter lastUpdatedDate is in the wrong format",
-              "errorNumber" -> 28
-            )
-          )
-        )
 
-        val errorResponse =
-          ErrorResponse.badRequestErrorResponse(
-            uuidService.uuid,
-            Some(
-              Seq(
-                Error("INVALID_REQUEST_PARAMETER", "The URL parameter lastUpdatedDate is in the wrong format", 28)
-              )
-            )
-          )
-        val serviceError  = ServiceError(INTERNAL_SERVER_ERROR, errorResponse)
-
-        when(routerService.updateRecord(any, any, any)(any))
-          .thenReturn(Future.successful(Left(serviceError)))
-
-        val result = sut.getRecords(eoriNumber, Some("2024-03-26T16:14:52222Z"), Some(0), Some(0))(request)
-
-        status(result) mustBe BAD_REQUEST
-        contentAsJson(result) mustBe expectedJson
-      }
     }
   }
-
-  private def createInvalidRequestParameterExpectedJson: JsObject =
-    Json.obj(
-      "correlationId" -> correlationId,
-      "code"          -> "BAD_REQUEST",
-      "message"       -> "Bad Request",
-      "errors"        -> Seq(
-        Json.obj(
-          "code"        -> "INVALID_REQUEST_PARAMETER",
-          "message"     -> "The recordId has been provided in the wrong format",
-          "errorNumber" -> 25
-        )
-      )
-    )
 
   def createGetRecordsResponse(
     eori: String,

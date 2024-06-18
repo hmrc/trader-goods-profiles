@@ -116,35 +116,15 @@ class RequestAdviceIntegrationTest
       }
     }
 
-    "return BadRequest for invalid request body" in {
+    "return BadRequest from router for invalid request body" in {
+      stubForRouterBadRequest(400, routerError.toString)
       withAuthorizedTrader()
       val invalidRequestBody = Json.obj()
 
       val result = requestAdviceAndWait(invalidRequestBody)
 
       result.status mustBe BAD_REQUEST
-      result.json mustBe Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "BAD_REQUEST",
-        "message"       -> "Bad Request",
-        "errors"        -> Seq(
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> s"Mandatory field requestorEmail was missing from body or is in the wrong format",
-            "errorNumber" -> 1009
-          ),
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> s"Mandatory field requestorName was missing from body or is in the wrong format",
-            "errorNumber" -> 1008
-          ),
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> s"Mandatory field actorId was missing from body or is in the wrong format",
-            "errorNumber" -> 8
-          )
-        )
-      )
+      result.json mustBe routerError
 
     }
 
@@ -276,5 +256,37 @@ class RequestAdviceIntegrationTest
       "correlationId" -> correlationId,
       "code"          -> code,
       "message"       -> message
+    )
+
+  val routerError = Json.obj(
+    "correlationId" -> correlationId,
+    "code"          -> "BAD_REQUEST",
+    "message"       -> "Bad Request",
+    "errors"        -> Seq(
+      Json.obj(
+        "code"        -> "INVALID_REQUEST_PARAMETER",
+        "message"     -> s"Mandatory field requestorEmail was missing from body or is in the wrong format",
+        "errorNumber" -> 1009
+      ),
+      Json.obj(
+        "code"        -> "INVALID_REQUEST_PARAMETER",
+        "message"     -> s"Mandatory field requestorName was missing from body or is in the wrong format",
+        "errorNumber" -> 1008
+      ),
+      Json.obj(
+        "code"        -> "INVALID_REQUEST_PARAMETER",
+        "message"     -> s"Mandatory field actorId was missing from body or is in the wrong format",
+        "errorNumber" -> 8
+      )
+    )
+  )
+  private def stubForRouterBadRequest(status: Int, responseBody: String) =
+    wireMock.stubFor(
+      post(routerUrl)
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withBody(responseBody)
+        )
     )
 }

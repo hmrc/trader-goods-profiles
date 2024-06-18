@@ -22,18 +22,14 @@ import play.api.mvc.{Action, ControllerComponents, Request, Result}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.UpdateRecordRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.response.CreateOrUpdateRecordResponse
-import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
-import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.validateRequestBody
-
+import uk.gov.hmrc.tradergoodsprofiles.services.RouterService
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class UpdateRecordController @Inject() (
   authAction: AuthAction,
   validateHeaderAction: ValidateHeaderAction,
-  uuidService: UuidService,
   routerService: RouterService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
@@ -42,20 +38,14 @@ class UpdateRecordController @Inject() (
   def updateRecord(eori: String, recordId: String): Action[JsValue] =
     (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
       (for {
-        updateRecordRequest <- validateBody(request)
-        response            <- sendUpdate(eori, recordId, updateRecordRequest)
+        response <- sendUpdate(eori, recordId, request)
       } yield Ok(Json.toJson(response))).merge
     }
-
-  private def validateBody(request: Request[JsValue]): EitherT[Future, Result, UpdateRecordRequest] =
-    EitherT
-      .fromEither[Future](validateRequestBody[UpdateRecordRequest](request.body, uuidService))
-      .leftMap(r => BadRequest(Json.toJson(r)))
 
   private def sendUpdate(
     eori: String,
     recordId: String,
-    updateRecordRequest: UpdateRecordRequest
+    updateRecordRequest: Request[JsValue]
   )(implicit hc: HeaderCarrier): EitherT[Future, Result, CreateOrUpdateRecordResponse] =
     EitherT(routerService.updateRecord(eori, recordId, updateRecordRequest)).leftMap(r =>
       Status(r.status)(Json.toJson(r.errorResponse))

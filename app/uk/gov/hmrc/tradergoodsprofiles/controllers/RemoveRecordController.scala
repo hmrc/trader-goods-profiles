@@ -22,58 +22,28 @@ import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.{Error, ErrorResponse}
-import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
-import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
-import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport
-
-import java.util.UUID
+import uk.gov.hmrc.tradergoodsprofiles.services.RouterService
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
 
 @Singleton
 class RemoveRecordController @Inject() (
   authAction: AuthAction,
   validateHeaderAction: ValidateHeaderAction,
-  uuidService: UuidService,
   routerService: RouterService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
     extends BackendController(cc) {
 
-  def removeRecord(eori: String, recordId: String, actorId: Option[String]): Action[AnyContent] =
+  def removeRecord(eori: String, recordId: String, actorId: String): Action[AnyContent] =
     (authAction(eori) andThen validateHeaderAction).async { implicit request =>
       (for {
-        _        <- validateRecordId(recordId)
-        actorId  <- validateActorId(actorId)
         response <- sendRemove(eori, recordId, actorId)
       } yield response).value.map {
         case Right(_)          => NoContent
         case Left(errorResult) => errorResult
       }
     }
-
-  def validateRecordId(recordId: String): EitherT[Future, Result, String] =
-    EitherT
-      .fromEither[Future](Try(UUID.fromString(recordId).toString).toEither)
-      .leftMap(_ =>
-        BadRequest(
-          Json.toJson(
-            ErrorResponse.badRequestErrorResponse(
-              uuidService.uuid,
-              Some(Seq(Error(InvalidRequestParameter, InvalidRecordIdMessage, InvalidRecordId)))
-            )
-          )
-        )
-      )
-
-  private def validateActorId(actorId: Option[String]): EitherT[Future, Result, String] =
-    EitherT.fromEither[Future](
-      ValidationSupport.validateActorId(actorId).left.map { error =>
-        BadRequest(Json.toJson(ErrorResponse.badRequestErrorResponse(uuidService.uuid, Some(Seq(error)))))
-      }
-    )
 
   private def sendRemove(
     eori: String,
