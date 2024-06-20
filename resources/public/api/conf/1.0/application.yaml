@@ -320,6 +320,22 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           description: Forbidden;   User was valid, but not allowed to perform this action
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+              examples:
+                advice already requested:
+                  value:
+                    correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
+                    code: BAD_REQUEST
+                    message: Bad request
+                    errors:
+                      - code: INVALID_REQUEST_PARAMETER
+                        message: There is an ongoing advice request and a new request cannot be requested.
+                        errorNumber: 1015
         '500':
           $ref: '#/components/responses/InternalServerError'
       security:
