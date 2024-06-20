@@ -36,7 +36,7 @@ class GetRecordsController @Inject() (
     extends BackendController(cc) {
 
   def getRecord(eori: String, recordId: String): Action[AnyContent] =
-    Action.async { implicit request =>
+    (authAction(eori) andThen validateHeaderAction).async { implicit request =>
       routerService.getRecord(eori, recordId).map {
         case Right(serviceResponse) => Ok(toJson(serviceResponse))
         case Left(error)            => Status(error.status)(toJson(error.errorResponse))
