@@ -16,16 +16,15 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
-import cats.data.EitherT
-import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, ControllerComponents, Request, Result}
-import uk.gov.hmrc.http.HeaderCarrier
+import play.api.libs.json.Json.toJson
+import play.api.libs.json.JsValue
+import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.models.response.CreateOrUpdateRecordResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.RouterService
+
 import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 class UpdateRecordController @Inject() (
   authAction: AuthAction,
@@ -37,17 +36,10 @@ class UpdateRecordController @Inject() (
 
   def updateRecord(eori: String, recordId: String): Action[JsValue] =
     (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
-      (for {
-        response <- sendUpdate(eori, recordId, request)
-      } yield Ok(Json.toJson(response))).merge
+      routerService.updateRecord(eori, recordId, request).map {
+        case Right(serviceResponse) => Ok(toJson(serviceResponse))
+        case Left(error)            => Status(error.status)(toJson(error.errorResponse))
+      }
     }
 
-  private def sendUpdate(
-    eori: String,
-    recordId: String,
-    updateRecordRequest: Request[JsValue]
-  )(implicit hc: HeaderCarrier): EitherT[Future, Result, CreateOrUpdateRecordResponse] =
-    EitherT(routerService.updateRecord(eori, recordId, updateRecordRequest)).leftMap(r =>
-      Status(r.status)(Json.toJson(r.errorResponse))
-    )
 }

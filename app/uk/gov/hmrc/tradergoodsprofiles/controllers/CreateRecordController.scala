@@ -16,18 +16,16 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
-import cats.data.EitherT
 import play.api.Logging
-import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, ControllerComponents, Request, Result}
-import uk.gov.hmrc.http.HeaderCarrier
+import play.api.libs.json.Json.toJson
+import play.api.libs.json.JsValue
+import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.models.response.CreateOrUpdateRecordResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.RouterService
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class CreateRecordController @Inject() (
@@ -41,16 +39,10 @@ class CreateRecordController @Inject() (
 
   def createRecord(eori: String): Action[JsValue] =
     (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
-      (for {
-        response <- sendCreate(eori, request)
-      } yield Created(Json.toJson(response))).merge
+      routerService.createRecord(eori, request).map {
+        case Right(serviceResponse) => Created(toJson(serviceResponse))
+        case Left(error)            => Status(error.status)(toJson(error.errorResponse))
+      }
     }
 
-  private def sendCreate(
-    eori: String,
-    createRecordRequest: Request[JsValue]
-  )(implicit hc: HeaderCarrier): EitherT[Future, Result, CreateOrUpdateRecordResponse] =
-    EitherT(routerService.createRecord(eori, createRecordRequest)).leftMap(r =>
-      Status(r.status)(Json.toJson(r.errorResponse))
-    )
 }

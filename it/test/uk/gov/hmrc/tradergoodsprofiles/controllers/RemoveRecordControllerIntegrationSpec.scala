@@ -52,12 +52,10 @@ class RemoveRecordControllerIntegrationSpec
   private lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
   private val recordId                = UUID.randomUUID().toString
   private val actorId                 = "GB987654321098"
-  private val invalidActorId          = "INVALID_ACTOR_ID"
   private val uuidService             = mock[UuidService]
   private val correlationId           = "d677693e-9981-4ee3-8574-654981ebe606"
 
   private val url            = s"http://localhost:$port/$eoriNumber/records/$recordId?actorId=$actorId"
-  private val invalidUrl     = s"http://localhost:$port/$eoriNumber/records/$recordId?actorId=$invalidActorId"
   private val routerUrl      = s"/trader-goods-profiles-router/traders/$eoriNumber/records/$recordId?actorId=$actorId"
   private val routerResponse = NO_CONTENT
 
@@ -279,8 +277,8 @@ class RemoveRecordControllerIntegrationSpec
       wsClient
         .url(url)
         .withHttpHeaders(
-          "X-Client-ID"  -> "clientId",
-          "Accept"       -> "application/vnd.hmrc.1.0+json",
+          "X-Client-ID" -> "clientId",
+          "Accept"      -> "application/vnd.hmrc.1.0+json"
         )
         .delete()
     )

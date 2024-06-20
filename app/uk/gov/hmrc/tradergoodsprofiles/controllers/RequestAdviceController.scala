@@ -16,19 +16,18 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
-import cats.data.EitherT
 import com.google.inject.Singleton
 import play.api.Logging
+import play.api.libs.json.Json.toJson
 import play.api.libs.json.OFormat.oFormatFromReadsAndOWrites
 import play.api.libs.json._
-import play.api.mvc.{Action, ControllerComponents, Request, Result}
-import uk.gov.hmrc.http.HeaderCarrier
+import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
 import uk.gov.hmrc.tradergoodsprofiles.services.RouterService
 
 import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class RequestAdviceController @Inject() (
@@ -42,17 +41,10 @@ class RequestAdviceController @Inject() (
 
   def requestAdvice(eori: String, recordId: String): Action[JsValue] =
     (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
-      (for {
-        response <- sendAdvice(eori, recordId, request)
-      } yield Created(Json.toJson(response))).merge
+      routerService.requestAdvice(eori, recordId, request).map {
+        case Right(serviceResponse) => Created(toJson(serviceResponse))
+        case Left(error)            => Status(error.status)(toJson(error.errorResponse))
+      }
     }
 
-  private def sendAdvice(
-    eori: String,
-    recordId: String,
-    adviceRequest: Request[JsValue]
-  )(implicit hc: HeaderCarrier): EitherT[Future, Result, Int] =
-    EitherT(routerService.requestAdvice(eori, recordId, adviceRequest)).leftMap(r =>
-      Status(r.status)(Json.toJson(r.errorResponse))
-    )
 }
