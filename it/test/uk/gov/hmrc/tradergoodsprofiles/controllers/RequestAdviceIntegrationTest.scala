@@ -34,7 +34,6 @@ import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.RequestAdviceRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
 
@@ -59,7 +58,7 @@ class RequestAdviceIntegrationTest
 
   private val url         = s"http://localhost:$port/$eoriNumber/records/$recordId/advice"
   private val routerUrl   = s"/trader-goods-profiles-router/traders/$eoriNumber/records/$recordId/advice"
-  private val requestBody = Json.toJson(createRequestAdviceRequest())
+  private val requestBody = createRequestAdviceRequest
 
   override lazy val app: Application = {
     wireMock.start()
@@ -116,35 +115,15 @@ class RequestAdviceIntegrationTest
       }
     }
 
-    "return BadRequest for invalid request body" in {
+    "return BadRequest from router for invalid request body" in {
+      stubForRouterBadRequest(400, routerError.toString)
       withAuthorizedTrader()
       val invalidRequestBody = Json.obj()
 
       val result = requestAdviceAndWait(invalidRequestBody)
 
       result.status mustBe BAD_REQUEST
-      result.json mustBe Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "BAD_REQUEST",
-        "message"       -> "Bad Request",
-        "errors"        -> Seq(
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> s"Mandatory field requestorEmail was missing from body or is in the wrong format",
-            "errorNumber" -> 1009
-          ),
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> s"Mandatory field requestorName was missing from body or is in the wrong format",
-            "errorNumber" -> 1008
-          ),
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> s"Mandatory field actorId was missing from body or is in the wrong format",
-            "errorNumber" -> 8
-          )
-        )
-      )
+      result.json mustBe routerError
 
     }
 
@@ -242,11 +221,14 @@ class RequestAdviceIntegrationTest
 
   }
 
-  def createRequestAdviceRequest(): RequestAdviceRequest = RequestAdviceRequest(
-    actorId = "XI123456789001",
-    requestorName = "Mr.Phil Edwards",
-    requestorEmail = "Phil.Edwards@gmail.com"
-  )
+  def createRequestAdviceRequest: JsValue = Json
+    .parse("""
+             |{
+             |    "ukimsNumber": "Mr.Phil Edwards",
+             |    "nirmsNumber": "Phil.Edwards@gmail.com"
+             |
+             |}
+             |""".stripMargin)
 
   private def requestAdviceAndWaitWithoutClientIdHeader() =
     await(
@@ -276,5 +258,37 @@ class RequestAdviceIntegrationTest
       "correlationId" -> correlationId,
       "code"          -> code,
       "message"       -> message
+    )
+
+  val routerError                                                        = Json.obj(
+    "correlationId" -> correlationId,
+    "code"          -> "BAD_REQUEST",
+    "message"       -> "Bad Request",
+    "errors"        -> Seq(
+      Json.obj(
+        "code"        -> "INVALID_REQUEST_PARAMETER",
+        "message"     -> s"Mandatory field requestorEmail was missing from body or is in the wrong format",
+        "errorNumber" -> 1009
+      ),
+      Json.obj(
+        "code"        -> "INVALID_REQUEST_PARAMETER",
+        "message"     -> s"Mandatory field requestorName was missing from body or is in the wrong format",
+        "errorNumber" -> 1008
+      ),
+      Json.obj(
+        "code"        -> "INVALID_REQUEST_PARAMETER",
+        "message"     -> s"Mandatory field actorId was missing from body or is in the wrong format",
+        "errorNumber" -> 8
+      )
+    )
+  )
+  private def stubForRouterBadRequest(status: Int, responseBody: String) =
+    wireMock.stubFor(
+      post(routerUrl)
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withBody(responseBody)
+        )
     )
 }

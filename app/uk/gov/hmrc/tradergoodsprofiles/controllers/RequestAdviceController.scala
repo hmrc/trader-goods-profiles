@@ -16,27 +16,23 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
-import cats.data.EitherT
 import com.google.inject.Singleton
 import play.api.Logging
+import play.api.libs.json.Json.toJson
 import play.api.libs.json.OFormat.oFormatFromReadsAndOWrites
 import play.api.libs.json._
-import play.api.mvc.{Action, ControllerComponents, Request, Result}
-import uk.gov.hmrc.http.HeaderCarrier
+import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.RequestAdviceRequest
-import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
-import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.validateRequestBody
+import uk.gov.hmrc.tradergoodsprofiles.services.RouterService
 
 import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class RequestAdviceController @Inject() (
   authAction: AuthAction,
   validateHeaderAction: ValidateHeaderAction,
-  uuidService: UuidService,
   routerService: RouterService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
@@ -45,23 +41,10 @@ class RequestAdviceController @Inject() (
 
   def requestAdvice(eori: String, recordId: String): Action[JsValue] =
     (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
-      (for {
-        adviceRequest <- validateBody(request)
-        response      <- sendAdvice(eori, recordId, adviceRequest)
-      } yield Created(Json.toJson(response))).merge
+      routerService.requestAdvice(eori, recordId, request).map {
+        case Right(serviceResponse) => Created(toJson(serviceResponse))
+        case Left(error)            => Status(error.status)(toJson(error.errorResponse))
+      }
     }
 
-  private def validateBody(request: Request[JsValue]): EitherT[Future, Result, RequestAdviceRequest] =
-    EitherT
-      .fromEither[Future](validateRequestBody[RequestAdviceRequest](request.body, uuidService))
-      .leftMap(r => BadRequest(Json.toJson(r)))
-
-  private def sendAdvice(
-    eori: String,
-    recordId: String,
-    adviceRequest: RequestAdviceRequest
-  )(implicit hc: HeaderCarrier): EitherT[Future, Result, Int] =
-    EitherT(routerService.requestAdvice(eori, recordId, adviceRequest)).leftMap(r =>
-      Status(r.status)(Json.toJson(r.errorResponse))
-    )
 }

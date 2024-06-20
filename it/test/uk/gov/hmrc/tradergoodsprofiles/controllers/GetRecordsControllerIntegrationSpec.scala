@@ -282,7 +282,15 @@ class GetRecordsControllerIntegrationSpec
       )
     }
 
-    "return an BAD_REQUEST (400) if recordId is invalid" in {
+    "return an BAD_REQUEST (400) from router if recordId is invalid" in {
+      stubForRouterBadRequest(
+        400,
+        createExpectedError(
+          "INVALID_REQUEST_PARAMETER",
+          "The recordId has been provided in the wrong format",
+          25
+        ).toString
+      )
       withAuthorizedTrader()
 
       val result = getRecordAndWait(s"http://localhost:$port/$eoriNumber/records/abcdfg-12gt")
@@ -552,31 +560,6 @@ class GetRecordsControllerIntegrationSpec
       )
     }
 
-    "return bad request when lastUpdatedDate query parameter is invalid" in {
-      withAuthorizedTrader()
-
-      val result =
-        await(
-          wsClient
-            .url(
-              s"http://localhost:$port/$eoriNumber/records?lastUpdatedDate=test"
-            )
-            .withHttpHeaders(
-              "X-Client-ID"  -> "clientId",
-              "Accept"       -> "application/vnd.hmrc.1.0+json",
-              "Content-Type" -> "application/json"
-            )
-            .get()
-        )
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe createExpectedError(
-        "INVALID_REQUEST_PARAMETER",
-        "The URL parameter lastUpdatedDate is in the wrong format",
-        28
-      )
-    }
-
     "return bad request when Content-Type header is missing" in {
       withAuthorizedTrader()
 
@@ -731,6 +714,16 @@ class GetRecordsControllerIntegrationSpec
           aResponse()
             .withStatus(status)
             .withBody(response)
+        )
+    )
+
+  private def stubForRouterBadRequest(status: Int, responseBody: String) =
+    wireMock.stubFor(
+      get(s"/trader-goods-profiles-router/traders/$eoriNumber/records/abcdfg-12gt")
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withBody(responseBody)
         )
     )
 }

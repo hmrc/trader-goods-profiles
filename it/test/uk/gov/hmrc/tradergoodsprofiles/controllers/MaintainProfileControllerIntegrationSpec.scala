@@ -34,7 +34,6 @@ import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.MaintainProfileRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
@@ -59,12 +58,16 @@ class MaintainProfileControllerIntegrationSpec
   private val url       = s"http://localhost:$port/$eoriNumber"
   private val routerUrl = s"/trader-goods-profiles-router/traders/$eoriNumber"
 
-  private val updateProfileRequest = MaintainProfileRequest(
-    actorId = "GB987654321098",
-    ukimsNumber = "XIUKIM47699357400020231115081800",
-    nirmsNumber = Some("RMS-GB-123456"),
-    niphlNumber = Some("6 S12345")
-  )
+  def updateProfileRequest: JsValue = Json
+    .parse("""
+             |{
+             |    "actorId": "GB987654321098",
+             |    "ukimsNumber": "XIUKIM47699357400020231115081800",
+             |    "nirmsNumber": "RMS-GB-123456",
+             |    "niphlNumber": "6 S12345"
+             |
+             |}
+             |""".stripMargin)
 
   private val updateProfileResponse = MaintainProfileResponse(
     eoriNumber,
@@ -74,7 +77,7 @@ class MaintainProfileControllerIntegrationSpec
     Some("6 S12345")
   )
 
-  private val requestBody      = Json.toJson(updateProfileRequest)
+  private val requestBody      = updateProfileRequest
   private val expectedResponse = Json.toJson(updateProfileResponse)
 
   override lazy val app: Application = {
@@ -193,140 +196,15 @@ class MaintainProfileControllerIntegrationSpec
       )
     }
 
-    "return 400 Bad Request when actorId is missing from body or is in the wrong format" in {
-      withAuthorizedTrader()
-      val invalidJson = Json.parse("""
-          |{
-          | "ukimsNumber": "XIUKIM47699357400020231115081800",
-          | "nirmsNumber": "RMS-GB-123456",
-          | "niphlNumber": "6 S12345"
-          |}
-          |""".stripMargin)
-
-      val result = updateProfileAndWait(invalidJson)
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "BAD_REQUEST",
-        "message"       -> "Bad Request",
-        "errors"        -> Json.arr(
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Mandatory field actorId was missing from body or is in the wrong format",
-            "errorNumber" -> 8
-          )
-        )
-      )
-    }
-
-    "return 400 Bad Request when ukimsNumber is missing from body or is in the wrong format" in {
-      withAuthorizedTrader()
-      val invalidJson = Json.parse("""
-          |{
-          | "actorId": "GB987654321098",
-          | "nirmsNumber": "RMS-GB-123456",
-          | "niphlNumber": "6 S12345"
-          |}
-          |""".stripMargin)
-
-      val result = updateProfileAndWait(invalidJson)
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "BAD_REQUEST",
-        "message"       -> "Bad Request",
-        "errors"        -> Json.arr(
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Mandatory field ukimsNumber was missing from body or is in the wrong format",
-            "errorNumber" -> 33
-          )
-        )
-      )
-    }
-
-    "return 400 Bad Request when optional field nirmsNumber is in the wrong format" in {
-      withAuthorizedTrader()
-      val invalidJson = Json.parse("""
-          |{
-          | "actorId": "GB987654321098",
-          | "ukimsNumber": "XIUKIM47699357400020231115081800",
-          | "nirmsNumber": 123456,
-          | "niphlNumber": "6 S12345"
-          |}
-          |""".stripMargin)
-
-      val result = updateProfileAndWait(invalidJson)
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "BAD_REQUEST",
-        "message"       -> "Bad Request",
-        "errors"        -> Json.arr(
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field nirmsNumber is in the wrong format",
-            "errorNumber" -> 34
-          )
-        )
-      )
-    }
-
-    "return 400 Bad Request when optional field niphlNumber is in the wrong format" in {
-      withAuthorizedTrader()
-      val invalidJson = Json.parse("""
-          |{
-          | "actorId": "GB987654321098",
-          | "ukimsNumber": "XIUKIM47699357400020231115081800",
-          | "nirmsNumber": "RMS-GB-123456",
-          | "niphlNumber": 123456
-          |}
-          |""".stripMargin)
-
-      val result = updateProfileAndWait(invalidJson)
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "BAD_REQUEST",
-        "message"       -> "Bad Request",
-        "errors"        -> Json.arr(
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field niphlNumber is in the wrong format",
-            "errorNumber" -> 35
-          )
-        )
-      )
-    }
-
     "return 400 Bad Request when multiple mandatory fields are missing from body" in {
+      stubForRouterBadRequest(BAD_REQUEST, Some(routerError.toString()))
       withAuthorizedTrader()
       val invalidJson = Json.parse("""{"invalid": "json"}""")
 
       val result = updateProfileAndWait(invalidJson)
 
       result.status mustBe BAD_REQUEST
-      result.json mustBe Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "BAD_REQUEST",
-        "message"       -> "Bad Request",
-        "errors"        -> Json.arr(
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Mandatory field actorId was missing from body or is in the wrong format",
-            "errorNumber" -> 8
-          ),
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Mandatory field ukimsNumber was missing from body or is in the wrong format",
-            "errorNumber" -> 33
-          )
-        )
-      )
+      result.json mustBe routerError
     }
 
     "return 403 Forbidden when EORI number is not authorized" in {
@@ -443,5 +321,32 @@ class MaintainProfileControllerIntegrationSpec
       "correlationId" -> correlationId,
       "code"          -> code,
       "message"       -> message
+    )
+
+  val routerError                                                                       = Json.obj(
+    "correlationId" -> correlationId,
+    "code"          -> "BAD_REQUEST",
+    "message"       -> "Bad Request",
+    "errors"        -> Json.arr(
+      Json.obj(
+        "code"        -> "INVALID_REQUEST_PARAMETER",
+        "message"     -> "Mandatory field actorId was missing from body or is in the wrong format",
+        "errorNumber" -> 8
+      ),
+      Json.obj(
+        "code"        -> "INVALID_REQUEST_PARAMETER",
+        "message"     -> "Mandatory field ukimsNumber was missing from body or is in the wrong format",
+        "errorNumber" -> 33
+      )
+    )
+  )
+  private def stubForRouterBadRequest(status: Int, responseBody: Option[String] = None) =
+    wireMock.stubFor(
+      put(urlEqualTo(routerUrl))
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withBody(responseBody.orNull)
+        )
     )
 }

@@ -64,7 +64,7 @@ class UpdateRecordControllerIntegrationSpec
 
   private val url              = s"http://localhost:$port/$eoriNumber/records/$recordId"
   private val routerUrl        = s"/trader-goods-profiles-router/traders/$eoriNumber/records/$recordId"
-  private val requestBody      = Json.toJson(createUpdateRecordRequest)
+  private val requestBody      = createUpdateRecordRequestData
   private val expectedResponse = Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
 
   override lazy val app: Application = {
@@ -119,60 +119,15 @@ class UpdateRecordControllerIntegrationSpec
     }
 
     "return BadRequest for invalid request body" in {
+      stubForRouterBadRequest(400, routerError.toString)
       withAuthorizedTrader()
       val invalidRequestBody = Json.obj()
 
       val result = updateRecordAndWait(invalidRequestBody)
 
       result.status mustBe BAD_REQUEST
-      result.json mustBe Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "BAD_REQUEST",
-        "message"       -> "Bad Request",
-        "errors"        -> Seq(
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Mandatory field actorId was missing from body or is in the wrong format",
-            "errorNumber" -> 8
-          )
-        )
-      )
+      result.json mustBe routerError
 
-    }
-
-    "return 400 Bad request when required request field is missing from assessment array" in {
-      withAuthorizedTrader()
-
-      val result = updateRecordAndWait(invalidUpdateRecordRequestDataForAssessmentArray)
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "BAD_REQUEST",
-        "message"       -> "Bad Request",
-        "errors"        -> Json.arr(
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field assessmentId is in the wrong format",
-            "errorNumber" -> 15
-          ),
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field primaryCategory is in the wrong format",
-            "errorNumber" -> 16
-          ),
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field type is in the wrong format",
-            "errorNumber" -> 17
-          ),
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field conditionId is in the wrong format",
-            "errorNumber" -> 18
-          )
-        )
-      )
     }
 
     "return Forbidden when X-Client-ID header is missing" in {
@@ -285,7 +240,16 @@ class UpdateRecordControllerIntegrationSpec
         .patch(requestBody)
     )
 
-  private def stubRouterRequest(status: Int, responseBody: String) =
+  private def stubRouterRequest(status: Int, responseBody: String)       =
+    wireMock.stubFor(
+      patch(urlEqualTo(routerUrl))
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withBody(responseBody)
+        )
+    )
+  private def stubForRouterBadRequest(status: Int, responseBody: String) =
     wireMock.stubFor(
       patch(urlEqualTo(routerUrl))
         .willReturn(
@@ -295,6 +259,18 @@ class UpdateRecordControllerIntegrationSpec
         )
     )
 
+  val routerError                                                                       = Json.obj(
+    "correlationId" -> correlationId,
+    "code"          -> "BAD_REQUEST",
+    "message"       -> "Bad Request",
+    "errors"        -> Seq(
+      Json.obj(
+        "code"        -> "INVALID_REQUEST_PARAMETER",
+        "message"     -> "Mandatory field actorId was missing from body or is in the wrong format",
+        "errorNumber" -> 8
+      )
+    )
+  )
   private def updateExpectedError(code: String, message: String, errorNumber: Int): Any =
     Json.obj(
       "correlationId" -> correlationId,

@@ -21,17 +21,15 @@ import org.mockito.MockitoSugar.{reset, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
-import play.api.http.Status.{BAD_REQUEST, CREATED, INTERNAL_SERVER_ERROR}
-import play.api.libs.json.Json
+import play.api.http.Status.{CREATED, INTERNAL_SERVER_ERROR}
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.RequestAdviceRequest
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
-import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants
 
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
@@ -52,7 +50,6 @@ class RequestAdviceControllerSpec extends PlaySpec with AuthTestSupport with Bef
   private val sut           = new RequestAdviceController(
     new FakeSuccessAuthAction(),
     new ValidateHeaderAction(uuidService),
-    uuidService,
     routerService,
     stubControllerComponents()
   )
@@ -67,78 +64,15 @@ class RequestAdviceControllerSpec extends PlaySpec with AuthTestSupport with Bef
 
   "requestAdvice" should {
     "return 201 when advice is successfully requested" in {
-      val requestBody = createRequestAdviceRequest()
+      val requestBody = createRequestAdviceRequest
 
       val result = sut.requestAdvice(eoriNumber, recordId)(request.withBody(Json.toJson(requestBody)))
 
       status(result) mustBe CREATED
     }
 
-    "return 400 when actorId is missing" in {
-      val invalidJsonRequest = Json.obj(
-        "requestorName"  -> "Mr. Phil Edwards",
-        "requestorEmail" -> "Phil.Edwards@gmail.com"
-      )
-
-      val result = sut.requestAdvice(eoriNumber, recordId)(request.withBody(invalidJsonRequest))
-
-      status(result) mustBe BAD_REQUEST
-
-      contentAsJson(result) mustBe Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "BAD_REQUEST",
-        "message"       -> "Bad Request",
-        "errors"        -> Seq(
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> ApplicationConstants.InvalidActorMessage,
-            "errorNumber" -> ApplicationConstants.InvalidActorId
-          )
-        )
-      )
-    }
-
-    "return 400 when JSON body doesn’t match the schema" in {
-      val invalidJsonRequest = Json.obj(
-        "traderRef"                -> "SKU123456",
-        "comcode"                  -> "123456",
-        "goodsDescription"         -> "Bananas",
-        "countryOfOrigin"          -> "GB",
-        "category"                 -> 2,
-        "comcodeEffectiveFromDate" -> "2023-01-01T00:00:00Z"
-      )
-
-      val result = sut.requestAdvice(eoriNumber, recordId)(request.withBody(invalidJsonRequest))
-
-      status(result) mustBe BAD_REQUEST
-
-      contentAsJson(result) mustBe
-        Json.obj(
-          "correlationId" -> correlationId,
-          "code"          -> "BAD_REQUEST",
-          "message"       -> "Bad Request",
-          "errors"        -> Seq(
-            Json.obj(
-              "code"        -> "INVALID_REQUEST_PARAMETER",
-              "message"     -> s"Mandatory field requestorEmail was missing from body or is in the wrong format",
-              "errorNumber" -> 1009
-            ),
-            Json.obj(
-              "code"        -> "INVALID_REQUEST_PARAMETER",
-              "message"     -> s"Mandatory field requestorName was missing from body or is in the wrong format",
-              "errorNumber" -> 1008
-            ),
-            Json.obj(
-              "code"        -> "INVALID_REQUEST_PARAMETER",
-              "message"     -> s"Mandatory field actorId was missing from body or is in the wrong format",
-              "errorNumber" -> 8
-            )
-          )
-        )
-    }
-
     "return 500 when the router service returns an error" in {
-      val adviceRequest = createRequestAdviceRequest()
+      val adviceRequest = createRequestAdviceRequest
 
       val expectedJson = Json.obj(
         "correlationId" -> correlationId,
@@ -160,9 +94,12 @@ class RequestAdviceControllerSpec extends PlaySpec with AuthTestSupport with Bef
     }
   }
 
-  def createRequestAdviceRequest(): RequestAdviceRequest = RequestAdviceRequest(
-    actorId = "XI123456789001",
-    requestorName = "Mr.Phil Edwards",
-    requestorEmail = "Phil.Edwards@gmail.com"
-  )
+  def createRequestAdviceRequest: JsValue = Json
+    .parse("""
+             |{
+             |    "ukimsNumber": "Mr.Phil Edwards",
+             |    "nirmsNumber": "Phil.Edwards@gmail.com"
+             |
+             |}
+             |""".stripMargin)
 }

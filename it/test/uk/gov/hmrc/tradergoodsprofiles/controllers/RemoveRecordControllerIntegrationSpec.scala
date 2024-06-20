@@ -52,12 +52,10 @@ class RemoveRecordControllerIntegrationSpec
   private lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
   private val recordId                = UUID.randomUUID().toString
   private val actorId                 = "GB987654321098"
-  private val invalidActorId          = "INVALID_ACTOR_ID"
   private val uuidService             = mock[UuidService]
   private val correlationId           = "d677693e-9981-4ee3-8574-654981ebe606"
 
   private val url            = s"http://localhost:$port/$eoriNumber/records/$recordId?actorId=$actorId"
-  private val invalidUrl     = s"http://localhost:$port/$eoriNumber/records/$recordId?actorId=$invalidActorId"
   private val routerUrl      = s"/trader-goods-profiles-router/traders/$eoriNumber/records/$recordId?actorId=$actorId"
   private val routerResponse = NO_CONTENT
 
@@ -225,19 +223,6 @@ class RemoveRecordControllerIntegrationSpec
       )
     }
 
-    "return bad request when actorId is invalid" in {
-      withAuthorizedTrader()
-
-      val result = removeRecordAndWait(invalidUrl)
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe createExpectedError(
-        "INVALID_REQUEST_PARAMETER",
-        "Mandatory query parameter actorId was missing or is in the wrong format",
-        8
-      )
-    }
-
     "return bad request when Accept header is invalid" in {
       withAuthorizedTrader()
 
@@ -265,6 +250,14 @@ class RemoveRecordControllerIntegrationSpec
     }
 
     "return an BAD_REQUEST (400) if recordId is invalid" in {
+      stubForRouterBadRequest(
+        400,
+        createExpectedError(
+          "INVALID_REQUEST_PARAMETER",
+          "The recordId has been provided in the wrong format",
+          25
+        ).toString
+      )
       withAuthorizedTrader()
 
       val result = removeRecordAndWait(s"http://localhost:$port/$eoriNumber/records/abcdfg-12gt?actorId=$actorId")
@@ -284,8 +277,8 @@ class RemoveRecordControllerIntegrationSpec
       wsClient
         .url(url)
         .withHttpHeaders(
-          "X-Client-ID"  -> "clientId",
-          "Accept"       -> "application/vnd.hmrc.1.0+json",
+          "X-Client-ID" -> "clientId",
+          "Accept"      -> "application/vnd.hmrc.1.0+json"
         )
         .delete()
     )
@@ -327,6 +320,17 @@ class RemoveRecordControllerIntegrationSpec
           aResponse()
             .withStatus(status)
             .withBody(errorResponse)
+        )
+    )
+
+  private def stubForRouterBadRequest(status: Int, responseBody: String) =
+    wireMock.stubFor(
+      WireMock
+        .delete(s"/trader-goods-profiles-router/traders/$eoriNumber/records/abcdfg-12gt?actorId=$actorId")
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withBody(responseBody)
         )
     )
 }

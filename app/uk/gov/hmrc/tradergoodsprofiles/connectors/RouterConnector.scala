@@ -21,13 +21,12 @@ import io.lemonlabs.uri.config.{ExcludeNones, UriConfig}
 import io.lemonlabs.uri.typesafe.QueryKey.stringQueryKey
 import play.api.Logging
 import play.api.http.{HeaderNames, MimeTypes}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.Request
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.router.RouterRequestAdviceRequest
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.{APICreateRecordRequest, MaintainProfileRequest, UpdateRecordRequest}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.XClientIdHeader
 
 import javax.inject.Inject
@@ -68,7 +67,7 @@ class RouterConnector @Inject() (
       .execute[HttpResponse]
   }
 
-  def createRecord(eori: String, createRecordRequest: APICreateRecordRequest)(implicit
+  def createRecord(eori: String, createRecordRequest: Request[JsValue])(implicit
     hc: HeaderCarrier
   ): Future[HttpResponse] = {
     val url = appConfig.routerUrl.withPath(routerCreateRecordUrlPath(eori))
@@ -76,7 +75,7 @@ class RouterConnector @Inject() (
     httpClient
       .post(url"$url")
       .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-      .withBody(Json.toJson(createRecordRequest))
+      .withBody(createRecordRequest.body)
       .withClientId
       .execute[HttpResponse]
   }
@@ -92,39 +91,37 @@ class RouterConnector @Inject() (
       .execute[HttpResponse]
   }
 
-  def updateRecord(eori: String, recordId: String, updateRecordRequest: UpdateRecordRequest)(implicit
+  def updateRecord(eori: String, recordId: String, updateRecordRequest: Request[JsValue])(implicit
     hc: HeaderCarrier
   ): Future[HttpResponse] = {
-    val url      = appConfig.routerUrl.withPath(routerUpdateRecordUrlPath(eori, recordId))
-    val jsonData = Json.toJson(updateRecordRequest)
+    val url = appConfig.routerUrl.withPath(routerUpdateRecordUrlPath(eori, recordId))
     httpClient
       .patch(url"$url")
       .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-      .withBody(jsonData)
+      .withBody(updateRecordRequest.body)
       .withClientId
       .execute[HttpResponse]
   }
 
-  def routerMaintainProfile(eori: String, updateProfileRequest: MaintainProfileRequest)(implicit
+  def routerMaintainProfile(eori: String, updateProfileRequest: Request[JsValue])(implicit
     hc: HeaderCarrier
   ): Future[HttpResponse] = {
-    val url      = appConfig.routerUrl.withPath(routerMaintainProfileUrlPath(eori))
-    val jsonData = Json.toJson(updateProfileRequest)
+    val url = appConfig.routerUrl.withPath(routerMaintainProfileUrlPath(eori))
     httpClient
       .put(url"$url")
       .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-      .withBody(jsonData)
+      .withBody(updateProfileRequest.body)
       .withClientId
       .execute[HttpResponse]
   }
 
   def requestAdvice(
-    adviceRequest: RouterRequestAdviceRequest,
+    adviceRequest: Request[JsValue],
     eori: String,
     recordId: String
   )(implicit hc: HeaderCarrier): Future[HttpResponse] = {
     val url      = appConfig.routerUrl.withPath(routerAdviceUrlPath(eori, recordId))
-    val jsonData = Json.toJson(adviceRequest)
+    val jsonData = Json.toJson(adviceRequest.body)
     httpClient
       .post(url"$url")
       .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)

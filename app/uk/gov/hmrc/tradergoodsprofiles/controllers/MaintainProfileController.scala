@@ -16,26 +16,21 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
-import cats.data.EitherT
 import play.api.Logging
-import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, ControllerComponents, Request, Result}
-import uk.gov.hmrc.http.HeaderCarrier
+import play.api.libs.json.Json.toJson
+import play.api.libs.json.JsValue
+import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.models.requests.MaintainProfileRequest
-import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
-import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
-import uk.gov.hmrc.tradergoodsprofiles.utils.ValidationSupport.validateRequestBody
+import uk.gov.hmrc.tradergoodsprofiles.services.RouterService
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class MaintainProfileController @Inject() (
   authAction: AuthAction,
   validateHeaderAction: ValidateHeaderAction,
-  uuidService: UuidService,
   routerService: RouterService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
@@ -44,22 +39,10 @@ class MaintainProfileController @Inject() (
 
   def updateProfile(eori: String): Action[JsValue] =
     (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
-      (for {
-        updateProfileRequest <- validateBody(request)
-        response             <- sendUpdate(eori, updateProfileRequest)
-      } yield Ok(Json.toJson(response))).merge
+      routerService.updateProfile(eori, request).map {
+        case Right(serviceResponse) => Ok(toJson(serviceResponse))
+        case Left(error)            => Status(error.status)(toJson(error.errorResponse))
+      }
     }
 
-  private def validateBody(request: Request[JsValue]): EitherT[Future, Result, MaintainProfileRequest] =
-    EitherT
-      .fromEither[Future](validateRequestBody[MaintainProfileRequest](request.body, uuidService))
-      .leftMap(r => BadRequest(Json.toJson(r)))
-
-  private def sendUpdate(
-    eori: String,
-    updateProfileRequest: MaintainProfileRequest
-  )(implicit hc: HeaderCarrier): EitherT[Future, Result, MaintainProfileResponse] =
-    EitherT(routerService.updateProfile(eori, updateProfileRequest)).leftMap(r =>
-      Status(r.status)(Json.toJson(r.errorResponse))
-    )
 }

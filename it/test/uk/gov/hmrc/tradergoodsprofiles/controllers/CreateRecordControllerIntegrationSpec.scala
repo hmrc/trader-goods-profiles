@@ -26,7 +26,7 @@ import play.api.Application
 import play.api.http.Status._
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
+import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
@@ -34,7 +34,7 @@ import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.APICreateRecordRequestSupport
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.UpdateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateOrUpdateRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
@@ -50,7 +50,7 @@ class CreateRecordControllerIntegrationSpec
     with AuthTestSupport
     with WireMockServerSpec
     with CreateOrUpdateRecordResponseSupport
-    with APICreateRecordRequestSupport
+    with UpdateRecordRequestSupport
     with BeforeAndAfterEach
     with BeforeAndAfterAll {
 
@@ -64,7 +64,7 @@ class CreateRecordControllerIntegrationSpec
 
   private val url              = s"http://localhost:$port/$eoriNumber/records"
   private val routerUrl        = s"/trader-goods-profiles-router/traders/$eoriNumber/records"
-  private val requestBody      = Json.toJson(createAPICreateRecordRequest())
+  private val requestBody      = createUpdateRecordRequestData
   private val expectedResponse = Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
 
   override lazy val app: Application = {
@@ -186,29 +186,14 @@ class CreateRecordControllerIntegrationSpec
     }
 
     "return BadRequest for invalid request body" in {
+      stubForRouterBadRequest(BAD_REQUEST, Some(routerError.toString()))
       withAuthorizedTrader()
       val invalidRequestBody = Json.obj()
 
       val result = createRecordAndWait(invalidRequestBody)
 
       result.status mustBe BAD_REQUEST
-      result.json mustBe Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "BAD_REQUEST",
-        "message"       -> "Bad Request",
-        "errors"        -> Seq(
-          createBadRequestJson("Mandatory field actorId was missing from body or is in the wrong format", 8),
-          createBadRequestJson("Mandatory field traderRef was missing from body or is in the wrong format", 9),
-          createBadRequestJson("Mandatory field comcode was missing from body or is in the wrong format", 11),
-          createBadRequestJson("Mandatory field goodsDescription was missing from body or is in the wrong format", 12),
-          createBadRequestJson("Mandatory field countryOfOrigin was missing from body or is in the wrong format", 13),
-          createBadRequestJson("Mandatory field category was missing from body or is in the wrong format", 14),
-          createBadRequestJson(
-            "Mandatory field comcodeEffectiveFromDate was missing from body or is in the wrong format",
-            23
-          )
-        )
-      )
+      result.json mustBe routerError
     }
 
     "return Forbidden when X-Client-ID header is missing" in {
@@ -296,41 +281,6 @@ class CreateRecordControllerIntegrationSpec
       )
     }
 
-    "return 400 Bad request when required request field is missing from assessment array" in {
-      withAuthorizedTrader()
-
-      val result = createRecordAndWait(invalidCreateRecordRequestDataForAssessmentArray)
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe Json.obj(
-        "correlationId" -> correlationId,
-        "code"          -> "BAD_REQUEST",
-        "message"       -> "Bad Request",
-        "errors"        -> Json.arr(
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field assessmentId is in the wrong format",
-            "errorNumber" -> 15
-          ),
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field primaryCategory is in the wrong format",
-            "errorNumber" -> 16
-          ),
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field type is in the wrong format",
-            "errorNumber" -> 17
-          ),
-          Json.obj(
-            "code"        -> "INVALID_REQUEST_PARAMETER",
-            "message"     -> "Optional field conditionId is in the wrong format",
-            "errorNumber" -> 18
-          )
-        )
-      )
-    }
-
   }
 
   private def createRecordAndWaitWithoutClientIdHeader() =
@@ -356,14 +306,24 @@ class CreateRecordControllerIntegrationSpec
         .post(requestBody)
     )
 
-  private def createRecordWithoutConditionAndWait(requestBody: JsValue = requestBody) = {
-    val updatedAssessments = (requestBody \ "assessments").asOpt[JsArray].map { assessments =>
-      JsArray(assessments.value.map { assessment =>
-        assessment.as[JsObject] - "condition"
-      })
-    }
-    requestBody.as[JsObject] ++ Json.obj("assessments" -> updatedAssessments)
-
+  val routerError                                                                                      = Json.obj(
+    "correlationId" -> correlationId,
+    "code"          -> "BAD_REQUEST",
+    "message"       -> "Bad Request",
+    "errors"        -> Seq(
+      createBadRequestJson("Mandatory field actorId was missing from body or is in the wrong format", 8),
+      createBadRequestJson("Mandatory field traderRef was missing from body or is in the wrong format", 9),
+      createBadRequestJson("Mandatory field comcode was missing from body or is in the wrong format", 11),
+      createBadRequestJson("Mandatory field goodsDescription was missing from body or is in the wrong format", 12),
+      createBadRequestJson("Mandatory field countryOfOrigin was missing from body or is in the wrong format", 13),
+      createBadRequestJson("Mandatory field category was missing from body or is in the wrong format", 14),
+      createBadRequestJson(
+        "Mandatory field comcodeEffectiveFromDate was missing from body or is in the wrong format",
+        23
+      )
+    )
+  )
+  private def createRecordWithoutConditionAndWait(requestBody: JsValue = createRecordWithoutCondition) =
     await(
       wsClient
         .url(url)
@@ -374,7 +334,6 @@ class CreateRecordControllerIntegrationSpec
         )
         .post(requestBody)
     )
-  }
 
   private def stubRouterRequest(status: Int, responseBody: String) =
     wireMock.stubFor(
@@ -414,7 +373,16 @@ class CreateRecordControllerIntegrationSpec
       "errorNumber" -> errorNumber
     )
 
-  lazy val invalidCreateRecordRequestDataForAssessmentArray: JsValue = Json
+  private def stubForRouterBadRequest(status: Int, responseBody: Option[String] = None) =
+    wireMock.stubFor(
+      post(urlEqualTo(routerUrl))
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withBody(responseBody.orNull)
+        )
+    )
+  lazy val invalidCreateRecordRequestDataForAssessmentArray: JsValue                    = Json
     .parse("""
              |{
              |    "actorId": "GB098765432112",
@@ -443,6 +411,28 @@ class CreateRecordControllerIntegrationSpec
              |                "conditionDescription": "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
              |                "conditionTraderText": "Excluded product"
              |            }
+             |        }
+             |    ],
+             |    "supplementaryUnit": 500,
+             |    "measurementUnit": "Square metre (m2)",
+             |    "comcodeEffectiveFromDate": "2024-11-18T23:20:19Z",
+             |    "comcodeEffectiveToDate": "2024-11-18T23:20:19Z"
+             |}
+             |""".stripMargin)
+
+  lazy val createRecordWithoutCondition: JsValue = Json
+    .parse("""
+             |{
+             |    "actorId": "GB098765432112",
+             |    "traderRef": "BAN001001",
+             |    "comcode": "10410100",
+             |    "goodsDescription": "Organic bananas",
+             |    "countryOfOrigin": "EC",
+             |    "category": 1,
+             |    "assessments": [
+             |        {
+             |            "assessmentId": "abc123",
+             |            "primaryCategory": 1
              |        }
              |    ],
              |    "supplementaryUnit": 500,
