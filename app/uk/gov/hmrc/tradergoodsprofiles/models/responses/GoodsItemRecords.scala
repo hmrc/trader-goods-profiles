@@ -42,8 +42,8 @@ case class GoodsItemRecords(
   reviewReason: Option[String],
   declarable: String,
   ukimsNumber: String,
-  nirmsNumber: String,
-  niphlNumber: String,
+  nirmsNumber: Option[String],
+  niphlNumber: Option[String],
   locked: Boolean,
   createdDateTime: Instant,
   updatedDateTime: Instant
@@ -74,8 +74,8 @@ object GoodsItemRecords {
         (json \ "reviewReason").asOpt[String],
         (json \ "declarable").as[String],
         (json \ "ukimsNumber").as[String],
-        (json \ "nirmsNumber").as[String],
-        (json \ "niphlNumber").as[String],
+        (json \ "nirmsNumber").asOpt[String],
+        (json \ "niphlNumber").asOpt[String],
         (json \ "locked").as[Boolean],
         (json \ "createdDateTime").as[Instant],
         (json \ "updatedDateTime").as[Instant]
