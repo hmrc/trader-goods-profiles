@@ -198,8 +198,8 @@ class GetRecordsControllerSpec
       Some("Commodity code changed"),
       "IMMI declarable",
       "XIUKIM47699357400020231115081800",
-      "RMS-GB-123456",
-      "6 S12345",
+      Some("RMS-GB-123456"),
+      Some("6 S12345"),
       locked = false,
       timestamp,
       timestamp
