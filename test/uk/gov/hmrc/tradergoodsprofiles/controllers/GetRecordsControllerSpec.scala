@@ -75,12 +75,6 @@ class GetRecordsControllerSpec
   }
 
   "getRecord" should {
-    "return 200" in {
-      val result = sut.getRecord(eoriNumber, recordId)(request)
-
-      status(result) mustBe OK
-    }
-
     "get the record from router" in {
       val result = sut.getRecord(eoriNumber, recordId)(request)
 
@@ -116,26 +110,13 @@ class GetRecordsControllerSpec
   }
 
   "getRecords" should {
-    "return 200 records without pagination" in {
-      val result = sut.getRecords(eoriNumber, None, Some(0), Some(0))(request)
-
-      status(result) mustBe OK
-      contentAsJson(result) mustBe Json.toJson(createGetRecordsResponse(eoriNumber, recordId, timestamp))
-    }
-
-    "return 200 records with pagination" in {
+    "return 200 with multiple records" in {
       val result = sut.getRecords(eoriNumber, Some("2024-03-26T16:14:52Z"), Some(1), Some(1))(request)
 
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(createGetRecordsResponse(eoriNumber, recordId, timestamp))
-    }
-
-    "get the record from router" in {
-      val result = sut.getRecords(eoriNumber, Some("2024-03-26T16:14:52Z"), Some(0), Some(0))(request)
-
-      status(result) mustBe OK
       verify(routerService)
-        .getRecords(eqTo(eoriNumber), eqTo(Some("2024-03-26T16:14:52Z")), eqTo(Some(0)), eqTo(Some(0)))(any)
+        .getRecords(eqTo(eoriNumber), eqTo(Some("2024-03-26T16:14:52Z")), eqTo(Some(1)), eqTo(Some(1)))(any)
     }
 
     "return an error" when {

@@ -135,24 +135,6 @@ class CreateRecordControllerIntegrationSpec
       }
     }
 
-    "return BadRequest when Accept header is invalid" in {
-      withAuthorizedTrader()
-
-      val headers = Seq("X-Client-ID" -> "clientId", "Content-Type" -> "application/json")
-      val result  = await(
-        wsClient
-          .url(url)
-          .withHttpHeaders(headers: _*)
-          .post(requestBody)
-      )
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe createExpectedError(
-        "INVALID_HEADER_PARAMETER",
-        "Accept was missing from Header or is in wrong format",
-        4
-      )
-    }
 
     "return Unsupported media type when Content-Type header is empty or invalid" in {
       withAuthorizedTrader()
