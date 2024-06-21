@@ -543,12 +543,9 @@ components:
     CreateTGPRecordAdviceSchema:
       type: object
       required:
-        - actorId
         - requestorName
         - requestorEmail
       properties:
-        actorId:
-          $ref: '#/components/schemas/actorId'
         requestorName:
           $ref: '#/components/schemas/requestorName'
         requestorEmail:
