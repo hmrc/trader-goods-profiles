@@ -45,11 +45,53 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
 
   "Validate Header Action" should {
     "return None" when {
-      "accept header is valid" in {
-        val request = FakeRequest().withHeaders(
+      "accept header is valid and content-type header is valid for POST request" in {
+        val request = FakeRequest("POST", "/").withHeaders(
           "Accept"       -> "application/vnd.hmrc.1.0+json",
           "Content-Type" -> "application/json",
           "X-Client-ID"  -> "some client ID"
+        )
+        val result  = await(sut.filter(request))
+
+        result mustBe None
+      }
+
+      "accept header is valid and content-type header is valid for PUT request" in {
+        val request = FakeRequest("PUT", "/").withHeaders(
+          "Accept"       -> "application/vnd.hmrc.1.0+json",
+          "Content-Type" -> "application/json",
+          "X-Client-ID"  -> "some client ID"
+        )
+        val result  = await(sut.filter(request))
+
+        result mustBe None
+      }
+
+      "accept header is valid and content-type header is valid for PATCH request" in {
+        val request = FakeRequest("PATCH", "/").withHeaders(
+          "Accept"       -> "application/vnd.hmrc.1.0+json",
+          "Content-Type" -> "application/json",
+          "X-Client-ID"  -> "some client ID"
+        )
+        val result  = await(sut.filter(request))
+
+        result mustBe None
+      }
+
+      "accept header is valid and content-type header is missing for GET request" in {
+        val request = FakeRequest("GET", "/").withHeaders(
+          "Accept"      -> "application/vnd.hmrc.1.0+json",
+          "X-Client-ID" -> "some client ID"
+        )
+        val result  = await(sut.filter(request))
+
+        result mustBe None
+      }
+
+      "accept header is valid and content-type header is missing for DELETE request" in {
+        val request = FakeRequest("DELETE", "/").withHeaders(
+          "Accept"      -> "application/vnd.hmrc.1.0+json",
+          "X-Client-ID" -> "some client ID"
         )
         val result  = await(sut.filter(request))
 
@@ -59,16 +101,42 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
 
     "return a bad request" when {
       "accept header is missing" in {
-        val request = FakeRequest().withHeaders("Content-Type" -> "application/json")
+        val request = FakeRequest("POST", "/").withHeaders("Content-Type" -> "application/json")
         val result  = await(sut.filter(request))
         result.value mustBe BadRequest(
           createExpectedJson("INVALID_HEADER_PARAMETER", "Accept was missing from Header or is in wrong format", 4)
         )
       }
 
-      "content type header is missing" in {
-        val request =
-          FakeRequest().withHeaders("Accept" -> "application/vnd.hmrc.1.0+json", "X-Client-ID" -> "some client ID")
+      "content type header is missing for POST request" in {
+        val request = FakeRequest("POST", "/")
+          .withHeaders("Accept" -> "application/vnd.hmrc.1.0+json", "X-Client-ID" -> "some client ID")
+        val result  = await(sut.filter(request))
+        result.value mustBe BadRequest(
+          createExpectedJson(
+            "INVALID_HEADER_PARAMETER",
+            "Content-Type was missing from Header or is in the wrong format",
+            3
+          )
+        )
+      }
+
+      "content type header is missing for PUT request" in {
+        val request = FakeRequest("PUT", "/")
+          .withHeaders("Accept" -> "application/vnd.hmrc.1.0+json", "X-Client-ID" -> "some client ID")
+        val result  = await(sut.filter(request))
+        result.value mustBe BadRequest(
+          createExpectedJson(
+            "INVALID_HEADER_PARAMETER",
+            "Content-Type was missing from Header or is in the wrong format",
+            3
+          )
+        )
+      }
+
+      "content type header is missing for PATCH request" in {
+        val request = FakeRequest("PATCH", "/")
+          .withHeaders("Accept" -> "application/vnd.hmrc.1.0+json", "X-Client-ID" -> "some client ID")
         val result  = await(sut.filter(request))
         result.value mustBe BadRequest(
           createExpectedJson(
@@ -80,8 +148,8 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
       }
 
       "client ID header is missing" in {
-        val request =
-          FakeRequest().withHeaders("Accept" -> "application/vnd.hmrc.1.0+json", "Content-Type" -> "application/json")
+        val request = FakeRequest("POST", "/")
+          .withHeaders("Accept" -> "application/vnd.hmrc.1.0+json", "Content-Type" -> "application/json")
         val result  = await(sut.filter(request))
         result.value mustBe BadRequest(
           createExpectedJson(
@@ -93,7 +161,7 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
       }
 
       "accept header is the incorrect format" in {
-        val request = FakeRequest().withHeaders(
+        val request = FakeRequest("POST", "/").withHeaders(
           "Accept"       -> "the wrong format",
           "Content-Type" -> "application/json",
           "X-Client-ID"  -> "some client ID"
@@ -105,8 +173,42 @@ class ValidateHeaderActionSpec extends PlaySpec with BeforeAndAfterEach with Eit
         )
       }
 
-      "content type header is the incorrect format" in {
-        val request = FakeRequest().withHeaders(
+      "content type header is the incorrect format for POST request" in {
+        val request = FakeRequest("POST", "/").withHeaders(
+          "Accept"       -> "application/vnd.hmrc.1.0+json",
+          "Content-Type" -> "the wrong format",
+          "X-Client-ID"  -> "some client ID"
+        )
+        val result  = await(sut.filter(request))
+
+        result.value mustBe BadRequest(
+          createExpectedJson(
+            "INVALID_HEADER_PARAMETER",
+            "Content-Type was missing from Header or is in the wrong format",
+            3
+          )
+        )
+      }
+
+      "content type header is the incorrect format for PUT request" in {
+        val request = FakeRequest("PUT", "/").withHeaders(
+          "Accept"       -> "application/vnd.hmrc.1.0+json",
+          "Content-Type" -> "the wrong format",
+          "X-Client-ID"  -> "some client ID"
+        )
+        val result  = await(sut.filter(request))
+
+        result.value mustBe BadRequest(
+          createExpectedJson(
+            "INVALID_HEADER_PARAMETER",
+            "Content-Type was missing from Header or is in the wrong format",
+            3
+          )
+        )
+      }
+
+      "content type header is the incorrect format for PATCH request" in {
+        val request = FakeRequest("PATCH", "/").withHeaders(
           "Accept"       -> "application/vnd.hmrc.1.0+json",
           "Content-Type" -> "the wrong format",
           "X-Client-ID"  -> "some client ID"

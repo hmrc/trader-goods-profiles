@@ -71,9 +71,8 @@ class ValidateHeaderAction @Inject() (uuidService: UuidService)(implicit ec: Exe
 
   private def validateContentTypeHeader(request: Request[_]): Future[Boolean] =
     request.method match {
-      case "DELETE" =>
-        successful(true)
-      case _        =>
+      case "DELETE" | "GET" => successful(true)
+      case _                =>
         request.headers.get(HeaderNames.CONTENT_TYPE) match {
           case Some(header) if header.equals(MimeTypes.JSON) => successful(true)
           case _                                             => successful(false)
