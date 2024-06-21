@@ -122,7 +122,6 @@ class GetRecordsControllerIntegrationSpec
       withClue("should add the right headers") {
         verify(
           getRequestedFor(urlEqualTo(getSingleRecordRouterUrl))
-            .withHeader("Content-Type", equalTo("application/json"))
             .withHeader("X-Client-ID", equalTo("clientId"))
         )
       }
@@ -238,38 +237,6 @@ class GetRecordsControllerIntegrationSpec
       )
     }
 
-    "return bad request when Content-Type header is missing" in {
-      withAuthorizedTrader()
-
-      val headers = Seq("X-Client-ID" -> "clientId", "Accept" -> "application/vnd.hmrc.1.0+json")
-      val result  = getRecordAndWait(getSingleRecordUrl, headers: _*)
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe createExpectedError(
-        "INVALID_HEADER_PARAMETER",
-        "Content-Type was missing from Header or is in the wrong format",
-        3
-      )
-    }
-
-    "return bad request when Content-Type header is not the right format" in {
-      withAuthorizedTrader()
-
-      val headers = Seq(
-        "X-Client-ID"  -> "clientId",
-        "Accept"       -> "application/vnd.hmrc.1.0+json",
-        "Content-Type" -> "application/xml"
-      )
-      val result  = getRecordAndWait(getSingleRecordUrl, headers: _*)
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe createExpectedError(
-        "INVALID_HEADER_PARAMETER",
-        "Content-Type was missing from Header or is in the wrong format",
-        3
-      )
-    }
-
     "return internal server error if auth throw" in {
       withUnauthorizedTrader(new RuntimeException("runtime exception"))
 
@@ -378,7 +345,6 @@ class GetRecordsControllerIntegrationSpec
       withClue("should add the right headers") {
         verify(
           getRequestedFor(urlEqualTo(getMultipleRecordsRouterUrl))
-            .withHeader("Content-Type", equalTo("application/json"))
             .withHeader("X-Client-ID", equalTo("clientId"))
         )
       }
@@ -557,38 +523,6 @@ class GetRecordsControllerIntegrationSpec
         "INVALID_HEADER_PARAMETER",
         "Accept was missing from Header or is in wrong format",
         4
-      )
-    }
-
-    "return bad request when Content-Type header is missing" in {
-      withAuthorizedTrader()
-
-      val headers = Seq("X-Client-ID" -> "clientId", "Accept" -> "application/vnd.hmrc.1.0+json")
-      val result  = getRecordsAndWait(getMultipleRecordsUrl, headers: _*)
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe createExpectedError(
-        "INVALID_HEADER_PARAMETER",
-        "Content-Type was missing from Header or is in the wrong format",
-        3
-      )
-    }
-
-    "return bad request when Content-Type header is not the right format" in {
-      withAuthorizedTrader()
-
-      val headers = Seq(
-        "X-Client-ID"  -> "clientId",
-        "Accept"       -> "application/vnd.hmrc.1.0+json",
-        "Content-Type" -> "application/xml"
-      )
-      val result  = getRecordsAndWait(getMultipleRecordsUrl, headers: _*)
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe createExpectedError(
-        "INVALID_HEADER_PARAMETER",
-        "Content-Type was missing from Header or is in the wrong format",
-        3
       )
     }
 
