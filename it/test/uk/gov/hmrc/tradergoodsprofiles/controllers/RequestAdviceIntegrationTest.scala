@@ -224,9 +224,9 @@ class RequestAdviceIntegrationTest
   def createRequestAdviceRequest: JsValue = Json
     .parse("""
              |{
-             |    "ukimsNumber": "Mr.Phil Edwards",
-             |    "nirmsNumber": "Phil.Edwards@gmail.com"
-             |
+             |    "actorId": "GB9876543210983",
+             |    "requestorName": "Mr.Phil Edwards",
+             |    "requestorEmail": "Phil.Edwards@gmail.com"
              |}
              |""".stripMargin)
 
