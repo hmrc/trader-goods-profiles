@@ -135,7 +135,6 @@ class CreateRecordControllerIntegrationSpec
       }
     }
 
-
     "return Unsupported media type when Content-Type header is empty or invalid" in {
       withAuthorizedTrader()
 
@@ -154,7 +153,7 @@ class CreateRecordControllerIntegrationSpec
       )
     }
 
-    "return BadRequest when X-Client-ID header is missing" in {
+    "return Forbidden when X-Client-ID header is missing" in {
       withAuthorizedTrader()
 
       val result = createRecordAndWaitWithoutClientIdHeader()
@@ -168,7 +167,7 @@ class CreateRecordControllerIntegrationSpec
     }
 
     "return BadRequest for invalid request body" in {
-      stubForRouterBadRequest(BAD_REQUEST, Some(routerError.toString()))
+      stubForRouterBadRequest()
       withAuthorizedTrader()
       val invalidRequestBody = Json.obj()
 
@@ -176,19 +175,6 @@ class CreateRecordControllerIntegrationSpec
 
       result.status mustBe BAD_REQUEST
       result.json mustBe routerError
-    }
-
-    "return Forbidden when X-Client-ID header is missing" in {
-      withAuthorizedTrader()
-
-      val result = createRecordAndWaitWithoutClientIdHeader()
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe createExpectedError(
-        "INVALID_HEADER_PARAMETER",
-        "X-Client-ID was missing from Header or is in wrong format",
-        6000
-      )
     }
 
     "return Forbidden when EORI number is not authorized" in {
@@ -288,7 +274,7 @@ class CreateRecordControllerIntegrationSpec
         .post(requestBody)
     )
 
-  val routerError                                                                                      = Json.obj(
+  private val routerError                           = Json.obj(
     "correlationId" -> correlationId,
     "code"          -> "BAD_REQUEST",
     "message"       -> "Bad Request",
@@ -305,7 +291,7 @@ class CreateRecordControllerIntegrationSpec
       )
     )
   )
-  private def createRecordWithoutConditionAndWait(requestBody: JsValue = createRecordWithoutCondition) =
+  private def createRecordWithoutConditionAndWait() =
     await(
       wsClient
         .url(url)
@@ -314,7 +300,7 @@ class CreateRecordControllerIntegrationSpec
           "Accept"       -> "application/vnd.hmrc.1.0+json",
           "Content-Type" -> "application/json"
         )
-        .post(requestBody)
+        .post(createRecordWithoutCondition)
     )
 
   private def stubRouterRequest(status: Int, responseBody: String) =
@@ -355,54 +341,17 @@ class CreateRecordControllerIntegrationSpec
       "errorNumber" -> errorNumber
     )
 
-  private def stubForRouterBadRequest(status: Int, responseBody: Option[String] = None) =
+  private def stubForRouterBadRequest() =
     wireMock.stubFor(
       post(urlEqualTo(routerUrl))
         .willReturn(
           aResponse()
-            .withStatus(status)
-            .withBody(responseBody.orNull)
+            .withStatus(400)
+            .withBody(routerError.toString())
         )
     )
-  lazy val invalidCreateRecordRequestDataForAssessmentArray: JsValue                    = Json
-    .parse("""
-             |{
-             |    "actorId": "GB098765432112",
-             |    "traderRef": "BAN001001",
-             |    "comcode": "10410100",
-             |    "goodsDescription": "Organic bananas",
-             |    "countryOfOrigin": "EC",
-             |    "category": 1,
-             |    "assessments": [
-             |        {
-             |            "assessmentId": "abc123",
-             |            "primaryCategory": 1,
-             |            "condition": {
-             |                "type": "abc123",
-             |                "conditionId": "Y923",
-             |                "conditionDescription": "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
-             |                "conditionTraderText": "Excluded product"
-             |            }
-             |        },
-             |        {
-             |            "assessmentId": "",
-             |            "primaryCategory": "test",
-             |            "condition": {
-             |                "type": "",
-             |                "conditionId": "",
-             |                "conditionDescription": "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
-             |                "conditionTraderText": "Excluded product"
-             |            }
-             |        }
-             |    ],
-             |    "supplementaryUnit": 500,
-             |    "measurementUnit": "Square metre (m2)",
-             |    "comcodeEffectiveFromDate": "2024-11-18T23:20:19Z",
-             |    "comcodeEffectiveToDate": "2024-11-18T23:20:19Z"
-             |}
-             |""".stripMargin)
 
-  lazy val createRecordWithoutCondition: JsValue = Json
+  private val createRecordWithoutCondition: JsValue = Json
     .parse("""
              |{
              |    "actorId": "GB098765432112",
