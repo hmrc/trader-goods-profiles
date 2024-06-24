@@ -1019,9 +1019,9 @@ components:
         number.
     niphlNumber:
       type: string
-      minLength: 8
-      maxLength: 8
-      example: 6 S12345
+      minLength: 4
+      maxLength: 7
+      example: 6S12345
       description: >-
         The traders' Northern Ireland Plant Health Label scheme registration
         number.
