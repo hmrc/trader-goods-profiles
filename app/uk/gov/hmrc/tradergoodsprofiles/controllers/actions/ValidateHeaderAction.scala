@@ -26,11 +26,35 @@ import javax.inject.Inject
 import scala.concurrent.Future.successful
 import scala.concurrent.{ExecutionContext, Future}
 
+trait ValidationActions {
+  def validateContentType(request: Request[_]): Future[Boolean]
+}
+
+object DefaultValidationActions extends ValidationActions {
+  def validateContentType(request: Request[_]): Future[Boolean] =
+    request.headers.get(HeaderNames.CONTENT_TYPE) match {
+      case Some(header) if header.equals(MimeTypes.JSON) => successful(true)
+      case _                                             => successful(false)
+    }
+}
+
+object NoContentTypeValidation extends ValidationActions {
+  def validateContentType(request: Request[_]): Future[Boolean] = successful(true)
+}
+
 class ValidateHeaderAction @Inject() (uuidService: UuidService)(implicit ec: ExecutionContext)
     extends ActionFilter[Request] {
 
   override val executionContext: ExecutionContext = ec
   private lazy val pattern                        = """^application/vnd[.]{1}hmrc[.]{1}1{1}[.]0[+]{1}json$""".r
+
+  private val methodValidationMap: Map[String, ValidationActions] = Map(
+    "POST"   -> DefaultValidationActions,
+    "PUT"    -> DefaultValidationActions,
+    "PATCH"  -> DefaultValidationActions,
+    "DELETE" -> NoContentTypeValidation,
+    "GET"    -> NoContentTypeValidation
+  )
 
   override def filter[A](request: Request[A]): Future[Option[Result]] =
     for {
@@ -44,7 +68,7 @@ class ValidateHeaderAction @Inject() (uuidService: UuidService)(implicit ec: Exe
       case _                  => invalidClientIdResult
     }
 
-  private def invalidAcceptHeaderResult                                  =
+  private def invalidAcceptHeaderResult =
     Some(
       BadRequestErrorResponse(
         uuidService.uuid,
@@ -53,6 +77,7 @@ class ValidateHeaderAction @Inject() (uuidService: UuidService)(implicit ec: Exe
         InvalidHeaderAccept
       ).toResult
     )
+
   private def validateAcceptHeader(request: Request[_]): Future[Boolean] =
     request.headers.get(HeaderNames.ACCEPT) match {
       case Some(header) if pattern.matches(header) => successful(true)
@@ -69,15 +94,10 @@ class ValidateHeaderAction @Inject() (uuidService: UuidService)(implicit ec: Exe
       ).toResult
     )
 
-  private def validateContentTypeHeader(request: Request[_]): Future[Boolean] =
-    request.method match {
-      case "DELETE" | "GET" => successful(true)
-      case _                =>
-        request.headers.get(HeaderNames.CONTENT_TYPE) match {
-          case Some(header) if header.equals(MimeTypes.JSON) => successful(true)
-          case _                                             => successful(false)
-        }
-    }
+  private def validateContentTypeHeader(request: Request[_]): Future[Boolean] = {
+    val validationAction = methodValidationMap.getOrElse(request.method, DefaultValidationActions)
+    validationAction.validateContentType(request)
+  }
 
   private def invalidClientIdResult =
     Some(
