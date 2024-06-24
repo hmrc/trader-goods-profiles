@@ -153,7 +153,7 @@ class CreateRecordControllerIntegrationSpec
       )
     }
 
-    "return Forbidden when X-Client-ID header is missing" in {
+    "return Bad Request when X-Client-ID header is missing" in {
       withAuthorizedTrader()
 
       val result = createRecordAndWaitWithoutClientIdHeader()
