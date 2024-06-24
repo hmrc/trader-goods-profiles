@@ -121,7 +121,7 @@ class CreateRecordControllerIntegrationSpec
     "successfully create a record without condition and return 201" in {
       withAuthorizedTrader()
 
-      val result = createRecordWithoutConditionAndWait()
+      val result = createRecordWithoutConditionAndWait
 
       result.status mustBe CREATED
       result.json mustBe expectedResponse
@@ -133,6 +133,25 @@ class CreateRecordControllerIntegrationSpec
             .withHeader("X-Client-ID", equalTo("clientId"))
         )
       }
+    }
+
+    "return BadRequest when Accept header is invalid" in {
+      withAuthorizedTrader()
+
+      val headers = Seq("X-Client-ID" -> "clientId", "Content-Type" -> "application/json")
+      val result  = await(
+        wsClient
+          .url(url)
+          .withHttpHeaders(headers: _*)
+          .post(requestBody)
+      )
+
+      result.status mustBe BAD_REQUEST
+      result.json mustBe createExpectedError(
+        "INVALID_HEADER_PARAMETER",
+        "Accept was missing from Header or is in wrong format",
+        4
+      )
     }
 
     "return Unsupported media type when Content-Type header is empty or invalid" in {
@@ -167,7 +186,7 @@ class CreateRecordControllerIntegrationSpec
     }
 
     "return BadRequest for invalid request body" in {
-      stubForRouterBadRequest()
+      stubForRouterBadRequest
       withAuthorizedTrader()
       val invalidRequestBody = Json.obj()
 
@@ -274,7 +293,7 @@ class CreateRecordControllerIntegrationSpec
         .post(requestBody)
     )
 
-  private val routerError                           = Json.obj(
+  private val routerError                         = Json.obj(
     "correlationId" -> correlationId,
     "code"          -> "BAD_REQUEST",
     "message"       -> "Bad Request",
@@ -291,7 +310,7 @@ class CreateRecordControllerIntegrationSpec
       )
     )
   )
-  private def createRecordWithoutConditionAndWait() =
+  private def createRecordWithoutConditionAndWait =
     await(
       wsClient
         .url(url)
@@ -341,7 +360,7 @@ class CreateRecordControllerIntegrationSpec
       "errorNumber" -> errorNumber
     )
 
-  private def stubForRouterBadRequest() =
+  private def stubForRouterBadRequest =
     wireMock.stubFor(
       post(urlEqualTo(routerUrl))
         .willReturn(

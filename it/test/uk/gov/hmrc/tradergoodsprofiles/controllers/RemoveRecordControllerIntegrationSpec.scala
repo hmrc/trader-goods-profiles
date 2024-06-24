@@ -215,6 +215,20 @@ class RemoveRecordControllerIntegrationSpec
       )
     }
 
+    "return bad request when Accept header is invalid" in {
+      withAuthorizedTrader()
+
+      val headers = Seq("X-Client-ID" -> "clientId", "Content-Type" -> "application/json")
+      val result  = removeRecordAndWait(url, headers: _*)
+
+      result.status mustBe BAD_REQUEST
+      result.json mustBe createExpectedError(
+        "INVALID_HEADER_PARAMETER",
+        "Accept was missing from Header or is in wrong format",
+        4
+      )
+    }
+
     "return internal server error if auth throw" in {
       withUnauthorizedTrader(new RuntimeException("runtime exception"))
 
@@ -227,26 +241,19 @@ class RemoveRecordControllerIntegrationSpec
       )
     }
 
-    "return an BAD_REQUEST (400) if recordId is invalid" in {
-      stubRouterResponse(
-        400,
-        createExpectedError(
-          "INVALID_REQUEST_PARAMETER",
-          "The recordId has been provided in the wrong format",
-          25
-        ).toString,
-        s"/trader-goods-profiles-router/traders/$eoriNumber/records/abcdfg-12gt?actorId=$actorId"
-      )
+    "return an error if API return an error with non json message" in {
       withAuthorizedTrader()
+      stubRouterResponse(404, "error")
 
-      val result = removeRecordAndWait(s"http://localhost:$port/$eoriNumber/records/abcdfg-12gt?actorId=$actorId")
+      val result = removeRecordAndWait()
 
-      result.status mustBe BAD_REQUEST
-      result.json mustBe createExpectedError(
-        "INVALID_REQUEST_PARAMETER",
-        "The recordId has been provided in the wrong format",
-        25
+      result.status mustBe INTERNAL_SERVER_ERROR
+      result.json mustBe Json.obj(
+        "correlationId" -> correlationId,
+        "code"          -> "INTERNAL_SERVER_ERROR",
+        "message"       -> "Response body could not be parsed as JSON, body: error"
       )
+
     }
 
   }
