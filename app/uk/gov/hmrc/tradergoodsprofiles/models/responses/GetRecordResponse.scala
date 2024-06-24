@@ -43,8 +43,8 @@ case class GetRecordResponse(
   reviewReason: Option[String],
   declarable: String,
   ukimsNumber: String,
-  nirmsNumber: String,
-  niphlNumber: String,
+  nirmsNumber: Option[String],
+  niphlNumber: Option[String],
   locked: Boolean,
   createdDateTime: Instant,
   updatedDateTime: Instant
@@ -131,8 +131,8 @@ object GetRecordResponse {
       val reviewReason             = readOption[String]("reviewReason")
       val declarable               = read[String]("declarable")
       val ukimsNumber              = read[String]("ukimsNumber")
-      val nirmsNumber              = read[String]("nirmsNumber")
-      val niphlNumber              = read[String]("niphlNumber")
+      val nirmsNumber              = readOption[String]("nirmsNumber")
+      val niphlNumber              = readOption[String]("niphlNumber")
       val locked                   = read[Boolean]("locked")
       val createdDateTime          = read[Instant]("createdDateTime")
       val updatedDateTime          = read[Instant]("updatedDateTime")
