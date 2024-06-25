@@ -35,7 +35,11 @@ trait ValidationRules {
       .toRight(Error(InvalidHeaderParameter, InvalidHeaderClientIdMessage, InvalidHeaderClientId))
 
   protected def validateAllHeader(implicit request: Request[_]): Either[Result, _] =
-    foldLeftBreak(List(validateAcceptHeader, validateContentType, validateClientIdHeader)).left
+    (for {
+      _ <- validateAcceptHeader
+      _ <- validateContentType
+      _ <- validateClientIdHeader
+    } yield ()).left
       .map(e =>
         BadRequestErrorResponse(
           uuidService.uuid,
@@ -44,10 +48,9 @@ trait ValidationRules {
           e.errorNumber
         ).toResult
       )
-
   protected def validateAcceptAndClientIdHeader(implicit
     request: Request[_]
-  ): Either[Result, _] =
+  ): Either[Result, _]                                                             =
     foldLeftBreak(List(validateAcceptHeader, validateClientIdHeader)).left
       .map(e =>
         BadRequestErrorResponse(
@@ -59,12 +62,13 @@ trait ValidationRules {
       )
 
   private def foldLeftBreak(list: List[Either[Error, _]]): Either[Error, _] =
+    //list => [Right(()), Left(E), Right(()) ]
     list match {
-      case Nil     => Right(())
-      case a :: as =>
-        a match {
+      case Nil          => Right(())
+      case head :: tail =>
+        head match {
           case l @ Left(_) => l
-          case Right(_)    => foldLeftBreak(as)
+          case Right(_)    => foldLeftBreak(tail)
         }
     }
 

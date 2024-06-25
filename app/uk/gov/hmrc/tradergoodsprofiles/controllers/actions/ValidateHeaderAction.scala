@@ -58,9 +58,9 @@ class ValidateHeaderAction @Inject() (uuidService: UuidService)(implicit ec: Exe
 
   override def filter[A](request: Request[A]): Future[Option[Result]] =
     for {
-      isValidAcceptHeader <- validateAcceptHeader(request)
-      isValidContentType  <- validateContentTypeHeader(request)
-      isValidClientId     <- validateClientIdHeader(request)
+      isValidAcceptHeader: Boolean <- validateAcceptHeader(request)
+      isValidContentType           <- validateContentTypeHeader(request)
+      isValidClientId              <- validateClientIdHeader(request)
     } yield (isValidAcceptHeader, isValidContentType, isValidClientId) match {
       case (true, true, true) => None
       case (false, _, _)      => invalidAcceptHeaderResult
