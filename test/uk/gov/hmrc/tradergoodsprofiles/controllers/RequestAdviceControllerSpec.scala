@@ -49,8 +49,8 @@ class RequestAdviceControllerSpec extends PlaySpec with AuthTestSupport with Bef
   private val routerService = mock[RouterService]
   private val sut           = new RequestAdviceController(
     new FakeSuccessAuthAction(),
-    new ValidateHeaderAction(uuidService),
     routerService,
+    uuidService,
     stubControllerComponents()
   )
 

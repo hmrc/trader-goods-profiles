@@ -42,7 +42,7 @@ class CreateRecordController @Inject() (
   def createRecord(eori: String): Action[JsValue] =
     authAction(eori).async(parse.json) { implicit request =>
       val result = for {
-        _               <- EitherT.fromEither[Future](validateAllHeader)
+        _               <- EitherT.fromEither[Future](validateAllHeaders)
         serviceResponse <-
           EitherT(routerService.createRecord(eori, request)).leftMap(e => Status(e.status)(toJson(e.errorResponse)))
       } yield Created(toJson(serviceResponse))

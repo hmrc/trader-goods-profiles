@@ -51,16 +51,17 @@ trait ValidationRules {
       .get(XClientIdHeader)
       .toRight(Error(InvalidHeaderParameter, InvalidHeaderClientIdMessage, InvalidHeaderClientId))
 
-  protected def validateAllHeader(implicit request: Request[_]): Either[Result, _] =
+  protected def validateAllHeaders(implicit request: Request[_]): Either[Result, _] =
     (for {
       _ <- validateAcceptHeader
       _ <- validateContentType
       _ <- validateClientIdHeader
     } yield ()).left
       .map(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
+
   protected def validateAcceptAndClientIdHeader(implicit
     request: Request[_]
-  ): Either[Result, _]                                                             =
+  ): Either[Result, _] =
     (for {
       _ <- validateAcceptHeader
       _ <- validateClientIdHeader

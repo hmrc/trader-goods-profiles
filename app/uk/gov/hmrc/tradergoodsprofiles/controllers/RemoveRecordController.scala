@@ -16,30 +16,34 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
+import cats.data.EitherT
 import play.api.libs.json.Json.toJson
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.services.RouterService
+import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidationRules}
+import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class RemoveRecordController @Inject() (
   authAction: AuthAction,
-  validateHeaderAction: ValidateHeaderAction,
   routerService: RouterService,
+  override val uuidService: UuidService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
-    extends BackendController(cc) {
+    extends BackendController(cc)
+    with ValidationRules {
 
   def removeRecord(eori: String, recordId: String, actorId: String): Action[AnyContent] =
-    (authAction(eori) andThen validateHeaderAction).async { implicit request =>
-      routerService.removeRecord(eori, recordId, actorId).map {
-        case Right(_)    => NoContent
-        case Left(error) => Status(error.status)(toJson(error.errorResponse))
-      }
-    }
+    authAction(eori).async { implicit request =>
+      val result = for {
+        _ <- EitherT.fromEither[Future](validateAcceptAndClientIdHeader)
+        _ <- EitherT(routerService.removeRecord(eori, recordId, actorId))
+               .leftMap(e => Status(e.status)(toJson(e.errorResponse)))
+      } yield NoContent
 
+      result.merge
+    }
 }

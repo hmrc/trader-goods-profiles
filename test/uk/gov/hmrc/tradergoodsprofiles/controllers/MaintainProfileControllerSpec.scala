@@ -25,7 +25,6 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
-import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
@@ -49,7 +48,7 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
   private val uuidService   = mock[UuidService]
   private val routerService = mock[RouterService]
 
-  def updateProfileRequestData: JsValue = Json
+  def updateProfileRequestData(): JsValue = Json
     .parse("""
              |{
              |    "actorId": "GB987654321098",
@@ -60,9 +59,9 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
              |}
              |""".stripMargin)
 
-  def updateProfileJson: Request[JsValue]    =
-    FakeRequest().withBody(updateProfileRequestData)
-  val updateProfileRequest: Request[JsValue] = updateProfileJson
+  def updateProfileJson(): Request[JsValue]  =
+    FakeRequest().withBody(updateProfileRequestData())
+  val updateProfileRequest: Request[JsValue] = updateProfileJson()
 
   private val updateProfileResponse = MaintainProfileResponse(
     eori,
@@ -74,8 +73,8 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
 
   private val sut = new MaintainProfileController(
     new FakeSuccessAuthAction(),
-    new ValidateHeaderAction(uuidService),
     routerService,
+    uuidService,
     stubControllerComponents()
   )
 

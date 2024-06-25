@@ -55,7 +55,7 @@ class ValidationRulesSpec extends PlaySpec with EitherValues with BeforeAndAfter
         "X-Client-ID"  -> "some client ID"
       )
 
-      val result = validator.validateAllHeader(request)
+      val result = validator.validateAllHeaders(request)
 
       result mustBe Right(())
     }
@@ -67,7 +67,7 @@ class ValidationRulesSpec extends PlaySpec with EitherValues with BeforeAndAfter
         "X-Client-ID" -> "some client ID"
       )
 
-      val result = validator.validateAllHeader(request)
+      val result = validator.validateAllHeaders(request)
 
       result.left.value mustBe createExpectedError(
         "Content-Type was missing from Header or is in the wrong format",
@@ -83,7 +83,7 @@ class ValidationRulesSpec extends PlaySpec with EitherValues with BeforeAndAfter
         "X-Client-ID"  -> "some client ID"
       )
 
-      val result = validator.validateAllHeader(request)
+      val result = validator.validateAllHeaders(request)
 
       result.left.value mustBe createExpectedError(
         "Accept was missing from Header or is in wrong format",
@@ -98,7 +98,7 @@ class ValidationRulesSpec extends PlaySpec with EitherValues with BeforeAndAfter
         "Content-Type" -> "application/json"
       )
 
-      val result = validator.validateAllHeader(request)
+      val result = validator.validateAllHeaders(request)
 
       result.left.value mustBe createExpectedError(
         "X-Client-ID was missing from Header or is in wrong format",
@@ -108,7 +108,7 @@ class ValidationRulesSpec extends PlaySpec with EitherValues with BeforeAndAfter
 
     "return the first invalid header error when all header are invalid" in new TestValidationRules(uuidService) {
       validator =>
-      val result = validator.validateAllHeader(FakeRequest())
+      val result = validator.validateAllHeaders(FakeRequest())
 
       result.left.value mustBe createExpectedError(
         "Accept was missing from Header or is in wrong format",

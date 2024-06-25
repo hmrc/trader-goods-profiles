@@ -16,31 +16,38 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
+import cats.data.EitherT
+import play.api.Logging
 import play.api.libs.json.Json.toJson
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.services.RouterService
+import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidationRules}
+import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class GetRecordsController @Inject() (
   authAction: AuthAction,
-  validateHeaderAction: ValidateHeaderAction,
+  override val uuidService: UuidService,
   routerService: RouterService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
-    extends BackendController(cc) {
+    extends BackendController(cc)
+    with ValidationRules
+    with Logging {
 
   def getRecord(eori: String, recordId: String): Action[AnyContent] =
-    (authAction(eori) andThen validateHeaderAction).async { implicit request =>
-      routerService.getRecord(eori, recordId).map {
-        case Right(serviceResponse) => Ok(toJson(serviceResponse))
-        case Left(error)            => Status(error.status)(toJson(error.errorResponse))
-      }
+    authAction(eori).async { implicit request =>
+      val result = for {
+        _               <- EitherT.fromEither[Future](validateAcceptAndClientIdHeader)
+        serviceResponse <-
+          EitherT(routerService.getRecord(eori, recordId)).leftMap(e => Status(e.status)(toJson(e.errorResponse)))
+      } yield Ok(toJson(serviceResponse))
+
+      result.merge
     }
 
   def getRecords(
@@ -49,11 +56,16 @@ class GetRecordsController @Inject() (
     page: Option[Int],
     size: Option[Int]
   ): Action[AnyContent] =
-    (authAction(eori) andThen validateHeaderAction).async { implicit request =>
-      routerService.getRecords(eori, lastUpdatedDate, page, size).map {
-        case Right(serviceResponse) => Ok(toJson(serviceResponse))
-        case Left(error)            => Status(error.status)(toJson(error.errorResponse))
-      }
+    authAction(eori).async { implicit request =>
+      val result = for {
+        _               <- EitherT.fromEither[Future](validateAcceptAndClientIdHeader)
+        serviceResponse <-
+          EitherT(routerService.getRecords(eori, lastUpdatedDate, page, size)).leftMap(e =>
+            Status(e.status)(toJson(e.errorResponse))
+          )
+      } yield Ok(toJson(serviceResponse))
+
+      result.merge
     }
 
 }
