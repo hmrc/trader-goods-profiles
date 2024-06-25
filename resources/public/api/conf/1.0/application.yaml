@@ -73,7 +73,6 @@ paths:
       description: Gets a list of good records
       operationId: getTraderGoodsProfileRecord
       parameters:
-        - $ref: '#/components/parameters/Content-Type'
         - $ref: '#/components/parameters/Accept'
         - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/eoriParam'
@@ -242,7 +241,6 @@ paths:
       description: Get a single goods record
       operationId: getSingleTraderGoodsProfileRecord
       parameters:
-        - $ref: '#/components/parameters/Content-Type'
         - $ref: '#/components/parameters/Accept'
         - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/eoriParam'

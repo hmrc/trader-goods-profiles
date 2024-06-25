@@ -90,8 +90,7 @@ class RouterConnectorSpec
       val expectedUrl =
         UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/traders/eori/records/recordId")
       verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
-      verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-      verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
+      verify(requestBuilder).setHeader("X-Client-ID" -> "clientId")
       verify(requestBuilder).execute(any, any)
     }
   }
@@ -121,8 +120,7 @@ class RouterConnectorSpec
 
       val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/traders/eori/records")
       verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
-      verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-      verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
+      verify(requestBuilder).setHeader("X-Client-ID" -> "clientId")
       verify(requestBuilder).execute(any, any)
     }
 
@@ -134,8 +132,7 @@ class RouterConnectorSpec
         "http://localhost:23123/trader-goods-profiles-router/traders/eori/records?lastUpdatedDate=2024-06-08T12:12:12.456789Z&page=1&size=1"
 
       verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
-      verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-      verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
+      verify(requestBuilder).setHeader("X-Client-ID" -> "clientId")
       verify(requestBuilder).execute(any, any)
     }
   }

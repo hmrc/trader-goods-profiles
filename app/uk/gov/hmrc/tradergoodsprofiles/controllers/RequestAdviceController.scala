@@ -19,32 +19,36 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers
 import com.google.inject.Singleton
 import play.api.Logging
 import play.api.libs.json.Json.toJson
-import play.api.libs.json.OFormat.oFormatFromReadsAndOWrites
-import play.api.libs.json._
+import play.api.libs.json.JsValue
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.services.RouterService
+import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidationRules}
+import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
+import cats.data.EitherT
 
 @Singleton
 class RequestAdviceController @Inject() (
   authAction: AuthAction,
-  validateHeaderAction: ValidateHeaderAction,
   routerService: RouterService,
+  override val uuidService: UuidService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
+    with ValidationRules
     with Logging {
 
   def requestAdvice(eori: String, recordId: String): Action[JsValue] =
-    (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
-      routerService.requestAdvice(eori, recordId, request).map {
-        case Right(serviceResponse) => Created(toJson(serviceResponse))
-        case Left(error)            => Status(error.status)(toJson(error.errorResponse))
-      }
+    authAction(eori).async(parse.json) { implicit request =>
+      val result = for {
+        _               <- EitherT.fromEither[Future](validateAllHeaders)
+        serviceResponse <- EitherT(routerService.requestAdvice(eori, recordId, request))
+                             .leftMap(e => Status(e.status)(toJson(e.errorResponse)))
+      } yield Created(toJson(serviceResponse))
+
+      result.merge
     }
 
 }

@@ -25,7 +25,6 @@ import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
-import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.GetRecordResponseSupport
@@ -58,7 +57,7 @@ class GetRecordsControllerSpec
   private val routerService = mock[RouterService]
   private val sut           = new GetRecordsController(
     new FakeSuccessAuthAction(),
-    new ValidateHeaderAction(uuidService),
+    uuidService,
     routerService,
     stubControllerComponents()
   )

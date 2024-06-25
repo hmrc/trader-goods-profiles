@@ -16,33 +16,37 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
+import cats.data.EitherT
 import play.api.Logging
 import play.api.libs.json.Json.toJson
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.services.RouterService
+import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidationRules}
+import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class MaintainProfileController @Inject() (
   authAction: AuthAction,
-  validateHeaderAction: ValidateHeaderAction,
   routerService: RouterService,
+  override val uuidService: UuidService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
+    with ValidationRules
     with Logging {
 
   def updateProfile(eori: String): Action[JsValue] =
-    (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
-      routerService.updateProfile(eori, request).map {
-        case Right(serviceResponse) => Ok(toJson(serviceResponse))
-        case Left(error)            => Status(error.status)(toJson(error.errorResponse))
-      }
-    }
+    authAction(eori).async(parse.json) { implicit request =>
+      val result = for {
+        _               <- EitherT.fromEither[Future](validateAllHeaders)
+        serviceResponse <-
+          EitherT(routerService.updateProfile(eori, request)).leftMap(e => Status(e.status)(toJson(e.errorResponse)))
+      } yield Ok(toJson(serviceResponse))
 
+      result.merge
+    }
 }

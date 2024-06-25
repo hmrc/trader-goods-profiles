@@ -86,18 +86,3 @@ case class ServerErrorResponse(correlationId: String, message: String) {
       )
     )
 }
-
-case class BadRequestErrorResponse(correlationId: String, code: String, message: String, errorNumber: Int) {
-  val errors: Option[Seq[Error]] = Some(Seq(Error(code, message, errorNumber)))
-  def toResult: Result           =
-    BadRequest(
-      Json.toJson(
-        ErrorResponse(
-          correlationId,
-          "BAD_REQUEST",
-          "Bad Request",
-          errors
-        )
-      )
-    )
-}

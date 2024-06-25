@@ -115,7 +115,6 @@ class GetRecordsControllerIntegrationSpec
       withClue("should add the right headers") {
         verify(
           getRequestedFor(urlEqualTo(getSingleRecordRouterUrl))
-            .withHeader("Content-Type", equalTo("application/json"))
             .withHeader("X-Client-ID", equalTo("clientId"))
         )
       }
@@ -284,7 +283,6 @@ class GetRecordsControllerIntegrationSpec
       withClue("should add the right headers") {
         verify(
           getRequestedFor(urlEqualTo(getMultipleRecordsRouterUrl))
-            .withHeader("Content-Type", equalTo("application/json"))
             .withHeader("X-Client-ID", equalTo("clientId"))
         )
       }
@@ -440,49 +438,6 @@ class GetRecordsControllerIntegrationSpec
         "INVALID_HEADER_PARAMETER",
         "Accept was missing from Header or is in wrong format",
         4
-      )
-    }
-
-    "return bad request when Content-Type header is missing" in {
-      withAuthorizedTrader()
-
-      val result = await(
-        wsClient
-          .url(getMultipleRecordsUrl)
-          .withHttpHeaders(
-            "X-Client-ID" -> "clientId",
-            "Accept"      -> "application/vnd.hmrc.1.0+json"
-          )
-          .get()
-      )
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe createExpectedError(
-        "INVALID_HEADER_PARAMETER",
-        "Content-Type was missing from Header or is in the wrong format",
-        3
-      )
-    }
-
-    "return bad request when Content-Type header is not the right format" in {
-      withAuthorizedTrader()
-
-      val result = await(
-        wsClient
-          .url(getMultipleRecordsUrl)
-          .withHttpHeaders(
-            "X-Client-ID"  -> "clientId",
-            "Accept"       -> "application/vnd.hmrc.1.0+json",
-            "Content-Type" -> "wrong format"
-          )
-          .get()
-      )
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe createExpectedError(
-        "INVALID_HEADER_PARAMETER",
-        "Content-Type was missing from Header or is in the wrong format",
-        3
       )
     }
 

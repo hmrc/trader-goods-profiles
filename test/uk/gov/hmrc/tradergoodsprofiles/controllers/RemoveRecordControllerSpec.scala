@@ -22,15 +22,13 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NO_CONTENT, OK}
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
-import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.ValidateHeaderAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
-import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants
 
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
@@ -57,8 +55,8 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
   private val routerService                 = mock[RouterService]
   private val sut                           = new RemoveRecordController(
     new FakeSuccessAuthAction(),
-    new ValidateHeaderAction(uuidService),
     routerService,
+    uuidService,
     stubControllerComponents()
   )
 

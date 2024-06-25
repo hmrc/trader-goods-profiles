@@ -46,7 +46,6 @@ class RouterConnector @Inject() (
 
     httpClient
       .get(url"$url")
-      .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       .withClientId
       .execute[HttpResponse]
   }
@@ -62,7 +61,6 @@ class RouterConnector @Inject() (
     val url = routerGetRecordsOptionalUrl(eori, lastUpdatedDate, page, size)
     httpClient
       .get(url"$url")
-      .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       .withClientId
       .execute[HttpResponse]
   }
