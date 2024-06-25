@@ -39,7 +39,7 @@ class RemoveRecordController @Inject() (
   def removeRecord(eori: String, recordId: String, actorId: String): Action[AnyContent] =
     authAction(eori).async { implicit request =>
       val result = for {
-        _ <- EitherT.fromEither[Future](validateAcceptAndClientIdHeader)
+        _ <- EitherT.fromEither[Future](validateAcceptAndClientIdHeaders)
         _ <- EitherT(routerService.removeRecord(eori, recordId, actorId))
                .leftMap(e => Status(e.status)(toJson(e.errorResponse)))
       } yield NoContent

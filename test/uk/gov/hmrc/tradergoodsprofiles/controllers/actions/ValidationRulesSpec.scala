@@ -22,7 +22,7 @@ import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.Json
 import play.api.mvc.Results.BadRequest
-import play.api.mvc.{ControllerComponents, Result}
+import play.api.mvc.{AnyContentAsEmpty, ControllerComponents, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.stubControllerComponents
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
@@ -49,7 +49,7 @@ class ValidationRulesSpec extends PlaySpec with EitherValues with BeforeAndAfter
 
   "validateDefaultHeaders" should {
     "validate all the headers" in new TestValidationRules(uuidService) { validator =>
-      val request = FakeRequest().withHeaders(
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest().withHeaders(
         "Accept"       -> "application/vnd.hmrc.1.0+json",
         "Content-Type" -> "application/json",
         "X-Client-ID"  -> "some client ID"
@@ -125,7 +125,7 @@ class ValidationRulesSpec extends PlaySpec with EitherValues with BeforeAndAfter
         "X-Client-ID" -> "some client ID"
       )
 
-      val result = validator.validateAcceptAndClientIdHeader(request)
+      val result = validator.validateAcceptAndClientIdHeaders(request)
 
       result mustBe Right(())
     }
@@ -137,7 +137,7 @@ class ValidationRulesSpec extends PlaySpec with EitherValues with BeforeAndAfter
         "X-Client-ID"  -> "some client ID"
       )
 
-      val result = validator.validateAcceptAndClientIdHeader(request)
+      val result = validator.validateAcceptAndClientIdHeaders(request)
 
       result.left.value mustBe createExpectedError(
         "Accept was missing from Header or is in wrong format",
@@ -152,7 +152,7 @@ class ValidationRulesSpec extends PlaySpec with EitherValues with BeforeAndAfter
         "Content-Type" -> "application/json"
       )
 
-      val result = validator.validateAcceptAndClientIdHeader(request)
+      val result = validator.validateAcceptAndClientIdHeaders(request)
 
       result.left.value mustBe createExpectedError(
         "X-Client-ID was missing from Header or is in wrong format",

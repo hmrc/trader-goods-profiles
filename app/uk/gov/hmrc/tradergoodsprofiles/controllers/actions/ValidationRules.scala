@@ -43,7 +43,6 @@ trait ValidationRules {
       .get(HeaderNames.ACCEPT)
       .filter(pattern.matches(_))
       .toRight(Error(InvalidHeaderParameter, InvalidHeaderAcceptMessage, InvalidHeaderAccept))
-
   }
 
   protected def validateClientIdHeader(implicit request: Request[_]): Either[Error, String] =
@@ -59,7 +58,7 @@ trait ValidationRules {
     } yield ()).left
       .map(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
 
-  protected def validateAcceptAndClientIdHeader(implicit
+  protected def validateAcceptAndClientIdHeaders(implicit
     request: Request[_]
   ): Either[Result, _] =
     (for {

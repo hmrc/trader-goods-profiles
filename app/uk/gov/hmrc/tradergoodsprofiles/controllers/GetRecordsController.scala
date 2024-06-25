@@ -42,7 +42,7 @@ class GetRecordsController @Inject() (
   def getRecord(eori: String, recordId: String): Action[AnyContent] =
     authAction(eori).async { implicit request =>
       val result = for {
-        _               <- EitherT.fromEither[Future](validateAcceptAndClientIdHeader)
+        _               <- EitherT.fromEither[Future](validateAcceptAndClientIdHeaders)
         serviceResponse <-
           EitherT(routerService.getRecord(eori, recordId)).leftMap(e => Status(e.status)(toJson(e.errorResponse)))
       } yield Ok(toJson(serviceResponse))
@@ -58,7 +58,7 @@ class GetRecordsController @Inject() (
   ): Action[AnyContent] =
     authAction(eori).async { implicit request =>
       val result = for {
-        _               <- EitherT.fromEither[Future](validateAcceptAndClientIdHeader)
+        _               <- EitherT.fromEither[Future](validateAcceptAndClientIdHeaders)
         serviceResponse <-
           EitherT(routerService.getRecords(eori, lastUpdatedDate, page, size)).leftMap(e =>
             Status(e.status)(toJson(e.errorResponse))
