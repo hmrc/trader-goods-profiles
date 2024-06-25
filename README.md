@@ -52,7 +52,7 @@ You can use Postman for tests for now. But there are plan to replace this which 
 
 In Postman
  
-* Create a request (GET, POST, PUT, PATCH) depending  what endpoint you want to test. For a list of endpoint available
+* Create a request (GET, POST, PUT, PATCH) depending on  what endpoint you want to test. For a list of endpoint available
     refer to the [API Specification](https://github.com/hmrc/trader-goods-profiles/blob/main/resources/public/api/conf/1.0/application.yaml)
 * In the header add the following header:
     ```aidl
@@ -75,7 +75,7 @@ system and EIS, ensuring efficient data exchange and integration.
 
 ### Dev
 
-Before pushing, you can run [verify.sh](./verify.sh) which will run all the tests, as well as check the format.
+Before pushing, you can run [precheck.sh](./precheck.sh) which will run all the tests, as well as check the format.
 
 ### License
 
