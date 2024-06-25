@@ -16,33 +16,40 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
+import cats.data.EitherT
 import play.api.Logging
-import play.api.libs.json.Json.toJson
 import play.api.libs.json.JsValue
+import play.api.libs.json.Json.toJson
 import play.api.mvc.{Action, ControllerComponents}
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction}
-import uk.gov.hmrc.tradergoodsprofiles.services.RouterService
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
+import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction, ValidationRules}
+import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CreateRecordController @Inject() (
   authAction: AuthAction,
-  validateHeaderAction: ValidateHeaderAction,
+  validateHeaderAction: ValidateHeaderAction, //todo: remove this
   routerService: RouterService,
-  cc: ControllerComponents
+  override val uuidService: UuidService,
+  override val controllerComponents: ControllerComponents
 )(implicit ec: ExecutionContext)
-    extends BackendController(cc)
+    extends BackendBaseController
+    with ValidationRules
     with Logging {
 
   def createRecord(eori: String): Action[JsValue] =
-    (authAction(eori) andThen validateHeaderAction).async(parse.json) { implicit request =>
-      routerService.createRecord(eori, request).map {
-        case Right(serviceResponse) => Created(toJson(serviceResponse))
-        case Left(error)            => Status(error.status)(toJson(error.errorResponse))
-      }
+    authAction(eori).async(parse.json) { implicit request =>
+      val result = for {
+        _               <- EitherT.fromEither[Future](validateAllHeader)
+        serviceResponse <-
+          EitherT(routerService.createRecord(eori, request)).leftMap(e => Status(e.status)(toJson(e.errorResponse)))
+      } yield Created(toJson(serviceResponse))
+
+      result.merge
+
     }
 
 }

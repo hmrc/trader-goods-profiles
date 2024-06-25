@@ -60,6 +60,7 @@ class CreateRecordControllerSpec
     new FakeSuccessAuthAction(),
     new ValidateHeaderAction(uuidService),
     routerService,
+    uuidService,
     stubControllerComponents()
   )
 
