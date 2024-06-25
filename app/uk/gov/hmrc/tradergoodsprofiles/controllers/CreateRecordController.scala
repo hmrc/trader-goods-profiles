@@ -22,7 +22,7 @@ import play.api.libs.json.JsValue
 import play.api.libs.json.Json.toJson
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
-import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidateHeaderAction, ValidationRules}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidationRules}
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
 
 import javax.inject.{Inject, Singleton}
@@ -31,7 +31,6 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class CreateRecordController @Inject() (
   authAction: AuthAction,
-  validateHeaderAction: ValidateHeaderAction, //todo: remove this
   routerService: RouterService,
   override val uuidService: UuidService,
   override val controllerComponents: ControllerComponents
