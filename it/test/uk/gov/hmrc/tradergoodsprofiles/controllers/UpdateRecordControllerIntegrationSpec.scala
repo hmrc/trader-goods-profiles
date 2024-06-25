@@ -67,6 +67,19 @@ class UpdateRecordControllerIntegrationSpec
   private val requestBody      = createUpdateRecordRequestData
   private val expectedResponse = Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
 
+  private val routerError = Json.obj(
+    "correlationId" -> correlationId,
+    "code"          -> "BAD_REQUEST",
+    "message"       -> "Bad Request",
+    "errors"        -> Seq(
+      Json.obj(
+        "code"        -> "INVALID_REQUEST_PARAMETER",
+        "message"     -> "Mandatory field actorId was missing from body or is in the wrong format",
+        "errorNumber" -> 8
+      )
+    )
+  )
+
   override lazy val app: Application = {
     wireMock.start()
     configureFor(wireHost, wireMock.port())
@@ -119,7 +132,7 @@ class UpdateRecordControllerIntegrationSpec
     }
 
     "return BadRequest for invalid request body" in {
-      stubForRouterBadRequest(400, routerError.toString)
+      stubRouterRequest(400, routerError.toString)
       withAuthorizedTrader()
       val invalidRequestBody = Json.obj()
 
@@ -240,7 +253,7 @@ class UpdateRecordControllerIntegrationSpec
         .patch(requestBody)
     )
 
-  private def stubRouterRequest(status: Int, responseBody: String)       =
+  private def stubRouterRequest(status: Int, responseBody: String)                      =
     wireMock.stubFor(
       patch(urlEqualTo(routerUrl))
         .willReturn(
@@ -249,28 +262,6 @@ class UpdateRecordControllerIntegrationSpec
             .withBody(responseBody)
         )
     )
-  private def stubForRouterBadRequest(status: Int, responseBody: String) =
-    wireMock.stubFor(
-      patch(urlEqualTo(routerUrl))
-        .willReturn(
-          aResponse()
-            .withStatus(status)
-            .withBody(responseBody)
-        )
-    )
-
-  val routerError                                                                       = Json.obj(
-    "correlationId" -> correlationId,
-    "code"          -> "BAD_REQUEST",
-    "message"       -> "Bad Request",
-    "errors"        -> Seq(
-      Json.obj(
-        "code"        -> "INVALID_REQUEST_PARAMETER",
-        "message"     -> "Mandatory field actorId was missing from body or is in the wrong format",
-        "errorNumber" -> 8
-      )
-    )
-  )
   private def updateExpectedError(code: String, message: String, errorNumber: Int): Any =
     Json.obj(
       "correlationId" -> correlationId,

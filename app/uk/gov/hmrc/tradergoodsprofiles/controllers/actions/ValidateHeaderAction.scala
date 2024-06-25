@@ -18,6 +18,7 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers.actions
 
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.mvc.{ActionFilter, Request, Result}
+import uk.gov.hmrc.http.HttpVerbs
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.BadRequestErrorResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
@@ -71,9 +72,9 @@ class ValidateHeaderAction @Inject() (uuidService: UuidService)(implicit ec: Exe
 
   private def validateContentTypeHeader(request: Request[_]): Future[Boolean] =
     request.method match {
-      case "DELETE" =>
+      case HttpVerbs.DELETE =>
         successful(true)
-      case _        =>
+      case _                =>
         request.headers.get(HeaderNames.CONTENT_TYPE) match {
           case Some(header) if header.equals(MimeTypes.JSON) => successful(true)
           case _                                             => successful(false)
