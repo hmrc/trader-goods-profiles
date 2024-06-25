@@ -754,7 +754,7 @@ components:
           declarable: IMMI declarable
           ukimsNumber: XIUKIM47699357400020231115081800
           nirmsNumber: RMS-GB-123456
-          niphlNumber: 6 S12345
+          niphlNumber: S12345
           locked: false
           createdDateTime: 2023-01-01T00:00:00Z
           updatedDateTime: 2023-01-01T00:00:00Z
@@ -788,7 +788,7 @@ components:
           declarable: IMMI declarable
           ukimsNumber: XIUKIM47699357400020231115081801
           nirmsNumber: RMS-GB-123457
-          niphlNumber: 6 S12346
+          niphlNumber: S12346
           locked: false
           createdDateTime: 2023-01-01T00:00:00Z
           updatedDateTime: 2023-01-01T00:00:00Z
@@ -1021,7 +1021,8 @@ components:
       type: string
       minLength: 4
       maxLength: 7
-      example: 6S12345
+      pattern: ([0-9]{4,6}|[a-zA-Z]{1,2}[0-9]{5})
+      example: SP12345
       description: >-
         The traders' Northern Ireland Plant Health Label scheme registration
         number.
