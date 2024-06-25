@@ -31,6 +31,7 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.UpdateRecord
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateOrUpdateRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
+import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
 
 import java.time.Instant
 import java.util.UUID

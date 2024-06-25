@@ -197,7 +197,7 @@ class MaintainProfileControllerIntegrationSpec
     }
 
     "return 400 Bad Request when multiple mandatory fields are missing from body" in {
-      stubForRouterBadRequest(BAD_REQUEST, Some(routerError.toString()))
+      stubRouterRequest(BAD_REQUEST, routerError.toString())
       withAuthorizedTrader()
       val invalidJson = Json.parse("""{"invalid": "json"}""")
 
@@ -323,7 +323,7 @@ class MaintainProfileControllerIntegrationSpec
       "message"       -> message
     )
 
-  val routerError                                                                       = Json.obj(
+  private val routerError = Json.obj(
     "correlationId" -> correlationId,
     "code"          -> "BAD_REQUEST",
     "message"       -> "Bad Request",
@@ -340,13 +340,5 @@ class MaintainProfileControllerIntegrationSpec
       )
     )
   )
-  private def stubForRouterBadRequest(status: Int, responseBody: Option[String] = None) =
-    wireMock.stubFor(
-      put(urlEqualTo(routerUrl))
-        .willReturn(
-          aResponse()
-            .withStatus(status)
-            .withBody(responseBody.orNull)
-        )
-    )
+
 }

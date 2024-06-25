@@ -40,7 +40,7 @@ import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 
-class RequestAdviceIntegrationTest
+class RequestAdviceControllerIntegrationSpec
     extends PlaySpec
     with GuiceOneServerPerSuite
     with HttpClientV2Support
@@ -116,7 +116,7 @@ class RequestAdviceIntegrationTest
     }
 
     "return BadRequest from router for invalid request body" in {
-      stubForRouterBadRequest(400, routerError.toString)
+      stubForRouterBadRequest(routerError.toString)
       withAuthorizedTrader()
       val invalidRequestBody = Json.obj()
 
@@ -221,12 +221,12 @@ class RequestAdviceIntegrationTest
 
   }
 
-  def createRequestAdviceRequest: JsValue = Json
+  private def createRequestAdviceRequest: JsValue = Json
     .parse("""
              |{
-             |    "ukimsNumber": "Mr.Phil Edwards",
-             |    "nirmsNumber": "Phil.Edwards@gmail.com"
-             |
+             |    "actorId": "GB9876543210983",
+             |    "requestorName": "Mr.Phil Edwards",
+             |    "requestorEmail": "Phil.Edwards@gmail.com"
              |}
              |""".stripMargin)
 
@@ -260,7 +260,7 @@ class RequestAdviceIntegrationTest
       "message"       -> message
     )
 
-  val routerError                                                        = Json.obj(
+  private val routerError                                   = Json.obj(
     "correlationId" -> correlationId,
     "code"          -> "BAD_REQUEST",
     "message"       -> "Bad Request",
@@ -282,12 +282,12 @@ class RequestAdviceIntegrationTest
       )
     )
   )
-  private def stubForRouterBadRequest(status: Int, responseBody: String) =
+  private def stubForRouterBadRequest(responseBody: String) =
     wireMock.stubFor(
       post(routerUrl)
         .willReturn(
           aResponse()
-            .withStatus(status)
+            .withStatus(400)
             .withBody(responseBody)
         )
     )
