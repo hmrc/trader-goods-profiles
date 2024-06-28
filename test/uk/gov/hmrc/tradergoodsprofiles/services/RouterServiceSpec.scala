@@ -33,12 +33,10 @@ import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{RouterCreateRecordRequestSupport, UpdateRecordRequestSupport}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.{CreateOrUpdateRecordResponseSupport, GetRecordResponseSupport}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
-import scala.reflect.runtime.universe.typeOf
 
 class RouterServiceSpec
     extends PlaySpec
@@ -74,109 +72,6 @@ class RouterServiceSpec
       .thenReturn(Future.successful(HttpResponse(200, Json.toJson(recordResponse), Map.empty)))
     when(uuidService.uuid).thenReturn(correlationId)
   }
-  "getRecord" should {
-    "request a record" in {
-      val result = sut.getRecord("GB123456789012", "recordId")
-
-      whenReady(result) { _ =>
-        verify(connector).get(eqTo("GB123456789012"), eqTo("recordId"))(any)
-      }
-    }
-
-    "return GetRecordResponse" in {
-      val result = sut.getRecord("eori", "recordId")
-
-      whenReady(result)(_.value mustBe recordResponse)
-    }
-
-    "return an error" when {
-      "cannot parse the response" in {
-
-        when(connector.get(any, any)(any))
-          .thenReturn(Future.successful(HttpResponse(200, Json.obj(), Map.empty)))
-
-        val result = sut.getRecord("eori", "recordId")
-
-        whenReady(result) {
-          _.left.value mustBe ServiceError(
-            INTERNAL_SERVER_ERROR,
-            ErrorResponse(
-              "d677693e-9981-4ee3-8574-654981ebe606",
-              "INTERNAL_SERVER_ERROR",
-              s"Response body could not be read as type ${typeOf[GetRecordResponse]}",
-              None
-            )
-          )
-        }
-      }
-
-      "cannot parse the response as Json" in {
-        when(connector.get(any, any)(any))
-          .thenReturn(Future.successful(HttpResponse(200, "error")))
-
-        val result = sut.getRecord("eori", "recordId")
-
-        whenReady(result) {
-          _.left.value mustBe ServiceError(
-            INTERNAL_SERVER_ERROR,
-            ErrorResponse(
-              "d677693e-9981-4ee3-8574-654981ebe606",
-              "INTERNAL_SERVER_ERROR",
-              s"Response body could not be parsed as JSON, body: error",
-              None
-            )
-          )
-        }
-      }
-
-      "routerConnector return an exception" in {
-        when(connector.get(any, any)(any))
-          .thenReturn(Future.failed(new RuntimeException("error")))
-
-        val result = sut.getRecord("eori", "recordId")
-
-        whenReady(result) {
-          _.left.value mustBe ServiceError(
-            INTERNAL_SERVER_ERROR,
-            ErrorResponse(
-              "d677693e-9981-4ee3-8574-654981ebe606",
-              "INTERNAL_SERVER_ERROR",
-              s"Could not retrieve record for eori number eori and record ID recordId",
-              None
-            )
-          )
-        }
-
-      }
-
-      val table = Table(
-        ("description", "status", "expectedResult", "code"),
-        ("return bad request", 400, 400, "BAD_REQUEST"),
-        ("return Forbidden", 403, 403, "FORBIDDEN"),
-        ("return Not Found", 404, 404, "NOT_FOUND")
-      )
-
-      forAll(table) {
-        (
-          description: String,
-          status: Int,
-          expectedResult: Int,
-          code: String
-        ) =>
-          s"$description" in {
-            when(connector.get(any, any)(any))
-              .thenReturn(Future.successful(createHttpResponse(status, code)))
-
-            val result = sut.getRecord("eori", "recordId")
-
-            whenReady(result) {
-              _.left.value.status mustBe expectedResult
-            }
-          }
-      }
-    }
-  }
-
   "createRecord" should {
     "create a record" in {
       when(connector.createRecord(any, any)(any))

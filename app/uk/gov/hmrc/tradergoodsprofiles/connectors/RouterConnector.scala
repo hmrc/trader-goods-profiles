@@ -17,7 +17,6 @@
 package uk.gov.hmrc.tradergoodsprofiles.connectors
 
 import io.lemonlabs.uri._
-import io.lemonlabs.uri.config.{ExcludeNones, UriConfig}
 import io.lemonlabs.uri.typesafe.QueryKey.stringQueryKey
 import play.api.Logging
 import play.api.http.{HeaderNames, MimeTypes}
@@ -38,7 +37,6 @@ class RouterConnector @Inject() (
 )(implicit ec: ExecutionContext)
     extends Logging {
 
-  implicit val config: UriConfig = UriConfig(renderQuery = ExcludeNones)
   val routerBaseRoute: String    = "/trader-goods-profiles-router"
 
   def get(eori: String, recordId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {

@@ -25,7 +25,7 @@ import uk.gov.hmrc.http.HttpReads.is2xx
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.models.response.{CreateOrUpdateRecordResponse, GetRecordResponse, GetRecordsResponse}
+import uk.gov.hmrc.tradergoodsprofiles.models.response.CreateOrUpdateRecordResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -37,45 +37,6 @@ class RouterService @Inject() (
   uuidService: UuidService
 )(implicit ec: ExecutionContext)
     extends Logging {
-
-  def getRecord(eoriNumber: String, recordId: String)(implicit
-    hc: HeaderCarrier
-  ): Future[Either[ServiceError, GetRecordResponse]] =
-    routerConnector
-      .get(eoriNumber, recordId)
-      .map { httpResponse =>
-        httpResponse.status match {
-          case status if is2xx(status) =>
-            jsonAs[GetRecordResponse](httpResponse.body).fold(
-              error =>
-                Left(
-                  ServiceError(
-                    INTERNAL_SERVER_ERROR,
-                    error
-                  )
-                ),
-              response => Right(response)
-            )
-          case _                       =>
-            Left(handleErrors(httpResponse, Some(eoriNumber), Some(recordId)))
-        }
-      }
-      .recover { case ex: Throwable =>
-        logger.error(
-          s"[RouterService] - Exception when retrieving record for eori number $eoriNumber and record ID $recordId, with message ${ex.getMessage}",
-          ex
-        )
-        Left(
-          ServiceError(
-            INTERNAL_SERVER_ERROR,
-            ErrorResponse
-              .serverErrorResponse(
-                uuidService.uuid,
-                s"Could not retrieve record for eori number $eoriNumber and record ID $recordId"
-              )
-          )
-        )
-      }
 
   def removeRecord(eoriNumber: String, recordId: String, actorId: String)(implicit
     hc: HeaderCarrier
@@ -105,42 +66,6 @@ class RouterService @Inject() (
                 uuidService.uuid,
                 s"Could not remove record for eori number $eoriNumber, record ID $recordId, and actor ID $actorId"
               )
-          )
-        )
-      }
-
-  def getRecords(eoriNumber: String, lastUpdatedDate: Option[String], page: Option[Int], size: Option[Int])(implicit
-    hc: HeaderCarrier
-  ): Future[Either[ServiceError, GetRecordsResponse]] =
-    routerConnector
-      .getRecords(eoriNumber, lastUpdatedDate, page, size)
-      .map { httpResponse =>
-        httpResponse.status match {
-          case status if is2xx(status) =>
-            jsonAs[GetRecordsResponse](httpResponse.body).fold(
-              error =>
-                Left(
-                  ServiceError(
-                    INTERNAL_SERVER_ERROR,
-                    error
-                  )
-                ),
-              response => Right(response)
-            )
-          case _                       =>
-            Left(handleErrors(httpResponse, Some(eoriNumber)))
-        }
-      }
-      .recover { case ex: Throwable =>
-        logger.error(
-          s"[RouterService] - Exception when retrieving record for eori number $eoriNumber, with message ${ex.getMessage}",
-          ex
-        )
-        Left(
-          ServiceError(
-            INTERNAL_SERVER_ERROR,
-            ErrorResponse
-              .serverErrorResponse(uuidService.uuid, s"Could not retrieve record for eori number $eoriNumber")
           )
         )
       }

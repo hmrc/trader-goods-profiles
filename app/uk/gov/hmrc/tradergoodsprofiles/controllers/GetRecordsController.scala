@@ -20,10 +20,10 @@ import cats.data.EitherT
 import play.api.Logging
 import play.api.libs.json.Json.toJson
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.tradergoodsprofiles.connectors.GetRecordsRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidationRules}
-import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
+import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -32,7 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class GetRecordsController @Inject() (
   authAction: AuthAction,
   override val uuidService: UuidService,
-  routerService: RouterService,
+  getRecordsConnector: GetRecordsRouterConnector,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
@@ -44,7 +44,7 @@ class GetRecordsController @Inject() (
       val result = for {
         _               <- EitherT.fromEither[Future](validateAcceptAndClientIdHeaders)
         serviceResponse <-
-          EitherT(routerService.getRecord(eori, recordId)).leftMap(e => Status(e.status)(toJson(e.errorResponse)))
+          EitherT(getRecordsConnector.get(eori, recordId)).leftMap(e => Status(e.status)(toJson(e.errorResponse)))
       } yield Ok(toJson(serviceResponse))
 
       result.merge
@@ -60,7 +60,7 @@ class GetRecordsController @Inject() (
       val result = for {
         _               <- EitherT.fromEither[Future](validateAcceptAndClientIdHeaders)
         serviceResponse <-
-          EitherT(routerService.getRecords(eori, lastUpdatedDate, page, size)).leftMap(e =>
+          EitherT(getRecordsConnector.get(eori, lastUpdatedDate, page, size)).leftMap(e =>
             Status(e.status)(toJson(e.errorResponse))
           )
       } yield Ok(toJson(serviceResponse))
