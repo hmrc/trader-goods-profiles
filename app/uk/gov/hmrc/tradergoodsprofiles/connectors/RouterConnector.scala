@@ -39,30 +39,6 @@ class RouterConnector @Inject() (
 
   val routerBaseRoute: String    = "/trader-goods-profiles-router"
 
-  def get(eori: String, recordId: String)(implicit hc: HeaderCarrier): Future[HttpResponse] = {
-    val url = appConfig.routerUrl.withPath(routerGetRecordUrlPath(eori, recordId))
-
-    httpClient
-      .get(url"$url")
-      .withClientId
-      .execute[HttpResponse]
-  }
-
-  def getRecords(
-    eori: String,
-    lastUpdatedDate: Option[String] = None,
-    page: Option[Int] = None,
-    size: Option[Int] = None
-  )(implicit
-    hc: HeaderCarrier
-  ): Future[HttpResponse] = {
-    val url = routerGetRecordsOptionalUrl(eori, lastUpdatedDate, page, size)
-    httpClient
-      .get(url"$url")
-      .withClientId
-      .execute[HttpResponse]
-  }
-
   def createRecord(eori: String, createRecordRequest: Request[JsValue])(implicit
     hc: HeaderCarrier
   ): Future[HttpResponse] = {

@@ -75,68 +75,6 @@ class RouterConnectorSpec
       .thenReturn(Future.successful(HttpResponse(200, "message")))
   }
 
-  "get single record" should {
-
-    "return 200" in {
-      val result = await(sut.get("eori", "recordId"))
-
-      result.status mustBe OK
-    }
-
-    "send a request with the right url" in {
-
-      await(sut.get("eori", "recordId"))
-
-      val expectedUrl =
-        UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/traders/eori/records/recordId")
-      verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
-      verify(requestBuilder).setHeader("X-Client-ID" -> "clientId")
-      verify(requestBuilder).execute(any, any)
-    }
-  }
-  "get multiple records" should {
-
-    "return 200" in {
-      val result = await(sut.getRecords("eori"))
-
-      result.status mustBe OK
-    }
-
-    "return 200 with optional query parameters" in {
-      val result = await(sut.getRecords("eori", Some("2024-06-08T12:12:12.456789Z"), Some(1), Some(1)))
-
-      result.status mustBe OK
-    }
-
-    "return 200 with optional query parameters page and size" in {
-      val result = await(sut.getRecords("eori", None, Some(1), Some(1)))
-
-      result.status mustBe OK
-    }
-
-    "send a request with the right url" in {
-
-      await(sut.getRecords("eori"))
-
-      val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/traders/eori/records")
-      verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
-      verify(requestBuilder).setHeader("X-Client-ID" -> "clientId")
-      verify(requestBuilder).execute(any, any)
-    }
-
-    "send a request with the right url with optional query parameter" in {
-
-      await(sut.getRecords("eori", Some("2024-06-08T12:12:12.456789Z"), Some(1), Some(1)))
-
-      val expectedUrl =
-        "http://localhost:23123/trader-goods-profiles-router/traders/eori/records?lastUpdatedDate=2024-06-08T12:12:12.456789Z&page=1&size=1"
-
-      verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
-      verify(requestBuilder).setHeader("X-Client-ID" -> "clientId")
-      verify(requestBuilder).execute(any, any)
-    }
-  }
-
   "create" should {
 
     "return 201 when the record is successfully created" in {

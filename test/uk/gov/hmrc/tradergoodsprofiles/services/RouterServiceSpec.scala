@@ -68,8 +68,6 @@ class RouterServiceSpec
 
     reset(connector, uuidService)
 
-    when(connector.get(any, any)(any))
-      .thenReturn(Future.successful(HttpResponse(200, Json.toJson(recordResponse), Map.empty)))
     when(uuidService.uuid).thenReturn(correlationId)
   }
   "createRecord" should {
