@@ -346,7 +346,6 @@ paths:
       description: Withdraw your request for advice from HMRC
       operationId: removeTraderGoodsProfileRecordAdvice
       parameters:
-        - $ref: '#/components/parameters/Content-Type'
         - $ref: '#/components/parameters/Accept'
         - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/eoriParam'
