@@ -75,29 +75,6 @@ class RouterConnectorSpec
       .thenReturn(Future.successful(HttpResponse(200, "message")))
   }
 
-  "create" should {
-
-    "return 201 when the record is successfully created" in {
-      when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "message")))
-      val result = await(sut.createRecord("eori", createRouterCreateRecordRequest))
-
-      result.status mustBe CREATED
-    }
-
-    "send a request with the right url and body" in {
-      when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(201, "message")))
-
-      await(sut.createRecord("eori", createRouterCreateRecordRequest))
-
-      val expectedUrl = UrlPath.parse("http://localhost:23123/trader-goods-profiles-router/traders/eori/records")
-      verify(httpClient).post(eqTo(url"$expectedUrl"))(any)
-      verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-      verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
-      verify(requestBuilder).withBody(eqTo(createRouterCreateRecordRequestData))(any, any, any)
-      verify(requestBuilder).execute(any, any)
-    }
-  }
-
   "remove" should {
 
     "return 204" in {

@@ -44,17 +44,17 @@ class GetRecordsControllerSpec
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
-  private val request       = FakeRequest().withHeaders(
+  private val request             = FakeRequest().withHeaders(
     "Accept"       -> "application/vnd.hmrc.1.0+json",
     "Content-Type" -> "application/json",
     "X-Client-ID"  -> "some client ID"
   )
-  private val recordId      = UUID.randomUUID().toString
-  private val correlationId = "d677693e-9981-4ee3-8574-654981ebe606"
-  private val timestamp     = Instant.parse("2024-01-12T12:12:12Z")
-  private val uuidService   = mock[UuidService]
+  private val recordId            = UUID.randomUUID().toString
+  private val correlationId       = "d677693e-9981-4ee3-8574-654981ebe606"
+  private val timestamp           = Instant.parse("2024-01-12T12:12:12Z")
+  private val uuidService         = mock[UuidService]
   private val getRecordsConnector = mock[GetRecordsRouterConnector]
-  private val sut           = new GetRecordsController(
+  private val sut                 = new GetRecordsController(
     new FakeSuccessAuthAction(),
     uuidService,
     getRecordsConnector,

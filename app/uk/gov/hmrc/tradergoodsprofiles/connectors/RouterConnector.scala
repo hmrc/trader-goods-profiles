@@ -37,20 +37,7 @@ class RouterConnector @Inject() (
 )(implicit ec: ExecutionContext)
     extends Logging {
 
-  val routerBaseRoute: String    = "/trader-goods-profiles-router"
-
-  def createRecord(eori: String, createRecordRequest: Request[JsValue])(implicit
-    hc: HeaderCarrier
-  ): Future[HttpResponse] = {
-    val url = appConfig.routerUrl.withPath(routerCreateRecordUrlPath(eori))
-
-    httpClient
-      .post(url"$url")
-      .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-      .withBody(createRecordRequest.body)
-      .withClientId
-      .execute[HttpResponse]
-  }
+  val routerBaseRoute: String = "/trader-goods-profiles-router"
 
   def removeRecord(eori: String, recordId: String, actorId: String)(implicit
     hc: HeaderCarrier
@@ -102,46 +89,14 @@ class RouterConnector @Inject() (
       .execute[HttpResponse]
   }
 
-  private def routerGetRecordUrlPath(eoriNumber: String, recordId: String): UrlPath =
-    UrlPath.parse(
-      s"$routerBaseRoute/traders/$eoriNumber/records/$recordId"
-    )
-
   private def routerRemoveRecordUrl(eoriNumber: String, recordId: String, actorId: String): Url =
     appConfig.routerUrl
       .withPath(UrlPath.parse(s"$routerBaseRoute/traders/$eoriNumber/records/$recordId"))
       .withQueryString(QueryString.fromPairs("actorId" -> actorId))
 
-  private def routerGetRecordsOptionalUrl(
-    eoriNumber: String,
-    lastUpdatedDate: Option[String],
-    page: Option[Int],
-    size: Option[Int]
-  ): String = {
-
-    val params = List(
-      lastUpdatedDate.map(d => s"lastUpdatedDate=$d"),
-      page.map(p => s"page=$p"),
-      size.map(s => s"size=$s")
-    ).flatten match {
-      case Nil   => ""
-      case other => other.mkString("?", "&", "")
-    }
-
-    val urlPath = appConfig.routerUrl
-      .withPath(UrlPath.parse(s"$routerBaseRoute/traders/$eoriNumber/records"))
-
-    s"${urlPath.toString()}$params"
-  }
-
-  private def routerUpdateRecordUrlPath(eori: String, recordId: String): UrlPath =
+  private def routerUpdateRecordUrlPath(eori: String, recordId: String): UrlPath                =
     UrlPath.parse(
       s"$routerBaseRoute/traders/$eori/records/$recordId"
-    )
-
-  private def routerCreateRecordUrlPath(eori: String): UrlPath =
-    UrlPath.parse(
-      s"$routerBaseRoute/traders/$eori/records"
     )
 
   private def routerAdviceUrlPath(eori: String, recordId: String): UrlPath =

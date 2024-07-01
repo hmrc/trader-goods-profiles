@@ -22,7 +22,7 @@ import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.XClientIdHeade
 
 trait BaseConnector {
 
-  val routerBaseRoute: String    = "/trader-goods-profiles-router"
+  val routerBaseRoute: String = "/trader-goods-profiles-router"
 
   implicit class HttpResponseHelpers(requestBuilder: RequestBuilder) {
     def withClientId(implicit hc: HeaderCarrier): RequestBuilder =

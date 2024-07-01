@@ -41,7 +41,7 @@ import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
 class CreateRecordRouterConnectorSpec
-  extends PlaySpec
+    extends PlaySpec
     with RouterCreateRecordRequestSupport
     with CreateOrUpdateRecordResponseSupport
     with ScalaFutures
@@ -54,10 +54,10 @@ class CreateRecordRouterConnectorSpec
   private val httpClient     = mock[HttpClientV2]
   private val appConfig      = mock[AppConfig]
   private val requestBuilder = mock[RequestBuilder]
-  private val uuidService = mock[UuidService]
+  private val uuidService    = mock[UuidService]
   private val eori           = "GB123456789012"
   private val recordId       = "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f"
-  private val correlationId = UUID.randomUUID().toString
+  private val correlationId  = UUID.randomUUID().toString
 
   private val sut = new CreateRecordRouterConnector(httpClient, appConfig, uuidService)
 
@@ -97,7 +97,7 @@ class CreateRecordRouterConnectorSpec
 
     "return an error" in {
       val expectedErrorResponse = ErrorResponse("123", "code", "error")
-      val expectedResponse = ServiceError(NOT_FOUND, expectedErrorResponse)
+      val expectedResponse      = ServiceError(NOT_FOUND, expectedErrorResponse)
       when(requestBuilder.execute[Either[ServiceError, CreateOrUpdateRecordResponse]](any, any))
         .thenReturn(Future.successful(Left(expectedResponse)))
 
@@ -112,12 +112,12 @@ class CreateRecordRouterConnectorSpec
 
       val result = await(sut.createRecord(eori, createRouterCreateRecordRequest))
 
-      val expectedErrorResponse = ErrorResponse(correlationId, "INTERNAL_SERVER_ERROR", s"Could not create record for eori number $eori")
-      val expectedResponse = ServiceError(INTERNAL_SERVER_ERROR, expectedErrorResponse)
+      val expectedErrorResponse =
+        ErrorResponse(correlationId, "INTERNAL_SERVER_ERROR", s"Could not create record for eori number $eori")
+      val expectedResponse      = ServiceError(INTERNAL_SERVER_ERROR, expectedErrorResponse)
       result.left.value mustBe expectedResponse
 
     }
   }
-
 
 }

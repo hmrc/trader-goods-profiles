@@ -33,11 +33,13 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class CreateRecordRouterConnector @Inject() (
-                                              httpClient: HttpClientV2,
-                                              appConfig: AppConfig,
-                                              override val uuidService: UuidService,
-                                            )(implicit ec: ExecutionContext)
-  extends BaseConnector  with RouterHttpReader with Logging {
+  httpClient: HttpClientV2,
+  appConfig: AppConfig,
+  override val uuidService: UuidService
+)(implicit ec: ExecutionContext)
+    extends BaseConnector
+    with RouterHttpReader
+    with Logging {
 
   def createRecord(
     eori: String,
@@ -51,22 +53,21 @@ class CreateRecordRouterConnector @Inject() (
       .withBody(createRecordRequest.body)
       .withClientId
       .execute(httpReader[CreateOrUpdateRecordResponse], ec)
-      .recover {
-        case ex: Throwable =>
-          logger.warn(
-            s"[CreateRecordRouterConnector] - Exception when creating record for eori number $eori, with message ${ex.getMessage}",
-            ex
+      .recover { case ex: Throwable =>
+        logger.warn(
+          s"[CreateRecordRouterConnector] - Exception when creating record for eori number $eori, with message ${ex.getMessage}",
+          ex
+        )
+        Left(
+          ServiceError(
+            INTERNAL_SERVER_ERROR,
+            ErrorResponse
+              .serverErrorResponse(
+                uuidService.uuid,
+                s"Could not create record for eori number $eori"
+              )
           )
-          Left(
-            ServiceError(
-              INTERNAL_SERVER_ERROR,
-              ErrorResponse
-                .serverErrorResponse(
-                  uuidService.uuid,
-                  s"Could not create record for eori number $eori"
-                )
-            )
-          )
+        )
       }
   }
 

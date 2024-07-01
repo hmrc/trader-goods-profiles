@@ -70,42 +70,6 @@ class RouterService @Inject() (
         )
       }
 
-  def createRecord(eori: String, createRequest: Request[JsValue])(implicit
-    hc: HeaderCarrier
-  ): Future[Either[ServiceError, CreateOrUpdateRecordResponse]] =
-    routerConnector
-      .createRecord(eori, createRequest)
-      .map { httpResponse =>
-        httpResponse.status match {
-          case status if is2xx(status) =>
-            jsonAs[CreateOrUpdateRecordResponse](httpResponse.body).fold(
-              error =>
-                Left(
-                  ServiceError(
-                    INTERNAL_SERVER_ERROR,
-                    error
-                  )
-                ),
-              response => Right(response)
-            )
-          case _                       =>
-            Left(handleErrors(httpResponse, Some(eori)))
-        }
-      }
-      .recover { case ex: Throwable =>
-        logger.error(
-          s"[RouterService] - Exception when creating record for eori number $eori with message ${ex.getMessage}",
-          ex
-        )
-        Left(
-          ServiceError(
-            INTERNAL_SERVER_ERROR,
-            ErrorResponse
-              .serverErrorResponse(uuidService.uuid, "Could not create record due to an internal error")
-          )
-        )
-      }
-
   def updateRecord(eori: String, recordId: String, updateRequest: Request[JsValue])(implicit
     hc: HeaderCarrier
   ): Future[Either[ServiceError, CreateOrUpdateRecordResponse]] =
@@ -210,7 +174,7 @@ class RouterService @Inject() (
 
   private def handleErrors(
     response: HttpResponse,
-    eoriNumber: Option[String] = None,
+    eoriNumber: Option[String],
     recordId: Option[String] = None,
     actorId: Option[String] = None
   ): ServiceError = {

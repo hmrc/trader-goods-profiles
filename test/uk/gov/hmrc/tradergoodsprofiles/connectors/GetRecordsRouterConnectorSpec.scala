@@ -39,11 +39,11 @@ import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
 class GetRecordsRouterConnectorSpec
-  extends PlaySpec
+    extends PlaySpec
     with GetRecordResponseSupport
     with ScalaFutures
     with EitherValues
-    with BeforeAndAfterEach{
+    with BeforeAndAfterEach {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
   implicit val hc: HeaderCarrier    = HeaderCarrier(otherHeaders = Seq(XClientIdHeader -> "clientId"))
@@ -51,10 +51,10 @@ class GetRecordsRouterConnectorSpec
   private val httpClient     = mock[HttpClientV2]
   private val appConfig      = mock[AppConfig]
   private val requestBuilder = mock[RequestBuilder]
-  private val uuidService = mock[UuidService]
+  private val uuidService    = mock[UuidService]
   private val eori           = "GB123456789012"
   private val recordId       = "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f"
-  private val correlationId = UUID.randomUUID().toString
+  private val correlationId  = UUID.randomUUID().toString
 
   private val sut = new GetRecordsRouterConnector(httpClient, appConfig, uuidService)
 
@@ -91,7 +91,7 @@ class GetRecordsRouterConnectorSpec
 
     "return an error" in {
       val expectedErrorResponse = ErrorResponse("123", "code", "error")
-      val expectedResponse = ServiceError(NOT_FOUND, expectedErrorResponse)
+      val expectedResponse      = ServiceError(NOT_FOUND, expectedErrorResponse)
       when(requestBuilder.execute[Either[ServiceError, GetRecordResponse]](any, any))
         .thenReturn(Future.successful(Left(expectedResponse)))
 
@@ -101,8 +101,12 @@ class GetRecordsRouterConnectorSpec
     }
 
     "catch exception" in {
-      val expectedErrorResponse = ErrorResponse(correlationId, "INTERNAL_SERVER_ERROR", s"Could not retrieve record for eori number $eori and record ID $recordId")
-      val expectedResponse = ServiceError(INTERNAL_SERVER_ERROR, expectedErrorResponse)
+      val expectedErrorResponse = ErrorResponse(
+        correlationId,
+        "INTERNAL_SERVER_ERROR",
+        s"Could not retrieve record for eori number $eori and record ID $recordId"
+      )
+      val expectedResponse      = ServiceError(INTERNAL_SERVER_ERROR, expectedErrorResponse)
       when(requestBuilder.execute[Either[ServiceError, GetRecordResponse]](any, any))
         .thenReturn(Future.failed(new RuntimeException("error")))
 
@@ -134,7 +138,7 @@ class GetRecordsRouterConnectorSpec
 
     "return an error" in {
       val expectedErrorResponse = ErrorResponse("123", "code", "error")
-      val expectedResponse = ServiceError(NOT_FOUND, expectedErrorResponse)
+      val expectedResponse      = ServiceError(NOT_FOUND, expectedErrorResponse)
       when(requestBuilder.execute[Either[ServiceError, GetRecordsResponse]](any, any))
         .thenReturn(Future.successful(Left(expectedResponse)))
 
@@ -144,8 +148,9 @@ class GetRecordsRouterConnectorSpec
     }
 
     "catch exception" in {
-      val expectedErrorResponse = ErrorResponse(correlationId, "INTERNAL_SERVER_ERROR", s"Could not retrieve records for eori number $eori")
-      val expectedResponse = ServiceError(INTERNAL_SERVER_ERROR, expectedErrorResponse)
+      val expectedErrorResponse =
+        ErrorResponse(correlationId, "INTERNAL_SERVER_ERROR", s"Could not retrieve records for eori number $eori")
+      val expectedResponse      = ServiceError(INTERNAL_SERVER_ERROR, expectedErrorResponse)
       when(requestBuilder.execute[Either[ServiceError, GetRecordsResponse]](any, any))
         .thenReturn(Future.failed(new RuntimeException("error")))
 
@@ -154,7 +159,6 @@ class GetRecordsRouterConnectorSpec
       result.left.value mustBe expectedResponse
 
     }
-
 
   }
 }

@@ -30,38 +30,40 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class GetRecordsRouterConnector @Inject() (
-                                            httpClient: HttpClientV2,
-                                            appConfig: AppConfig,
-                                            val uuidService: UuidService,
-                                          )(implicit ec: ExecutionContext)
-  extends BaseConnector  with RouterHttpReader with Logging {
+  httpClient: HttpClientV2,
+  appConfig: AppConfig,
+  val uuidService: UuidService
+)(implicit ec: ExecutionContext)
+    extends BaseConnector
+    with RouterHttpReader
+    with Logging {
 
-  def get(eori: String, recordId: String)(implicit hc: HeaderCarrier): Future[Either[ServiceError, GetRecordResponse]] = {
+  def get(eori: String, recordId: String)(implicit
+    hc: HeaderCarrier
+  ): Future[Either[ServiceError, GetRecordResponse]] = {
     val url = appConfig.routerUrl.withPath(routerGetRecordUrlPath(eori, recordId))
 
     httpClient
       .get(url"$url")
       .withClientId
       .execute(httpReader[GetRecordResponse], ec)
-      .recover {
-        case ex: Throwable =>
-          logger.warn(
-            s"[GetRecordsRouterConnector] - Exception when retrieving record for eori number $eori and record ID $recordId, with message ${ex.getMessage}",
-            ex
+      .recover { case ex: Throwable =>
+        logger.warn(
+          s"[GetRecordsRouterConnector] - Exception when retrieving record for eori number $eori and record ID $recordId, with message ${ex.getMessage}",
+          ex
+        )
+        Left(
+          ServiceError(
+            INTERNAL_SERVER_ERROR,
+            ErrorResponse
+              .serverErrorResponse(
+                uuidService.uuid,
+                s"Could not retrieve record for eori number $eori and record ID $recordId"
+              )
           )
-          Left(
-            ServiceError(
-              INTERNAL_SERVER_ERROR,
-              ErrorResponse
-                .serverErrorResponse(
-                  uuidService.uuid,
-                  s"Could not retrieve record for eori number $eori and record ID $recordId"
-                )
-            )
-          )
+        )
       }
   }
-
 
   def get(
     eori: String,
@@ -74,22 +76,21 @@ class GetRecordsRouterConnector @Inject() (
       .get(url"$url")
       .withClientId
       .execute(httpReader[GetRecordsResponse], ec)
-      .recover {
-        case ex: Throwable =>
-          logger.warn(
-            s"[GetRecordsRouterConnector] - Exception when retrieving multiple records for eori number $eori, with message ${ex.getMessage}",
-            ex
+      .recover { case ex: Throwable =>
+        logger.warn(
+          s"[GetRecordsRouterConnector] - Exception when retrieving multiple records for eori number $eori, with message ${ex.getMessage}",
+          ex
+        )
+        Left(
+          ServiceError(
+            INTERNAL_SERVER_ERROR,
+            ErrorResponse
+              .serverErrorResponse(
+                uuidService.uuid,
+                s"Could not retrieve records for eori number $eori"
+              )
           )
-          Left(
-            ServiceError(
-              INTERNAL_SERVER_ERROR,
-              ErrorResponse
-                .serverErrorResponse(
-                  uuidService.uuid,
-                  s"Could not retrieve records for eori number $eori"
-                )
-            )
-          )
+        )
       }
   }
 
@@ -99,11 +100,11 @@ class GetRecordsRouterConnector @Inject() (
     )
 
   private def routerGetRecordsOptionalUrl(
-                                           eoriNumber: String,
-                                           lastUpdatedDate: Option[String],
-                                           page: Option[Int],
-                                           size: Option[Int]
-                                         ): String = {
+    eoriNumber: String,
+    lastUpdatedDate: Option[String],
+    page: Option[Int],
+    size: Option[Int]
+  ): String = {
 
     val params = List(
       lastUpdatedDate.map(d => s"lastUpdatedDate=$d"),

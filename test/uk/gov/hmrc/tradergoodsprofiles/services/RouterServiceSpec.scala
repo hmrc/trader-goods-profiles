@@ -53,7 +53,6 @@ class RouterServiceSpec
   implicit val hc: HeaderCarrier    = HeaderCarrier()
 
   private val connector      = mock[RouterConnector]
-  private val recordResponse = createGetRecordResponse("GB123456789012", "recordId", Instant.now)
   private val createResponse = createCreateOrUpdateRecordResponse("recordId", "GB123456789012", Instant.now)
   private val uuidService    = mock[UuidService]
   private val correlationId  = "d677693e-9981-4ee3-8574-654981ebe606"
@@ -69,118 +68,6 @@ class RouterServiceSpec
     reset(connector, uuidService)
 
     when(uuidService.uuid).thenReturn(correlationId)
-  }
-  "createRecord" should {
-    "create a record" in {
-      when(connector.createRecord(any, any)(any))
-        .thenReturn(Future.successful(HttpResponse(201, Json.toJson(createResponse), Map.empty)))
-
-      val result = sut.createRecord("GB123456789012", createRouterCreateRecordRequest)
-
-      whenReady(result) { _ =>
-        verify(connector).createRecord(
-          eqTo("GB123456789012"),
-          eqTo(createRouterCreateRecordRequest)
-        )(any)
-      }
-    }
-
-    "return CreateRecordResponse" in {
-      when(connector.createRecord(any, any)(any))
-        .thenReturn(Future.successful(HttpResponse(201, Json.toJson(createResponse), Map.empty)))
-
-      val result = sut.createRecord("GB123456789012", createRouterCreateRecordRequest)
-
-      whenReady(result)(_.value mustBe createResponse)
-    }
-
-    "return an error" when {
-      "cannot parse the response" in {
-
-        when(connector.createRecord(any, any)(any))
-          .thenReturn(Future.successful(HttpResponse(201, Json.obj(), Map.empty)))
-
-        val result = sut.createRecord("GB123456789012", createRouterCreateRecordRequest)
-
-        whenReady(result) {
-          _.left.value mustBe ServiceError(
-            INTERNAL_SERVER_ERROR,
-            ErrorResponse(
-              "d677693e-9981-4ee3-8574-654981ebe606",
-              "INTERNAL_SERVER_ERROR",
-              "Could not create record due to an internal error",
-              None
-            )
-          )
-        }
-      }
-
-      "cannot parse the response as Json" in {
-
-        when(connector.createRecord(any, any)(any))
-          .thenReturn(Future.successful(HttpResponse(201, "error")))
-
-        val result = sut.createRecord("GB123456789012", createRouterCreateRecordRequest)
-
-        whenReady(result) {
-          _.left.value mustBe ServiceError(
-            INTERNAL_SERVER_ERROR,
-            ErrorResponse(
-              "d677693e-9981-4ee3-8574-654981ebe606",
-              "INTERNAL_SERVER_ERROR",
-              "Response body could not be parsed as JSON, body: error",
-              None
-            )
-          )
-        }
-      }
-
-      "routerConnector return an exception" in {
-
-        when(connector.createRecord(any, any)(any))
-          .thenReturn(Future.failed(new RuntimeException("error")))
-
-        val result = sut.createRecord("GB123456789012", createRouterCreateRecordRequest)
-
-        whenReady(result) {
-          _.left.value mustBe ServiceError(
-            INTERNAL_SERVER_ERROR,
-            ErrorResponse(
-              "d677693e-9981-4ee3-8574-654981ebe606",
-              "INTERNAL_SERVER_ERROR",
-              "Could not create record due to an internal error",
-              None
-            )
-          )
-        }
-      }
-
-      val table = Table(
-        ("description", "status", "expectedResult", "code"),
-        ("return bad request", 400, 400, "BAD_REQUEST"),
-        ("return Forbidden", 403, 403, "FORBIDDEN"),
-        ("return Not Found", 404, 404, "NOT_FOUND")
-      )
-
-      forAll(table) {
-        (
-          description: String,
-          status: Int,
-          expectedResult: Int,
-          code: String
-        ) =>
-          s"$description" in {
-            when(connector.createRecord(any, any)(any))
-              .thenReturn(Future.successful(createHttpResponse(status, code)))
-
-            val result = sut.createRecord("GB123456789012", createRouterCreateRecordRequest)
-
-            whenReady(result) {
-              _.left.value.status mustBe expectedResult
-            }
-          }
-      }
-    }
   }
 
   "removeRecord" should {

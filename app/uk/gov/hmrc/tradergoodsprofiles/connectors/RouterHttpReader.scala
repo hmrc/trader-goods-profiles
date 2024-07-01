@@ -30,15 +30,16 @@ trait RouterHttpReader {
 
   def uuidService: UuidService
 
-  implicit def httpReader[T](implicit reads: Reads[T], tt: TypeTag[T]) =
-    new  HttpReads[Either[ServiceError, T]] {
+  implicit def httpReader[T](implicit reads: Reads[T], tt: TypeTag[T]): HttpReads[Either[ServiceError, T]] =
+    new HttpReads[Either[ServiceError, T]] {
       override def read(method: String, url: String, response: HttpResponse): Either[ServiceError, T] =
-      response match {
-        case response if isSuccessful(response.status) => jsonAs[T](response.body).left.map(ServiceError(INTERNAL_SERVER_ERROR, _))
-        case response                                  =>
-          Left(handleErrors(response))
-      }
-  }
+        response match {
+          case response if isSuccessful(response.status) =>
+            jsonAs[T](response.body).left.map(ServiceError(INTERNAL_SERVER_ERROR, _))
+          case response                                  =>
+            Left(handleErrors(response))
+        }
+    }
 
   private def jsonAs[T](responseBody: String)(implicit reads: Reads[T], tt: TypeTag[T]): Either[ErrorResponse, T] =
     Try(Json.parse(responseBody)) match {
@@ -71,12 +72,11 @@ trait RouterHttpReader {
         )
     }
 
-  private def handleErrors(response: HttpResponse): ServiceError = {
+  private def handleErrors(response: HttpResponse): ServiceError =
     jsonAs[ErrorResponse](response.body)
       .fold(
         ServiceError(INTERNAL_SERVER_ERROR, _),
         ServiceError(response.status, _)
       )
-  }
 
 }
