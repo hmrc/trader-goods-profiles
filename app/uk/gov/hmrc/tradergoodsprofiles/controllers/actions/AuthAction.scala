@@ -111,7 +111,7 @@ class AuthActionImpl @Inject() (
   }
 
   private def handleForbiddenError[A](eoriNumber: String)(implicit request: Request[A]): Future[Result] = {
-    logger.error(s"Forbidden error for ${request.uri}, eori number $eoriNumber")
+    logger.warn(s"Forbidden error for ${request.uri}, eori number $eoriNumber")
 
     Future.successful(
       ForbiddenErrorResponse(
@@ -134,7 +134,7 @@ class AuthActionImpl @Inject() (
     errorMessage: String
   )(implicit request: Request[A]): Result = {
 
-    logger.error(s"Unauthorised exception for ${request.uri} with error $errorMessage")
+    logger.warn(s"Unauthorised exception for ${request.uri} with error $errorMessage")
 
     UnauthorisedErrorResponse(
       uuidService.uuid,
@@ -146,7 +146,7 @@ class AuthActionImpl @Inject() (
     errorMessage: String
   )(implicit request: Request[A]): Result = {
 
-    logger.error(s"Unauthorised exception for ${request.uri} with error $errorMessage")
+    logger.warn(s"Unauthorised exception for ${request.uri} with error $errorMessage")
 
     UnauthorisedErrorResponse(
       uuidService.uuid,
