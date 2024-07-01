@@ -38,38 +38,6 @@ class RouterService @Inject() (
 )(implicit ec: ExecutionContext)
     extends Logging {
 
-  def removeRecord(eoriNumber: String, recordId: String, actorId: String)(implicit
-    hc: HeaderCarrier
-  ): Future[Either[ServiceError, Int]] =
-    routerConnector
-      .removeRecord(eoriNumber, recordId, actorId)
-      .map { httpResponse =>
-        httpResponse.status match {
-          case status if is2xx(status) =>
-            Right(status)
-          case _                       =>
-            Left(
-              handleErrors(httpResponse, Some(eoriNumber), Some(recordId), Some(actorId))
-            )
-        }
-      }
-      .recover { case ex: Throwable =>
-        logger.error(
-          s"[RouterService] - Exception when removing record for eori number $eoriNumber, record ID $recordId, and actor ID $actorId, with message ${ex.getMessage}",
-          ex
-        )
-        Left(
-          ServiceError(
-            INTERNAL_SERVER_ERROR,
-            ErrorResponse
-              .serverErrorResponse(
-                uuidService.uuid,
-                s"Could not remove record for eori number $eoriNumber, record ID $recordId, and actor ID $actorId"
-              )
-          )
-        )
-      }
-
   def updateRecord(eori: String, recordId: String, updateRequest: Request[JsValue])(implicit
     hc: HeaderCarrier
   ): Future[Either[ServiceError, CreateOrUpdateRecordResponse]] =

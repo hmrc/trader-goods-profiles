@@ -24,7 +24,7 @@ import org.scalatest.{BeforeAndAfterEach, EitherValues}
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
+import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
 import play.api.test.FakeRequest
@@ -68,69 +68,6 @@ class RouterServiceSpec
     reset(connector, uuidService)
 
     when(uuidService.uuid).thenReturn(correlationId)
-  }
-
-  "removeRecord" should {
-    "return 200 OK " in {
-      val httpResponse = HttpResponse(Status.OK, "")
-      when(connector.removeRecord("GB123456789012", "recordId", "GB123456789012"))
-        .thenReturn(Future.successful(httpResponse))
-
-      val result = sut.removeRecord("GB123456789012", "recordId", "GB123456789012")
-
-      whenReady(result) {
-        _.value mustBe OK
-      }
-    }
-
-    "return an error" when {
-
-      "routerConnector return an exception" in {
-        when(connector.removeRecord(any, any, any)(any))
-          .thenReturn(Future.failed(new RuntimeException("error")))
-
-        val result = sut.removeRecord("eori", "recordId", "actorId")
-
-        whenReady(result) {
-          _.left.value mustBe ServiceError(
-            INTERNAL_SERVER_ERROR,
-            ErrorResponse(
-              "d677693e-9981-4ee3-8574-654981ebe606",
-              "INTERNAL_SERVER_ERROR",
-              "Could not remove record for eori number eori, record ID recordId, and actor ID actorId",
-              None
-            )
-          )
-        }
-
-      }
-
-      val table = Table(
-        ("description", "status", "expectedResult", "code"),
-        ("return bad request", 400, 400, "BAD_REQUEST"),
-        ("return Forbidden", 403, 403, "FORBIDDEN"),
-        ("return Not Found", 404, 404, "NOT_FOUND")
-      )
-
-      forAll(table) {
-        (
-          description: String,
-          status: Int,
-          expectedResult: Int,
-          code: String
-        ) =>
-          s"$description" in {
-            when(connector.removeRecord(any, any, any)(any))
-              .thenReturn(Future.successful(createHttpResponse(status, code)))
-
-            val result = sut.removeRecord("eori", "recordId", "actorId")
-
-            whenReady(result) {
-              _.left.value.status mustBe expectedResult
-            }
-          }
-      }
-    }
   }
 
   "updateRecord" should {

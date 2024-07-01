@@ -25,10 +25,11 @@ import play.api.http.Status.{INTERNAL_SERVER_ERROR, NO_CONTENT, OK}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
+import uk.gov.hmrc.tradergoodsprofiles.connectors.RemoveRecordRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
+import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
@@ -52,10 +53,10 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
   private val actorId                       = "GB987654321098"
   private val correlationId                 = "d677693e-9981-4ee3-8574-654981ebe606"
   private val uuidService                   = mock[UuidService]
-  private val routerService                 = mock[RouterService]
+  private val connector                     = mock[RemoveRecordRouterConnector]
   private val sut                           = new RemoveRecordController(
     new FakeSuccessAuthAction(),
-    routerService,
+    connector,
     uuidService,
     stubControllerComponents()
   )
@@ -63,9 +64,9 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(uuidService, routerService)
+    reset(uuidService, connector)
     when(uuidService.uuid).thenReturn(correlationId)
-    when(routerService.removeRecord(any, any, any)(any))
+    when(connector.removeRecord(any, any, any)(any))
       .thenReturn(Future.successful(Right(OK)))
   }
 
@@ -79,7 +80,7 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
       val result = sut.removeRecord(eoriNumber, recordId, actorId)(request)
 
       status(result) mustBe NO_CONTENT
-      verify(routerService).removeRecord(eqTo(eoriNumber), eqTo(recordId), eqTo(actorId))(any)
+      verify(connector).removeRecord(eqTo(eoriNumber), eqTo(recordId), eqTo(actorId))(any)
     }
 
     "return an error" when {
@@ -95,7 +96,7 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
           ErrorResponse.serverErrorResponse(uuidService.uuid, "internal server error")
         val serviceError  = ServiceError(INTERNAL_SERVER_ERROR, errorResponse)
 
-        when(routerService.removeRecord(any, any, any)(any))
+        when(connector.removeRecord(any, any, any)(any))
           .thenReturn(Future.successful(Left(serviceError)))
 
         val result = sut.removeRecord(eoriNumber, recordId, actorId)(request)

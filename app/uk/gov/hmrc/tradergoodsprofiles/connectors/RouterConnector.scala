@@ -17,7 +17,6 @@
 package uk.gov.hmrc.tradergoodsprofiles.connectors
 
 import io.lemonlabs.uri._
-import io.lemonlabs.uri.typesafe.QueryKey.stringQueryKey
 import play.api.Logging
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.libs.json.{JsValue, Json}
@@ -38,17 +37,6 @@ class RouterConnector @Inject() (
     extends Logging {
 
   val routerBaseRoute: String = "/trader-goods-profiles-router"
-
-  def removeRecord(eori: String, recordId: String, actorId: String)(implicit
-    hc: HeaderCarrier
-  ): Future[HttpResponse] = {
-    val url = routerRemoveRecordUrl(eori, recordId, actorId)
-
-    httpClient
-      .delete(url"$url")
-      .withClientId
-      .execute[HttpResponse]
-  }
 
   def updateRecord(eori: String, recordId: String, updateRecordRequest: Request[JsValue])(implicit
     hc: HeaderCarrier
@@ -89,12 +77,7 @@ class RouterConnector @Inject() (
       .execute[HttpResponse]
   }
 
-  private def routerRemoveRecordUrl(eoriNumber: String, recordId: String, actorId: String): Url =
-    appConfig.routerUrl
-      .withPath(UrlPath.parse(s"$routerBaseRoute/traders/$eoriNumber/records/$recordId"))
-      .withQueryString(QueryString.fromPairs("actorId" -> actorId))
-
-  private def routerUpdateRecordUrlPath(eori: String, recordId: String): UrlPath                =
+  private def routerUpdateRecordUrlPath(eori: String, recordId: String): UrlPath =
     UrlPath.parse(
       s"$routerBaseRoute/traders/$eori/records/$recordId"
     )

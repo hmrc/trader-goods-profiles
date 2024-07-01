@@ -41,6 +41,15 @@ trait RouterHttpReader {
         }
     }
 
+  implicit def httpReaderWithoutPayload: HttpReads[Either[ServiceError, Int]] =
+    new HttpReads[Either[ServiceError, Int]] {
+      override def read(method: String, url: String, response: HttpResponse): Either[ServiceError, Int] =
+        response match {
+          case response if isSuccessful(response.status) => Right(response.status)
+          case response                                  => Left(handleErrors(response))
+        }
+    }
+
   private def jsonAs[T](responseBody: String)(implicit reads: Reads[T], tt: TypeTag[T]): Either[ErrorResponse, T] =
     Try(Json.parse(responseBody)) match {
       case Success(value)     =>

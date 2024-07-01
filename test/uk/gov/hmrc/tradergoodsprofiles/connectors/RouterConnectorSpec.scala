@@ -23,7 +23,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, EitherValues}
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
-import play.api.http.Status.{CREATED, NO_CONTENT, OK}
+import play.api.http.Status.{CREATED, OK}
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
@@ -66,36 +66,12 @@ class RouterConnectorSpec
     when(httpClient.post(any)(any)).thenReturn(requestBuilder)
     when(httpClient.put(any)(any)).thenReturn(requestBuilder)
     when(httpClient.patch(any)(any)).thenReturn(requestBuilder)
-    when(httpClient.delete(any)(any)).thenReturn(requestBuilder)
     when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
     when(requestBuilder.withBody(any[Object])(any, any, any))
       .thenReturn(requestBuilder)
     when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
     when(requestBuilder.execute[HttpResponse](any, any))
       .thenReturn(Future.successful(HttpResponse(200, "message")))
-  }
-
-  "remove" should {
-
-    "return 204" in {
-      when(requestBuilder.execute[HttpResponse](any, any))
-        .thenReturn(Future.successful(HttpResponse(204, "")))
-
-      val result = await(sut.removeRecord("eori", "recordId", "actorId"))
-
-      result.status mustBe NO_CONTENT
-    }
-
-    "send a DELETE request with the right url and body" in {
-
-      await(sut.removeRecord("eori", "recordId", "actorId"))
-
-      val expectedUrl =
-        "http://localhost:23123/trader-goods-profiles-router/traders/eori/records/recordId?actorId=actorId"
-      verify(httpClient).delete(eqTo(url"$expectedUrl"))(any)
-      verify(requestBuilder).setHeader("X-Client-ID" -> "clientId")
-      verify(requestBuilder).execute(any, any)
-    }
   }
 
   "update" should {
