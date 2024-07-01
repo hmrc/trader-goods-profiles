@@ -95,7 +95,7 @@ class RouterHttpReaderSpec extends PlaySpec with EitherValues {
 
     "return the object requested" in new TestRouterHttpReader(uuidService) { reader =>
       val response = HttpResponse(200, Json.obj(), Map.empty)
-      val result   = reader.httpReaderWithoutPayload.read("GET", "any-url", response)
+      val result   = reader.httpReaderWithoutResponseBody.read("GET", "any-url", response)
 
       result.value mustBe 200
     }
@@ -104,7 +104,7 @@ class RouterHttpReaderSpec extends PlaySpec with EitherValues {
       "HttpResponse is an error" in new TestRouterHttpReader(uuidService) { reader =>
         val response     = ErrorResponse("123", "any-code", "error", Some(Seq(Error("BAD_REQUEST", "Bad request", 78890))))
         val httpResponse = HttpResponse(BAD_REQUEST, Json.toJson(response), Map.empty)
-        val result       = reader.httpReaderWithoutPayload.read("GET", "any-url", httpResponse)
+        val result       = reader.httpReaderWithoutResponseBody.read("GET", "any-url", httpResponse)
 
         result.left.value mustBe ServiceError(BAD_REQUEST, response)
       }
@@ -112,7 +112,7 @@ class RouterHttpReaderSpec extends PlaySpec with EitherValues {
 
     "cannot parse an error response" in new TestRouterHttpReader(uuidService) { reader =>
       val response = HttpResponse(NOT_FOUND, Json.obj(), Map.empty)
-      val result   = reader.httpReaderWithoutPayload.read("GET", "any-url", response)
+      val result   = reader.httpReaderWithoutResponseBody.read("GET", "any-url", response)
 
       result.left.value mustBe ServiceError(
         INTERNAL_SERVER_ERROR,

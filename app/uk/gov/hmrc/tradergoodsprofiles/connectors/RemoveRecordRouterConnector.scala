@@ -46,7 +46,7 @@ class RemoveRecordRouterConnector @Inject()(
     httpClient
       .delete(url"$url")
       .withClientId
-      .execute(httpReaderWithoutPayload, ec)
+      .execute(httpReaderWithoutResponseBody, ec)
       .recover { case ex: Throwable =>
         logger.warn(
           s"[RemoveRecordRouterConnector] - Exception when removing record for eori number $eori, record ID $recordId, and actor ID $actorId, with message ${ex.getMessage}",

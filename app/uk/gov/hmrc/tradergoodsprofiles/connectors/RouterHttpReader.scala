@@ -41,7 +41,7 @@ trait RouterHttpReader {
         }
     }
 
-  implicit def httpReaderWithoutPayload: HttpReads[Either[ServiceError, Int]] =
+  implicit def httpReaderWithoutResponseBody: HttpReads[Either[ServiceError, Int]] =
     new HttpReads[Either[ServiceError, Int]] {
       override def read(method: String, url: String, response: HttpResponse): Either[ServiceError, Int] =
         response match {
