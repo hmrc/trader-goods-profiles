@@ -297,7 +297,7 @@ class RouterService @Inject() (
       case _                                       => ""
     }
 
-    logger.error(
+    logger.warn(
       s"[RouterService] - Error processing request $errorContext, status '${response.status}' with message: ${response.body}"
     )
     jsonAs[ErrorResponse](response.body)
@@ -321,7 +321,7 @@ class RouterService @Inject() (
         value.validate[T] match {
           case JsSuccess(v, _) => Right(v)
           case JsError(error)  =>
-            logger.error(
+            logger.warn(
               s"[RouterService] - Response body could not be read as type ${typeOf[T]}, error ${error.toString()}"
             )
             Left(
@@ -333,7 +333,7 @@ class RouterService @Inject() (
             )
         }
       case Failure(exception) =>
-        logger.error(
+        logger.warn(
           s"[RouterService] - Response body could not be parsed as JSON, body: $responseBody",
           exception
         )
