@@ -339,6 +339,48 @@ paths:
       security:
         - userRestricted:
             - trader-goods-profiles
+    delete:
+      tags:
+        - Goods records
+      summary: Withdraw your request for advice from HMRC
+      description: Withdraw your request for advice from HMRC
+      operationId: removeTraderGoodsProfileRecordAdvice
+      parameters:
+        - $ref: '#/components/parameters/Accept'
+        - $ref: '#/components/parameters/Authorization'
+        - $ref: '#/components/parameters/eoriParam'
+        - $ref: '#/components/parameters/recordParam'
+        - $ref: '#/components/parameters/withdrawReasonParam'
+      responses:
+        '204':
+          description: No Content; Request completed successfully
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+              examples:
+                invalidHeader:
+                  value:
+                    correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
+                    code: BAD_REQUEST
+                    message: Bad request
+                    errors:
+                      - code: INVALID_HEADER
+                        message: Accept was missing from Header or wrong format
+                        errorNumber: 4
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Forbidden;   User was valid, but not allowed to perform this action
+        '404':
+          description: Good records not found to deactivate
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - userRestricted:
+            - trader-goods-profiles
   /customs/traders/goods-profiles/{eori}:
     put:
       parameters:
@@ -1124,6 +1166,11 @@ components:
       maximum: 100000
       example: 100
       description: Number of records per page to be requested
+    withdrawReason:
+      type: string
+      minimum: 1
+      maximum: 4000
+      description: A free format field for traders to explain why they're withdrawing their request for advice.
   parameters:
     Content-Type:
       name: Content-Type
@@ -1191,6 +1238,12 @@ components:
       schema:
         $ref: '#/components/schemas/recordId'
       description: ID of the record for the TGP Product in the TGP Core database (UUID)
+    withdrawReasonParam:
+      in: query
+      name: withdrawReason
+      schema:
+        $ref: '#/components/schemas/withdrawReason'
+      description: A free format field for traders to explain why they're withdrawing their request for advice.
   examples:
     StandardBadRequestExample:
       value:
