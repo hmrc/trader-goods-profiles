@@ -22,38 +22,29 @@ import org.mockito.MockitoSugar.{reset, verify, when}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, EitherValues}
 import org.scalatestplus.mockito.MockitoSugar.mock
-import org.scalatestplus.play.PlaySpec
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND}
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
-import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
-import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
+import uk.gov.hmrc.http.StringContextOps
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.RouterCreateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateOrUpdateRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.CreateOrUpdateRecordResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
-import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.XClientIdHeader
+import uk.gov.hmrc.tradergoodsprofiles.support.BaseConnectorSpec
 
 import java.time.Instant
 import java.util.UUID
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class CreateRecordRouterConnectorSpec
-    extends PlaySpec
+    extends BaseConnectorSpec
     with RouterCreateRecordRequestSupport
     with CreateOrUpdateRecordResponseSupport
     with ScalaFutures
     with EitherValues
     with BeforeAndAfterEach {
 
-  implicit val ec: ExecutionContext = ExecutionContext.global
-  implicit val hc: HeaderCarrier    = HeaderCarrier(otherHeaders = Seq(XClientIdHeader -> "clientId"))
-
-  private val httpClient     = mock[HttpClientV2]
-  private val appConfig      = mock[AppConfig]
-  private val requestBuilder = mock[RequestBuilder]
   private val uuidService    = mock[UuidService]
   private val eori           = "GB123456789012"
   private val recordId       = "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f"
