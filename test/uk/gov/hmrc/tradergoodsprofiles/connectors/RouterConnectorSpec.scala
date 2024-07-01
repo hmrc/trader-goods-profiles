@@ -74,31 +74,6 @@ class RouterConnectorSpec
       .thenReturn(Future.successful(HttpResponse(200, "message")))
   }
 
-  "update" should {
-
-    "return 200" in {
-      when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(200, "message")))
-
-      val result = await(sut.updateRecord(eori, recordId, createUpdateRecordRequest))
-
-      result.status mustBe OK
-    }
-
-    "send a PATCH request with the right url and body" in {
-      when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(200, "message")))
-
-      await(sut.updateRecord(eori, recordId, createUpdateRecordRequest))
-
-      val expectedUrl =
-        UrlPath.parse(s"http://localhost:23123/trader-goods-profiles-router/traders/$eori/records/$recordId")
-      verify(httpClient).patch(eqTo(url"$expectedUrl"))(any)
-      verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-      verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
-      verify(requestBuilder).withBody(eqTo(createUpdateRecordRequestData))(any, any, any)
-      verify(requestBuilder).execute(any, any)
-    }
-  }
-
   "request advice" should {
 
     "return 201 when advice is successfully requested" in {

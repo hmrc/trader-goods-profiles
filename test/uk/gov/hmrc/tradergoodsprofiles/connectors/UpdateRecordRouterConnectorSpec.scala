@@ -26,7 +26,7 @@ import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND}
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.StringContextOps
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.RouterCreateRecordRequestSupport
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.UpdateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateOrUpdateRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.CreateOrUpdateRecordResponse
@@ -37,19 +37,19 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.Future
 
-class CreateRecordRouterConnectorSpec
-    extends BaseConnectorSpec
-    with RouterCreateRecordRequestSupport
-    with CreateOrUpdateRecordResponseSupport
+class UpdateRecordRouterConnectorSpec
+  extends BaseConnectorSpec
     with ScalaFutures
     with EitherValues
+    with CreateOrUpdateRecordResponseSupport
+    with UpdateRecordRequestSupport
     with BeforeAndAfterEach {
 
-  private val uuidService   = mock[UuidService]
+  private val uuidService = mock[UuidService]
+  private val correlationId  = UUID.randomUUID().toString
   private val eori          = "GB123456789012"
-  private val correlationId = UUID.randomUUID().toString
-
-  private val sut = new CreateRecordRouterConnector(httpClient, appConfig, uuidService)
+  private val recordId = UUID.randomUUID().toString
+  private val sut = new UpdateRecordRouterConnector(httpClient, appConfig, uuidService)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -58,55 +58,59 @@ class CreateRecordRouterConnectorSpec
 
     when(appConfig.routerUrl).thenReturn(Url.parse("http://localhost:23123"))
     when(uuidService.uuid).thenReturn(correlationId)
-    when(httpClient.post(any)(any)).thenReturn(requestBuilder)
+    when(httpClient.patch(any)(any)).thenReturn(requestBuilder)
     when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
     when(requestBuilder.withBody(any[Object])(any, any, any))
       .thenReturn(requestBuilder)
   }
+  "update" should {
 
-  "create" should {
-
-    "return 201 when the record is successfully created" in {
-      val response = createCreateOrUpdateRecordResponse("any-recordId", eori, Instant.now)
+    "return 200" in {
+      val response = createCreateOrUpdateRecordResponse(recordId, eori, Instant.now)
       when(requestBuilder.execute[Either[ServiceError, CreateOrUpdateRecordResponse]](any, any))
         .thenReturn(Future.successful(Right(response)))
 
-      val result = await(sut.createRecord(eori, createRouterCreateRecordRequest))
+      val result = await(sut.updateRecord(eori, recordId, createUpdateRecordRequest))
 
       result.value mustBe response
 
       withClue("send a request with the right url") {
-        val expectedUrl = UrlPath.parse(s"http://localhost:23123/trader-goods-profiles-router/traders/$eori/records")
-        verify(httpClient).post(eqTo(url"$expectedUrl"))(any)
+        val expectedUrl =
+          UrlPath.parse(s"http://localhost:23123/trader-goods-profiles-router/traders/$eori/records/$recordId")
+        verify(httpClient).patch(eqTo(url"$expectedUrl"))(any)
         verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
         verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
-        verify(requestBuilder).withBody(eqTo(createRouterCreateRecordRequestData))(any, any, any)
+        verify(requestBuilder).withBody(eqTo(createUpdateRecordRequestData))(any, any, any)
         verify(requestBuilder).execute(any, any)
       }
     }
 
-    "return an error" in {
-      val expectedErrorResponse = ErrorResponse("123", "code", "error")
-      val expectedResponse      = ServiceError(NOT_FOUND, expectedErrorResponse)
-      when(requestBuilder.execute[Either[ServiceError, CreateOrUpdateRecordResponse]](any, any))
-        .thenReturn(Future.successful(Left(expectedResponse)))
+    "return an error" when {
+      "router connector return an error" in {
+        val expectedErrorResponse = ErrorResponse("123", "code", "error")
+        val expectedResponse      = ServiceError(NOT_FOUND, expectedErrorResponse)
+        when(requestBuilder.execute[Either[ServiceError, CreateOrUpdateRecordResponse]](any, any))
+          .thenReturn(Future.successful(Left(expectedResponse)))
 
-      val result = await(sut.createRecord(eori, createRouterCreateRecordRequest))
+        val result = await(sut.updateRecord(eori, recordId, createUpdateRecordRequest))
 
-      result.left.value mustBe expectedResponse
-    }
+        result.left.value mustBe expectedResponse
+      }
 
-    "catch exception" in {
-      when(requestBuilder.execute[Either[ServiceError, CreateOrUpdateRecordResponse]](any, any))
-        .thenReturn(Future.failed(new RuntimeException("error")))
+      "http client throw" in {
 
-      val result = await(sut.createRecord(eori, createRouterCreateRecordRequest))
+        when(requestBuilder.execute[Either[ServiceError, CreateOrUpdateRecordResponse]](any, any))
+          .thenReturn(Future.failed(new RuntimeException("error")))
 
-      val expectedErrorResponse =
-        ErrorResponse(correlationId, "INTERNAL_SERVER_ERROR", s"Could not create record for eori number $eori")
-      val expectedResponse      = ServiceError(INTERNAL_SERVER_ERROR, expectedErrorResponse)
-      result.left.value mustBe expectedResponse
+        val result = await(sut.updateRecord(eori, recordId, createUpdateRecordRequest))
 
+        val expectedErrorResponse = ErrorResponse(
+          correlationId,
+          "INTERNAL_SERVER_ERROR",
+          "Could not update record due to an internal error")
+        val expectedResponse      = ServiceError(INTERNAL_SERVER_ERROR, expectedErrorResponse)
+        result.left.value mustBe expectedResponse
+      }
     }
   }
 

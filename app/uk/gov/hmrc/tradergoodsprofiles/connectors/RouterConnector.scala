@@ -38,18 +38,6 @@ class RouterConnector @Inject() (
 
   val routerBaseRoute: String = "/trader-goods-profiles-router"
 
-  def updateRecord(eori: String, recordId: String, updateRecordRequest: Request[JsValue])(implicit
-    hc: HeaderCarrier
-  ): Future[HttpResponse] = {
-    val url = appConfig.routerUrl.withPath(routerUpdateRecordUrlPath(eori, recordId))
-    httpClient
-      .patch(url"$url")
-      .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-      .withBody(updateRecordRequest.body)
-      .withClientId
-      .execute[HttpResponse]
-  }
-
   def routerMaintainProfile(eori: String, updateProfileRequest: Request[JsValue])(implicit
     hc: HeaderCarrier
   ): Future[HttpResponse] = {
@@ -76,11 +64,6 @@ class RouterConnector @Inject() (
       .withClientId
       .execute[HttpResponse]
   }
-
-  private def routerUpdateRecordUrlPath(eori: String, recordId: String): UrlPath =
-    UrlPath.parse(
-      s"$routerBaseRoute/traders/$eori/records/$recordId"
-    )
 
   private def routerAdviceUrlPath(eori: String, recordId: String): UrlPath =
     UrlPath.parse(

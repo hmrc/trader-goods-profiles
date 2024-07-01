@@ -25,12 +25,13 @@ import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
+import uk.gov.hmrc.tradergoodsprofiles.connectors.UpdateRecordRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.UpdateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateOrUpdateRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
+import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import java.time.Instant
 import java.util.UUID
@@ -54,19 +55,19 @@ class UpdateRecordControllerSpec
   private val timestamp     = Instant.parse("2024-01-12T12:12:12Z")
   private val correlationId = "d677693e-9981-4ee3-8574-654981ebe606"
   private val uuidService   = mock[UuidService]
-  private val routerService = mock[RouterService]
+  private val connector     = mock[UpdateRecordRouterConnector]
   private val sut           = new UpdateRecordController(
     new FakeSuccessAuthAction(),
-    routerService,
+    connector,
     uuidService,
     stubControllerComponents()
   )
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    reset(uuidService, routerService)
+    reset(uuidService, connector)
     when(uuidService.uuid).thenReturn(correlationId)
-    when(routerService.updateRecord(any, any, any)(any))
+    when(connector.updateRecord(any, any, any)(any))
       .thenReturn(Future.successful(Right(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))))
   }
 
@@ -93,7 +94,7 @@ class UpdateRecordControllerSpec
         )
       val serviceError  = ServiceError(INTERNAL_SERVER_ERROR, errorResponse)
 
-      when(routerService.updateRecord(any, any, any)(any))
+      when(connector.updateRecord(any, any, any)(any))
         .thenReturn(Future.successful(Left(serviceError)))
 
       val result = sut.updateRecord(eoriNumber, recordId)(request.withBody(createUpdateRecordRequest.body))

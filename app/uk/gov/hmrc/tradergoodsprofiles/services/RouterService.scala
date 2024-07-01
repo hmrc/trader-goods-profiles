@@ -25,7 +25,6 @@ import uk.gov.hmrc.http.HttpReads.is2xx
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.models.response.CreateOrUpdateRecordResponse
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -37,42 +36,6 @@ class RouterService @Inject() (
   uuidService: UuidService
 )(implicit ec: ExecutionContext)
     extends Logging {
-
-  def updateRecord(eori: String, recordId: String, updateRequest: Request[JsValue])(implicit
-    hc: HeaderCarrier
-  ): Future[Either[ServiceError, CreateOrUpdateRecordResponse]] =
-    routerConnector
-      .updateRecord(eori, recordId, updateRequest)
-      .map { httpResponse =>
-        httpResponse.status match {
-          case status if is2xx(status) =>
-            jsonAs[CreateOrUpdateRecordResponse](httpResponse.body).fold(
-              error =>
-                Left(
-                  ServiceError(
-                    INTERNAL_SERVER_ERROR,
-                    error
-                  )
-                ),
-              updateRecordResponse => Right(updateRecordResponse)
-            )
-          case _                       =>
-            Left(handleErrors(httpResponse, Some(eori), Some(recordId)))
-        }
-      }
-      .recover { case ex: Throwable =>
-        logger.error(
-          s"[RouterService] - Exception when updating record for eori number $eori with message ${ex.getMessage}",
-          ex
-        )
-        Left(
-          ServiceError(
-            INTERNAL_SERVER_ERROR,
-            ErrorResponse
-              .serverErrorResponse(uuidService.uuid, "Could not update record due to an internal error")
-          )
-        )
-      }
 
   def requestAdvice(
     eori: String,

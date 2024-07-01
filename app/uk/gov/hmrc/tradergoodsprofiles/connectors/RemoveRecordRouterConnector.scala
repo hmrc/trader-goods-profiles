@@ -28,18 +28,17 @@ import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class RemoveRecordRouterConnector @Inject()(
+class RemoveRecordRouterConnector @Inject() (
   httpClient: HttpClientV2,
   appConfig: AppConfig,
   val uuidService: UuidService
 )(implicit ec: ExecutionContext)
-  extends BaseConnector
+    extends BaseConnector
     with RouterHttpReader
-    with Logging
-{
+    with Logging {
 
   def removeRecord(eori: String, recordId: String, actorId: String)(implicit
-                                                                    hc: HeaderCarrier
+    hc: HeaderCarrier
   ): Future[Either[ServiceError, Int]] = {
     val url = routerRemoveRecordUrl(eori, recordId, actorId)
 

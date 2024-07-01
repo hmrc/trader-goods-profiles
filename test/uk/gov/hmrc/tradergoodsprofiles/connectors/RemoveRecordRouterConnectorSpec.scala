@@ -33,19 +33,18 @@ import java.util.UUID
 import scala.concurrent.Future
 
 class RemoveRecordRouterConnectorSpec
-  extends BaseConnectorSpec
+    extends BaseConnectorSpec
     with ScalaFutures
     with EitherValues
-    with BeforeAndAfterEach{
+    with BeforeAndAfterEach {
 
-  private val uuidService = mock[UuidService]
-  private val correlationId  = UUID.randomUUID().toString
-  private val eori           = "GB123456789012"
-  private val recordId       = UUID.randomUUID().toString
-  private val actorId = "GB987654321098"
+  private val uuidService   = mock[UuidService]
+  private val correlationId = UUID.randomUUID().toString
+  private val eori          = "GB123456789012"
+  private val recordId      = UUID.randomUUID().toString
+  private val actorId       = "GB987654321098"
 
   private val sut = new RemoveRecordRouterConnector(httpClient, appConfig, uuidService)
-
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -99,7 +98,7 @@ class RemoveRecordRouterConnectorSpec
       val expectedErrorResponse = ErrorResponse(
         correlationId,
         "INTERNAL_SERVER_ERROR",
-        s"Could not remove record for eori number $eori, record ID $recordId, and actor ID $actorId",
+        s"Could not remove record for eori number $eori, record ID $recordId, and actor ID $actorId"
       )
       val expectedResponse      = ServiceError(INTERNAL_SERVER_ERROR, expectedErrorResponse)
 

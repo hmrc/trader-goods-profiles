@@ -88,6 +88,20 @@ class RouterHttpReaderSpec extends PlaySpec with EitherValues {
         )
       )
     }
+
+    "cannot parse json" in new TestRouterHttpReader(uuidService) { reader =>
+      val response = HttpResponse(200, "error")
+      val result   = reader.httpReader[TestResponse].read("GET", "any-url", response)
+
+      result.left.value mustBe ServiceError(
+        INTERNAL_SERVER_ERROR,
+        ErrorResponse(
+          correlationId,
+          "INTERNAL_SERVER_ERROR",
+          s"Response body could not be parsed as JSON, body: error"
+        )
+      )
+    }
   }
 
   "httpReaderWithoutPayload" should {
