@@ -16,17 +16,14 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.connectors
 
-import io.lemonlabs.uri.Url
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.MockitoSugar.{reset, verify, when}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, EitherValues}
-import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.StringContextOps
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.support.BaseConnectorSpec
 
 import java.util.UUID
@@ -38,11 +35,9 @@ class RemoveRecordRouterConnectorSpec
     with EitherValues
     with BeforeAndAfterEach {
 
-  private val uuidService   = mock[UuidService]
-  private val correlationId = UUID.randomUUID().toString
-  private val eori          = "GB123456789012"
-  private val recordId      = UUID.randomUUID().toString
-  private val actorId       = "GB987654321098"
+  private val eori     = "GB123456789012"
+  private val recordId = UUID.randomUUID().toString
+  private val actorId  = "GB987654321098"
 
   private val sut = new RemoveRecordRouterConnector(httpClient, appConfig, uuidService)
 
@@ -51,8 +46,7 @@ class RemoveRecordRouterConnectorSpec
 
     reset(httpClient, appConfig, requestBuilder, uuidService)
 
-    when(appConfig.routerUrl).thenReturn(Url.parse("http://localhost:23123"))
-    when(uuidService.uuid).thenReturn(correlationId)
+    commonSetUp
     when(httpClient.delete(any)(any)).thenReturn(requestBuilder)
     when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
   }
@@ -68,7 +62,7 @@ class RemoveRecordRouterConnectorSpec
       result.value mustBe NO_CONTENT
       withClue("send a request with the right url") {
         val expectedUrl =
-          s"http://localhost:23123/trader-goods-profiles-router/traders/$eori/records/$recordId?actorId=$actorId"
+          s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId?actorId=$actorId"
         verify(httpClient).delete(eqTo(url"$expectedUrl"))(any)
         verify(requestBuilder).setHeader("X-Client-ID" -> "clientId")
         verify(requestBuilder).execute(any, any)

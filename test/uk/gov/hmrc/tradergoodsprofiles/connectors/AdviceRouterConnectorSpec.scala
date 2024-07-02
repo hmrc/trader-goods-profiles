@@ -16,12 +16,11 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.connectors
 
-import io.lemonlabs.uri.{Url, UrlPath}
+import io.lemonlabs.uri.UrlPath
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.MockitoSugar.{reset, verify, when}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, EitherValues}
-import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.http.Status.{CREATED, NOT_FOUND}
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.libs.json.{JsValue, Json}
@@ -30,18 +29,15 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.StringContextOps
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.support.BaseConnectorSpec
 
-import java.util.UUID
 import scala.concurrent.Future
 
 class AdviceRouterConnectorSpec extends BaseConnectorSpec with ScalaFutures with EitherValues with BeforeAndAfterEach {
 
-  private val uuidService        = mock[UuidService]
-  private val eori               = "GB123456789012"
-  private val recordId           = "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f"
-  private val correlationId      = UUID.randomUUID().toString
+  private val eori     = "GB123456789012"
+  private val recordId = "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f"
+
   def requestAdviceData: JsValue = Json
     .parse("""
              |{
@@ -60,11 +56,10 @@ class AdviceRouterConnectorSpec extends BaseConnectorSpec with ScalaFutures with
 
     reset(httpClient, appConfig, requestBuilder)
 
-    when(appConfig.routerUrl).thenReturn(Url.parse("http://localhost:23123"))
+    commonSetUp
     when(httpClient.post(any)(any)).thenReturn(requestBuilder)
     when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
     when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
-    when(uuidService.uuid).thenReturn(correlationId)
   }
 
   "request advice" should {
@@ -79,7 +74,7 @@ class AdviceRouterConnectorSpec extends BaseConnectorSpec with ScalaFutures with
       result.value mustBe CREATED
 
       val expectedUrl =
-        UrlPath.parse(s"http://localhost:23123/trader-goods-profiles-router/traders/$eori/records/$recordId/advice")
+        UrlPath.parse(s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId/advice")
       verify(httpClient).post(eqTo(url"$expectedUrl"))(any)
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")

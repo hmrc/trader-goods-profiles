@@ -16,13 +16,17 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.support
 
+import io.lemonlabs.uri.Url
+import org.mockito.MockitoSugar.when
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
+import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.XClientIdHeader
 
+import java.util.UUID
 import scala.concurrent.ExecutionContext
 
 class BaseConnectorSpec extends PlaySpec {
@@ -33,5 +37,13 @@ class BaseConnectorSpec extends PlaySpec {
   protected val httpClient     = mock[HttpClientV2]
   protected val appConfig      = mock[AppConfig]
   protected val requestBuilder = mock[RequestBuilder]
+  protected val uuidService    = mock[UuidService]
+  protected val correlationId  = UUID.randomUUID().toString
+  protected val serverUrl      = "http://localhost:23123"
+
+  def commonSetUp = {
+    when(appConfig.routerUrl).thenReturn(Url.parse(serverUrl))
+    when(uuidService.uuid).thenReturn(correlationId)
+  }
 
 }

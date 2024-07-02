@@ -16,23 +16,20 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.connectors
 
-import io.lemonlabs.uri.{Url, UrlPath}
+import io.lemonlabs.uri.UrlPath
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.MockitoSugar.{reset, verify, when}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, EitherValues}
-import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.StringContextOps
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.GetRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.{GetRecordResponse, GetRecordsResponse}
-import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.support.BaseConnectorSpec
 
 import java.time.Instant
-import java.util.UUID
 import scala.concurrent.Future
 
 class GetRecordsRouterConnectorSpec
@@ -42,10 +39,8 @@ class GetRecordsRouterConnectorSpec
     with EitherValues
     with BeforeAndAfterEach {
 
-  private val uuidService   = mock[UuidService]
-  private val eori          = "GB123456789012"
-  private val recordId      = "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f"
-  private val correlationId = UUID.randomUUID().toString
+  private val eori     = "GB123456789012"
+  private val recordId = "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f"
 
   private val sut = new GetRecordsRouterConnector(httpClient, appConfig, uuidService)
 
@@ -54,7 +49,7 @@ class GetRecordsRouterConnectorSpec
 
     reset(httpClient, appConfig, requestBuilder, uuidService)
 
-    when(appConfig.routerUrl).thenReturn(Url.parse("http://localhost:23123"))
+    commonSetUp
     when(uuidService.uuid).thenReturn(correlationId)
     when(httpClient.get(any)(any)).thenReturn(requestBuilder)
     when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
@@ -73,7 +68,7 @@ class GetRecordsRouterConnectorSpec
       result.value mustBe routerResponse
       withClue("send a request with the right url") {
         val expectedUrl =
-          UrlPath.parse(s"http://localhost:23123/trader-goods-profiles-router/traders/$eori/records/$recordId")
+          UrlPath.parse(s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId")
         verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
         verify(requestBuilder).setHeader("X-Client-ID" -> "clientId")
         verify(requestBuilder).execute(any, any)
