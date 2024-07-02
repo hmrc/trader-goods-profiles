@@ -38,18 +38,18 @@ import java.util.UUID
 import scala.concurrent.Future
 
 class UpdateRecordRouterConnectorSpec
-  extends BaseConnectorSpec
+    extends BaseConnectorSpec
     with ScalaFutures
     with EitherValues
     with CreateOrUpdateRecordResponseSupport
     with UpdateRecordRequestSupport
     with BeforeAndAfterEach {
 
-  private val uuidService = mock[UuidService]
-  private val correlationId  = UUID.randomUUID().toString
+  private val uuidService   = mock[UuidService]
+  private val correlationId = UUID.randomUUID().toString
   private val eori          = "GB123456789012"
-  private val recordId = UUID.randomUUID().toString
-  private val sut = new UpdateRecordRouterConnector(httpClient, appConfig, uuidService)
+  private val recordId      = UUID.randomUUID().toString
+  private val sut           = new UpdateRecordRouterConnector(httpClient, appConfig, uuidService)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -104,10 +104,8 @@ class UpdateRecordRouterConnectorSpec
 
         val result = await(sut.updateRecord(eori, recordId, createUpdateRecordRequest))
 
-        val expectedErrorResponse = ErrorResponse(
-          correlationId,
-          "INTERNAL_SERVER_ERROR",
-          "Could not update record due to an internal error")
+        val expectedErrorResponse =
+          ErrorResponse(correlationId, "INTERNAL_SERVER_ERROR", "Could not update record due to an internal error")
         val expectedResponse      = ServiceError(INTERNAL_SERVER_ERROR, expectedErrorResponse)
         result.left.value mustBe expectedResponse
       }

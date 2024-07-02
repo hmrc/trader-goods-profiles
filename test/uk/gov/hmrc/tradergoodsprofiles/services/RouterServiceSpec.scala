@@ -24,7 +24,6 @@ import org.scalatest.{BeforeAndAfterEach, EitherValues}
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.http.Status
-import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
 import play.api.test.FakeRequest
@@ -33,7 +32,6 @@ import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.{RouterCreateRecordRequestSupport, UpdateRecordRequestSupport}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.{CreateOrUpdateRecordResponseSupport, GetRecordResponseSupport}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
@@ -68,142 +66,6 @@ class RouterServiceSpec
     reset(connector, uuidService)
 
     when(uuidService.uuid).thenReturn(correlationId)
-  }
-
-  "updateProfile" should {
-    "update a profile" in {
-      val updateProfileRequest: JsValue = Json
-        .parse("""
-                 |{
-                 |    "actorId": "GB987654321098",
-                 |    "ukimsNumber": "XIUKIM47699357400020231115081800",
-                 |    "nirmsNumber": "RMS-GB-123456",
-                 |    "niphlNumber": "6 S12345"
-                 |}
-                 |""".stripMargin)
-
-      def updateJsonRequest: Request[JsValue] =
-        FakeRequest().withBody(updateProfileRequest)
-      val updateRequest: Request[JsValue]     = updateJsonRequest
-
-      val updateResponse = MaintainProfileResponse(
-        eori = "GB123456789012",
-        actorId = "GB987654321098",
-        ukimsNumber = Some("XIUKIM47699357400020231115081800"),
-        nirmsNumber = Some("RMS-GB-123456"),
-        niphlNumber = Some("6 S12345")
-      )
-
-      when(connector.routerMaintainProfile(any[String], any[Request[JsValue]])(any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(200, Json.toJson(updateResponse), Map.empty)))
-
-      val result = sut.updateProfile("GB123456789012", updateRequest)
-
-      whenReady(result) { res =>
-        res mustBe Right(updateResponse)
-        verify(connector).routerMaintainProfile(
-          eqTo("GB123456789012"),
-          eqTo(updateRequest)
-        )(any[HeaderCarrier])
-      }
-    }
-
-    "return an error when the response cannot be parsed as JSON" in {
-      val updateProfileRequest: JsValue = Json
-        .parse("""
-                 |{
-                 |    "actorId": "GB987654321098",
-                 |    "ukimsNumber": "XIUKIM47699357400020231115081800",
-                 |    "nirmsNumber": "RMS-GB-123456",
-                 |    "niphlNumber": "6 S12345"
-                 |}
-                 |""".stripMargin)
-
-      def updateJsonRequest: Request[JsValue] =
-        FakeRequest().withBody(updateProfileRequest)
-      val updateRequest: Request[JsValue]     = updateJsonRequest
-      when(connector.routerMaintainProfile(any[String], any[Request[JsValue]])(any[HeaderCarrier]))
-        .thenReturn(Future.successful(HttpResponse(200, "error")))
-
-      val result = sut.updateProfile("GB123456789012", updateRequest)
-
-      whenReady(result) {
-        _.left.value mustBe ServiceError(
-          INTERNAL_SERVER_ERROR,
-          ErrorResponse(
-            correlationId,
-            "INTERNAL_SERVER_ERROR",
-            "Response body could not be parsed as JSON, body: error"
-          )
-        )
-      }
-    }
-
-    "return an error when the routerConnector returns an exception" in {
-      val updateProfileRequest: JsValue = Json
-        .parse("""
-                 |{
-                 |    "actorId": "GB987654321098",
-                 |    "ukimsNumber": "XIUKIM47699357400020231115081800",
-                 |    "nirmsNumber": "RMS-GB-123456",
-                 |    "niphlNumber": "6 S12345"
-                 |}
-                 |""".stripMargin)
-
-      def updateJsonRequest: Request[JsValue] =
-        FakeRequest().withBody(updateProfileRequest)
-      val updateRequest: Request[JsValue]     = updateJsonRequest
-
-      when(connector.routerMaintainProfile(any[String], any[Request[JsValue]])(any[HeaderCarrier]))
-        .thenReturn(Future.failed(new RuntimeException("error")))
-
-      val result = sut.updateProfile("GB123456789012", updateRequest)
-
-      whenReady(result) {
-        _.left.value mustBe ServiceError(
-          INTERNAL_SERVER_ERROR,
-          ErrorResponse(
-            correlationId,
-            "INTERNAL_SERVER_ERROR",
-            "Could not update profile due to an internal error"
-          )
-        )
-      }
-    }
-
-    val table = Table(
-      ("description", "status", "expectedResult", "code"),
-      ("return bad request", 400, 400, "BAD_REQUEST"),
-      ("return Forbidden", 403, 403, "FORBIDDEN"),
-      ("return Not Found", 404, 404, "NOT_FOUND")
-    )
-
-    forAll(table) { (description: String, status: Int, expectedResult: Int, code: String) =>
-      s"$description" in {
-        val updateProfileRequest: JsValue = Json
-          .parse("""
-                   |{
-                   |    "actorId": "GB987654321098",
-                   |    "ukimsNumber": "XIUKIM47699357400020231115081800",
-                   |    "nirmsNumber": "RMS-GB-123456",
-                   |    "niphlNumber": "6 S12345"
-                   |}
-                   |""".stripMargin)
-
-        def updateJsonRequest: Request[JsValue] =
-          FakeRequest().withBody(updateProfileRequest)
-        val updateRequest: Request[JsValue]     = updateJsonRequest
-
-        when(connector.routerMaintainProfile(any[String], any[Request[JsValue]])(any[HeaderCarrier]))
-          .thenReturn(Future.successful(createHttpResponse(status, code)))
-
-        val result = sut.updateProfile("GB123456789012", updateRequest)
-
-        whenReady(result) {
-          _.left.value.status mustBe expectedResult
-        }
-      }
-    }
   }
 
   "requestAdvice" should {

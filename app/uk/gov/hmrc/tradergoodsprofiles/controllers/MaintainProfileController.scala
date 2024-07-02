@@ -18,12 +18,13 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import cats.data.EitherT
 import play.api.Logging
-import play.api.libs.json.Json.toJson
 import play.api.libs.json.JsValue
+import play.api.libs.json.Json.toJson
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.tradergoodsprofiles.connectors.MaintainProfileRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidationRules}
-import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
+import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -31,7 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class MaintainProfileController @Inject() (
   authAction: AuthAction,
-  routerService: RouterService,
+  maintainProfileRouterConnector: MaintainProfileRouterConnector,
   override val uuidService: UuidService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
@@ -44,7 +45,9 @@ class MaintainProfileController @Inject() (
       val result = for {
         _               <- EitherT.fromEither[Future](validateAllHeaders)
         serviceResponse <-
-          EitherT(routerService.updateProfile(eori, request)).leftMap(e => Status(e.status)(toJson(e.errorResponse)))
+          EitherT(maintainProfileRouterConnector.put(eori, request)).leftMap(e =>
+            Status(e.status)(toJson(e.errorResponse))
+          )
       } yield Ok(toJson(serviceResponse))
 
       result.merge

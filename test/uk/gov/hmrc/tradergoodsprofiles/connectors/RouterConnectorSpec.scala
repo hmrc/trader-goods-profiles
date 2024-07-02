@@ -23,7 +23,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, EitherValues}
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
-import play.api.http.Status.{CREATED, OK}
+import play.api.http.Status.CREATED
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
@@ -113,63 +113,5 @@ class RouterConnectorSpec
   def requestAdviceJsonRequest: Request[JsValue]         =
     FakeRequest().withBody(requestAdviceData)
   val createRouterRequestAdviceRequest: Request[JsValue] = requestAdviceJsonRequest
-
-  "maintain profile" should {
-
-    "return 200 when the profile is successfully updated" in {
-      val eori = "GB123456789012"
-
-      def updateProfileRequestData: JsValue = Json
-        .parse("""
-                 |{
-                 |    "actorId": "GB987654321098",
-                 |    "ukimsNumber": "XIUKIM47699357400020231115081800",
-                 |    "nirmsNumber": "RMS-GB-123456",
-                 |    "niphlNumber": "6 S12345"
-                 |
-                 |}
-                 |""".stripMargin)
-
-      def updateProfileJson: Request[JsValue]    =
-        FakeRequest().withBody(updateProfileRequestData)
-      val updateProfileRequest: Request[JsValue] = updateProfileJson
-
-      when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(200, "message")))
-
-      val result = await(sut.routerMaintainProfile(eori, updateProfileRequest))
-
-      result.status mustBe OK
-    }
-
-    "send a PUT request with the right url and body" in {
-      val eori = "GB123456789012"
-
-      def updateProfileRequestData: JsValue = Json
-        .parse("""
-                 |{
-                 |    "actorId": "GB987654321098",
-                 |    "ukimsNumber": "XIUKIM47699357400020231115081800",
-                 |    "nirmsNumber": "RMS-GB-123456",
-                 |    "niphlNumber": "6 S12345"
-                 |
-                 |}
-                 |""".stripMargin)
-
-      def updateProfileJson: Request[JsValue]    =
-        FakeRequest().withBody(updateProfileRequestData)
-      val updateProfileRequest: Request[JsValue] = updateProfileJson
-
-      when(requestBuilder.execute[HttpResponse](any, any)).thenReturn(Future.successful(HttpResponse(200, "message")))
-
-      await(sut.routerMaintainProfile(eori, updateProfileRequest))
-
-      val expectedUrl =
-        UrlPath.parse(s"http://localhost:23123/trader-goods-profiles-router/traders/$eori")
-      verify(httpClient).put(eqTo(url"$expectedUrl"))(any)
-      verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-      verify(requestBuilder).withBody(eqTo(updateProfileRequestData))(any, any, any)
-      verify(requestBuilder).execute(any, any)
-    }
-  }
 
 }

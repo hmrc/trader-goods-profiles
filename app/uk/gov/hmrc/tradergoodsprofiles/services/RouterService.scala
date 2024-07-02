@@ -25,7 +25,6 @@ import uk.gov.hmrc.http.HttpReads.is2xx
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.runtime.universe.{TypeTag, typeOf}
@@ -64,41 +63,6 @@ class RouterService @Inject() (
             INTERNAL_SERVER_ERROR,
             ErrorResponse
               .serverErrorResponse(uuidService.uuid, "Could not request advice due to an internal error")
-          )
-        )
-      }
-
-  def updateProfile(eori: String, updateRequest: Request[JsValue])(implicit
-    hc: HeaderCarrier
-  ): Future[Either[ServiceError, MaintainProfileResponse]] =
-    routerConnector
-      .routerMaintainProfile(eori, updateRequest)
-      .map { httpResponse =>
-        httpResponse.status match {
-          case status if is2xx(status) =>
-            jsonAs[MaintainProfileResponse](httpResponse.body).fold(
-              error =>
-                Left(
-                  ServiceError(
-                    INTERNAL_SERVER_ERROR,
-                    error
-                  )
-                ),
-              response => Right(response)
-            )
-          case _                       =>
-            Left(handleErrors(httpResponse, Some(eori)))
-        }
-      }
-      .recover { case ex: Throwable =>
-        logger.error(s"Exception when updating profile for eori number $eori: ${ex.getMessage}", ex)
-        Left(
-          ServiceError(
-            INTERNAL_SERVER_ERROR,
-            ErrorResponse.serverErrorResponse(
-              uuidService.uuid,
-              "Could not update profile due to an internal error"
-            )
           )
         )
       }
