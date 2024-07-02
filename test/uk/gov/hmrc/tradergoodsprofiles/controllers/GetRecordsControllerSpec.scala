@@ -25,13 +25,12 @@ import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
+import uk.gov.hmrc.tradergoodsprofiles.connectors.GetRecordsRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.GetRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.models.response.{GetRecordsResponse, GoodsItemRecords, Pagination}
-import uk.gov.hmrc.tradergoodsprofiles.models.{Assessment, Condition}
-import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
+import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import java.time.Instant
 import java.util.UUID
@@ -45,31 +44,31 @@ class GetRecordsControllerSpec
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
-  private val request       = FakeRequest().withHeaders(
+  private val request             = FakeRequest().withHeaders(
     "Accept"       -> "application/vnd.hmrc.1.0+json",
     "Content-Type" -> "application/json",
     "X-Client-ID"  -> "some client ID"
   )
-  private val recordId      = UUID.randomUUID().toString
-  private val correlationId = "d677693e-9981-4ee3-8574-654981ebe606"
-  private val timestamp     = Instant.parse("2024-01-12T12:12:12Z")
-  private val uuidService   = mock[UuidService]
-  private val routerService = mock[RouterService]
-  private val sut           = new GetRecordsController(
+  private val recordId            = UUID.randomUUID().toString
+  private val correlationId       = "d677693e-9981-4ee3-8574-654981ebe606"
+  private val timestamp           = Instant.parse("2024-01-12T12:12:12Z")
+  private val uuidService         = mock[UuidService]
+  private val getRecordsConnector = mock[GetRecordsRouterConnector]
+  private val sut                 = new GetRecordsController(
     new FakeSuccessAuthAction(),
     uuidService,
-    routerService,
+    getRecordsConnector,
     stubControllerComponents()
   )
 
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(uuidService, routerService)
+    reset(uuidService, getRecordsConnector)
     when(uuidService.uuid).thenReturn(correlationId)
-    when(routerService.getRecord(any, any)(any))
+    when(getRecordsConnector.get(any, any)(any))
       .thenReturn(Future.successful(Right(createGetRecordResponse(eoriNumber, recordId, timestamp))))
-    when(routerService.getRecords(any, any, any, any)(any))
+    when(getRecordsConnector.get(any, any, any, any)(any))
       .thenReturn(Future.successful(Right(createGetRecordsResponse(eoriNumber, recordId, timestamp))))
   }
 
@@ -78,7 +77,7 @@ class GetRecordsControllerSpec
       val result = sut.getRecord(eoriNumber, recordId)(request)
 
       status(result) mustBe OK
-      verify(routerService).getRecord(eqTo(eoriNumber), eqTo(recordId))(any)
+      verify(getRecordsConnector).get(eqTo(eoriNumber), eqTo(recordId))(any)
     }
 
     "return an error" when {
@@ -97,7 +96,7 @@ class GetRecordsControllerSpec
           )
         val serviceError  = ServiceError(INTERNAL_SERVER_ERROR, errorResponse)
 
-        when(routerService.getRecord(any, any)(any))
+        when(getRecordsConnector.get(any, any)(any))
           .thenReturn(Future.successful(Left(serviceError)))
 
         val result = sut.getRecord(eoriNumber, recordId)(request)
@@ -114,8 +113,8 @@ class GetRecordsControllerSpec
 
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(createGetRecordsResponse(eoriNumber, recordId, timestamp))
-      verify(routerService)
-        .getRecords(eqTo(eoriNumber), eqTo(Some("2024-03-26T16:14:52Z")), eqTo(Some(1)), eqTo(Some(1)))(any)
+      verify(getRecordsConnector)
+        .get(eqTo(eoriNumber), eqTo(Some("2024-03-26T16:14:52Z")), eqTo(Some(1)), eqTo(Some(1)))(any)
     }
 
     "return an error" when {
@@ -133,7 +132,7 @@ class GetRecordsControllerSpec
           )
         val serviceError  = ServiceError(INTERNAL_SERVER_ERROR, errorResponse)
 
-        when(routerService.getRecords(any, any, any, any)(any))
+        when(getRecordsConnector.get(any, any, any, any)(any))
           .thenReturn(Future.successful(Left(serviceError)))
 
         val result = sut.getRecords(eoriNumber, Some("2024-03-26T16:14:52Z"), Some(0), Some(0))(request)
@@ -143,56 +142,5 @@ class GetRecordsControllerSpec
       }
 
     }
-  }
-
-  def createGetRecordsResponse(
-    eori: String,
-    recordId: String,
-    timestamp: Instant
-  ): GetRecordsResponse = {
-    val condition        = Condition(
-      Some("certificate"),
-      Some("Y923"),
-      Some("Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law"),
-      Some("Excluded product")
-    )
-    val assessment       = Assessment(Some("a06846e9a5f61fa4ecf2c4e3b23631fc"), Some(1), Some(condition))
-    val goodsItemRecords = GoodsItemRecords(
-      eori,
-      "GB123456789012",
-      recordId,
-      "SKU123456",
-      "123456",
-      "Not Requested",
-      "Bananas",
-      "GB",
-      2,
-      Some(Seq(assessment)),
-      Some(13),
-      Some("Kilograms"),
-      timestamp,
-      Some(timestamp),
-      1,
-      active = true,
-      toReview = false,
-      Some("Commodity code changed"),
-      "IMMI declarable",
-      "XIUKIM47699357400020231115081800",
-      Some("RMS-GB-123456"),
-      Some("6 S12345"),
-      locked = false,
-      timestamp,
-      timestamp
-    )
-
-    val pagination = Pagination(
-      1,
-      0,
-      1,
-      None,
-      None
-    )
-
-    GetRecordsResponse(Seq(goodsItemRecords), pagination)
   }
 }

@@ -18,7 +18,7 @@ package uk.gov.hmrc.tradergoodsprofiles.models.errors
 
 import play.api.libs.json._
 import play.api.mvc.Result
-import play.api.mvc.Results.{BadRequest, Forbidden, InternalServerError, Unauthorized}
+import play.api.mvc.Results.{Forbidden, InternalServerError, Unauthorized}
 
 case class ErrorResponse(
   correlationId: String,
@@ -37,13 +37,6 @@ object ErrorResponse {
       message
     )
 
-  def badRequestErrorResponse(correlationId: String, errors: Option[Seq[Error]]): ErrorResponse =
-    ErrorResponse(
-      correlationId,
-      "BAD_REQUEST",
-      "Bad Request",
-      errors
-    )
 }
 
 case class ServiceError(status: Int, errorResponse: ErrorResponse)

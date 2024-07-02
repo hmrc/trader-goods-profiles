@@ -20,8 +20,9 @@ import cats.data.EitherT
 import play.api.libs.json.Json.toJson
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.tradergoodsprofiles.connectors.RemoveRecordRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidationRules}
-import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
+import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -29,7 +30,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class RemoveRecordController @Inject() (
   authAction: AuthAction,
-  routerService: RouterService,
+  removeRecordConnector: RemoveRecordRouterConnector,
   override val uuidService: UuidService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
@@ -40,7 +41,7 @@ class RemoveRecordController @Inject() (
     authAction(eori).async { implicit request =>
       val result = for {
         _ <- EitherT.fromEither[Future](validateAcceptAndClientIdHeaders)
-        _ <- EitherT(routerService.removeRecord(eori, recordId, actorId))
+        _ <- EitherT(removeRecordConnector.removeRecord(eori, recordId, actorId))
                .leftMap(e => Status(e.status)(toJson(e.errorResponse)))
       } yield NoContent
 

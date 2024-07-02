@@ -25,10 +25,11 @@ import play.api.http.Status.{CREATED, INTERNAL_SERVER_ERROR}
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
+import uk.gov.hmrc.tradergoodsprofiles.connectors.AdviceRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
+import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
@@ -37,27 +38,27 @@ class RequestAdviceControllerSpec extends PlaySpec with AuthTestSupport with Bef
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
-  private val request       = FakeRequest().withHeaders(
+  private val request               = FakeRequest().withHeaders(
     "Accept"       -> "application/vnd.hmrc.1.0+json",
     "Content-Type" -> "application/json",
     "X-Client-ID"  -> "some client ID"
   )
-  private val recordId      = UUID.randomUUID().toString
-  private val correlationId = "d677693e-9981-4ee3-8574-654981ebe606"
-  private val uuidService   = mock[UuidService]
-  private val routerService = mock[RouterService]
-  private val sut           = new RequestAdviceController(
+  private val recordId              = UUID.randomUUID().toString
+  private val correlationId         = "d677693e-9981-4ee3-8574-654981ebe606"
+  private val uuidService           = mock[UuidService]
+  private val adviceRouterConnector = mock[AdviceRouterConnector]
+  private val sut                   = new RequestAdviceController(
     new FakeSuccessAuthAction(),
-    routerService,
+    adviceRouterConnector,
     uuidService,
     stubControllerComponents()
   )
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    reset(uuidService, routerService)
+    reset(uuidService, adviceRouterConnector)
     when(uuidService.uuid).thenReturn(correlationId)
-    when(routerService.requestAdvice(any, any, any)(any))
+    when(adviceRouterConnector.post(any, any, any)(any))
       .thenReturn(Future.successful(Right(CREATED)))
   }
 
@@ -83,7 +84,7 @@ class RequestAdviceControllerSpec extends PlaySpec with AuthTestSupport with Bef
         ErrorResponse.serverErrorResponse(uuidService.uuid, "Could not request advice due to an internal error")
       val serviceError  = ServiceError(INTERNAL_SERVER_ERROR, errorResponse)
 
-      when(routerService.requestAdvice(any, any, any)(any))
+      when(adviceRouterConnector.post(any, any, any)(any))
         .thenReturn(Future.successful(Left(serviceError)))
 
       val result = sut.requestAdvice(eoriNumber, recordId)(request.withBody(Json.toJson(adviceRequest)))

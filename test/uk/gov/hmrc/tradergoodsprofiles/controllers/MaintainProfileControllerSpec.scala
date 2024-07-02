@@ -25,11 +25,12 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
+import uk.gov.hmrc.tradergoodsprofiles.connectors.MaintainProfileRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
-import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
+import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -46,7 +47,7 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
   private val eori          = "GB123456789012"
   private val correlationId = "d677693e-9981-4ee3-8574-654981ebe606"
   private val uuidService   = mock[UuidService]
-  private val routerService = mock[RouterService]
+  private val connector     = mock[MaintainProfileRouterConnector]
 
   def updateProfileRequestData(): JsValue = Json
     .parse("""
@@ -73,16 +74,16 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
 
   private val sut = new MaintainProfileController(
     new FakeSuccessAuthAction(),
-    routerService,
+    connector,
     uuidService,
     stubControllerComponents()
   )
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    reset(uuidService, routerService)
+    reset(uuidService, connector)
     when(uuidService.uuid).thenReturn(correlationId)
-    when(routerService.updateProfile(mockEq(eori), any[Request[JsValue]])(any()))
+    when(connector.put(mockEq(eori), any[Request[JsValue]])(any()))
       .thenReturn(Future.successful(Right(updateProfileResponse)))
   }
 
@@ -113,7 +114,7 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
       )
       val serviceError  = ServiceError(INTERNAL_SERVER_ERROR, errorResponse)
 
-      when(routerService.updateProfile(any, any)(any))
+      when(connector.put(any, any)(any))
         .thenReturn(Future.successful(Left(serviceError)))
 
       val request = FakeRequest()

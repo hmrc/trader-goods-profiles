@@ -22,8 +22,9 @@ import play.api.libs.json.JsValue
 import play.api.libs.json.Json.toJson
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
+import uk.gov.hmrc.tradergoodsprofiles.connectors.CreateRecordRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidationRules}
-import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
+import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -31,7 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class CreateRecordController @Inject() (
   authAction: AuthAction,
-  routerService: RouterService,
+  createRecordConnector: CreateRecordRouterConnector,
   override val uuidService: UuidService,
   override val controllerComponents: ControllerComponents
 )(implicit ec: ExecutionContext)
@@ -44,7 +45,9 @@ class CreateRecordController @Inject() (
       val result = for {
         _               <- EitherT.fromEither[Future](validateAllHeaders)
         serviceResponse <-
-          EitherT(routerService.createRecord(eori, request)).leftMap(e => Status(e.status)(toJson(e.errorResponse)))
+          EitherT(createRecordConnector.createRecord(eori, request)).leftMap(e =>
+            Status(e.status)(toJson(e.errorResponse))
+          )
       } yield Created(toJson(serviceResponse))
 
       result.merge

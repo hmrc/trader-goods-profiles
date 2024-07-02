@@ -25,13 +25,13 @@ import play.api.http.Status.{CREATED, INTERNAL_SERVER_ERROR}
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
+import uk.gov.hmrc.tradergoodsprofiles.connectors.CreateRecordRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.UpdateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateOrUpdateRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
-import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
+import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import java.time.Instant
 import java.util.UUID
@@ -46,28 +46,28 @@ class CreateRecordControllerSpec
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
-  private val request       = FakeRequest().withHeaders(
+  private val request               = FakeRequest().withHeaders(
     "Accept"       -> "application/vnd.hmrc.1.0+json",
     "Content-Type" -> "application/json",
     "X-Client-ID"  -> "some client ID"
   )
-  private val recordId      = UUID.randomUUID().toString
-  private val timestamp     = Instant.parse("2024-01-12T12:12:12Z")
-  private val correlationId = "d677693e-9981-4ee3-8574-654981ebe606"
-  private val uuidService   = mock[UuidService]
-  private val routerService = mock[RouterService]
-  private val sut           = new CreateRecordController(
+  private val recordId              = UUID.randomUUID().toString
+  private val timestamp             = Instant.parse("2024-01-12T12:12:12Z")
+  private val correlationId         = "d677693e-9981-4ee3-8574-654981ebe606"
+  private val uuidService           = mock[UuidService]
+  private val createRecordConnector = mock[CreateRecordRouterConnector]
+  private val sut                   = new CreateRecordController(
     new FakeSuccessAuthAction(),
-    routerService,
+    createRecordConnector,
     uuidService,
     stubControllerComponents()
   )
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    reset(uuidService, routerService)
+    reset(uuidService, createRecordConnector)
     when(uuidService.uuid).thenReturn(correlationId)
-    when(routerService.createRecord(any, any)(any))
+    when(createRecordConnector.createRecord(any, any)(any))
       .thenReturn(Future.successful(Right(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))))
   }
 
@@ -94,7 +94,7 @@ class CreateRecordControllerSpec
         )
       val serviceError  = ServiceError(INTERNAL_SERVER_ERROR, errorResponse)
 
-      when(routerService.createRecord(any, any)(any))
+      when(createRecordConnector.createRecord(any, any)(any))
         .thenReturn(Future.successful(Left(serviceError)))
 
       val result = sut.createRecord(eoriNumber)(request.withBody(createUpdateRecordRequestData))
