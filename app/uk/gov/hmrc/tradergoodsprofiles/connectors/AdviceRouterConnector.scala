@@ -16,41 +16,56 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.connectors
 
-import io.lemonlabs.uri._
+import io.lemonlabs.uri.UrlPath
 import play.api.Logging
+import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
-import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
-import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.XClientIdHeader
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
+import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class RouterConnector @Inject() (
+class AdviceRouterConnector @Inject()(
   httpClient: HttpClientV2,
-  appConfig: AppConfig
+  appConfig: AppConfig,
+  override val uuidService: UuidService
 )(implicit ec: ExecutionContext)
-    extends Logging {
+    extends BaseConnector
+    with RouterHttpReader
+    with Logging {
 
-  val routerBaseRoute: String = "/trader-goods-profiles-router"
-
-  def requestAdvice(
-    adviceRequest: Request[JsValue],
+  def post(
     eori: String,
-    recordId: String
-  )(implicit hc: HeaderCarrier): Future[HttpResponse] = {
+    recordId: String,
+    request: Request[JsValue]
+  )(implicit hc: HeaderCarrier): Future[Either[ServiceError, Int]] = {
     val url      = appConfig.routerUrl.withPath(routerAdviceUrlPath(eori, recordId))
-    val jsonData = Json.toJson(adviceRequest.body)
+
     httpClient
       .post(url"$url")
       .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-      .withBody(jsonData)
+      .withBody(Json.toJson(request.body))
       .withClientId
-      .execute[HttpResponse]
+      .execute(httpReaderWithoutResponseBody, ec)
+      .recover { case ex: Throwable =>
+        logger.error(
+          s"[RequestAdviceRouterConnector] - Exception when requesting advice for eori number $eori with message ${ex.getMessage}",
+          ex
+        )
+        Left(
+          ServiceError(
+            INTERNAL_SERVER_ERROR,
+            ErrorResponse
+              .serverErrorResponse(uuidService.uuid, "Could not request advice due to an internal error")
+          )
+        )
+      }
   }
 
   private def routerAdviceUrlPath(eori: String, recordId: String): UrlPath =
@@ -58,11 +73,4 @@ class RouterConnector @Inject() (
       s"$routerBaseRoute/traders/$eori/records/$recordId/advice"
     )
 
-  implicit class HttpResponseHelpers(requestBuilder: RequestBuilder) {
-    def withClientId(implicit hc: HeaderCarrier): RequestBuilder =
-      hc.headers(Seq(XClientIdHeader)).headOption match {
-        case Some(header) => requestBuilder.setHeader(header)
-        case None         => requestBuilder
-      }
-  }
 }

@@ -22,7 +22,7 @@ import org.mockito.MockitoSugar.{reset, verify, when}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, EitherValues}
 import org.scalatestplus.mockito.MockitoSugar.mock
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND}
+import play.api.http.Status.{CREATED, NOT_FOUND}
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
@@ -30,24 +30,34 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.StringContextOps
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.support.BaseConnectorSpec
 
 import java.util.UUID
 import scala.concurrent.Future
 
-class MaintainProfileRouterConnectorSpec
-    extends BaseConnectorSpec
+class AdviceRouterConnectorSpec
+  extends BaseConnectorSpec
     with ScalaFutures
     with EitherValues
     with BeforeAndAfterEach {
 
   private val uuidService   = mock[UuidService]
-  private val eori          = "GB123456789012"
+  private val eori           = "GB123456789012"
+  private val recordId       = "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f"
   private val correlationId = UUID.randomUUID().toString
+  def requestAdviceData: JsValue = Json
+    .parse("""
+             |{
+             |    "requestorName": "Mr.Phil Edwards",
+             |    "requestorEmail": "Phil.Edwards@gmail.com"
+             |
+             |}
+             |""".stripMargin)
 
-  private val sut = new MaintainProfileRouterConnector(httpClient, appConfig, uuidService)
+  def request: Request[JsValue]         = FakeRequest().withBody(requestAdviceData)
+
+  private val sut = new AdviceRouterConnector(httpClient, appConfig, uuidService)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -55,80 +65,59 @@ class MaintainProfileRouterConnectorSpec
     reset(httpClient, appConfig, requestBuilder)
 
     when(appConfig.routerUrl).thenReturn(Url.parse("http://localhost:23123"))
-    when(httpClient.put(any)(any)).thenReturn(requestBuilder)
+    when(httpClient.post(any)(any)).thenReturn(requestBuilder)
     when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
     when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
     when(uuidService.uuid).thenReturn(correlationId)
   }
 
-  "put" should {
-    "return 200 when the profile is successfully updated" in {
+  "request advice" should {
 
-      val response = MaintainProfileResponse(
-        eori = "GB123456789012",
-        actorId = "GB987654321098",
-        ukimsNumber = Some("XIUKIM47699357400020231115081800"),
-        nirmsNumber = Some("RMS-GB-123456"),
-        niphlNumber = Some("6 S12345")
-      )
-      when(requestBuilder.execute[Either[ServiceError, MaintainProfileResponse]](any, any))
-        .thenReturn(Future.successful(Right(response)))
+    "return 201 when advice is successfully requested" in {
 
-      val result = await(sut.put(eori, createRequest(updateProfileRequestData)))
+      when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
+        .thenReturn(Future.successful(Right(CREATED)))
 
-      result.value mustBe response
+      val result = await(sut.post(eori, recordId, request))
 
-      withClue("send a request with the right parameters") {
-        val expectedUrl =
-          UrlPath.parse(s"http://localhost:23123/trader-goods-profiles-router/traders/$eori")
-        verify(httpClient).put(eqTo(url"$expectedUrl"))(any)
-        verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-        verify(requestBuilder).withBody(eqTo(updateProfileRequestData))(any, any, any)
-        verify(requestBuilder).execute(any, any)
-      }
+      result.value mustBe CREATED
+
+      val expectedUrl =
+        UrlPath.parse(s"http://localhost:23123/trader-goods-profiles-router/traders/$eori/records/$recordId/advice")
+      verify(httpClient).post(eqTo(url"$expectedUrl"))(any)
+      verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+      verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
+      verify(requestBuilder).withBody(eqTo(requestAdviceData))(any, any, any)
+      verify(requestBuilder).execute(any, any)
     }
 
     "return an error" when {
-      "router return an error" in {
+      "api return an error" in {
         val errorResponse = ServiceError(NOT_FOUND, ErrorResponse(correlationId, "any-code", "any-message"))
-
-        when(requestBuilder.execute[Either[ServiceError, MaintainProfileResponse]](any, any))
+        when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
           .thenReturn(Future.successful(Left(errorResponse)))
 
-        val result = await(sut.put(eori, createRequest(updateProfileRequestData)))
+        val result = await(sut.post(eori, recordId, request))
 
         result.left.value mustBe errorResponse
       }
 
-      "http client throw" in {
-        when(requestBuilder.execute[Either[ServiceError, MaintainProfileResponse]](any, any))
+      "api throw" in {
+        when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
           .thenReturn(Future.failed(new RuntimeException("error")))
 
-        val result = await(sut.put(eori, createRequest(updateProfileRequestData)))
+        val result = await(sut.post(eori, recordId, request))
 
         result.left.value mustBe ServiceError(
-          INTERNAL_SERVER_ERROR,
+          500,
           ErrorResponse(
             correlationId,
             "INTERNAL_SERVER_ERROR",
-            "Could not update profile due to an internal error"
+            "Could not request advice due to an internal error"
           )
         )
       }
     }
+
   }
-
-  def updateProfileRequestData: JsValue = Json
-    .parse("""
-             |{
-             |    "actorId": "GB987654321098",
-             |    "ukimsNumber": "XIUKIM47699357400020231115081800",
-             |    "nirmsNumber": "RMS-GB-123456",
-             |    "niphlNumber": "6 S12345"
-             |
-             |}
-             |""".stripMargin)
-
-  def createRequest(body: JsValue): Request[JsValue] =
-    FakeRequest().withBody(body)
 }

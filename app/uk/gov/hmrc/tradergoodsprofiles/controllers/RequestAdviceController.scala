@@ -16,23 +16,24 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
+import cats.data.EitherT
 import com.google.inject.Singleton
 import play.api.Logging
-import play.api.libs.json.Json.toJson
 import play.api.libs.json.JsValue
+import play.api.libs.json.Json.toJson
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.tradergoodsprofiles.connectors.AdviceRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidationRules}
-import uk.gov.hmrc.tradergoodsprofiles.services.{RouterService, UuidService}
+import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
-import cats.data.EitherT
 
 @Singleton
 class RequestAdviceController @Inject() (
   authAction: AuthAction,
-  routerService: RouterService,
+  adviceRouterConnector: AdviceRouterConnector,
   override val uuidService: UuidService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
@@ -44,7 +45,7 @@ class RequestAdviceController @Inject() (
     authAction(eori).async(parse.json) { implicit request =>
       val result = for {
         _               <- EitherT.fromEither[Future](validateAllHeaders)
-        serviceResponse <- EitherT(routerService.requestAdvice(eori, recordId, request))
+        serviceResponse <- EitherT(adviceRouterConnector.post(eori, recordId, request))
                              .leftMap(e => Status(e.status)(toJson(e.errorResponse)))
       } yield Created(toJson(serviceResponse))
 

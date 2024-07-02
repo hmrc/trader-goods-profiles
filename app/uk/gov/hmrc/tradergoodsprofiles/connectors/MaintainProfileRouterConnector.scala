@@ -33,18 +33,17 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class MaintainProfileRouterConnector @Inject() (
-                                                 httpClient: HttpClientV2,
-                                                 appConfig: AppConfig,
-                                                 override val uuidService: UuidService
-                                               )(implicit ec: ExecutionContext)
-  extends BaseConnector
+  httpClient: HttpClientV2,
+  appConfig: AppConfig,
+  override val uuidService: UuidService
+)(implicit ec: ExecutionContext)
+    extends BaseConnector
     with RouterHttpReader
     with Logging {
 
   def put(eori: String, updateProfileRequest: Request[JsValue])(implicit
-                                                                                  hc: HeaderCarrier
+    hc: HeaderCarrier
   ): Future[Either[ServiceError, MaintainProfileResponse]] = {
-
 
     val url = appConfig.routerUrl.withPath(routerMaintainProfileUrlPath(eori))
 
