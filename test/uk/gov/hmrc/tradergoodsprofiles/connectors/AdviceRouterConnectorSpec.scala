@@ -36,16 +36,12 @@ import uk.gov.hmrc.tradergoodsprofiles.support.BaseConnectorSpec
 import java.util.UUID
 import scala.concurrent.Future
 
-class AdviceRouterConnectorSpec
-  extends BaseConnectorSpec
-    with ScalaFutures
-    with EitherValues
-    with BeforeAndAfterEach {
+class AdviceRouterConnectorSpec extends BaseConnectorSpec with ScalaFutures with EitherValues with BeforeAndAfterEach {
 
-  private val uuidService   = mock[UuidService]
-  private val eori           = "GB123456789012"
-  private val recordId       = "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f"
-  private val correlationId = UUID.randomUUID().toString
+  private val uuidService        = mock[UuidService]
+  private val eori               = "GB123456789012"
+  private val recordId           = "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f"
+  private val correlationId      = UUID.randomUUID().toString
   def requestAdviceData: JsValue = Json
     .parse("""
              |{
@@ -55,7 +51,7 @@ class AdviceRouterConnectorSpec
              |}
              |""".stripMargin)
 
-  def request: Request[JsValue]         = FakeRequest().withBody(requestAdviceData)
+  def request: Request[JsValue] = FakeRequest().withBody(requestAdviceData)
 
   private val sut = new AdviceRouterConnector(httpClient, appConfig, uuidService)
 

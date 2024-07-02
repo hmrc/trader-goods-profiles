@@ -54,7 +54,7 @@ class UpdateRecordRouterConnector @Inject() (
       .withClientId
       .execute(httpReader[CreateOrUpdateRecordResponse], ec)
       .recover { case ex: Throwable =>
-        logger.error(
+        logger.warn(
           s"""[UpdateRecordRouterConnector] - Exception when updating record for eori number $eori,
                recordId $recordId and message ${ex.getMessage}""".stripMargin,
           ex

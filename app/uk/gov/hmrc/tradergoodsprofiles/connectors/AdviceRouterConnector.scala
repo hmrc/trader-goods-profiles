@@ -31,7 +31,7 @@ import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class AdviceRouterConnector @Inject()(
+class AdviceRouterConnector @Inject() (
   httpClient: HttpClientV2,
   appConfig: AppConfig,
   override val uuidService: UuidService
@@ -45,7 +45,7 @@ class AdviceRouterConnector @Inject()(
     recordId: String,
     request: Request[JsValue]
   )(implicit hc: HeaderCarrier): Future[Either[ServiceError, Int]] = {
-    val url      = appConfig.routerUrl.withPath(routerAdviceUrlPath(eori, recordId))
+    val url = appConfig.routerUrl.withPath(routerAdviceUrlPath(eori, recordId))
 
     httpClient
       .post(url"$url")
@@ -54,7 +54,7 @@ class AdviceRouterConnector @Inject()(
       .withClientId
       .execute(httpReaderWithoutResponseBody, ec)
       .recover { case ex: Throwable =>
-        logger.error(
+        logger.warn(
           s"[RequestAdviceRouterConnector] - Exception when requesting advice for eori number $eori with message ${ex.getMessage}",
           ex
         )

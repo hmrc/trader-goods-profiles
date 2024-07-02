@@ -54,7 +54,7 @@ class MaintainProfileRouterConnector @Inject() (
       .withClientId
       .execute(httpReader[MaintainProfileResponse], ec)
       .recover { case ex: Throwable =>
-        logger.error(s"Exception when updating profile for eori number $eori: ${ex.getMessage}", ex)
+        logger.warn(s"Exception when updating profile for eori number $eori: ${ex.getMessage}", ex)
         Left(
           ServiceError(
             INTERNAL_SERVER_ERROR,
