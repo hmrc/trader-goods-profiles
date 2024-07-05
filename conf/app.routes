@@ -9,3 +9,5 @@ PATCH   /:eori/records/:recordId                    uk.gov.hmrc.tradergoodsprofi
 POST    /:eori/records/:recordId/advice             uk.gov.hmrc.tradergoodsprofiles.controllers.RequestAdviceController.requestAdvice(eori: String, recordId: String)
 
 PUT     /:eori                                      uk.gov.hmrc.tradergoodsprofiles.controllers.MaintainProfileController.updateProfile(eori: String)
+
+DELETE    /:eori/records/:recordId/advice           uk.gov.hmrc.tradergoodsprofiles.controllers.WithdrawAdviceController.withdrawAdvice(eori: String, recordId: String, withdrawReason:Option[String] ?= None)
