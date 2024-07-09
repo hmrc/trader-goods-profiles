@@ -977,13 +977,14 @@ components:
       description: Status of the TGP record.
     toReview:
       type: boolean
-      example: false
+      example: true
       description: The state of the record and if the trader needs to review it.
     reviewReason:
       type: string
       minLength: 1
       maxLength: 512
-      example: Commodity code changed
+      example: The commodity code has expired. You'll need to
+        change the commodity code and categorise the goods.
       description: >-
         Commodity code expiry: The commodity code has expired. You'll need to
         change the commodity code and categorise the goods.
@@ -995,12 +996,12 @@ components:
       type: string
       minLength: 1
       maxLength: 100
-      example: IMMI declarable
+      example: Not Ready For Use
       description: Status of TGP record for H8 declarations.
       enum:
-        - IMMI ready
-        - not ready for IMMI
-        - not ready for use
+        - IMMI Ready
+        - Not Ready For IMMI
+        - Not Ready For Use
     ukimsNumber:
       type: string
       minLength: 32
