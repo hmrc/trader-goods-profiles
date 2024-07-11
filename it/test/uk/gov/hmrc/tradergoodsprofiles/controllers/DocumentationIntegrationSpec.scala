@@ -22,7 +22,7 @@ import play.api.{Application, inject}
 import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WSClient
-import play.api.test.Helpers.{await, contentAsJson, defaultAwaitTimeout}
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 
@@ -45,16 +45,36 @@ class DocumentationIntegrationSpec extends PlaySpec with GuiceOneServerPerSuite 
       response.body must include("api")
     }
 
-    "return an OpenAPi Specification (OAS)" in {
-      val response = await(wsClient.url(s"http://localhost:$port/api/conf/1.0/application.yaml").get())
+    "return a dynamically generated OpenAPI Specification (OAS) without withdraw advice endpoint when withdrawAdviceEnabled is false" in {
+      val appWithConfig = GuiceApplicationBuilder()
+        .configure("withdrawAdviceEnabled" -> false)
+        .build()
+
+      val wsClientWithConfig = appWithConfig.injector.instanceOf[WSClient]
+      val response           = await(wsClientWithConfig.url(s"http://localhost:$port/api/conf/1.0/application.yaml").get())
 
       response.status mustBe OK
       response.body must not be empty
       response.body must startWith("---")
+      response.body must not include "Withdraw your request for advice from HMRC"
+    }
+
+    "return a dynamically generated OpenAPI Specification (OAS) with withdraw advice endpoint when withdrawAdviceEnabled is true" in {
+      val appWithConfig = GuiceApplicationBuilder()
+        .configure("withdrawAdviceEnabled" -> true)
+        .build()
+
+      val wsClientWithConfig = appWithConfig.injector.instanceOf[WSClient]
+      val response           = await(wsClientWithConfig.url(s"http://localhost:$port/api/conf/1.0/application.yaml").get())
+
+      response.status mustBe OK
+      response.body must not be empty
+      response.body must startWith("---")
+      response.body must not include "Withdraw your request for advice from HMRC"
     }
 
     "return a 404 if not specification found" in {
-      val response = await(wsClient.url(s"http://localhost:$port/api/conf/111.0/application.yaml").get())
+      val response = await(wsClient.url(s"http://localhost:$port/api/conf/111.0/nonexistent.yaml").get())
 
       response.status mustBe NOT_FOUND
     }
