@@ -50,8 +50,8 @@ class WithdrawAdviceControllerSpec extends PlaySpec with AuthTestSupport with Be
     "Content-Type" -> "application/json"
   )
   private val recordId                      = UUID.randomUUID().toString
-  private val actorId                       = "GB987654321098"
   private val correlationId                 = "d677693e-9981-4ee3-8574-654981ebe606"
+  private val withdrawReason                = "today"
   private val uuidService                   = mock[UuidService]
   private val connector                     = mock[WithdrawAdviceRouterConnector]
   private val sut                           = new WithdrawAdviceController(
@@ -72,15 +72,16 @@ class WithdrawAdviceControllerSpec extends PlaySpec with AuthTestSupport with Be
 
   "withdrawAdvice" should {
     "return 204" in {
-      val result = sut.withdrawAdvice(eoriNumber, recordId, Some(actorId))(request)
+      val result = sut.withdrawAdvice(eoriNumber, recordId, Some(withdrawReason))(request)
       status(result) mustBe NO_CONTENT
     }
 
-    "remove the record from router" in {
-      val result = sut.withdrawAdvice(eoriNumber, recordId, Some(actorId))(request)
+    "withdraw the record from router" in {
+
+      val result = sut.withdrawAdvice(eoriNumber, recordId, Some(withdrawReason))(request)
 
       status(result) mustBe NO_CONTENT
-      verify(connector).withdrawAdvice(eqTo(eoriNumber), eqTo(recordId), eqTo(Some(actorId)))(any)
+      verify(connector).withdrawAdvice(eqTo(eoriNumber), eqTo(recordId), eqTo(Some(withdrawReason)))(any)
     }
 
     "return an error" when {
@@ -99,7 +100,7 @@ class WithdrawAdviceControllerSpec extends PlaySpec with AuthTestSupport with Be
         when(connector.withdrawAdvice(any, any, any)(any))
           .thenReturn(Future.successful(Left(serviceError)))
 
-        val result = sut.withdrawAdvice(eoriNumber, recordId, Some(actorId))(request)
+        val result = sut.withdrawAdvice(eoriNumber, recordId, Some(withdrawReason))(request)
 
         status(result) mustBe INTERNAL_SERVER_ERROR
         contentAsJson(result) mustBe expectedJson

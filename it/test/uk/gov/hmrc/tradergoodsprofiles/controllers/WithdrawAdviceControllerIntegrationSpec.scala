@@ -132,6 +132,14 @@ class WithdrawAdviceControllerIntegrationSpec
       )
     }
 
+    "router return Bad Request" in {
+      stubRouterResponse(BAD_REQUEST, routerError.toString())
+      withAuthorizedTrader()
+      val result = requestAdviceAndWait()
+      result.status mustBe BAD_REQUEST
+      result.json mustBe routerError
+    }
+
     "return Forbidden when EORI number is not authorized" in {
       withAuthorizedTrader(enrolment = Enrolment("OTHER-ENROLMENT-KEY"))
 
@@ -205,6 +213,49 @@ class WithdrawAdviceControllerIntegrationSpec
     }
 
   }
+
+  private val routerError = Json.obj(
+    "correlationId" -> correlationId,
+    "code"          -> "BAD_REQUEST",
+    "message"       -> "Bad Request",
+    "errors"        -> Json.arr(
+      Json.obj(
+        "code"        -> "INVALID_REQUEST_PARAMETER",
+        "message"     -> "X-Correlation-ID was missing from Header or is in the wrong format",
+        "errorNumber" -> 1
+      ),
+      Json.obj(
+        "code"        -> "INVALID_REQUEST_PARAMETER",
+        "message"     -> "X-Forwarded-Host was missing from Header os is in the wrong format",
+        "errorNumber" -> 5
+      ),
+      Json.obj(
+        "code"        -> "INVALID_REQUEST_PARAMETER",
+        "message"     -> "Content-Type was missing from Header or is in the wrong format",
+        "errorNumber" -> 3
+      ),
+      Json.obj(
+        "code"        -> "INVALID_REQUEST_PARAMETER",
+        "message"     -> "Accept was missing from Header or is in the wrong format",
+        "errorNumber" -> 4
+      ),
+      Json.obj(
+        "code"        -> "INVALID_REQUEST_PARAMETER",
+        "message"     -> "Mandatory withdrawDate was missing from body",
+        "errorNumber" -> 1013
+      ),
+      Json.obj(
+        "code"        -> "INVALID_REQUEST_PARAMETER",
+        "message"     -> "Mandatory goodsItems was missing from body",
+        "errorNumber" -> 1014
+      ),
+      Json.obj(
+        "code"        -> "INVALID_REQUEST_PARAMETER",
+        "message"     -> "The recordId has been provided in the wrong format",
+        "errorNumber" -> 1017
+      )
+    )
+  )
 
   private def requestAdviceAndWaitWithoutClientIdHeader() =
     await(

@@ -38,8 +38,7 @@ class WithdrawAdviceController @Inject() (
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
-    with ValidationRules
-    {
+    with ValidationRules {
 
   def withdrawAdvice(eori: String, recordId: String, withdrawReason: Option[String]): Action[AnyContent] =
     authAction(eori).async { implicit request =>

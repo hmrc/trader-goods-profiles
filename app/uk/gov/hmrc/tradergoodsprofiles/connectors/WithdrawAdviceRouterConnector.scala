@@ -41,7 +41,6 @@ class WithdrawAdviceRouterConnector @Inject() (
     hc: HeaderCarrier
   ): Future[Either[ServiceError, Int]] = {
 
-    //val url = appConfig.routerUrl.withPath(routerWithdrawAdviceUrlPath(eori, recordId, withdrawReason))
     val url = routerWithdrawAdviceUrl(eori, recordId, withdrawReason)
     httpClient
       .delete(url"$url")
@@ -64,12 +63,6 @@ class WithdrawAdviceRouterConnector @Inject() (
         )
       }
   }
-
-//  private def routerWithdrawAdviceUrlPath(eori: String, recordId: String, withdrawReason: Option[String]): UrlPath =
-//    UrlPath.parse(
-//      s"$routerBaseRoute/traders/$eori/records/$recordId/advice?$withdrawReason"
-//    )
-
 
   private def routerWithdrawAdviceUrl(eoriNumber: String, recordId: String, withdrawReason: Option[String]): Url =
     appConfig.routerUrl
