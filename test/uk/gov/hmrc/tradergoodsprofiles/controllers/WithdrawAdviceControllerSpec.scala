@@ -71,10 +71,6 @@ class WithdrawAdviceControllerSpec extends PlaySpec with AuthTestSupport with Be
   }
 
   "withdrawAdvice" should {
-    "return 204" in {
-      val result = sut.withdrawAdvice(eoriNumber, recordId, Some(withdrawReason))(request)
-      status(result) mustBe NO_CONTENT
-    }
 
     "withdraw the record from router" in {
 

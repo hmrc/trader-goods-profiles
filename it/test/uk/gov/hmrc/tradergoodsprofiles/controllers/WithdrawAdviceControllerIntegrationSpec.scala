@@ -62,7 +62,6 @@ class WithdrawAdviceControllerIntegrationSpec
   private val routerUrl =
     s"/trader-goods-profiles-router/traders/$eoriNumber/records/$recordId/advice?withdrawReason=$withdrawReason"
 
-  private val routerResponse = NO_CONTENT
 
   override lazy val app: Application = {
     wireMock.start()
@@ -82,7 +81,7 @@ class WithdrawAdviceControllerIntegrationSpec
     super.beforeEach()
 
     reset(authConnector)
-    stubRouterResponse(NO_CONTENT, routerResponse.toString)
+    stubRouterResponse(NO_CONTENT, "204")
     when(uuidService.uuid).thenReturn(correlationId)
   }
 
@@ -97,7 +96,7 @@ class WithdrawAdviceControllerIntegrationSpec
   }
 
   "Withdraw Advice" should {
-    "successfully request advice and return 204" in {
+    "successfully withdraw advice and return 204" in {
       withAuthorizedTrader()
 
       val result = requestAdviceAndWait()
