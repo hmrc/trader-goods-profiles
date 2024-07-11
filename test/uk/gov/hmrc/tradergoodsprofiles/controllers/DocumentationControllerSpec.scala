@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
+import io.swagger.v3.parser.OpenAPIV3Parser
+import io.swagger.v3.parser.core.models.SwaggerParseResult
 import org.apache.pekko.stream.Materializer
 import org.mockito.Mockito.{reset, when}
 import org.scalatest.BeforeAndAfterEach
@@ -28,8 +30,8 @@ import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.JsValue
 import play.api.mvc.Result
+import play.api.test.FakeRequest
 import play.api.test.Helpers.{route, _}
-import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 
 import scala.concurrent.Future
@@ -63,33 +65,46 @@ class DocumentationControllerSpec
     }
 
     "specification" should {
-      "return application.yaml without withdraw advice endpoint when withdrawAdviceEnabled is false" in {
+      "return valid application.yaml without withdraw advice endpoint when withdrawAdviceEnabled is false" in {
         when(mockAppConfig.withdrawAdviceEnabled).thenReturn(false)
         val result: Future[Result] = doGet("/api/conf/1.0/application.yaml", Map.empty)
 
         status(result) shouldBe OK
-        val stringResult = Helpers.contentAsString(result)
+        val stringResult = contentAsString(result)
 
         stringResult should include("---")
         stringResult should not include "summary: Withdraw your request for advice from HMRC"
+
+        validateOpenAPISpec(stringResult)
       }
 
-      "return application.yaml with withdraw advice endpoint when withdrawAdviceEnabled is true" in {
+      "return valid application.yaml with withdraw advice endpoint when withdrawAdviceEnabled is true" in {
         when(mockAppConfig.withdrawAdviceEnabled).thenReturn(true)
         val result: Future[Result] = doGet("/api/conf/1.0/application.yaml", Map.empty)
 
         status(result) shouldBe OK
-        val stringResult = Helpers.contentAsString(result)
+        val stringResult = contentAsString(result)
 
         stringResult should include("---")
         stringResult should include("summary: Withdraw your request for advice from HMRC")
-      }
 
+        validateOpenAPISpec(stringResult)
+      }
     }
   }
 
   def doGet(uri: String, headers: Map[String, String]): Future[Result] = {
     val fakeRequest = FakeRequest(GET, uri).withHeaders(headers.toSeq: _*)
     route(app, fakeRequest).get
+  }
+
+  def validateOpenAPISpec(yamlContent: String): Unit = {
+    val parser                     = new OpenAPIV3Parser()
+    val result: SwaggerParseResult = parser.readContents(yamlContent, null, null)
+    if (result.getMessages != null && result.getMessages.size() > 0) {
+      fail("Generated YAML is not a valid OpenAPI v3.0 specification: " + result.getMessages)
+    } else {
+      result.getOpenAPI should not be null
+    }
   }
 }
