@@ -1171,6 +1171,13 @@ components:
       maximum: 100000
       example: 100
       description: Number of records per page to be requested
+    @if(includeWithdrawAdviceEndpoint) {
+    withdrawReason:
+          type: string
+          minimum: 1
+          maximum: 4000
+          description: A free format field for traders to explain why they're withdrawing their request for advice.
+    }
   parameters:
     Content-Type:
       name: Content-Type
@@ -1238,6 +1245,14 @@ components:
       schema:
         $ref: '#/components/schemas/recordId'
       description: ID of the record for the TGP Product in the TGP Core database (UUID)
+    @if(includeWithdrawAdviceEndpoint) {
+    withdrawReasonParam:
+          in: query
+          name: withdrawReason
+          schema:
+            $ref: '#/components/schemas/withdrawReason'
+          description: A free format field for traders to explain why they're withdrawing their request for advice.
+    }
   examples:
     StandardBadRequestExample:
       value:
