@@ -22,7 +22,7 @@ import play.api.{Application, inject}
 import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WSClient
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import play.api.test.Helpers.{await, contentAsJson, defaultAwaitTimeout}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 
@@ -36,12 +36,13 @@ class DocumentationIntegrationSpec extends PlaySpec with GuiceOneServerPerSuite 
       .overrides(inject.bind[HttpClientV2].to(httpClientV2))
       .build()
 
-  "get" should {
+  "DocumentationController" should {
     "return the definition specification" in {
       val response = await(wsClient.url(s"http://localhost:$port/api/definition").get())
 
       response.status mustBe OK
       response.body must not be empty
+      response.body must include("api")
     }
 
     "return an OpenAPi Specification (OAS)" in {
@@ -49,6 +50,7 @@ class DocumentationIntegrationSpec extends PlaySpec with GuiceOneServerPerSuite 
 
       response.status mustBe OK
       response.body must not be empty
+      response.body must startWith("---")
     }
 
     "return a 404 if not specification found" in {
