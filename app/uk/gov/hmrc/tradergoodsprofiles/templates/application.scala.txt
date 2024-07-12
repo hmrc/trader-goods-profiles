@@ -342,7 +342,7 @@ paths:
         - userRestricted:
             - trader-goods-profiles
     @if(includeWithdrawAdviceEndpoint) {
-    delete:
+    put:
       tags:
         - Goods records
       summary: Withdraw your request for advice from HMRC
@@ -1175,7 +1175,7 @@ components:
     withdrawReason:
           type: string
           minimum: 1
-          maximum: 4000
+          maximum: 512
           description: A free format field for traders to explain why they're withdrawing their request for advice.
     }
   parameters:
