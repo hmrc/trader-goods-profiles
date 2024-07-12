@@ -20,12 +20,11 @@ import org.mockito.Mockito._
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import org.slf4j.LoggerFactory
 import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import play.api.{Application, Configuration, inject}
+import play.api.{Application, inject}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
@@ -36,9 +35,7 @@ class DocumentationIntegrationSpec
     with HttpClientV2Support
     with MockitoSugar {
 
-  lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
-  private val logger          = LoggerFactory.getLogger(getClass)
-
+  lazy val wsClient: WSClient  = app.injector.instanceOf[WSClient]
   val mockAppConfig: AppConfig = mock[AppConfig]
 
   override def fakeApplication(): Application =
@@ -47,6 +44,18 @@ class DocumentationIntegrationSpec
       .overrides(inject.bind[AppConfig].toInstance(mockAppConfig))
       .overrides(inject.bind[HttpClientV2].to(httpClientV2))
       .build()
+
+  private def configureApp(withdrawAdviceEnabled: Boolean): WSClient = {
+    when(mockAppConfig.withdrawAdviceEnabled).thenReturn(withdrawAdviceEnabled)
+
+    val configuredApp = GuiceApplicationBuilder()
+      .configure("metrics.enabled" -> false, "feature.withdrawAdviceEnabled" -> withdrawAdviceEnabled)
+      .overrides(inject.bind[AppConfig].toInstance(mockAppConfig))
+      .overrides(inject.bind[HttpClientV2].to(httpClientV2))
+      .build()
+
+    configuredApp.injector.instanceOf[WSClient]
+  }
 
   "DocumentationController" should {
     "return the definition specification" in {
@@ -58,16 +67,9 @@ class DocumentationIntegrationSpec
     }
 
     "return a dynamically generated OpenAPI Specification (OAS) without withdraw advice endpoint when withdrawAdviceEnabled is false" in {
-      when(mockAppConfig.withdrawAdviceEnabled).thenReturn(false)
+      val wsClientWithFalseConfig = configureApp(withdrawAdviceEnabled = false)
 
-      val config        = Configuration("feature.withdrawAdviceEnabled" -> false)
-      val appWithConfig = GuiceApplicationBuilder()
-        .configure(config)
-        .overrides(inject.bind[AppConfig].toInstance(mockAppConfig))
-        .build()
-
-      val wsClientWithConfig = appWithConfig.injector.instanceOf[WSClient]
-      val response           = await(wsClientWithConfig.url(s"http://localhost:$port/api/conf/1.0/application.yaml").get())
+      val response = await(wsClientWithFalseConfig.url(s"http://localhost:$port/api/conf/1.0/application.yaml").get())
 
       response.status mustBe OK
       response.body must not be empty
@@ -76,16 +78,9 @@ class DocumentationIntegrationSpec
     }
 
     "return a dynamically generated OpenAPI Specification (OAS) with withdraw advice endpoint when withdrawAdviceEnabled is true" in {
-      when(mockAppConfig.withdrawAdviceEnabled).thenReturn(true)
+      val wsClientWithTrueConfig = configureApp(withdrawAdviceEnabled = true)
 
-      val config        = Configuration("feature.withdrawAdviceEnabled" -> true)
-      val appWithConfig = GuiceApplicationBuilder()
-        .configure(config)
-        .overrides(inject.bind[AppConfig].toInstance(mockAppConfig))
-        .build()
-
-      val wsClientWithConfig = appWithConfig.injector.instanceOf[WSClient]
-      val response           = await(wsClientWithConfig.url(s"http://localhost:$port/api/conf/1.0/application.yaml").get())
+      val response = await(wsClientWithTrueConfig.url(s"http://localhost:$port/api/conf/1.0/application.yaml").get())
 
       response.status mustBe OK
       response.body must not be empty
