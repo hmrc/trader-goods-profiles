@@ -17,6 +17,7 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import controllers.Assets
+import play.api.Logging
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
@@ -27,8 +28,8 @@ import scala.concurrent.Future
 
 @Singleton
 class DocumentationController @Inject() (assets: Assets, cc: ControllerComponents, appConfig: AppConfig)
-    extends BackendController(cc) {
-
+    extends BackendController(cc)
+    with Logging {
   def definition(): Action[AnyContent] =
     assets.at("/public/api", "definition.json")
 
@@ -41,6 +42,7 @@ class DocumentationController @Inject() (assets: Assets, cc: ControllerComponent
 
   private def returnTemplatedYaml(): Action[AnyContent] = Action {
     val includeWithdrawAdviceEndpoint = appConfig.withdrawAdviceEnabled
+    logger.info(s"Generating OpenAPI Spec with includeWithdrawAdviceEndpoint: $includeWithdrawAdviceEndpoint")
     Ok(txt.application(includeWithdrawAdviceEndpoint)).as("application/yaml")
   }
 

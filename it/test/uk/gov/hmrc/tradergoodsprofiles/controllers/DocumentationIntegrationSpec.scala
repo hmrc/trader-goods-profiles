@@ -16,23 +16,35 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
+import org.mockito.Mockito._
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.{Application, inject}
+import org.slf4j.LoggerFactory
 import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import play.api.{Application, Configuration, inject}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
+import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 
-class DocumentationIntegrationSpec extends PlaySpec with GuiceOneServerPerSuite with HttpClientV2Support {
+class DocumentationIntegrationSpec
+    extends PlaySpec
+    with GuiceOneServerPerSuite
+    with HttpClientV2Support
+    with MockitoSugar {
 
   lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
+  private val logger          = LoggerFactory.getLogger(getClass)
+
+  val mockAppConfig: AppConfig = mock[AppConfig]
 
   override def fakeApplication(): Application =
     GuiceApplicationBuilder()
       .configure("metrics.enabled" -> false)
+      .overrides(inject.bind[AppConfig].toInstance(mockAppConfig))
       .overrides(inject.bind[HttpClientV2].to(httpClientV2))
       .build()
 
@@ -46,8 +58,12 @@ class DocumentationIntegrationSpec extends PlaySpec with GuiceOneServerPerSuite 
     }
 
     "return a dynamically generated OpenAPI Specification (OAS) without withdraw advice endpoint when withdrawAdviceEnabled is false" in {
+      when(mockAppConfig.withdrawAdviceEnabled).thenReturn(false)
+
+      val config        = Configuration("feature.withdrawAdviceEnabled" -> false)
       val appWithConfig = GuiceApplicationBuilder()
-        .configure("withdrawAdviceEnabled" -> false)
+        .configure(config)
+        .overrides(inject.bind[AppConfig].toInstance(mockAppConfig))
         .build()
 
       val wsClientWithConfig = appWithConfig.injector.instanceOf[WSClient]
@@ -60,8 +76,12 @@ class DocumentationIntegrationSpec extends PlaySpec with GuiceOneServerPerSuite 
     }
 
     "return a dynamically generated OpenAPI Specification (OAS) with withdraw advice endpoint when withdrawAdviceEnabled is true" in {
+      when(mockAppConfig.withdrawAdviceEnabled).thenReturn(true)
+
+      val config        = Configuration("feature.withdrawAdviceEnabled" -> true)
       val appWithConfig = GuiceApplicationBuilder()
-        .configure("withdrawAdviceEnabled" -> true)
+        .configure(config)
+        .overrides(inject.bind[AppConfig].toInstance(mockAppConfig))
         .build()
 
       val wsClientWithConfig = appWithConfig.injector.instanceOf[WSClient]
@@ -70,7 +90,7 @@ class DocumentationIntegrationSpec extends PlaySpec with GuiceOneServerPerSuite 
       response.status mustBe OK
       response.body must not be empty
       response.body must startWith("---")
-      response.body must not include "Withdraw your request for advice from HMRC"
+      response.body must include("Withdraw your request for advice from HMRC")
     }
 
     "return a 404 if not specification found" in {
