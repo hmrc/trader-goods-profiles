@@ -45,18 +45,6 @@ class DocumentationIntegrationSpec
       .overrides(inject.bind[HttpClientV2].to(httpClientV2))
       .build()
 
-  private def configureApp(withdrawAdviceEnabled: Boolean): WSClient = {
-    when(mockAppConfig.withdrawAdviceEnabled).thenReturn(withdrawAdviceEnabled)
-
-    val configuredApp = GuiceApplicationBuilder()
-      .configure("metrics.enabled" -> false, "feature.withdrawAdviceEnabled" -> withdrawAdviceEnabled)
-      .overrides(inject.bind[AppConfig].toInstance(mockAppConfig))
-      .overrides(inject.bind[HttpClientV2].to(httpClientV2))
-      .build()
-
-    configuredApp.injector.instanceOf[WSClient]
-  }
-
   "DocumentationController" should {
     "return the definition specification" in {
       val response = await(wsClient.url(s"http://localhost:$port/api/definition").get())
@@ -67,9 +55,8 @@ class DocumentationIntegrationSpec
     }
 
     "return a dynamically generated OpenAPI Specification (OAS) without withdraw advice endpoint when withdrawAdviceEnabled is false" in {
-      val wsClientWithFalseConfig = configureApp(withdrawAdviceEnabled = false)
-
-      val response = await(wsClientWithFalseConfig.url(s"http://localhost:$port/api/conf/1.0/application.yaml").get())
+      when(mockAppConfig.withdrawAdviceEnabled).thenReturn(false)
+      val response = await(wsClient.url(s"http://localhost:$port/api/conf/1.0/application.yaml").get())
 
       response.status mustBe OK
       response.body must not be empty
@@ -78,9 +65,8 @@ class DocumentationIntegrationSpec
     }
 
     "return a dynamically generated OpenAPI Specification (OAS) with withdraw advice endpoint when withdrawAdviceEnabled is true" in {
-      val wsClientWithTrueConfig = configureApp(withdrawAdviceEnabled = true)
-
-      val response = await(wsClientWithTrueConfig.url(s"http://localhost:$port/api/conf/1.0/application.yaml").get())
+      when(mockAppConfig.withdrawAdviceEnabled).thenReturn(true)
+      val response = await(wsClient.url(s"http://localhost:$port/api/conf/1.0/application.yaml").get())
 
       response.status mustBe OK
       response.body must not be empty
