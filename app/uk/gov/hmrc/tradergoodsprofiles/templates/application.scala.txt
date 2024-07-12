@@ -1097,7 +1097,7 @@ components:
       type: string
       format: email
       maxLength: 254
-      example: @{"""Phil.Edwards@gmail.com"""}
+      example: Phil.Edwards@@gmail.com
       description: The email of the user requesting advice from HMRC.
     Assessment:
       type: object
