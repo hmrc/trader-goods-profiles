@@ -16,18 +16,18 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
-import javax.inject.{Inject, Singleton}
 import controllers.Assets
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.templates.txt
-import scala.concurrent.{ExecutionContext, Future}
+
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.Future
 
 @Singleton
-class DocumentationController @Inject() (assets: Assets, cc: ControllerComponents, appConfig: AppConfig)(implicit
-  ec: ExecutionContext
-) extends BackendController(cc) {
+class DocumentationController @Inject() (assets: Assets, cc: ControllerComponents, appConfig: AppConfig)
+    extends BackendController(cc) {
 
   def definition(): Action[AnyContent] =
     assets.at("/public/api", "definition.json")
