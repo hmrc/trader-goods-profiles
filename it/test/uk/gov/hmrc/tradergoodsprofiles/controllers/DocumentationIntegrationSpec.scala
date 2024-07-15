@@ -16,33 +16,21 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
-import org.mockito.Mockito._
-import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.Application
 import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import play.api.{Application, inject}
-import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.test.HttpClientV2Support
-import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 
-class DocumentationIntegrationSpec
-    extends PlaySpec
-    with GuiceOneServerPerSuite
-    with HttpClientV2Support
-    with MockitoSugar {
+class DocumentationIntegrationSpec extends PlaySpec with GuiceOneServerPerSuite {
 
-  lazy val wsClient: WSClient  = app.injector.instanceOf[WSClient]
-  val mockAppConfig: AppConfig = mock[AppConfig]
+  lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
   override def fakeApplication(): Application =
     GuiceApplicationBuilder()
       .configure("metrics.enabled" -> false)
-      .overrides(inject.bind[AppConfig].toInstance(mockAppConfig))
-      .overrides(inject.bind[HttpClientV2].to(httpClientV2))
       .build()
 
   "DocumentationController" should {
@@ -54,24 +42,11 @@ class DocumentationIntegrationSpec
       response.body must include("api")
     }
 
-    "return a dynamically generated OpenAPI Specification (OAS) without withdraw advice endpoint when withdrawAdviceEnabled is false" in {
-      when(mockAppConfig.withdrawAdviceEnabled).thenReturn(false)
+    "return an OpenAPi Specification (OAS)" in {
       val response = await(wsClient.url(s"http://localhost:$port/api/conf/1.0/application.yaml").get())
 
       response.status mustBe OK
       response.body must not be empty
-      response.body must startWith("---")
-      response.body must not include "Withdraw your request for advice from HMRC"
-    }
-
-    "return a dynamically generated OpenAPI Specification (OAS) with withdraw advice endpoint when withdrawAdviceEnabled is true" in {
-      when(mockAppConfig.withdrawAdviceEnabled).thenReturn(true)
-      val response = await(wsClient.url(s"http://localhost:$port/api/conf/1.0/application.yaml").get())
-
-      response.status mustBe OK
-      response.body must not be empty
-      response.body must startWith("---")
-      response.body must include("Withdraw your request for advice from HMRC")
     }
 
     "return a 404 if not specification found" in {
