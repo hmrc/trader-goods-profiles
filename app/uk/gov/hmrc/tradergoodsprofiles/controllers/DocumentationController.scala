@@ -21,13 +21,13 @@ import play.api.Logging
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
-import uk.gov.hmrc.tradergoodsprofiles.templates.txt
+import uk.gov.hmrc.tradergoodsprofiles.templates.txt.ApiSchema
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 @Singleton
-class DocumentationController @Inject() (assets: Assets, cc: ControllerComponents, appConfig: AppConfig)
+class DocumentationController @Inject() (assets: Assets, cc: ControllerComponents, appConfig: AppConfig, apiSpec: ApiSchema)
     extends BackendController(cc)
     with Logging {
   def definition(): Action[AnyContent] =
@@ -43,7 +43,7 @@ class DocumentationController @Inject() (assets: Assets, cc: ControllerComponent
   private def returnTemplatedYaml(): Action[AnyContent] = Action {
     val includeWithdrawAdviceEndpoint = appConfig.withdrawAdviceEnabled
     logger.info(s"Generating OpenAPI Spec with includeWithdrawAdviceEndpoint: $includeWithdrawAdviceEndpoint")
-    Ok(txt.application()).as("application/yaml")
+    Ok(apiSpec()).as("application/yaml")
   }
 
   private def returnStaticAsset(version: String, file: String): Action[AnyContent] = Action.async { implicit request =>
