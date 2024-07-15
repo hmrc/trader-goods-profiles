@@ -1,3 +1,7 @@
+@this(appConfig: uk.gov.hmrc.tradergoodsprofiles.config.AppConfig)
+@()
+@includeWithdrawAdviceEndpoint = @{appConfig.withdrawAdviceEnabled}
+---
 openapi: 3.0.3
 info:
   title: Trader Goods Profile
@@ -339,6 +343,50 @@ paths:
       security:
         - userRestricted:
             - trader-goods-profiles
+    @if(includeWithdrawAdviceEndpoint) {
+    put:
+      tags:
+        - Goods records
+      summary: Withdraw your request for advice from HMRC
+      description: Withdraw your request for advice from HMRC
+      operationId: removeTraderGoodsProfileRecordAdvice
+      parameters:
+        - $ref: '#/components/parameters/Accept'
+        - $ref: '#/components/parameters/Authorization'
+        - $ref: '#/components/parameters/eoriParam'
+        - $ref: '#/components/parameters/recordParam'
+        - $ref: '#/components/parameters/withdrawReasonParam'
+      responses:
+        '204':
+          description: No Content; Request completed successfully
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
+              examples:
+                invalidHeader:
+                  value:
+                    correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
+                    code: BAD_REQUEST
+                    message: Bad request
+                    errors:
+                      - code: INVALID_HEADER
+                        message: Accept was missing from Header or wrong format
+                        errorNumber: 4
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Forbidden;   User was valid, but not allowed to perform this action
+        '404':
+          description: Good records not found to deactivate
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - userRestricted:
+            - trader-goods-profiles
+    }
   /customs/traders/goods-profiles/{eori}:
     put:
       parameters:
@@ -1051,7 +1099,7 @@ components:
       type: string
       format: email
       maxLength: 254
-      example: Phil.Edwards@gmail.com
+      example: Phil.Edwards@@gmail.com
       description: The email of the user requesting advice from HMRC.
     Assessment:
       type: object
@@ -1125,6 +1173,13 @@ components:
       maximum: 100000
       example: 100
       description: Number of records per page to be requested
+    @if(includeWithdrawAdviceEndpoint) {
+    withdrawReason:
+          type: string
+          minimum: 1
+          maximum: 512
+          description: A free format field for traders to explain why they're withdrawing their request for advice.
+    }
   parameters:
     Content-Type:
       name: Content-Type
@@ -1192,6 +1247,14 @@ components:
       schema:
         $ref: '#/components/schemas/recordId'
       description: ID of the record for the TGP Product in the TGP Core database (UUID)
+    @if(includeWithdrawAdviceEndpoint) {
+    withdrawReasonParam:
+          in: query
+          name: withdrawReason
+          schema:
+            $ref: '#/components/schemas/withdrawReason'
+          description: A free format field for traders to explain why they're withdrawing their request for advice.
+    }
   examples:
     StandardBadRequestExample:
       value:
@@ -1227,7 +1290,7 @@ components:
     applicationRestricted:
       type: oauth2
       description: >-
-        HMRC supports OAuth 2.0 for authenticating application restricted API 
+        HMRC supports OAuth 2.0 for authenticating application restricted API
         requests using an OAuth 2.0 Bearer Token in the AUTHORIZATION header.
         See
         https://developer.service.hmrc.gov.uk/api-documentation/docs/authorisation/application-restricted-endpoints

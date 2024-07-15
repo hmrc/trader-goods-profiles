@@ -18,30 +18,28 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.{Application, inject}
+import play.api.Application
 import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.test.HttpClientV2Support
 
-class DocumentationIntegrationSpec extends PlaySpec with GuiceOneServerPerSuite with HttpClientV2Support {
+class DocumentationIntegrationSpec extends PlaySpec with GuiceOneServerPerSuite {
 
   lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
 
   override def fakeApplication(): Application =
     GuiceApplicationBuilder()
       .configure("metrics.enabled" -> false)
-      .overrides(inject.bind[HttpClientV2].to(httpClientV2))
       .build()
 
-  "get" should {
+  "DocumentationController" should {
     "return the definition specification" in {
       val response = await(wsClient.url(s"http://localhost:$port/api/definition").get())
 
       response.status mustBe OK
       response.body must not be empty
+      response.body must include("api")
     }
 
     "return an OpenAPi Specification (OAS)" in {
@@ -52,7 +50,7 @@ class DocumentationIntegrationSpec extends PlaySpec with GuiceOneServerPerSuite 
     }
 
     "return a 404 if not specification found" in {
-      val response = await(wsClient.url(s"http://localhost:$port/api/conf/111.0/application.yaml").get())
+      val response = await(wsClient.url(s"http://localhost:$port/api/conf/111.0/nonexistent.yaml").get())
 
       response.status mustBe NOT_FOUND
     }

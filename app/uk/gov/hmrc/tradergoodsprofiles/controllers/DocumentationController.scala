@@ -17,16 +17,45 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import controllers.Assets
-import javax.inject.{Inject, Singleton}
+import play.api.Logging
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
+import uk.gov.hmrc.tradergoodsprofiles.templates.txt.ApiSchema
+
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.Future
 
 @Singleton
-class DocumentationController @Inject() (assets: Assets, cc: ControllerComponents) extends BackendController(cc) {
-
+class DocumentationController @Inject() (
+  assets: Assets,
+  cc: ControllerComponents,
+  appConfig: AppConfig,
+  apiSpec: ApiSchema
+) extends BackendController(cc)
+    with Logging {
   def definition(): Action[AnyContent] =
     assets.at("/public/api", "definition.json")
 
   def specification(version: String, file: String): Action[AnyContent] =
-    assets.at(s"/public/api/conf/$version", file)
+    if (file == "application.yaml") {
+      returnTemplatedYaml()
+    } else {
+      returnStaticAsset(version, file)
+    }
+
+  private def returnTemplatedYaml(): Action[AnyContent] = Action {
+    val includeWithdrawAdviceEndpoint = appConfig.withdrawAdviceEnabled
+    logger.info(s"Generating OpenAPI Spec with includeWithdrawAdviceEndpoint: $includeWithdrawAdviceEndpoint")
+    Ok(apiSpec()).as("application/yaml")
+  }
+
+  private def returnStaticAsset(version: String, file: String): Action[AnyContent] = Action.async { implicit request =>
+    val path     = s"/public/api/conf/$version/$file"
+    val resource = Option(getClass.getResource(path))
+    resource match {
+      case Some(_) => assets.at(path).apply(request)
+      case None    => Future.successful(NotFound)
+    }
+  }
 }

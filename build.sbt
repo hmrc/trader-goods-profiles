@@ -9,9 +9,15 @@ lazy val microservice = Project("trader-goods-profiles", file("."))
   .settings(
     PlayKeys.playDefaultPort := 10902,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
-    // https://www.scala-lang.org/2021/01/12/configuring-and-suppressing-warnings.html
-    // suppress warnings in generated routes files
-    scalacOptions += "-Wconf:src=routes/.*:s"
+    scalacOptions ++= Seq(
+      // https://www.scala-lang.org/2021/01/12/configuring-and-suppressing-warnings.html
+      // suppress warnings in generated routes files
+      "-Wconf:src=routes/.*:s",
+      // Suppress "unused imports" in /templates directory
+      "-Wconf:cat=unused&src=templates/.*\\.scala:s",
+      // Suppress "possible missing interpolator" in /templates directory
+      "-Wconf:src=templates/.*\\.scala&msg=possible missing interpolator:s"
+    )
   )
   .settings(resolvers += Resolver.jcenterRepo)
   .settings(CodeCoverageSettings.settings: _*)
