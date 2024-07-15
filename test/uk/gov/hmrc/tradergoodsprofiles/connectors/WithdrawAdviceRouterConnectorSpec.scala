@@ -67,7 +67,7 @@ class WithdrawAdviceRouterConnectorSpec
 
   "request advice" should {
 
-    "return 201 when advice is successfully requested" in {
+    "return 204 when withdraw advice is successfully" in {
 
       when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
         .thenReturn(Future.successful(Right(NO_CONTENT)))
