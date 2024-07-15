@@ -27,8 +27,12 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 @Singleton
-class DocumentationController @Inject() (assets: Assets, cc: ControllerComponents, appConfig: AppConfig, apiSpec: ApiSchema)
-    extends BackendController(cc)
+class DocumentationController @Inject() (
+  assets: Assets,
+  cc: ControllerComponents,
+  appConfig: AppConfig,
+  apiSpec: ApiSchema
+) extends BackendController(cc)
     with Logging {
   def definition(): Action[AnyContent] =
     assets.at("/public/api", "definition.json")
