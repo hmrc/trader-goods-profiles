@@ -98,7 +98,7 @@ class WithdrawAdviceControllerIntegrationSpec
     "successfully withdraw advice and return 204" in {
       withAuthorizedTrader()
 
-      val result = requestAdviceAndWait()
+      val result = withdrawAdviceAndWait()
 
       result.status mustBe NO_CONTENT
 
@@ -113,7 +113,7 @@ class WithdrawAdviceControllerIntegrationSpec
     "return Bad Request when X-Client-ID header is missing" in {
       withAuthorizedTrader()
 
-      val result = requestAdviceAndWaitWithoutClientIdHeader()
+      val result = withdrawAdviceAndWaitWithoutClientIdHeader()
 
       result.status mustBe BAD_REQUEST
       result.json mustBe Json.obj(
@@ -133,7 +133,7 @@ class WithdrawAdviceControllerIntegrationSpec
     "router return Bad Request" in {
       stubRouterResponse(BAD_REQUEST, routerError.toString())
       withAuthorizedTrader()
-      val result = requestAdviceAndWait()
+      val result = withdrawAdviceAndWait()
       result.status mustBe BAD_REQUEST
       result.json mustBe routerError
     }
@@ -141,7 +141,7 @@ class WithdrawAdviceControllerIntegrationSpec
     "return Forbidden when EORI number is not authorized" in {
       withAuthorizedTrader(enrolment = Enrolment("OTHER-ENROLMENT-KEY"))
 
-      val result = requestAdviceAndWait()
+      val result = withdrawAdviceAndWait()
 
       result.status mustBe FORBIDDEN
       result.json mustBe expectedJson(
@@ -153,7 +153,7 @@ class WithdrawAdviceControllerIntegrationSpec
     "return Forbidden when identifier does not exist" in {
       withUnauthorizedEmptyIdentifier()
 
-      val result = requestAdviceAndWait()
+      val result = withdrawAdviceAndWait()
 
       result.status mustBe FORBIDDEN
       result.json mustBe expectedJson(
@@ -165,7 +165,7 @@ class WithdrawAdviceControllerIntegrationSpec
     "return Unauthorized when invalid enrolment" in {
       withUnauthorizedTrader(InsufficientEnrolments())
 
-      val result = requestAdviceAndWait()
+      val result = withdrawAdviceAndWait()
 
       result.status mustBe UNAUTHORIZED
       result.json mustBe expectedJson(
@@ -177,7 +177,7 @@ class WithdrawAdviceControllerIntegrationSpec
     "return Unauthorized when affinity group is Agent" in {
       authorizeWithAffinityGroup(Some(Agent))
 
-      val result = requestAdviceAndWait()
+      val result = withdrawAdviceAndWait()
 
       result.status mustBe UNAUTHORIZED
       result.json mustBe expectedJson(
@@ -189,7 +189,7 @@ class WithdrawAdviceControllerIntegrationSpec
     "return Unauthorized when affinity group is empty" in {
       authorizeWithAffinityGroup(None)
 
-      val result = requestAdviceAndWait()
+      val result = withdrawAdviceAndWait()
 
       result.status mustBe UNAUTHORIZED
       result.json mustBe expectedJson(
@@ -201,7 +201,7 @@ class WithdrawAdviceControllerIntegrationSpec
     "return Internal server error if auth throws" in {
       withUnauthorizedTrader(new RuntimeException("runtime exception"))
 
-      val result = requestAdviceAndWait()
+      val result = withdrawAdviceAndWait()
 
       result.status mustBe INTERNAL_SERVER_ERROR
       result.json mustBe expectedJson(
@@ -255,7 +255,7 @@ class WithdrawAdviceControllerIntegrationSpec
     )
   )
 
-  private def requestAdviceAndWaitWithoutClientIdHeader() =
+  private def withdrawAdviceAndWaitWithoutClientIdHeader() =
     await(
       wsClient
         .url(url)
@@ -265,7 +265,7 @@ class WithdrawAdviceControllerIntegrationSpec
         .put(requestBody)
     )
 
-  private def requestAdviceAndWait(requestBody: JsValue = requestBody) =
+  private def withdrawAdviceAndWait(requestBody: JsValue = requestBody) =
     await(
       wsClient
         .url(url)
