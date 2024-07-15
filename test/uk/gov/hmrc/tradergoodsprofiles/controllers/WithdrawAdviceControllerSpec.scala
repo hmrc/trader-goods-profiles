@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
-import org.mockito.ArgumentMatchersSugar.{any, eqTo}
-import org.mockito.MockitoSugar.{reset, verify, when}
+import org.mockito.ArgumentMatchersSugar.any
+import org.mockito.MockitoSugar.{reset, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, NO_CONTENT, OK}
-import play.api.libs.json.Json
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, NO_CONTENT}
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.connectors.WithdrawAdviceRouterConnector
@@ -38,70 +38,73 @@ class WithdrawAdviceControllerSpec extends PlaySpec with AuthTestSupport with Be
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
-  private val request = FakeRequest()
-    .withHeaders(
-      "Accept"       -> "application/vnd.hmrc.1.0+json",
-      "Content-Type" -> "application/json",
-      "X-Client-ID"  -> "some client ID"
-    )
-
-  val requestHeaders: Seq[(String, String)] = Seq(
+  private val request                       = FakeRequest().withHeaders(
     "Accept"       -> "application/vnd.hmrc.1.0+json",
-    "Content-Type" -> "application/json"
+    "Content-Type" -> "application/json",
+    "X-Client-ID"  -> "some client ID"
   )
   private val recordId                      = UUID.randomUUID().toString
   private val correlationId                 = "d677693e-9981-4ee3-8574-654981ebe606"
-  private val withdrawReason                = "today"
   private val uuidService                   = mock[UuidService]
-  private val connector                     = mock[WithdrawAdviceRouterConnector]
+  private val withdrawAdviceRouterConnector = mock[WithdrawAdviceRouterConnector]
   private val sut                           = new WithdrawAdviceController(
     new FakeSuccessAuthAction(),
-    connector,
+    withdrawAdviceRouterConnector,
     uuidService,
     stubControllerComponents()
   )
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-
-    reset(uuidService, connector)
+    reset(uuidService, withdrawAdviceRouterConnector)
     when(uuidService.uuid).thenReturn(correlationId)
-    when(connector.withdrawAdvice(any, any, any)(any))
-      .thenReturn(Future.successful(Right(OK)))
+    when(withdrawAdviceRouterConnector.withdrawAdvice(any, any, any)(any))
+      .thenReturn(Future.successful(Right(NO_CONTENT)))
   }
 
-  "withdrawAdvice" should {
+  "requestAdvice" should {
+    "return 204 when withdraw advice is successfully" in {
+      val requestBody = createWithdrawAdviceRequest
 
-    "withdraw the record from router" in {
-
-      val result = sut.withdrawAdvice(eoriNumber, recordId, Some(withdrawReason))(request)
+      val result = sut.withdrawAdvice(eoriNumber, recordId)(request.withBody(Json.toJson(requestBody)))
 
       status(result) mustBe NO_CONTENT
-      verify(connector).withdrawAdvice(eqTo(eoriNumber), eqTo(recordId), eqTo(Some(withdrawReason)))(any)
     }
 
-    "return an error" when {
+    "return 204 when withdrawReason is missing" in {
 
-      "routerService returns an error" in {
-        val expectedJson = Json.obj(
-          "correlationId" -> "d677693e-9981-4ee3-8574-654981ebe606",
-          "code"          -> "INTERNAL_SERVER_ERROR",
-          "message"       -> s"internal server error"
-        )
+      val result = sut.withdrawAdvice(eoriNumber, recordId)(request.withBody(Json.obj()))
 
-        val errorResponse =
-          ErrorResponse.serverErrorResponse(uuidService.uuid, "internal server error")
-        val serviceError  = ServiceError(INTERNAL_SERVER_ERROR, errorResponse)
+      status(result) mustBe NO_CONTENT
+    }
 
-        when(connector.withdrawAdvice(any, any, any)(any))
-          .thenReturn(Future.successful(Left(serviceError)))
+    "return 500 when the router service returns an error" in {
+      val withdrawAdviceRequest = createWithdrawAdviceRequest
 
-        val result = sut.withdrawAdvice(eoriNumber, recordId, Some(withdrawReason))(request)
+      val expectedJson = Json.obj(
+        "correlationId" -> correlationId,
+        "code"          -> "INTERNAL_SERVER_ERROR",
+        "message"       -> "Could not request advice due to an internal error"
+      )
 
-        status(result) mustBe INTERNAL_SERVER_ERROR
-        contentAsJson(result) mustBe expectedJson
-      }
+      val errorResponse =
+        ErrorResponse.serverErrorResponse(uuidService.uuid, "Could not request advice due to an internal error")
+      val serviceError  = ServiceError(INTERNAL_SERVER_ERROR, errorResponse)
+
+      when(withdrawAdviceRouterConnector.withdrawAdvice(any, any, any)(any))
+        .thenReturn(Future.successful(Left(serviceError)))
+
+      val result = sut.withdrawAdvice(eoriNumber, recordId)(request.withBody(Json.toJson(withdrawAdviceRequest)))
+
+      status(result) mustBe INTERNAL_SERVER_ERROR
+      contentAsJson(result) mustBe expectedJson
     }
   }
 
+  def createWithdrawAdviceRequest: JsValue = Json
+    .parse("""
+             |{
+             |    "withdrawReason": "text"
+             |}
+             |""".stripMargin)
 }

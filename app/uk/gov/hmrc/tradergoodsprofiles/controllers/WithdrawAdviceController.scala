@@ -18,10 +18,9 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import cats.data.EitherT
 import com.google.inject.Singleton
-import play.api.Logging
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json.toJson
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.connectors.WithdrawAdviceRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidationRules}
@@ -40,11 +39,11 @@ class WithdrawAdviceController @Inject() (
     extends BackendController(cc)
     with ValidationRules {
 
-  def withdrawAdvice(eori: String, recordId: String, withdrawReason: Option[String]): Action[AnyContent] =
-    authAction(eori).async { implicit request =>
+  def withdrawAdvice(eori: String, recordId: String): Action[JsValue] =
+    authAction(eori).async(parse.json) { implicit request =>
       val result = for {
         _ <- EitherT.fromEither[Future](validateAcceptAndClientIdHeaders)
-        _ <- EitherT(withdrawAdviceRouterConnector.withdrawAdvice(eori, recordId, withdrawReason))
+        _ <- EitherT(withdrawAdviceRouterConnector.withdrawAdvice(eori, recordId, request))
                .leftMap(e => Status(e.status)(toJson(e.errorResponse)))
       } yield NoContent
 

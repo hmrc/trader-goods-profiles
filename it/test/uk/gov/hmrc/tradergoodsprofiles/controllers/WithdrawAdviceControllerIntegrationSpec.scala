@@ -27,7 +27,7 @@ import play.api.Application
 import play.api.http.Status._
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
@@ -56,12 +56,11 @@ class WithdrawAdviceControllerIntegrationSpec
   private val recordId                = UUID.randomUUID().toString
   private val uuidService             = mock[UuidService]
   private val correlationId           = "d677693e-9981-4ee3-8574-654981ebe606"
-  private val withdrawReason          = "today"
 
-  private val url       = s"http://localhost:$port/$eoriNumber/records/$recordId/advice?withdrawReason=$withdrawReason"
-  private val routerUrl =
-    s"/trader-goods-profiles-router/traders/$eoriNumber/records/$recordId/advice?withdrawReason=$withdrawReason"
-
+  private val url         = s"http://localhost:$port/$eoriNumber/records/$recordId/advice"
+  private val routerUrl   =
+    s"/trader-goods-profiles-router/traders/$eoriNumber/records/$recordId/advice"
+  private val requestBody = createWithdrawAdviceRequest
 
   override lazy val app: Application = {
     wireMock.start()
@@ -105,7 +104,7 @@ class WithdrawAdviceControllerIntegrationSpec
 
       withClue("should add the right headers") {
         verify(
-          deleteRequestedFor(urlEqualTo(routerUrl))
+          putRequestedFor(urlEqualTo(routerUrl))
             .withHeader("X-Client-ID", equalTo("clientId"))
         )
       }
@@ -207,7 +206,7 @@ class WithdrawAdviceControllerIntegrationSpec
       result.status mustBe INTERNAL_SERVER_ERROR
       result.json mustBe expectedJson(
         "INTERNAL_SERVER_ERROR",
-        s"Internal server error for /$eoriNumber/records/$recordId/advice?withdrawReason=$withdrawReason with error: runtime exception"
+        s"Internal server error for /$eoriNumber/records/$recordId/advice with error: runtime exception"
       )
     }
 
@@ -263,18 +262,19 @@ class WithdrawAdviceControllerIntegrationSpec
         .withHttpHeaders(
           "Accept" -> "application/vnd.hmrc.1.0+json"
         )
-        .delete()
+        .put(requestBody)
     )
 
-  private def requestAdviceAndWait() =
+  private def requestAdviceAndWait(requestBody: JsValue = requestBody) =
     await(
       wsClient
         .url(url)
         .withHttpHeaders(
-          "X-Client-ID" -> "clientId",
-          "Accept"      -> "application/vnd.hmrc.1.0+json"
+          "X-Client-ID"  -> "clientId",
+          "Accept"       -> "application/vnd.hmrc.1.0+json",
+          "Content-Type" -> "application/json"
         )
-        .delete()
+        .put(requestBody)
     )
 
   private def expectedJson(code: String, message: String): Any =
@@ -287,11 +287,18 @@ class WithdrawAdviceControllerIntegrationSpec
   private def stubRouterResponse(status: Int, errorResponse: String, url: String = routerUrl) =
     wireMock.stubFor(
       WireMock
-        .delete(url)
+        .put(url)
         .willReturn(
           aResponse()
             .withStatus(status)
             .withBody(errorResponse)
         )
     )
+
+  private def createWithdrawAdviceRequest: JsValue = Json
+    .parse("""
+             |{
+             |    "withdrawReason": "text"
+             |}
+             |""".stripMargin)
 }

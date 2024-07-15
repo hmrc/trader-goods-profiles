@@ -16,9 +16,12 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.connectors
 
-import io.lemonlabs.uri.{QueryString, Url, UrlPath}
+import io.lemonlabs.uri.UrlPath
 import play.api.Logging
+import play.api.http.{HeaderNames, MimeTypes}
 import play.api.http.Status.INTERNAL_SERVER_ERROR
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.Request
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
@@ -37,18 +40,21 @@ class WithdrawAdviceRouterConnector @Inject() (
     with RouterHttpReader
     with Logging {
 
-  def withdrawAdvice(eori: String, recordId: String, withdrawReason: Option[String])(implicit
+  def withdrawAdvice(eori: String, recordId: String, request: Request[JsValue])(implicit
     hc: HeaderCarrier
   ): Future[Either[ServiceError, Int]] = {
 
-    val url = routerWithdrawAdviceUrl(eori, recordId, withdrawReason)
+    val url = appConfig.routerUrl.withPath(routerWithdrawAdviceUrl(eori, recordId))
+
     httpClient
-      .delete(url"$url")
+      .put(url"$url")
+      .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+      .withBody(Json.toJson(request.body))
       .withClientId
       .execute(httpReaderWithoutResponseBody, ec)
       .recover { case ex: Throwable =>
         logger.warn(
-          s"[WithdrawAdviceRouterConnector] - Exception when withdraw Advice  for eori number $eori, record ID $recordId, with message ${ex.getMessage}",
+          s"[WithdrawAdviceRouterConnector] - Exception when withdraw advice  for eori number $eori, record ID $recordId, with message ${ex.getMessage}",
           ex
         )
         Left(
@@ -57,16 +63,15 @@ class WithdrawAdviceRouterConnector @Inject() (
             ErrorResponse
               .serverErrorResponse(
                 uuidService.uuid,
-                s"Could not withdraw Advice for eori number $eori, record ID $recordId"
+                "Could not withdraw advice due to an internal error"
               )
           )
         )
       }
   }
 
-  private def routerWithdrawAdviceUrl(eoriNumber: String, recordId: String, withdrawReason: Option[String]): Url =
-    appConfig.routerUrl
-      .withPath(UrlPath.parse(s"$routerBaseRoute/traders/$eoriNumber/records/$recordId/advice"))
-      .withQueryString(QueryString.fromPairs("withdrawReason" -> withdrawReason))
-
+  private def routerWithdrawAdviceUrl(eori: String, recordId: String): UrlPath =
+    UrlPath.parse(
+      s"$routerBaseRoute/traders/$eori/records/$recordId/advice"
+    )
 }

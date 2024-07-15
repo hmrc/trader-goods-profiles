@@ -16,17 +16,21 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.connectors
 
+import io.lemonlabs.uri.UrlPath
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.MockitoSugar.{reset, verify, when}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, EitherValues}
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT}
+import play.api.http.{HeaderNames, MimeTypes}
+import play.api.http.Status.{NOT_FOUND, NO_CONTENT}
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.Request
+import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.StringContextOps
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.support.BaseConnectorSpec
 
-import java.util.UUID
 import scala.concurrent.Future
 
 class WithdrawAdviceRouterConnectorSpec
@@ -36,67 +40,78 @@ class WithdrawAdviceRouterConnectorSpec
     with BeforeAndAfterEach {
 
   private val eori     = "GB123456789012"
-  private val recordId = UUID.randomUUID().toString
+  private val recordId = "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f"
+
+  def withdrawAdviceData: JsValue = Json
+    .parse("""
+             |{
+             |    "withdrawReason": "text"
+             |
+             |}
+             |""".stripMargin)
+
+  def request: Request[JsValue] = FakeRequest().withBody(withdrawAdviceData)
 
   private val sut = new WithdrawAdviceRouterConnector(httpClient, appConfig, uuidService)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(httpClient, appConfig, requestBuilder, uuidService)
+    reset(httpClient, appConfig, requestBuilder)
 
     commonSetUp
-    when(httpClient.delete(any)(any)).thenReturn(requestBuilder)
+    when(httpClient.put(any)(any)).thenReturn(requestBuilder)
     when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
+    when(requestBuilder.withBody(any[Object])(any, any, any)).thenReturn(requestBuilder)
   }
 
-  "withdraw advice" should {
+  "request advice" should {
 
-    "return 204" in {
+    "return 201 when advice is successfully requested" in {
+
       when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
         .thenReturn(Future.successful(Right(NO_CONTENT)))
-      val withdrawReason = "today"
-      val result         = await(sut.withdrawAdvice(eori, recordId, Some(withdrawReason)))
+
+      val result = await(sut.withdrawAdvice(eori, recordId, request))
 
       result.value mustBe NO_CONTENT
-      withClue("send a request with the right url") {
-        val expectedUrl =
-          s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId/advice?withdrawReason=$withdrawReason"
-        verify(httpClient).delete(eqTo(url"$expectedUrl"))(any)
-        verify(requestBuilder).setHeader("X-Client-ID" -> "clientId")
-        verify(requestBuilder).execute(any, any)
-      }
+
+      val expectedUrl =
+        UrlPath.parse(s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId/advice")
+      verify(httpClient).put(eqTo(url"$expectedUrl"))(any)
+      verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+      verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
+      verify(requestBuilder).withBody(eqTo(withdrawAdviceData))(any, any, any)
+      verify(requestBuilder).execute(any, any)
     }
 
-    "return an error response" when {
-      "router API return an error" in {
-        val expectedErrorResponse = ErrorResponse("123", "code", "error")
-        val expectedResponse      = ServiceError(NOT_FOUND, expectedErrorResponse)
+    "return an error" when {
+      "api return an error" in {
+        val errorResponse = ServiceError(NOT_FOUND, ErrorResponse(correlationId, "any-code", "any-message"))
         when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
-          .thenReturn(Future.successful(Left(expectedResponse)))
+          .thenReturn(Future.successful(Left(errorResponse)))
 
-        val result = await(sut.withdrawAdvice(eori, recordId, None))
+        val result = await(sut.withdrawAdvice(eori, recordId, request))
 
-        result.left.value mustBe expectedResponse
+        result.left.value mustBe errorResponse
+      }
+
+      "api throw" in {
+        when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
+          .thenReturn(Future.failed(new RuntimeException("error")))
+
+        val result = await(sut.withdrawAdvice(eori, recordId, request))
+
+        result.left.value mustBe ServiceError(
+          500,
+          ErrorResponse(
+            correlationId,
+            "INTERNAL_SERVER_ERROR",
+            "Could not withdraw advice due to an internal error"
+          )
+        )
       }
     }
 
-    "throw an exception" in {
-
-      when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
-        .thenReturn(Future.failed(new RuntimeException("error")))
-
-      val result = await(sut.withdrawAdvice(eori, recordId, None))
-
-      val expectedErrorResponse = ErrorResponse(
-        correlationId,
-        "INTERNAL_SERVER_ERROR",
-        s"Could not withdraw Advice for eori number $eori, record ID $recordId"
-      )
-      val expectedResponse      = ServiceError(INTERNAL_SERVER_ERROR, expectedErrorResponse)
-
-      result.left.value mustBe expectedResponse
-    }
   }
-
 }
