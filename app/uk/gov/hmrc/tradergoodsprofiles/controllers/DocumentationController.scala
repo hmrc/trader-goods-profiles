@@ -43,7 +43,7 @@ class DocumentationController @Inject() (assets: Assets, cc: ControllerComponent
   private def returnTemplatedYaml(): Action[AnyContent] = Action {
     val includeWithdrawAdviceEndpoint = appConfig.withdrawAdviceEnabled
     logger.info(s"Generating OpenAPI Spec with includeWithdrawAdviceEndpoint: $includeWithdrawAdviceEndpoint")
-    Ok(txt.application(includeWithdrawAdviceEndpoint)).as("application/yaml")
+    Ok(txt.application()).as("application/yaml")
   }
 
   private def returnStaticAsset(version: String, file: String): Action[AnyContent] = Action.async { implicit request =>

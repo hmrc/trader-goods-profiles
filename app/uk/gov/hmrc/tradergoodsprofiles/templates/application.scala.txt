@@ -1,4 +1,6 @@
-@(includeWithdrawAdviceEndpoint: Boolean)
+@this(appConfig: uk.gov.hmrc.tradergoodsprofiles.config.AppConfig)
+@()
+@{val includeWithdrawAdviceEndpoint = appConfig.withdrawAdviceEnabled}
 ---
 openapi: 3.0.3
 info:
