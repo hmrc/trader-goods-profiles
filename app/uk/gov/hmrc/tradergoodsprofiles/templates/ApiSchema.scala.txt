@@ -343,19 +343,30 @@ paths:
       security:
         - userRestricted:
             - trader-goods-profiles
-    @if(includeWithdrawAdviceEndpoint) {
+@if(includeWithdrawAdviceEndpoint) {
     put:
       tags:
         - Goods records
       summary: Withdraw your request for advice from HMRC
       description: Withdraw your request for advice from HMRC
-      operationId: removeTraderGoodsProfileRecordAdvice
+      operationId: withdrawTraderGoodsProfileRecordAdvice
       parameters:
         - $ref: '#/components/parameters/Accept'
         - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/eoriParam'
         - $ref: '#/components/parameters/recordParam'
-        - $ref: '#/components/parameters/withdrawReasonParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                withdrawReason:
+                  type: string
+                  minLength: 1
+                  maxLength: 512
+                  description: A free format field for traders to explain why they're withdrawing their request for advice.
+        required: true
       responses:
         '204':
           description: No Content; Request completed successfully
