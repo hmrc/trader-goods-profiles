@@ -951,8 +951,8 @@ components:
         - In progress
         - Information Requested
         - Withdrawn
-        - Approved
-        - Rejected
+        - Advice Provided
+        - Advice not provided
     goodsDescription:
       type: string
       minLength: 1
