@@ -65,6 +65,34 @@ class DocumentationControllerSpec
     }
 
     "specification" should {
+      "return valid application.yaml without Request Advice endpoint when requestAdviceEnabled is false" in {
+        when(mockAppConfig.requestAdviceEnabled).thenReturn(false)
+        val result: Future[Result] = doGet("/api/conf/1.0/application.yaml", Map.empty)
+
+        status(result) shouldBe OK
+        val stringResult = contentAsString(result)
+
+        stringResult should include("---")
+        stringResult should not include s"/customs/traders/goods-profiles/{eori}/records/{recordId}/advice:"
+        stringResult should not include "summary: Ask HMRC for advice if a commodity code is correct"
+
+        validateOpenAPISpec(stringResult)
+      }
+
+      "return valid application.yaml with Request Advice endpoint when requestAdviceEnabled is true" in {
+        when(mockAppConfig.requestAdviceEnabled).thenReturn(true)
+        val result: Future[Result] = doGet("/api/conf/1.0/application.yaml", Map.empty)
+
+        status(result) shouldBe OK
+        val stringResult = contentAsString(result)
+
+        stringResult should include("---")
+        stringResult should include("/customs/traders/goods-profiles/{eori}/records/{recordId}/advice:")
+        stringResult should include("summary: Ask HMRC for advice if a commodity code is correct")
+
+        validateOpenAPISpec(stringResult)
+      }
+
       "return valid application.yaml without withdraw advice endpoint when withdrawAdviceEnabled is false" in {
         when(mockAppConfig.withdrawAdviceEnabled).thenReturn(false)
         val result: Future[Result] = doGet("/api/conf/1.0/application.yaml", Map.empty)
@@ -90,6 +118,39 @@ class DocumentationControllerSpec
 
         validateOpenAPISpec(stringResult)
       }
+
+      "should return valid application.yaml when both requestAdviceEnabled and withdrawAdviceEnabled are set to false" in {
+        when(mockAppConfig.requestAdviceEnabled).thenReturn(false)
+        when(mockAppConfig.withdrawAdviceEnabled).thenReturn(false)
+        val result: Future[Result] = doGet("/api/conf/1.0/application.yaml", Map.empty)
+
+        status(result) shouldBe OK
+        val stringResult = contentAsString(result)
+
+        stringResult should include("---")
+        stringResult should not include "/customs/traders/goods-profiles/{eori}/records/{recordId}/advice:"
+        stringResult should not include "summary: Ask HMRC for advice if a commodity code is correct"
+        stringResult should not include "summary: Withdraw your request for advice from HMRC"
+
+        validateOpenAPISpec(stringResult)
+      }
+
+      "should return valid application.yaml when both requestAdviceEnabled and withdrawAdviceEnabled are set to true" in {
+        when(mockAppConfig.requestAdviceEnabled).thenReturn(true)
+        when(mockAppConfig.withdrawAdviceEnabled).thenReturn(true)
+        val result: Future[Result] = doGet("/api/conf/1.0/application.yaml", Map.empty)
+
+        status(result) shouldBe OK
+        val stringResult = contentAsString(result)
+
+        stringResult should include("---")
+        stringResult should include("/customs/traders/goods-profiles/{eori}/records/{recordId}/advice:")
+        stringResult should include("summary: Ask HMRC for advice if a commodity code is correct")
+        stringResult should include("summary: Withdraw your request for advice from HMRC")
+
+        validateOpenAPISpec(stringResult)
+      }
+
     }
   }
 
