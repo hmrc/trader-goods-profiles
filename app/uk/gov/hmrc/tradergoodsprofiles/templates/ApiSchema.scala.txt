@@ -1,6 +1,7 @@
 @this(appConfig: uk.gov.hmrc.tradergoodsprofiles.config.AppConfig)
 @()
 @includeWithdrawAdviceEndpoint = @{appConfig.withdrawAdviceEnabled}
+@includeRequestAdviceEndpoint = @{appConfig.requestAdviceEnabled}
 ---
 openapi: 3.0.3
 info:
@@ -269,7 +270,10 @@ paths:
       security:
         - userRestricted:
             - trader-goods-profiles
+@if(includeRequestAdviceEndpoint || includeWithdrawAdviceEndpoint) {
   /customs/traders/goods-profiles/{eori}/records/{recordId}/advice:
+}
+@if(includeRequestAdviceEndpoint){
     post:
       tags:
         - Goods records
@@ -343,6 +347,7 @@ paths:
       security:
         - userRestricted:
             - trader-goods-profiles
+}
 @if(includeWithdrawAdviceEndpoint) {
     put:
       tags:

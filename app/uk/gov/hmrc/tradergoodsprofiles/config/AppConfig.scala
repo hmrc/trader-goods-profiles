@@ -29,4 +29,5 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   val routerUrl = Url.parse(servicesConfig.baseUrl("trader-goods-profiles-router"))
 
   val withdrawAdviceEnabled: Boolean = config.get[Boolean]("feature.withdrawAdviceEnabled")
+  val requestAdviceEnabled: Boolean  = config.get[Boolean]("feature.requestAdviceEnabled")
 }
