@@ -40,8 +40,7 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
 
   private val requestHeaders = Seq(
     "Accept"       -> "application/vnd.hmrc.1.0+json",
-    "Content-Type" -> "application/json",
-    "X-Client-ID"  -> "some client ID"
+    "Content-Type" -> "application/json"
   )
 
   private val eori          = "GB123456789012"
