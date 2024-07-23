@@ -299,7 +299,6 @@ class GetRecordsControllerIntegrationSpec
               s"http://localhost:$port/$eoriNumber/records?lastUpdatedDate=2024-06-08T12:12:12Z&page=1&size=1"
             )
             .withHttpHeaders(
-              "X-Client-ID"  -> "clientId",
               "Accept"       -> "application/vnd.hmrc.1.0+json",
               "Content-Type" -> "application/json"
             )
@@ -314,7 +313,6 @@ class GetRecordsControllerIntegrationSpec
           getRequestedFor(
             urlEqualTo(s"$getMultipleRecordsRouterUrl?lastUpdatedDate=2024-06-08T12:12:12Z&page=1&size=1")
           )
-            .withHeader("X-Client-ID", equalTo("clientId"))
         )
       }
     }
@@ -417,11 +415,9 @@ class GetRecordsControllerIntegrationSpec
     "return bad request when Accept header is invalid" in {
       withAuthorizedTrader()
 
-      val headers = Seq("X-Client-ID" -> "clientId", "Content-Type" -> "application/json")
       val result  = await(
         wsClient
           .url(getMultipleRecordsUrl)
-          .withHttpHeaders(headers: _*)
           .get()
       )
 
