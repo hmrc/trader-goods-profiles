@@ -45,7 +45,6 @@ class GetRecordsRouterConnector @Inject() (
 
     httpClient
       .get(url"$url")
-      .withClientId
       .execute(httpReader[GetRecordResponse], ec)
       .recover { case ex: Throwable =>
         logger.warn(
@@ -74,7 +73,6 @@ class GetRecordsRouterConnector @Inject() (
     val url = routerGetRecordsOptionalUrl(eori, lastUpdatedDate, page, size)
     httpClient
       .get(url"$url")
-      .withClientId
       .execute(httpReader[GetRecordsResponse], ec)
       .recover { case ex: Throwable =>
         logger.warn(
