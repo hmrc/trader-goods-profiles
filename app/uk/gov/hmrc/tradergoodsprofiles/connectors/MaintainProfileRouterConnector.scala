@@ -51,7 +51,6 @@ class MaintainProfileRouterConnector @Inject() (
       .put(url"$url")
       .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
       .withBody(updateProfileRequest.body)
-      .withClientId
       .execute(httpReader[MaintainProfileResponse], ec)
       .recover { case ex: Throwable =>
         logger.warn(s"Exception when updating profile for eori number $eori: ${ex.getMessage}", ex)

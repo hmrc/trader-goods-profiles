@@ -128,7 +128,6 @@ class MaintainProfileControllerIntegrationSpec
         verify(
           putRequestedFor(urlEqualTo(routerUrl))
             .withHeader("Content-Type", equalTo("application/json"))
-            .withHeader("X-Client-ID", equalTo("clientId"))
         )
       }
     }
@@ -140,7 +139,6 @@ class MaintainProfileControllerIntegrationSpec
         wsClient
           .url(url)
           .withHttpHeaders(
-            "X-Client-ID"  -> "clientId",
             "Content-Type" -> "application/json"
           )
           .put(requestBody)
@@ -161,7 +159,6 @@ class MaintainProfileControllerIntegrationSpec
         wsClient
           .url(url)
           .withHttpHeaders(
-            "X-Client-ID"  -> "clientId",
             "Accept"       -> "application/vnd.hmrc.1.0+json",
             "Content-Type" -> ""
           )
@@ -172,27 +169,6 @@ class MaintainProfileControllerIntegrationSpec
       result.json mustBe Json.obj(
         "statusCode" -> 415,
         "message"    -> "Expecting text/json or application/json body"
-      )
-    }
-
-    "return 400 Bad Request when X-Client-ID header is missing" in {
-      withAuthorizedTrader()
-
-      val result = await(
-        wsClient
-          .url(url)
-          .withHttpHeaders(
-            "Accept"       -> "application/vnd.hmrc.1.0+json",
-            "Content-Type" -> "application/json"
-          )
-          .put(requestBody)
-      )
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe createExpectedError(
-        "INVALID_HEADER_PARAMETER",
-        "X-Client-ID was missing from Header or is in wrong format",
-        6000
       )
     }
 
@@ -285,7 +261,6 @@ class MaintainProfileControllerIntegrationSpec
       wsClient
         .url(url)
         .withHttpHeaders(
-          "X-Client-ID"  -> "clientId",
           "Accept"       -> "application/vnd.hmrc.1.0+json",
           "Content-Type" -> "application/json"
         )
