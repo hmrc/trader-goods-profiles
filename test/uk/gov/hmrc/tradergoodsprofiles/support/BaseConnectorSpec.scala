@@ -18,6 +18,7 @@ package uk.gov.hmrc.tradergoodsprofiles.support
 
 import io.lemonlabs.uri.Url
 import org.mockito.MockitoSugar.when
+import org.mockito.stubbing.ScalaOngoingStubbing
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import uk.gov.hmrc.http.HeaderCarrier
@@ -34,14 +35,14 @@ class BaseConnectorSpec extends PlaySpec {
   implicit val ec: ExecutionContext = ExecutionContext.global
   implicit val hc: HeaderCarrier    = HeaderCarrier(otherHeaders = Seq(XClientIdHeader -> "clientId"))
 
-  protected val httpClient     = mock[HttpClientV2]
-  protected val appConfig      = mock[AppConfig]
-  protected val requestBuilder = mock[RequestBuilder]
-  protected val uuidService    = mock[UuidService]
-  protected val correlationId  = UUID.randomUUID().toString
-  protected val serverUrl      = "http://localhost:23123"
+  protected val httpClient: HttpClientV2       = mock[HttpClientV2]
+  protected val appConfig: AppConfig           = mock[AppConfig]
+  protected val requestBuilder: RequestBuilder = mock[RequestBuilder]
+  protected val uuidService: UuidService       = mock[UuidService]
+  protected val correlationId: String          = UUID.randomUUID().toString
+  protected val serverUrl: String              = "http://localhost:23123"
 
-  def commonSetUp = {
+  def commonSetUp: ScalaOngoingStubbing[String] = {
     when(appConfig.routerUrl).thenReturn(Url.parse(serverUrl))
     when(uuidService.uuid).thenReturn(correlationId)
   }

@@ -26,7 +26,10 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   val appName: String = config.get[String]("appName")
 
-  val routerUrl = Url.parse(servicesConfig.baseUrl("trader-goods-profiles-router"))
+  val routerUrl: Url = Url.parse(servicesConfig.baseUrl("trader-goods-profiles-router"))
+
+  val userAllowListBaseUrl: String = servicesConfig.baseUrl("microservice.services.user-allow-list")
+  val internalAuthToken: String    = config.get[String]("internal-auth.token")
 
   val withdrawAdviceEnabled: Boolean = config.get[Boolean]("feature.withdrawAdviceEnabled")
   val requestAdviceEnabled: Boolean  = config.get[Boolean]("feature.requestAdviceEnabled")
