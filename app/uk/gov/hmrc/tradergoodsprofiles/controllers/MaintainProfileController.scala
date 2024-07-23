@@ -43,9 +43,7 @@ class MaintainProfileController @Inject() (
   def updateProfile(eori: String): Action[JsValue] =
     authAction(eori).async(parse.json) { implicit request =>
       val result = for {
-        _               <- EitherT
-                             .fromEither[Future](validateAcceptHeader)
-                             .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
+        _               <- EitherT.fromEither[Future](validateAcceptAndContentTypeHeaders)
         serviceResponse <-
           EitherT(maintainProfileRouterConnector.put(eori, request)).leftMap(e =>
             Status(e.status)(toJson(e.errorResponse))
