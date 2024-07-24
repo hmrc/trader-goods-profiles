@@ -107,7 +107,7 @@ class GetRecordsControllerIntegrationSpec
     "return a record" in {
       withAuthorizedTrader()
 
-      val result = getRecordAndWait()
+      val result = getRecordAndWait(getSingleRecordUrl)
 
       result.status mustBe OK
       result.json mustBe getSingleRecordRouterResponse
@@ -115,7 +115,6 @@ class GetRecordsControllerIntegrationSpec
       withClue("should add the right headers") {
         verify(
           getRequestedFor(urlEqualTo(getSingleRecordRouterUrl))
-            .withHeader("X-Client-ID", equalTo("clientId"))
         )
       }
     }
@@ -137,7 +136,7 @@ class GetRecordsControllerIntegrationSpec
 
       stubRouterRequest(getSingleRecordRouterUrl, 404, routerResponse.toString())
 
-      val result = getRecordAndWait()
+      val result = getRecordAndWait(getSingleRecordUrl)
 
       result.status mustBe NOT_FOUND
       result.json mustBe expectedErrorResponse
@@ -151,7 +150,7 @@ class GetRecordsControllerIntegrationSpec
 
       withAuthorizedTrader(enrolment)
 
-      val result = getRecordAndWait()
+      val result = getRecordAndWait(getSingleRecordUrl)
 
       result.status mustBe OK
     }
@@ -159,13 +158,7 @@ class GetRecordsControllerIntegrationSpec
     "return bad request when Accept header is invalid" in {
       withAuthorizedTrader()
 
-      val headers = Seq("X-Client-ID" -> "clientId", "Content-Type" -> "application/json")
-      val result  = await(
-        wsClient
-          .url(getSingleRecordUrl)
-          .withHttpHeaders(headers: _*)
-          .get()
-      )
+      val result  = await(wsClient.url(getSingleRecordUrl).get())
 
       result.status mustBe BAD_REQUEST
       result.json mustBe createExpectedError(
@@ -178,7 +171,7 @@ class GetRecordsControllerIntegrationSpec
     "return internal server error if auth throw" in {
       withUnauthorizedTrader(new RuntimeException("runtime exception"))
 
-      val result = getRecordAndWait()
+      val result = getRecordAndWait(getSingleRecordUrl)
 
       result.status mustBe INTERNAL_SERVER_ERROR
       result.json mustBe createExpectedJson(
@@ -275,7 +268,7 @@ class GetRecordsControllerIntegrationSpec
     "return multiple records" in {
       withAuthorizedTrader()
 
-      val result = getRecordsAndWait()
+      val result = getRecordAndWait(getMultipleRecordsUrl)
 
       result.status mustBe OK
       result.json mustBe getMultipleRecordsCallerResponse
@@ -283,7 +276,6 @@ class GetRecordsControllerIntegrationSpec
       withClue("should add the right headers") {
         verify(
           getRequestedFor(urlEqualTo(getMultipleRecordsRouterUrl))
-            .withHeader("X-Client-ID", equalTo("clientId"))
         )
       }
     }
@@ -307,7 +299,6 @@ class GetRecordsControllerIntegrationSpec
               s"http://localhost:$port/$eoriNumber/records?lastUpdatedDate=2024-06-08T12:12:12Z&page=1&size=1"
             )
             .withHttpHeaders(
-              "X-Client-ID"  -> "clientId",
               "Accept"       -> "application/vnd.hmrc.1.0+json",
               "Content-Type" -> "application/json"
             )
@@ -322,7 +313,6 @@ class GetRecordsControllerIntegrationSpec
           getRequestedFor(
             urlEqualTo(s"$getMultipleRecordsRouterUrl?lastUpdatedDate=2024-06-08T12:12:12Z&page=1&size=1")
           )
-            .withHeader("X-Client-ID", equalTo("clientId"))
         )
       }
     }
@@ -344,7 +334,7 @@ class GetRecordsControllerIntegrationSpec
 
       stubRouterRequest(getMultipleRecordsRouterUrl, 404, routerResponse.toString())
 
-      val result = getRecordsAndWait()
+      val result = getRecordAndWait(getMultipleRecordsUrl)
 
       result.status mustBe NOT_FOUND
       result.json mustBe expectedErrorResponse
@@ -357,7 +347,7 @@ class GetRecordsControllerIntegrationSpec
 
       withAuthorizedTrader(enrolment)
 
-      val result = getRecordsAndWait()
+      val result = getRecordAndWait(getMultipleRecordsUrl)
 
       result.status mustBe OK
     }
@@ -365,7 +355,7 @@ class GetRecordsControllerIntegrationSpec
     "return Unauthorised when invalid enrolment" in {
       withUnauthorizedTrader(InsufficientEnrolments())
 
-      val result = getRecordsAndWait()
+      val result = getRecordAndWait(getMultipleRecordsUrl)
 
       result.status mustBe UNAUTHORIZED
       result.json mustBe createExpectedJson(
@@ -377,7 +367,7 @@ class GetRecordsControllerIntegrationSpec
     "return Unauthorised when affinityGroup is Agent" in {
       authorizeWithAffinityGroup(Some(Agent))
 
-      val result = getRecordsAndWait()
+      val result = getRecordAndWait(getMultipleRecordsUrl)
 
       result.status mustBe UNAUTHORIZED
       result.json mustBe createExpectedJson(
@@ -389,7 +379,7 @@ class GetRecordsControllerIntegrationSpec
     "return Unauthorised when affinityGroup empty" in {
       authorizeWithAffinityGroup(None)
 
-      val result = getRecordsAndWait()
+      val result = getRecordAndWait(getMultipleRecordsUrl)
 
       result.status mustBe UNAUTHORIZED
       result.json mustBe createExpectedJson(
@@ -401,7 +391,7 @@ class GetRecordsControllerIntegrationSpec
     "return forbidden if identifier does not exist" in {
       withUnauthorizedEmptyIdentifier()
 
-      val result = getRecordsAndWait()
+      val result = getRecordAndWait(getMultipleRecordsUrl)
 
       result.status mustBe FORBIDDEN
       result.json mustBe createExpectedJson(
@@ -413,7 +403,7 @@ class GetRecordsControllerIntegrationSpec
     "return forbidden if identifier is not authorised" in {
       withAuthorizedTrader()
 
-      val result = getRecordsAndWait(s"http://localhost:$port/wrongEoriNumber/records")
+      val result = getRecordAndWait(s"http://localhost:$port/wrongEoriNumber/records")
 
       result.status mustBe FORBIDDEN
       result.json mustBe createExpectedJson(
@@ -425,11 +415,9 @@ class GetRecordsControllerIntegrationSpec
     "return bad request when Accept header is invalid" in {
       withAuthorizedTrader()
 
-      val headers = Seq("X-Client-ID" -> "clientId", "Content-Type" -> "application/json")
       val result  = await(
         wsClient
           .url(getMultipleRecordsUrl)
-          .withHttpHeaders(headers: _*)
           .get()
       )
 
@@ -444,7 +432,7 @@ class GetRecordsControllerIntegrationSpec
     "return internal server error if auth throw" in {
       withUnauthorizedTrader(new RuntimeException("runtime exception"))
 
-      val result = getRecordsAndWait()
+      val result = getRecordAndWait(getMultipleRecordsUrl)
 
       result.status mustBe INTERNAL_SERVER_ERROR
       result.json mustBe createExpectedJson(
@@ -457,7 +445,7 @@ class GetRecordsControllerIntegrationSpec
       withAuthorizedTrader()
       stubRouterRequest(getMultipleRecordsRouterUrl, 404, "error")
 
-      val result = getRecordsAndWait()
+      val result = getRecordAndWait(getMultipleRecordsUrl)
 
       result.status mustBe INTERNAL_SERVER_ERROR
       result.json mustBe Json.obj(
@@ -472,7 +460,7 @@ class GetRecordsControllerIntegrationSpec
       withAuthorizedTrader()
       stubRouterRequest(getMultipleRecordsRouterUrl, 200, "{test}")
 
-      val result = getRecordsAndWait()
+      val result = getRecordAndWait(getMultipleRecordsUrl)
 
       result.status mustBe INTERNAL_SERVER_ERROR
       result.json mustBe Json.obj(
@@ -489,24 +477,11 @@ class GetRecordsControllerIntegrationSpec
       wsClient
         .url(url)
         .withHttpHeaders(
-          "X-Client-ID"  -> "clientId",
-          "Accept"       -> "application/vnd.hmrc.1.0+json",
-          "Content-Type" -> "application/json"
+          "Accept"       -> "application/vnd.hmrc.1.0+json"
         )
         .get()
     )
 
-  private def getRecordsAndWait(url: String = getMultipleRecordsUrl) =
-    await(
-      wsClient
-        .url(url)
-        .withHttpHeaders(
-          "X-Client-ID"  -> "clientId",
-          "Accept"       -> "application/vnd.hmrc.1.0+json",
-          "Content-Type" -> "application/json"
-        )
-        .get()
-    )
 
   private def createExpectedJson(code: String, message: String): Any =
     Json.obj(
