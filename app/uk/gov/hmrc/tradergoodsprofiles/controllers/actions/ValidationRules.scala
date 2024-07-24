@@ -67,7 +67,7 @@ trait ValidationRules {
     } yield ()).left
       .map(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
 
-  protected def createBadRequestResponse(code: String, message: String, errorNumber: Int): Result =
+  private def createBadRequestResponse(code: String, message: String, errorNumber: Int): Result =
     BadRequest(
       Json.toJson(
         ErrorResponse(
