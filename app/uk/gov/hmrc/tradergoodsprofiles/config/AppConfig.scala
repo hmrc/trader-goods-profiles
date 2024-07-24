@@ -24,10 +24,14 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 @Singleton
 class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) {
 
-  val appName: String = config.get[String]("appName")
+  lazy val appName: String = config.get[String]("appName")
 
-  val routerUrl = Url.parse(servicesConfig.baseUrl("trader-goods-profiles-router"))
+  lazy val routerUrl = Url.parse(servicesConfig.baseUrl("trader-goods-profiles-router"))
 
-  val withdrawAdviceEnabled: Boolean = config.get[Boolean]("feature.withdrawAdviceEnabled")
-  val requestAdviceEnabled: Boolean  = config.get[Boolean]("feature.requestAdviceEnabled")
+  lazy val withdrawAdviceEnabled: Boolean = config.get[Boolean]("feature.withdrawAdviceEnabled")
+  lazy val requestAdviceEnabled: Boolean  = config.get[Boolean]("feature.requestAdviceEnabled")
+
+  val isDrop1_1_enabled: Boolean  =
+    config.getOptional[Boolean]("feature.drop_1_1_enabled")
+    .getOrElse(false)
 }
