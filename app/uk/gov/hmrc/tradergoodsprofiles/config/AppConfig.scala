@@ -28,10 +28,10 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   lazy val routerUrl = Url.parse(servicesConfig.baseUrl("trader-goods-profiles-router"))
 
-  lazy val withdrawAdviceEnabled: Boolean = config.get[Boolean]("feature.withdrawAdviceEnabled")
-  lazy val requestAdviceEnabled: Boolean  = config.get[Boolean]("feature.requestAdviceEnabled")
+  lazy val withdrawAdviceEnabled: Boolean = config.get[Boolean]("features.withdrawAdviceEnabled")
+  lazy val requestAdviceEnabled: Boolean  = config.get[Boolean]("features.requestAdviceEnabled")
 
   val isDrop1_1_enabled: Boolean  =
-    config.getOptional[Boolean]("feature.drop_1_1_enabled")
+    config.getOptional[Boolean]("features.drop_1_1_enabled")
     .getOrElse(false)
 }
