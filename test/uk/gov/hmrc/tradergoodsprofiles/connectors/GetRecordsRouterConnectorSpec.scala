@@ -18,6 +18,7 @@ package uk.gov.hmrc.tradergoodsprofiles.connectors
 
 import io.lemonlabs.uri.UrlPath
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
+import org.mockito.Mockito.never
 import org.mockito.MockitoSugar.{reset, verify, when}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, EitherValues}
@@ -52,6 +53,7 @@ class GetRecordsRouterConnectorSpec
     commonSetUp
     when(uuidService.uuid).thenReturn(correlationId)
     when(httpClient.get(any)(any)).thenReturn(requestBuilder)
+    when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
   }
 
   "get single record" should {
@@ -69,8 +71,24 @@ class GetRecordsRouterConnectorSpec
         val expectedUrl =
           UrlPath.parse(s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId")
         verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
+        verify(requestBuilder).setHeader("X-Client-ID" -> "clientId")
         verify(requestBuilder).execute(any, any)
       }
+    }
+
+    "not send the client ID in the header if drop.1.1" in {
+      when(appConfig.isDrop1_1_enabled).thenReturn(true)
+      val routerResponse = createGetRecordResponse("eori", "recoreId", Instant.now)
+      when(requestBuilder.execute[Either[ServiceError, GetRecordResponse]](any, any))
+        .thenReturn(Future.successful(Right(routerResponse)))
+
+      await(sut.get(eori, recordId)(hc))
+
+      val expectedUrl =
+        UrlPath.parse(s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId")
+      verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
+      verify(requestBuilder, never()).setHeader("X-Client-ID" -> "clientId")
+      verify(requestBuilder).execute(any, any)
     }
 
     "return an error" in {
@@ -115,6 +133,24 @@ class GetRecordsRouterConnectorSpec
         val expectedUrl =
           UrlPath.parse(s"http://localhost:23123/trader-goods-profiles-router/traders/$eori/records")
         verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
+        verify(requestBuilder).setHeader("X-Client-ID" -> "clientId")
+        verify(requestBuilder).execute(any, any)
+      }
+    }
+
+    "not send the client ID in the header if drop.1.1" in {
+      when(appConfig.isDrop1_1_enabled).thenReturn(true)
+      val routerResponse = createGetRecordsResponse("eori", "recoreId", Instant.now)
+      when(requestBuilder.execute[Either[ServiceError, GetRecordsResponse]](any, any))
+        .thenReturn(Future.successful(Right(routerResponse)))
+
+      await(sut.get(eori))
+
+      withClue("send a request with the right url") {
+        val expectedUrl =
+          UrlPath.parse(s"http://localhost:23123/trader-goods-profiles-router/traders/$eori/records")
+        verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
+        verify(requestBuilder, never()).setHeader("X-Client-ID" -> "clientId")
         verify(requestBuilder).execute(any, any)
       }
     }
