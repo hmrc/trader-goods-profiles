@@ -35,10 +35,9 @@ class UserAllowListConnector @Inject() (
   appConfig: AppConfig
 )(implicit ec: ExecutionContext) {
 
-  def check(feature: String, value: String)(implicit hc: HeaderCarrier): Future[Boolean] = {
-    val baseUrl = appConfig.userAllowListBaseUrl
+  def check(feature: String, value: String)(implicit hc: HeaderCarrier): Future[Boolean] =
     httpClient
-      .post(url"$baseUrl/user-allow-list/trader-goods-profiles/$feature/check")
+      .post(url"${appConfig.userAllowListBaseUrl}/user-allow-list/trader-goods-profiles/$feature/check")
       .setHeader("Authorization" -> appConfig.internalAuthToken)
       .withBody(Json.toJson(CheckRequest(value)))
       .execute[HttpResponse]
@@ -49,7 +48,6 @@ class UserAllowListConnector @Inject() (
           case status    => Future.failed(UnexpectedResponseException(status))
         }
       }
-  }
 }
 
 object UserAllowListConnector {

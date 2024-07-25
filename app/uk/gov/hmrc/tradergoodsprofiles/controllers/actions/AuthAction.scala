@@ -27,6 +27,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.AuthAction.{gtpEnrolmentKey, gtpIdentifierKey}
+import uk.gov.hmrc.tradergoodsprofiles.models.UserRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ForbiddenErrorResponse, ServerErrorResponse, UnauthorisedErrorResponse}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
@@ -50,15 +51,15 @@ class AuthActionImpl @Inject() (
 
   override def apply(
     eori: String
-  ): ActionBuilder[Request, AnyContent] with ActionFunction[Request, Request] =
-    new ActionBuilder[Request, AnyContent] with ActionFunction[Request, Request] {
+  ): ActionBuilder[UserRequest, AnyContent] with ActionFunction[Request, UserRequest] =
+    new ActionBuilder[UserRequest, AnyContent] with ActionFunction[Request, UserRequest] {
 
       override val parser                              = bodyParser
       protected def executionContext: ExecutionContext = ec
 
       override def invokeBlock[A](
         request: Request[A],
-        block: Request[A] => Future[Result]
+        block: UserRequest[A] => Future[Result]
       ): Future[Result] = {
 
         implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
@@ -101,12 +102,12 @@ class AuthActionImpl @Inject() (
   private def validateIdentifier[A](
     eoriNumber: String,
     authorisedEnrolments: Enrolments,
-    block: Request[A] => Future[Result]
+    block: UserRequest[A] => Future[Result]
   )(implicit request: Request[A]): Future[Result] = {
 
     val eoriNumbers = getIdentifierForGtpEnrolment(authorisedEnrolments)
 
-    if (eoriNumbers.contains(eoriNumber)) block(request)
+    if (eoriNumbers.contains(eoriNumber)) block(UserRequest(request, eoriNumber))
     else handleForbiddenError(eoriNumber)
   }
 
@@ -162,5 +163,5 @@ object AuthAction {
 
 @ImplementedBy(classOf[AuthActionImpl])
 trait AuthAction {
-  def apply(eori: String): ActionBuilder[Request, AnyContent] with ActionFunction[Request, Request]
+  def apply(eori: String): ActionBuilder[UserRequest, AnyContent] with ActionFunction[Request, UserRequest]
 }
