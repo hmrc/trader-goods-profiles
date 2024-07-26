@@ -88,7 +88,6 @@ class CreateRecordControllerIntegrationSpec
     stubRouterRequest(CREATED, expectedResponse.toString())
     stubForUserAllowList
     when(uuidService.uuid).thenReturn(correlationId)
-
   }
 
   override def beforeAll(): Unit = {

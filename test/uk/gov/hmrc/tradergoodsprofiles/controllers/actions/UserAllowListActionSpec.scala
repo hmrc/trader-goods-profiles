@@ -17,8 +17,8 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers.actions
 
 import org.mockito.ArgumentMatchersSugar.any
-import org.mockito.Mockito.verifyNoInteractions
-import org.mockito.MockitoSugar.when
+import org.mockito.Mockito.never
+import org.mockito.MockitoSugar.{verify, when}
 import org.scalatest.EitherValues
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
@@ -46,7 +46,7 @@ class UserAllowListActionSpec extends AnyWordSpec with Matchers with ScalaFuture
 
   private val sut = new UserAllowListActionImpl(connector, uuidService, appConfig)
 
-  "check action" should {
+  "refine action" should {
     "return the request if the user is allowed" in {
       val request = UserRequest(FakeRequest(), "12345")
       when(connector.check(any, any)(any)).thenReturn(Future.successful(true))
@@ -92,8 +92,7 @@ class UserAllowListActionSpec extends AnyWordSpec with Matchers with ScalaFuture
       val result = await(sut.refine(request))
 
       result shouldBe Right(request)
-      verifyNoInteractions(connector)
+      verify(connector, never())
     }
-
   }
 }
