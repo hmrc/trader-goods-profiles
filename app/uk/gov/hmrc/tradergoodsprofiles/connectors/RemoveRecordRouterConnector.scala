@@ -30,7 +30,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class RemoveRecordRouterConnector @Inject() (
   httpClient: HttpClientV2,
-  override val appConfig: AppConfig,
+  appConfig: AppConfig,
   val uuidService: UuidService
 )(implicit ec: ExecutionContext)
     extends BaseConnector

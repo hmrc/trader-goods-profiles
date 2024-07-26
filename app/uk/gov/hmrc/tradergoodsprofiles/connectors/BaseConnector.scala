@@ -18,32 +18,17 @@ package uk.gov.hmrc.tradergoodsprofiles.connectors
 
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.client.RequestBuilder
-import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.XClientIdHeader
 
 trait BaseConnector {
 
-  val appConfig: AppConfig
   val routerBaseRoute: String = "/trader-goods-profiles-router"
 
-  /* TGP-1889
-  ToDo: Remove the  withClientId and withClientIdIfSupported after drop1.1
-  as EIS does not accept the client Id i the header anymore.
-   */
   implicit class HttpResponseHelpers(requestBuilder: RequestBuilder) {
     def withClientId(implicit hc: HeaderCarrier): RequestBuilder =
       hc.headers(Seq(XClientIdHeader)).headOption match {
         case Some(header) => requestBuilder.setHeader(header)
         case None         => requestBuilder
-      }
-
-    def withClientIdIfSupported(implicit hc: HeaderCarrier): RequestBuilder =
-      if (appConfig.isDrop1_1_enabled) requestBuilder
-      else {
-        hc.headers(Seq(XClientIdHeader)).headOption match {
-          case Some(header) => requestBuilder.setHeader(header)
-          case None         => requestBuilder
-        }
       }
   }
 
