@@ -229,6 +229,19 @@ class UpdateRecordControllerIntegrationSpec
       )
     }
 
+    "return forbidden when EORI is not on the user allow list" in {
+      withAuthorizedTrader()
+      stubForUserAllowListWhereUserItNotAllowed
+
+      val result = updateRecordAndWait()
+
+      result.status mustBe FORBIDDEN
+      result.json mustBe updateExpectedJson(
+        "FORBIDDEN",
+        "This service is in private beta and not available to the public. We will aim to open the service to the public soon."
+      )
+    }
+
   }
 
   private def updateRecordAndWaitWithoutClientIdHeader() =

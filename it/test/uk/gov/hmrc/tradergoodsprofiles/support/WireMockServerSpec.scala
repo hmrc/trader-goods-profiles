@@ -43,4 +43,12 @@ trait WireMockServerSpec {
         )
     )
 
+  def stubForUserAllowListWhereUserItNotAllowed: StubMapping =
+    wireMock.stubFor(
+      post(urlEqualTo(s"/user-allow-list/trader-goods-profiles/private-beta/check"))
+        .willReturn(
+          aResponse()
+            .withStatus(404)
+        )
+    )
 }
