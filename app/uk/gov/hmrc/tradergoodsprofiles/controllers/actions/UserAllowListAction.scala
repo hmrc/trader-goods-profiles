@@ -20,6 +20,7 @@ import com.google.inject.ImplementedBy
 import play.api.mvc.{ActionRefiner, Result}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
+import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.connectors.UserAllowListConnector
 import uk.gov.hmrc.tradergoodsprofiles.models.UserRequest
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.UserNotAllowedResponse
@@ -30,30 +31,34 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class UserAllowListActionImpl @Inject() (
   userAllowListConnector: UserAllowListConnector,
-  uuidService: UuidService
+  uuidService: UuidService,
+  appConfig: AppConfig
 )(implicit
   val executionContext: ExecutionContext
 ) extends UserAllowListAction {
 
   override def refine[A](request: UserRequest[A]): Future[Either[Result, UserRequest[A]]] = {
-
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
 
-    userAllowListConnector
-      .check("private-beta", request.eori)
-      .flatMap {
-        case false =>
-          Future.successful(
-            Left(
-              UserNotAllowedResponse(
-                uuidService.uuid,
-                "This service is in private beta and not available to the public. We will aim to open the service to the public soon."
-              ).toResult
+    if (appConfig.userAllowListEnabled) {
+      userAllowListConnector
+        .check("private-beta", request.eori)
+        .flatMap {
+          case false =>
+            Future.successful(
+              Left(
+                UserNotAllowedResponse(
+                  uuidService.uuid,
+                  "This service is in private beta and not available to the public. We will aim to open the service to the public soon."
+                ).toResult
+              )
             )
-          )
-        case true  => Future.successful(Right(request))
-      } recoverWith { case e: Exception =>
-      Future.failed(e)
+          case true  => Future.successful(Right(request))
+        } recoverWith { case e: Exception =>
+        Future.failed(e)
+      }
+    } else {
+      Future.successful(Right(request))
     }
   }
 }

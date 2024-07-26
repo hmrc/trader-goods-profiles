@@ -17,6 +17,7 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers.actions
 
 import org.mockito.ArgumentMatchersSugar.any
+import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.MockitoSugar.when
 import org.scalatest.EitherValues
 import org.scalatest.concurrent.ScalaFutures
@@ -26,6 +27,7 @@ import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.connectors.UserAllowListConnector
 import uk.gov.hmrc.tradergoodsprofiles.connectors.UserAllowListConnector.UnexpectedResponseException
 import uk.gov.hmrc.tradergoodsprofiles.models.UserRequest
@@ -38,15 +40,17 @@ class UserAllowListActionSpec extends AnyWordSpec with Matchers with ScalaFuture
 
   private val connector             = mock[UserAllowListConnector]
   private val uuidService           = mock[UuidService]
+  private val appConfig             = mock[AppConfig]
   implicit val hc: HeaderCarrier    = HeaderCarrier()
   implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
 
-  private val sut = new UserAllowListActionImpl(connector, uuidService)
+  private val sut = new UserAllowListActionImpl(connector, uuidService, appConfig)
 
   "check action" should {
-    "return a unit if the user is allowed" in {
+    "return the request if the user is allowed" in {
       val request = UserRequest(FakeRequest(), "12345")
       when(connector.check(any, any)(any)).thenReturn(Future.successful(true))
+      when(appConfig.userAllowListEnabled).thenReturn(true)
 
       val result = await(sut.refine(request))
 
@@ -62,6 +66,7 @@ class UserAllowListActionSpec extends AnyWordSpec with Matchers with ScalaFuture
       val request                = UserRequest(FakeRequest(), "12345")
 
       when(connector.check(any, any)(any)).thenReturn(Future.successful(false))
+      when(appConfig.userAllowListEnabled).thenReturn(true)
       when(uuidService.uuid).thenReturn(correlationId)
 
       val result = await(sut.refine(request))
@@ -74,8 +79,20 @@ class UserAllowListActionSpec extends AnyWordSpec with Matchers with ScalaFuture
       val exception: UnexpectedResponseException = UnexpectedResponseException(400)
 
       when(connector.check(any, any)(any)).thenReturn(Future.failed(exception))
+      when(appConfig.userAllowListEnabled).thenReturn(true)
 
       assertThrows[UnexpectedResponseException](await(sut.refine(request)))
+    }
+
+    "should return a successful future if the userAllowListEnabled feature flag is false" in {
+      val request = UserRequest(FakeRequest(), "12345")
+
+      when(appConfig.userAllowListEnabled).thenReturn(false)
+
+      val result = await(sut.refine(request))
+
+      result shouldBe Right(request)
+      verifyNoInteractions(connector)
     }
 
   }
