@@ -18,6 +18,7 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
+import io.lemonlabs.uri.Url
 import org.mockito.MockitoSugar.{reset, when}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar.mock
@@ -34,6 +35,7 @@ import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
+import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.GetRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, GetRecordsResponseSupport}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
@@ -70,6 +72,8 @@ class GetRecordsControllerIntegrationSpec
   private val getMultipleRecordsCallerResponse =
     Json.toJson(createGetRecordsCallerResponse(eoriNumber))
 
+  lazy private val appConfig = mock[AppConfig]
+
   override lazy val app: Application = {
     wireMock.start()
     WireMock.configureFor(wireHost, wireMock.port())
@@ -79,7 +83,8 @@ class GetRecordsControllerIntegrationSpec
       .overrides(
         bind[AuthConnector].to(authConnector),
         bind[UuidService].to(uuidService),
-        bind[HttpClientV2].to(httpClientV2)
+        bind[HttpClientV2].to(httpClientV2),
+        bind[AppConfig].to(appConfig)
       )
       .build()
   }
@@ -92,6 +97,8 @@ class GetRecordsControllerIntegrationSpec
     stubRouterRequest(getMultipleRecordsRouterUrl, 200, getMultipleRecordsRouterResponse.toString())
     stubRouterRequest(getSingleRecordRouterUrl, 200, getSingleRecordRouterResponse.toString())
     when(uuidService.uuid).thenReturn(correlationId)
+    when(appConfig.isDrop1_1_enabled).thenReturn(false)
+    when(appConfig.routerUrl).thenReturn(Url.parse(wireMock.baseUrl))
   }
 
   override def beforeAll(): Unit = {
@@ -108,7 +115,7 @@ class GetRecordsControllerIntegrationSpec
     "return a record" in {
       withAuthorizedTrader()
 
-      val result = getRecordAndWait()
+      val result = getRecordAndWait(getSingleRecordUrl)
 
       result.status mustBe OK
       result.json mustBe getSingleRecordRouterResponse
@@ -116,7 +123,22 @@ class GetRecordsControllerIntegrationSpec
       withClue("should add the right headers") {
         verify(
           getRequestedFor(urlEqualTo(getSingleRecordRouterUrl))
-            .withHeader("X-Client-ID", equalTo("clientId"))
+        )
+      }
+    }
+
+    "should not validate client ID is feature flag isDrop1_1_enabled is true" in {
+      withAuthorizedTrader()
+      when(appConfig.isDrop1_1_enabled).thenReturn(true)
+
+      val result = getRecordAndWaitWithOutClientIDHeader(getSingleRecordUrl)
+
+      result.status mustBe OK
+      result.json mustBe getSingleRecordRouterResponse
+
+      withClue("should add the right headers") {
+        verify(
+          getRequestedFor(urlEqualTo(getSingleRecordRouterUrl))
         )
       }
     }
@@ -138,7 +160,7 @@ class GetRecordsControllerIntegrationSpec
 
       stubRouterRequest(getSingleRecordRouterUrl, 404, routerResponse.toString())
 
-      val result = getRecordAndWait()
+      val result = getRecordAndWait(getSingleRecordUrl)
 
       result.status mustBe NOT_FOUND
       result.json mustBe expectedErrorResponse
@@ -152,7 +174,7 @@ class GetRecordsControllerIntegrationSpec
 
       withAuthorizedTrader(enrolment)
 
-      val result = getRecordAndWait()
+      val result = getRecordAndWait(getSingleRecordUrl)
 
       result.status mustBe OK
     }
@@ -160,12 +182,10 @@ class GetRecordsControllerIntegrationSpec
     "return bad request when Accept header is invalid" in {
       withAuthorizedTrader()
 
-      val headers = Seq("X-Client-ID" -> "clientId", "Content-Type" -> "application/json")
       val result  = await(
-        wsClient
-          .url(getSingleRecordUrl)
-          .withHttpHeaders(headers: _*)
-          .get()
+        wsClient.url(getSingleRecordUrl)
+        .withHttpHeaders("X-Client-ID" -> "TSS")
+        .get()
       )
 
       result.status mustBe BAD_REQUEST
@@ -179,7 +199,7 @@ class GetRecordsControllerIntegrationSpec
     "return internal server error if auth throw" in {
       withUnauthorizedTrader(new RuntimeException("runtime exception"))
 
-      val result = getRecordAndWait()
+      val result = getRecordAndWait(getSingleRecordUrl)
 
       result.status mustBe INTERNAL_SERVER_ERROR
       result.json mustBe createExpectedJson(
@@ -220,7 +240,7 @@ class GetRecordsControllerIntegrationSpec
       withAuthorizedTrader()
       stubRouterRequest(getSingleRecordRouterUrl, 404, "error")
 
-      val result = getRecordAndWait()
+      val result = getRecordAndWait(getSingleRecordUrl)
 
       result.status mustBe INTERNAL_SERVER_ERROR
       result.json mustBe Json.obj(
@@ -245,7 +265,7 @@ class GetRecordsControllerIntegrationSpec
 
       stubRouterRequest(getSingleRecordRouterUrl, 500, routerResponse)
 
-      val result = getRecordAndWait()
+      val result = getRecordAndWait(getSingleRecordUrl)
 
       result.status mustBe INTERNAL_SERVER_ERROR
       result.json mustBe Json.obj(
@@ -260,7 +280,7 @@ class GetRecordsControllerIntegrationSpec
       withAuthorizedTrader()
       stubRouterRequest(getSingleRecordRouterUrl, 200, "{}")
 
-      val result = getRecordAndWait()
+      val result = getRecordAndWait(getSingleRecordUrl)
 
       result.status mustBe INTERNAL_SERVER_ERROR
       result.json mustBe Json.obj(
@@ -276,7 +296,7 @@ class GetRecordsControllerIntegrationSpec
     "return multiple records" in {
       withAuthorizedTrader()
 
-      val result = getRecordsAndWait()
+      val result = getRecordAndWait(getMultipleRecordsUrl)
 
       result.status mustBe OK
       result.json mustBe getMultipleRecordsCallerResponse
@@ -284,11 +304,29 @@ class GetRecordsControllerIntegrationSpec
       withClue("should add the right headers") {
         verify(
           getRequestedFor(urlEqualTo(getMultipleRecordsRouterUrl))
-            .withHeader("X-Client-ID", equalTo("clientId"))
         )
       }
     }
 
+    /* TGP-1889
+    ToDo: remove this test after drop1.1 and refactor getRecordAndWait
+    to remove the client ID header
+     */
+    "should not validate client ID is feature flag isDrop1_1_enabled is true" in {
+      withAuthorizedTrader()
+      when(appConfig.isDrop1_1_enabled).thenReturn(true)
+
+      val result = getRecordAndWaitWithOutClientIDHeader(getMultipleRecordsUrl)
+
+      result.status mustBe OK
+      result.json mustBe getMultipleRecordsCallerResponse
+
+      withClue("should add the right headers") {
+        verify(
+          getRequestedFor(urlEqualTo(getMultipleRecordsRouterUrl))
+        )
+      }
+    }
     "return multiple records with optional query parameters" in {
       withAuthorizedTrader()
       wireMock.stubFor(
@@ -308,9 +346,9 @@ class GetRecordsControllerIntegrationSpec
               s"http://localhost:$port/$eoriNumber/records?lastUpdatedDate=2024-06-08T12:12:12Z&page=1&size=1"
             )
             .withHttpHeaders(
-              "X-Client-ID"  -> "clientId",
               "Accept"       -> "application/vnd.hmrc.1.0+json",
-              "Content-Type" -> "application/json"
+              "Content-Type" -> "application/json",
+              "X-Client-ID" -> "TSS"
             )
             .get()
         )
@@ -323,7 +361,6 @@ class GetRecordsControllerIntegrationSpec
           getRequestedFor(
             urlEqualTo(s"$getMultipleRecordsRouterUrl?lastUpdatedDate=2024-06-08T12:12:12Z&page=1&size=1")
           )
-            .withHeader("X-Client-ID", equalTo("clientId"))
         )
       }
     }
@@ -345,7 +382,7 @@ class GetRecordsControllerIntegrationSpec
 
       stubRouterRequest(getMultipleRecordsRouterUrl, 404, routerResponse.toString())
 
-      val result = getRecordsAndWait()
+      val result = getRecordAndWait(getMultipleRecordsUrl)
 
       result.status mustBe NOT_FOUND
       result.json mustBe expectedErrorResponse
@@ -358,7 +395,7 @@ class GetRecordsControllerIntegrationSpec
 
       withAuthorizedTrader(enrolment)
 
-      val result = getRecordsAndWait()
+      val result = getRecordAndWait(getMultipleRecordsUrl)
 
       result.status mustBe OK
     }
@@ -366,7 +403,7 @@ class GetRecordsControllerIntegrationSpec
     "return Unauthorised when invalid enrolment" in {
       withUnauthorizedTrader(InsufficientEnrolments())
 
-      val result = getRecordsAndWait()
+      val result = getRecordAndWait(getMultipleRecordsUrl)
 
       result.status mustBe UNAUTHORIZED
       result.json mustBe createExpectedJson(
@@ -378,7 +415,7 @@ class GetRecordsControllerIntegrationSpec
     "return Unauthorised when affinityGroup is Agent" in {
       authorizeWithAffinityGroup(Some(Agent))
 
-      val result = getRecordsAndWait()
+      val result = getRecordAndWait(getMultipleRecordsUrl)
 
       result.status mustBe UNAUTHORIZED
       result.json mustBe createExpectedJson(
@@ -390,7 +427,7 @@ class GetRecordsControllerIntegrationSpec
     "return Unauthorised when affinityGroup empty" in {
       authorizeWithAffinityGroup(None)
 
-      val result = getRecordsAndWait()
+      val result = getRecordAndWait(getMultipleRecordsUrl)
 
       result.status mustBe UNAUTHORIZED
       result.json mustBe createExpectedJson(
@@ -402,7 +439,7 @@ class GetRecordsControllerIntegrationSpec
     "return forbidden if identifier does not exist" in {
       withUnauthorizedEmptyIdentifier()
 
-      val result = getRecordsAndWait()
+      val result = getRecordAndWait(getMultipleRecordsUrl)
 
       result.status mustBe FORBIDDEN
       result.json mustBe createExpectedJson(
@@ -414,7 +451,7 @@ class GetRecordsControllerIntegrationSpec
     "return forbidden if identifier is not authorised" in {
       withAuthorizedTrader()
 
-      val result = getRecordsAndWait(s"http://localhost:$port/wrongEoriNumber/records")
+      val result = getRecordAndWait(s"http://localhost:$port/wrongEoriNumber/records")
 
       result.status mustBe FORBIDDEN
       result.json mustBe createExpectedJson(
@@ -426,11 +463,10 @@ class GetRecordsControllerIntegrationSpec
     "return bad request when Accept header is invalid" in {
       withAuthorizedTrader()
 
-      val headers = Seq("X-Client-ID" -> "clientId", "Content-Type" -> "application/json")
       val result  = await(
         wsClient
           .url(getMultipleRecordsUrl)
-          .withHttpHeaders(headers: _*)
+          .withHttpHeaders("X-Client-ID" -> "TSS")
           .get()
       )
 
@@ -445,7 +481,7 @@ class GetRecordsControllerIntegrationSpec
     "return internal server error if auth throw" in {
       withUnauthorizedTrader(new RuntimeException("runtime exception"))
 
-      val result = getRecordsAndWait()
+      val result = getRecordAndWait(getMultipleRecordsUrl)
 
       result.status mustBe INTERNAL_SERVER_ERROR
       result.json mustBe createExpectedJson(
@@ -458,7 +494,7 @@ class GetRecordsControllerIntegrationSpec
       withAuthorizedTrader()
       stubRouterRequest(getMultipleRecordsRouterUrl, 404, "error")
 
-      val result = getRecordsAndWait()
+      val result = getRecordAndWait(getMultipleRecordsUrl)
 
       result.status mustBe INTERNAL_SERVER_ERROR
       result.json mustBe Json.obj(
@@ -473,7 +509,7 @@ class GetRecordsControllerIntegrationSpec
       withAuthorizedTrader()
       stubRouterRequest(getMultipleRecordsRouterUrl, 200, "{test}")
 
-      val result = getRecordsAndWait()
+      val result = getRecordAndWait(getMultipleRecordsUrl)
 
       result.status mustBe INTERNAL_SERVER_ERROR
       result.json mustBe Json.obj(
@@ -497,29 +533,34 @@ class GetRecordsControllerIntegrationSpec
     }
   }
 
-  private def getRecordAndWait(url: String = getSingleRecordUrl) =
+  /* TGP-1889
+   ToDo: remove the X-Client-ID header after drop1.1
+    */
+  private def getRecordAndWait(url: String) =
     await(
       wsClient
         .url(url)
         .withHttpHeaders(
-          "X-Client-ID"  -> "clientId",
           "Accept"       -> "application/vnd.hmrc.1.0+json",
-          "Content-Type" -> "application/json"
+          "X-Client-ID" ->  "TSS"
         )
         .get()
     )
 
-  private def getRecordsAndWait(url: String = getMultipleRecordsUrl) =
+  /* TGP-1889
+   ToDo: after drop1.1 and refactory of the getRecordAndWait function,
+   this function can be removed
+    */
+  private def getRecordAndWaitWithOutClientIDHeader(url: String) =
     await(
       wsClient
         .url(url)
         .withHttpHeaders(
-          "X-Client-ID"  -> "clientId",
           "Accept"       -> "application/vnd.hmrc.1.0+json",
-          "Content-Type" -> "application/json"
         )
         .get()
     )
+
 
   private def createExpectedJson(code: String, message: String): Any =
     Json.obj(
