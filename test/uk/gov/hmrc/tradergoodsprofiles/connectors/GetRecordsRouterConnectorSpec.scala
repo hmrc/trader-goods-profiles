@@ -103,7 +103,7 @@ class GetRecordsRouterConnectorSpec
     }
   }
 
-  "gerRecords" should {
+  "getRecords" should {
     "return 200" in {
       val routerResponse = createGetRecordsResponse("eori", "recoreId", Instant.now)
       when(requestBuilder.execute[Either[ServiceError, GetRecordsResponse]](any, any))

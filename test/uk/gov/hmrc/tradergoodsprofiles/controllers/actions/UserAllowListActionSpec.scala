@@ -17,8 +17,7 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers.actions
 
 import org.mockito.ArgumentMatchersSugar.any
-import org.mockito.Mockito.never
-import org.mockito.MockitoSugar.{verify, when}
+import org.mockito.MockitoSugar.when
 import org.scalatest.EitherValues
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
@@ -92,7 +91,6 @@ class UserAllowListActionSpec extends AnyWordSpec with Matchers with ScalaFuture
       val result = await(sut.refine(request))
 
       result shouldBe Right(request)
-      verify(connector, never())
     }
   }
 }

@@ -17,6 +17,7 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers.actions
 
 import com.google.inject.ImplementedBy
+import play.api.Logging
 import play.api.mvc.{ActionRefiner, Result}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
@@ -35,7 +36,8 @@ class UserAllowListActionImpl @Inject() (
   appConfig: AppConfig
 )(implicit
   val executionContext: ExecutionContext
-) extends UserAllowListAction {
+) extends UserAllowListAction
+    with Logging {
 
   override def refine[A](request: UserRequest[A]): Future[Either[Result, UserRequest[A]]] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
@@ -55,6 +57,10 @@ class UserAllowListActionImpl @Inject() (
             )
           case true  => Future.successful(Right(request))
         } recoverWith { case e: Exception =>
+        logger.warn(
+          s"[UserAllowListAction] - Exception when checking if user was on the allow list",
+          e
+        )
         Future.failed(e)
       }
     } else {
