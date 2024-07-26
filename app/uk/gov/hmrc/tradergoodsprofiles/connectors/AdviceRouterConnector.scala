@@ -33,7 +33,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class AdviceRouterConnector @Inject() (
   httpClient: HttpClientV2,
-  appConfig: AppConfig,
+  override val appConfig: AppConfig,
   override val uuidService: UuidService
 )(implicit ec: ExecutionContext)
     extends BaseConnector
