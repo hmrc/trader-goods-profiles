@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers.actions
 
+import com.google.inject.ImplementedBy
 import play.api.mvc.{ActionRefiner, Result}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
@@ -27,8 +28,11 @@ import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class UserAllowListActionImpl @Inject() (userAllowListConnector: UserAllowListConnector, uuidService: UuidService)(
-  implicit val executionContext: ExecutionContext
+class UserAllowListActionImpl @Inject() (
+  userAllowListConnector: UserAllowListConnector,
+  uuidService: UuidService
+)(implicit
+  val executionContext: ExecutionContext
 ) extends UserAllowListAction {
 
   override def refine[A](request: UserRequest[A]): Future[Either[Result, UserRequest[A]]] = {
@@ -54,4 +58,5 @@ class UserAllowListActionImpl @Inject() (userAllowListConnector: UserAllowListCo
   }
 }
 
+@ImplementedBy(classOf[UserAllowListActionImpl])
 trait UserAllowListAction extends ActionRefiner[UserRequest, UserRequest]

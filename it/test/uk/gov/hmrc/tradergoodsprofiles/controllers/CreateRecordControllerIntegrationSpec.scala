@@ -86,6 +86,7 @@ class CreateRecordControllerIntegrationSpec
 
     reset(authConnector)
     stubRouterRequest(CREATED, expectedResponse.toString())
+    stubForUserAllowList
     when(uuidService.uuid).thenReturn(correlationId)
 
   }

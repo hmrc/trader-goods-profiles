@@ -80,6 +80,7 @@ class WithdrawAdviceControllerIntegrationSpec
     super.beforeEach()
 
     reset(authConnector)
+    stubForUserAllowList
     stubRouterResponse(NO_CONTENT, "204")
     when(uuidService.uuid).thenReturn(correlationId)
   }

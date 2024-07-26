@@ -22,7 +22,7 @@ import play.api.libs.json.Json.toJson
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.connectors.UpdateRecordRouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidationRules}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, UserAllowListAction, ValidationRules}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import javax.inject.Inject
@@ -30,6 +30,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class UpdateRecordController @Inject() (
   authAction: AuthAction,
+  userAllowListAction: UserAllowListAction,
   updateRecordConnector: UpdateRecordRouterConnector,
   override val uuidService: UuidService,
   cc: ControllerComponents
@@ -38,7 +39,7 @@ class UpdateRecordController @Inject() (
     with ValidationRules {
 
   def updateRecord(eori: String, recordId: String): Action[JsValue] =
-    authAction(eori).async(parse.json) { implicit request =>
+    (authAction(eori) andThen userAllowListAction).async(parse.json) { implicit request =>
       val result = for {
         _               <- EitherT.fromEither[Future](validateAllHeaders(request))
         serviceResponse <- EitherT(updateRecordConnector.updateRecord(eori, recordId, request))

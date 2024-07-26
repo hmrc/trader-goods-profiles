@@ -78,6 +78,7 @@ class RequestAdviceControllerIntegrationSpec
     super.beforeEach()
 
     reset(authConnector)
+    stubForUserAllowList
     wireMock.stubFor(
       post(urlEqualTo(routerUrl))
         .willReturn(

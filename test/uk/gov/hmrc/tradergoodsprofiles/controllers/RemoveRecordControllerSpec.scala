@@ -26,7 +26,7 @@ import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RemoveRecordRouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, FakeUserAllowListAction}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
@@ -56,6 +56,7 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
   private val connector                     = mock[RemoveRecordRouterConnector]
   private val sut                           = new RemoveRecordController(
     new FakeSuccessAuthAction(),
+    new FakeUserAllowListAction(),
     connector,
     uuidService,
     stubControllerComponents()

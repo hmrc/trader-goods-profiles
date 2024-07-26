@@ -21,7 +21,7 @@ import play.api.libs.json.Json.toJson
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RemoveRecordRouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidationRules}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, UserAllowListAction, ValidationRules}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import javax.inject.{Inject, Singleton}
@@ -30,6 +30,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class RemoveRecordController @Inject() (
   authAction: AuthAction,
+  userAllowListAction: UserAllowListAction,
   removeRecordConnector: RemoveRecordRouterConnector,
   override val uuidService: UuidService,
   cc: ControllerComponents
@@ -38,7 +39,7 @@ class RemoveRecordController @Inject() (
     with ValidationRules {
 
   def removeRecord(eori: String, recordId: String, actorId: String): Action[AnyContent] =
-    authAction(eori).async { implicit request =>
+    (authAction(eori) andThen userAllowListAction).async { implicit request =>
       val result = for {
         _ <- EitherT.fromEither[Future](validateAcceptAndClientIdHeaders)
         _ <- EitherT(removeRecordConnector.removeRecord(eori, recordId, actorId))

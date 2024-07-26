@@ -23,7 +23,7 @@ import play.api.libs.json.Json.toJson
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.connectors.MaintainProfileRouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidationRules}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, UserAllowListAction, ValidationRules}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import javax.inject.{Inject, Singleton}
@@ -32,6 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class MaintainProfileController @Inject() (
   authAction: AuthAction,
+  userAllowListAction: UserAllowListAction,
   maintainProfileRouterConnector: MaintainProfileRouterConnector,
   override val uuidService: UuidService,
   cc: ControllerComponents
@@ -41,7 +42,7 @@ class MaintainProfileController @Inject() (
     with Logging {
 
   def updateProfile(eori: String): Action[JsValue] =
-    authAction(eori).async(parse.json) { implicit request =>
+    (authAction(eori) andThen userAllowListAction).async(parse.json) { implicit request =>
       val result = for {
         _               <- EitherT.fromEither[Future](validateAllHeaders)
         serviceResponse <-
