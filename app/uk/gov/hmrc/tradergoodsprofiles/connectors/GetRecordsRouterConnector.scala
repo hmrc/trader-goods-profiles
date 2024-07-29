@@ -73,8 +73,6 @@ class GetRecordsRouterConnector @Inject() (
     size: Option[Int] = None
   )(implicit hc: HeaderCarrier): Future[Either[ServiceError, GetRecordsResponse]] = {
     val url = routerGetRecordsOptionalUrl(eori, lastUpdatedDate, page, size)
-    println(s"HEADERRSSS  ---- $hc ---")
-
     httpClient
       .get(url"$url")
       .setHeader("Accept" -> "application/vnd.hmrc.1.0+json")
