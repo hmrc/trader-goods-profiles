@@ -18,7 +18,6 @@ package uk.gov.hmrc.tradergoodsprofiles.connectors
 
 import io.lemonlabs.uri.{QueryString, Url, UrlPath}
 import play.api.Logging
-import play.api.http.HeaderNames
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
