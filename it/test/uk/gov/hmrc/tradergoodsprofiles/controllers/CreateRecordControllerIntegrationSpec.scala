@@ -114,6 +114,7 @@ class CreateRecordControllerIntegrationSpec
           postRequestedFor(urlEqualTo(routerUrl))
             .withHeader("Content-Type", equalTo("application/json"))
             .withHeader("X-Client-ID", equalTo("clientId"))
+            .withHeader("Accept", equalTo("application/vnd.hmrc.1.0+json"))
         )
       }
     }
@@ -131,6 +132,7 @@ class CreateRecordControllerIntegrationSpec
           postRequestedFor(urlEqualTo(routerUrl))
             .withHeader("Content-Type", equalTo("application/json"))
             .withHeader("X-Client-ID", equalTo("clientId"))
+            .withHeader("Accept", equalTo("application/vnd.hmrc.1.0+json"))
         )
       }
     }
