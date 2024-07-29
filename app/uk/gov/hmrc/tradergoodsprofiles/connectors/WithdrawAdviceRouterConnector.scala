@@ -18,7 +18,6 @@ package uk.gov.hmrc.tradergoodsprofiles.connectors
 
 import io.lemonlabs.uri.UrlPath
 import play.api.Logging
-import play.api.http.{HeaderNames, MimeTypes}
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
