@@ -40,5 +40,13 @@ trait BaseConnector {
       }
     }
 
+    def withContentType(implicit hc: HeaderCarrier): RequestBuilder = {
+      val acceptHeader = hc.headers(Seq(HeaderNames.CONTENT_TYPE)).headOption
+      acceptHeader match {
+        case Some(header) => requestBuilder.setHeader(header)
+        case None         => requestBuilder
+      }
+    }
+
   }
 }

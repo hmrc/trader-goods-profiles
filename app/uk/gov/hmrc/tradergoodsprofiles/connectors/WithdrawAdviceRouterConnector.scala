@@ -48,7 +48,7 @@ class WithdrawAdviceRouterConnector @Inject() (
 
     httpClient
       .put(url"$url")
-      .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+      .withContentType
       .withAcceptHeader
       .withBody(Json.toJson(request.body))
       .withClientId

@@ -49,7 +49,7 @@ class AdviceRouterConnector @Inject() (
 
     httpClient
       .post(url"$url")
-      .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+      .withContentType
       .withAcceptHeader
       .withBody(Json.toJson(request.body))
       .withClientId

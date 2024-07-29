@@ -49,7 +49,7 @@ class UpdateRecordRouterConnector @Inject() (
     val url = appConfig.routerUrl.withPath(routerUpdateRecordUrlPath(eori, recordId))
     httpClient
       .patch(url"$url")
-      .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+      .withContentType
       .withAcceptHeader
       .withBody(updateRecordRequest.body)
       .withClientId

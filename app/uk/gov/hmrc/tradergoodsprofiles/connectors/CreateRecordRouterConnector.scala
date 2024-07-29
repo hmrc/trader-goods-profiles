@@ -49,7 +49,7 @@ class CreateRecordRouterConnector @Inject() (
 
     httpClient
       .post(url"$url")
-      .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+      .withContentType
       .withAcceptHeader
       .withBody(createRecordRequest.body)
       .withClientId

@@ -49,7 +49,7 @@ class MaintainProfileRouterConnector @Inject() (
 
     httpClient
       .put(url"$url")
-      .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+      .withContentType
       .withAcceptHeader
       .withBody(updateProfileRequest.body)
       .withClientId
