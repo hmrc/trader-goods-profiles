@@ -45,7 +45,7 @@ class RemoveRecordRouterConnector @Inject() (
 
     httpClient
       .delete(url"$url")
-      .setHeader(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
+      .withAcceptHeader
       .withClientId
       .execute(httpReaderWithoutResponseBody, ec)
       .recover { case ex: Throwable =>

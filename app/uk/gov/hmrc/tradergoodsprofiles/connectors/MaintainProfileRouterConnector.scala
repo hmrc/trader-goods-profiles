@@ -50,7 +50,7 @@ class MaintainProfileRouterConnector @Inject() (
     httpClient
       .put(url"$url")
       .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-      .setHeader(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
+      .withAcceptHeader
       .withBody(updateProfileRequest.body)
       .withClientId
       .execute(httpReader[MaintainProfileResponse], ec)
