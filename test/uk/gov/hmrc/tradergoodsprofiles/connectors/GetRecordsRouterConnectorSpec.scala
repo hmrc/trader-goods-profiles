@@ -23,7 +23,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, EitherValues}
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import uk.gov.hmrc.http.StringContextOps
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.GetRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.{GetRecordResponse, GetRecordsResponse}
@@ -70,6 +70,7 @@ class GetRecordsRouterConnectorSpec
         val expectedUrl =
           UrlPath.parse(s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId")
         verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
+        verify(requestBuilder).setHeader("Accept"      -> "application/vnd.hmrc.1.0+json")
         verify(requestBuilder).setHeader("X-Client-ID" -> "clientId")
         verify(requestBuilder).execute(any, any)
       }
@@ -117,6 +118,7 @@ class GetRecordsRouterConnectorSpec
         val expectedUrl =
           UrlPath.parse(s"http://localhost:23123/trader-goods-profiles-router/traders/$eori/records")
         verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
+        verify(requestBuilder).setHeader("Accept"      -> "application/vnd.hmrc.1.0+json")
         verify(requestBuilder).setHeader("X-Client-ID" -> "clientId")
         verify(requestBuilder).execute(any, any)
       }

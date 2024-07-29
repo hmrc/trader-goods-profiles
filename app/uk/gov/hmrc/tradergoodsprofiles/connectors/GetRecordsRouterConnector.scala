@@ -45,8 +45,8 @@ class GetRecordsRouterConnector @Inject() (
     val url = appConfig.routerUrl.withPath(routerGetRecordUrlPath(eori, recordId))
     httpClient
       .get(url"$url")
-      .setHeader(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
       .withClientId
+      .withAcceptHeader
       .execute(httpReader[GetRecordResponse], ec)
       .recover { case ex: Throwable =>
         logger.warn(
@@ -75,8 +75,8 @@ class GetRecordsRouterConnector @Inject() (
     val url = routerGetRecordsOptionalUrl(eori, lastUpdatedDate, page, size)
     httpClient
       .get(url"$url")
-      .setHeader("Accept" -> "application/vnd.hmrc.1.0+json")
       .withClientId
+      .withAcceptHeader
       .execute(httpReader[GetRecordsResponse], ec)
       .recover { case ex: Throwable =>
         logger.warn(
