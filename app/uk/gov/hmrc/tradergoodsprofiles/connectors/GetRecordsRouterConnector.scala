@@ -18,6 +18,7 @@ package uk.gov.hmrc.tradergoodsprofiles.connectors
 
 import io.lemonlabs.uri.UrlPath
 import play.api.Logging
+import play.api.http.HeaderNames
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
@@ -42,9 +43,9 @@ class GetRecordsRouterConnector @Inject() (
     hc: HeaderCarrier
   ): Future[Either[ServiceError, GetRecordResponse]] = {
     val url = appConfig.routerUrl.withPath(routerGetRecordUrlPath(eori, recordId))
-
     httpClient
       .get(url"$url")
+      .setHeader(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
       .withClientId
       .execute(httpReader[GetRecordResponse], ec)
       .recover { case ex: Throwable =>
@@ -72,8 +73,11 @@ class GetRecordsRouterConnector @Inject() (
     size: Option[Int] = None
   )(implicit hc: HeaderCarrier): Future[Either[ServiceError, GetRecordsResponse]] = {
     val url = routerGetRecordsOptionalUrl(eori, lastUpdatedDate, page, size)
+    println(s"HEADERRSSS  ---- $hc ---")
+
     httpClient
       .get(url"$url")
+      .setHeader("Accept" -> "application/vnd.hmrc.1.0+json")
       .withClientId
       .execute(httpReader[GetRecordsResponse], ec)
       .recover { case ex: Throwable =>

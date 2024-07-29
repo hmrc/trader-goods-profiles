@@ -49,6 +49,7 @@ class WithdrawAdviceRouterConnector @Inject() (
     httpClient
       .put(url"$url")
       .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+      .setHeader(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
       .withBody(Json.toJson(request.body))
       .withClientId
       .execute(httpReaderWithoutResponseBody, ec)

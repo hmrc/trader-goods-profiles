@@ -50,6 +50,7 @@ class UpdateRecordRouterConnector @Inject() (
     httpClient
       .patch(url"$url")
       .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+      .setHeader(HeaderNames.ACCEPT -> "application/vnd.hmrc.1.0+json")
       .withBody(updateRecordRequest.body)
       .withClientId
       .execute(httpReader[CreateOrUpdateRecordResponse], ec)
