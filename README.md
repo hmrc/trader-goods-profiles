@@ -23,7 +23,7 @@ Notice: You can use the run_local.sh script file to load all needed services and
     ```sm2 --start TGP_API```
 
 #### Generate an access token
-* Use the [Auth wizard](https://www.development.tax.service.gov.uk/auth-login-stub/gg-sign-in)
+* Use the [Auth wizard](http://localhost:9949/auth-login-stub/session)
   * Fill the following details:
     <br><br>
 
