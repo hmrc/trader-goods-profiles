@@ -25,6 +25,7 @@ import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
+import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.connectors.GetRecordsRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
@@ -54,10 +55,12 @@ class GetRecordsControllerSpec
   private val timestamp           = Instant.parse("2024-01-12T12:12:12Z")
   private val uuidService         = mock[UuidService]
   private val getRecordsConnector = mock[GetRecordsRouterConnector]
+  private val appConfig           = mock[AppConfig]
   private val sut                 = new GetRecordsController(
     new FakeSuccessAuthAction(),
     uuidService,
     getRecordsConnector,
+    appConfig,
     stubControllerComponents()
   )
 
@@ -70,6 +73,7 @@ class GetRecordsControllerSpec
       .thenReturn(Future.successful(Right(createGetRecordResponse(eoriNumber, recordId, timestamp))))
     when(getRecordsConnector.get(any, any, any, any)(any))
       .thenReturn(Future.successful(Right(createGetRecordsResponse(eoriNumber, recordId, timestamp))))
+    when(appConfig.isDrop1_1_enabled).thenReturn(false)
   }
 
   "getRecord" should {
@@ -78,6 +82,23 @@ class GetRecordsControllerSpec
 
       status(result) mustBe OK
       verify(getRecordsConnector).get(eqTo(eoriNumber), eqTo(recordId))(any)
+    }
+
+    /*
+    ToDO: remove this test after drop1.1 - TGP-1889
+
+    The client ID does not need to be checked anymore as EIS has removed it
+    from the header
+     */
+    "not validate client ID is isDrop1_1_enabled is true" in {
+      when(appConfig.isDrop1_1_enabled).thenReturn(true)
+      val request1 = FakeRequest().withHeaders(
+        "Accept"       -> "application/vnd.hmrc.1.0+json",
+        "Content-Type" -> "application/json"
+      )
+      val result   = sut.getRecord(eoriNumber, recordId)(request1)
+
+      status(result) mustBe OK
     }
 
     "return an error" when {
@@ -115,6 +136,23 @@ class GetRecordsControllerSpec
       contentAsJson(result) mustBe Json.toJson(createGetRecordsResponse(eoriNumber, recordId, timestamp))
       verify(getRecordsConnector)
         .get(eqTo(eoriNumber), eqTo(Some("2024-03-26T16:14:52Z")), eqTo(Some(1)), eqTo(Some(1)))(any)
+    }
+
+    /*
+    ToDO: remove this test after drop1.1 - TGP-1889
+
+    The client ID does not need to be checked anymore as EIS has removed it
+    from the header
+     */
+    "not validate client ID is isDrop1_1_enabled is true" in {
+      when(appConfig.isDrop1_1_enabled).thenReturn(true)
+      val request1 = FakeRequest().withHeaders(
+        "Accept"       -> "application/vnd.hmrc.1.0+json",
+        "Content-Type" -> "application/json"
+      )
+      val result   = sut.getRecords(eoriNumber, Some("2024-03-26T16:14:52Z"), Some(1), Some(1))(request1)
+
+      status(result) mustBe OK
     }
 
     "return an error" when {

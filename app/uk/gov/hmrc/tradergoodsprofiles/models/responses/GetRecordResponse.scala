@@ -31,7 +31,7 @@ case class GetRecordResponse(
   adviceStatus: String,
   goodsDescription: String,
   countryOfOrigin: String,
-  category: Int,
+  category: Option[Int],
   assessments: Option[Seq[Assessment]],
   supplementaryUnit: Option[BigDecimal],
   measurementUnit: Option[String],
@@ -119,7 +119,7 @@ object GetRecordResponse {
       val adviceStatus             = read[String]("adviceStatus")
       val goodsDescription         = read[String]("goodsDescription")
       val countryOfOrigin          = read[String]("countryOfOrigin")
-      val category                 = read[Int]("category")
+      val category                 = readOption[Int]("category")
       val assessments              = readOption[Seq[Assessment]]("assessments")
       val supplementaryUnit        = readOption[BigDecimal]("supplementaryUnit")
       val measurementUnit          = readOption[String]("measurementUnit")

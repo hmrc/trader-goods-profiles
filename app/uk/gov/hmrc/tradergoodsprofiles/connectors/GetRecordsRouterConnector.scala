@@ -31,7 +31,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class GetRecordsRouterConnector @Inject() (
   httpClient: HttpClientV2,
-  appConfig: AppConfig,
+  override val appConfig: AppConfig,
   val uuidService: UuidService
 )(implicit ec: ExecutionContext)
     extends BaseConnector
@@ -42,9 +42,10 @@ class GetRecordsRouterConnector @Inject() (
     hc: HeaderCarrier
   ): Future[Either[ServiceError, GetRecordResponse]] = {
     val url = appConfig.routerUrl.withPath(routerGetRecordUrlPath(eori, recordId))
+
     httpClient
       .get(url"$url")
-      .withClientId
+      .withClientIdIfSupported //ToDo: Remove this after drop1.1 - TGP-1889
       .withAcceptHeader
       .execute(httpReader[GetRecordResponse], ec)
       .recover { case ex: Throwable =>
@@ -74,7 +75,7 @@ class GetRecordsRouterConnector @Inject() (
     val url = routerGetRecordsOptionalUrl(eori, lastUpdatedDate, page, size)
     httpClient
       .get(url"$url")
-      .withClientId
+      .withClientIdIfSupported //ToDo: Remove this after drop1.1 - TGP-1889
       .withAcceptHeader
       .execute(httpReader[GetRecordsResponse], ec)
       .recover { case ex: Throwable =>
