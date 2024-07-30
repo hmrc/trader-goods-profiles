@@ -62,7 +62,7 @@ class GetRecordsController @Inject() (
     page: Option[Int],
     size: Option[Int]
   ): Action[AnyContent] =
-    authAction(eori).async { implicit request =>
+    (authAction(eori) andThen userAllowListAction).async { implicit request =>
       val result = for {
         _               <- validateClientIdIfSupported //ToDO: remove this test after drop1.1 - TGP-1889
         _               <- EitherT
