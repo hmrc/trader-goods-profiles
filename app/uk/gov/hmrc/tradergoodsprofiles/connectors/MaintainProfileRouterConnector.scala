@@ -19,7 +19,6 @@ package uk.gov.hmrc.tradergoodsprofiles.connectors
 import io.lemonlabs.uri.UrlPath
 import play.api.Logging
 import play.api.http.Status.INTERNAL_SERVER_ERROR
-import play.api.http.{HeaderNames, MimeTypes}
 import play.api.libs.json.JsValue
 import play.api.mvc.Request
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -49,7 +48,8 @@ class MaintainProfileRouterConnector @Inject() (
 
     httpClient
       .put(url"$url")
-      .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+      .withContentType
+      .withAcceptHeader
       .withBody(updateProfileRequest.body)
       .withClientId
       .execute(httpReader[MaintainProfileResponse], ec)

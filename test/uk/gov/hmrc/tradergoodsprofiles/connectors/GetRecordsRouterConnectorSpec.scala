@@ -71,6 +71,7 @@ class GetRecordsRouterConnectorSpec
         val expectedUrl =
           UrlPath.parse(s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId")
         verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
+        verify(requestBuilder).setHeader("Accept"      -> "application/vnd.hmrc.1.0+json")
         verify(requestBuilder).setHeader("X-Client-ID" -> "clientId")
         verify(requestBuilder).execute(any, any)
       }
@@ -133,6 +134,7 @@ class GetRecordsRouterConnectorSpec
         val expectedUrl =
           UrlPath.parse(s"http://localhost:23123/trader-goods-profiles-router/traders/$eori/records")
         verify(httpClient).get(eqTo(url"$expectedUrl"))(any)
+        verify(requestBuilder).setHeader("Accept"      -> "application/vnd.hmrc.1.0+json")
         verify(requestBuilder).setHeader("X-Client-ID" -> "clientId")
         verify(requestBuilder).execute(any, any)
       }

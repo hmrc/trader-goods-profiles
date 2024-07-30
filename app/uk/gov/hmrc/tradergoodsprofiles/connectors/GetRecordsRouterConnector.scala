@@ -46,6 +46,7 @@ class GetRecordsRouterConnector @Inject() (
     httpClient
       .get(url"$url")
       .withClientIdIfSupported //ToDo: Remove this after drop1.1 - TGP-1889
+      .withAcceptHeader
       .execute(httpReader[GetRecordResponse], ec)
       .recover { case ex: Throwable =>
         logger.warn(
@@ -75,6 +76,7 @@ class GetRecordsRouterConnector @Inject() (
     httpClient
       .get(url"$url")
       .withClientIdIfSupported //ToDo: Remove this after drop1.1 - TGP-1889
+      .withAcceptHeader
       .execute(httpReader[GetRecordsResponse], ec)
       .recover { case ex: Throwable =>
         logger.warn(
