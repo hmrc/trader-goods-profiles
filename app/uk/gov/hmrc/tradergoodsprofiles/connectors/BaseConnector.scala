@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.connectors
 
+import play.api.http.HeaderNames
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.client.RequestBuilder
 import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.XClientIdHeader
@@ -30,6 +31,22 @@ trait BaseConnector {
         case Some(header) => requestBuilder.setHeader(header)
         case None         => requestBuilder
       }
-  }
 
+    def withAcceptHeader(implicit hc: HeaderCarrier): RequestBuilder = {
+      val acceptHeader = hc.headers(Seq(HeaderNames.ACCEPT)).headOption
+      acceptHeader match {
+        case Some(header) => requestBuilder.setHeader(header)
+        case None         => requestBuilder
+      }
+    }
+
+    def withContentType(implicit hc: HeaderCarrier): RequestBuilder = {
+      val acceptHeader = hc.headers(Seq(HeaderNames.CONTENT_TYPE)).headOption
+      acceptHeader match {
+        case Some(header) => requestBuilder.setHeader(header)
+        case None         => requestBuilder
+      }
+    }
+
+  }
 }

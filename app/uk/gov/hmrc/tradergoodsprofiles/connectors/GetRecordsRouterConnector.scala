@@ -42,10 +42,10 @@ class GetRecordsRouterConnector @Inject() (
     hc: HeaderCarrier
   ): Future[Either[ServiceError, GetRecordResponse]] = {
     val url = appConfig.routerUrl.withPath(routerGetRecordUrlPath(eori, recordId))
-
     httpClient
       .get(url"$url")
       .withClientId
+      .withAcceptHeader
       .execute(httpReader[GetRecordResponse], ec)
       .recover { case ex: Throwable =>
         logger.warn(
@@ -75,6 +75,7 @@ class GetRecordsRouterConnector @Inject() (
     httpClient
       .get(url"$url")
       .withClientId
+      .withAcceptHeader
       .execute(httpReader[GetRecordsResponse], ec)
       .recover { case ex: Throwable =>
         logger.warn(

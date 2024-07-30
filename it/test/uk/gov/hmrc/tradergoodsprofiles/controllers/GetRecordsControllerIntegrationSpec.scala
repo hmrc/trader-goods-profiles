@@ -116,6 +116,7 @@ class GetRecordsControllerIntegrationSpec
         verify(
           getRequestedFor(urlEqualTo(getSingleRecordRouterUrl))
             .withHeader("X-Client-ID", equalTo("clientId"))
+            .withHeader("Accept", equalTo("application/vnd.hmrc.1.0+json"))
         )
       }
     }
@@ -284,6 +285,7 @@ class GetRecordsControllerIntegrationSpec
         verify(
           getRequestedFor(urlEqualTo(getMultipleRecordsRouterUrl))
             .withHeader("X-Client-ID", equalTo("clientId"))
+            .withHeader("Accept", equalTo("application/vnd.hmrc.1.0+json"))
         )
       }
     }
