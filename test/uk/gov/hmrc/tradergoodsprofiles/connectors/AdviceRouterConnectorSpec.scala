@@ -77,6 +77,7 @@ class AdviceRouterConnectorSpec extends BaseConnectorSpec with ScalaFutures with
         UrlPath.parse(s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId/advice")
       verify(httpClient).post(eqTo(url"$expectedUrl"))(any)
       verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+      verify(requestBuilder).setHeader("Accept"                 -> "application/vnd.hmrc.1.0+json")
       verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
       verify(requestBuilder).withBody(eqTo(requestAdviceData))(any, any, any)
       verify(requestBuilder).execute(any, any)

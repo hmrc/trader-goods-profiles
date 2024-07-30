@@ -65,6 +65,7 @@ class RemoveRecordRouterConnectorSpec
           s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId?actorId=$actorId"
         verify(httpClient).delete(eqTo(url"$expectedUrl"))(any)
         verify(requestBuilder).setHeader("X-Client-ID" -> "clientId")
+        verify(requestBuilder).setHeader("Accept"      -> "application/vnd.hmrc.1.0+json")
         verify(requestBuilder).execute(any, any)
       }
     }
