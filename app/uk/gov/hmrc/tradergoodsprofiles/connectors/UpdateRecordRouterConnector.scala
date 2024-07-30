@@ -19,11 +19,10 @@ package uk.gov.hmrc.tradergoodsprofiles.connectors
 import io.lemonlabs.uri.UrlPath
 import play.api.Logging
 import play.api.http.Status.INTERNAL_SERVER_ERROR
-import play.api.http.{HeaderNames, MimeTypes}
 import play.api.libs.json.JsValue
 import play.api.mvc.Request
-import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.models.response.CreateOrUpdateRecordResponse
@@ -34,7 +33,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class UpdateRecordRouterConnector @Inject() (
   httpClient: HttpClientV2,
-  appConfig: AppConfig,
+  override val appConfig: AppConfig,
   override val uuidService: UuidService
 )(implicit ec: ExecutionContext)
     extends BaseConnector
@@ -49,7 +48,8 @@ class UpdateRecordRouterConnector @Inject() (
     val url = appConfig.routerUrl.withPath(routerUpdateRecordUrlPath(eori, recordId))
     httpClient
       .patch(url"$url")
-      .setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+      .withContentType
+      .withAcceptHeader
       .withBody(updateRecordRequest.body)
       .withClientId
       .execute(httpReader[CreateOrUpdateRecordResponse], ec)

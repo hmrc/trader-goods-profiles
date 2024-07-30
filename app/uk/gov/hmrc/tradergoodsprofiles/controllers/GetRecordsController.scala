@@ -19,8 +19,9 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers
 import cats.data.EitherT
 import play.api.Logging
 import play.api.libs.json.Json.toJson
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.connectors.GetRecordsRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidationRules}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
@@ -33,6 +34,7 @@ class GetRecordsController @Inject() (
   authAction: AuthAction,
   override val uuidService: UuidService,
   getRecordsConnector: GetRecordsRouterConnector,
+  appConfig: AppConfig,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
@@ -42,7 +44,10 @@ class GetRecordsController @Inject() (
   def getRecord(eori: String, recordId: String): Action[AnyContent] =
     authAction(eori).async { implicit request =>
       val result = for {
-        _               <- EitherT.fromEither[Future](validateAcceptAndClientIdHeaders)
+        _               <- validateClientIdIfSupported //ToDO: remove this test after drop1.1 - TGP-1889
+        _               <- EitherT
+                             .fromEither[Future](validateAcceptHeader)
+                             .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
         serviceResponse <-
           EitherT(getRecordsConnector.get(eori, recordId)).leftMap(e => Status(e.status)(toJson(e.errorResponse)))
       } yield Ok(toJson(serviceResponse))
@@ -58,7 +63,10 @@ class GetRecordsController @Inject() (
   ): Action[AnyContent] =
     authAction(eori).async { implicit request =>
       val result = for {
-        _               <- EitherT.fromEither[Future](validateAcceptAndClientIdHeaders)
+        _               <- validateClientIdIfSupported //ToDO: remove this test after drop1.1 - TGP-1889
+        _               <- EitherT
+                             .fromEither[Future](validateAcceptHeader)
+                             .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
         serviceResponse <-
           EitherT(getRecordsConnector.get(eori, lastUpdatedDate, page, size)).leftMap(e =>
             Status(e.status)(toJson(e.errorResponse))
@@ -67,5 +75,19 @@ class GetRecordsController @Inject() (
 
       result.merge
     }
+
+  /*
+  ToDO: remove this test after drop1.1 - TGP-1889
+
+  The client ID does not need to be checked anymore as EIS has removed it
+  from the header
+   */
+  private def validateClientIdIfSupported(implicit request: Request[_]): EitherT[Future, Result, String] =
+    EitherT
+      .fromEither[Future](
+        if (!appConfig.isDrop1_1_enabled) validateClientIdHeader
+        else Right("")
+      )
+      .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
 
 }

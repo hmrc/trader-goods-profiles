@@ -20,6 +20,8 @@ import io.lemonlabs.uri.Url
 import org.mockito.MockitoSugar.when
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
+import play.api.http.MimeTypes
+import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
@@ -32,7 +34,13 @@ import scala.concurrent.ExecutionContext
 class BaseConnectorSpec extends PlaySpec {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
-  implicit val hc: HeaderCarrier    = HeaderCarrier(otherHeaders = Seq(XClientIdHeader -> "clientId"))
+  implicit val hc: HeaderCarrier    = HeaderCarrier(otherHeaders =
+    Seq(
+      XClientIdHeader          -> "clientId",
+      HeaderNames.ACCEPT       -> "application/vnd.hmrc.1.0+json",
+      HeaderNames.CONTENT_TYPE -> MimeTypes.JSON
+    )
+  )
 
   protected val httpClient     = mock[HttpClientV2]
   protected val appConfig      = mock[AppConfig]
