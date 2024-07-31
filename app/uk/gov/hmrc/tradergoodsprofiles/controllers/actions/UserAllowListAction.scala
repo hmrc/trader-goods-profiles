@@ -64,6 +64,7 @@ class UserAllowListActionImpl @Inject() (
         Future.failed(e)
       }
     } else {
+      logger.info("user allow list feature flag is disabled, always returning successfully")
       Future.successful(Right(request))
     }
   }
