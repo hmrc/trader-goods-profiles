@@ -20,19 +20,10 @@ Notice: You can use the run_local.sh script file to load all needed services and
 #### Start the services
 * Open a terminal window, type the below command and press enter. This will load locally all the services necessary for testing :
 
-    ```
-    sm2 --start AUTH_LOGIN_API \
-    AUTH_LOGIN_STUB \
-    AUTH \
-    USER_DETAILS \
-    ASSETS_FRONTEND_2 \
-    IDENTITY_VERIFICATION \
-    TRADER_GOODS_PROFILES_STUBS \
-    TRADER_GOODS_PROFILES_ROUTER 
-    ```
+    ```sm2 --start TGP_API```
 
 #### Generate an access token
-* Use the [Auth wizard](https://www.development.tax.service.gov.uk/auth-login-stub/gg-sign-in)
+* Use the [Auth wizard](http://localhost:9949/auth-login-stub/session)
   * Fill the following details:
     <br><br>
 

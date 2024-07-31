@@ -23,7 +23,7 @@ import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.connectors.GetRecordsRouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidationRules}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, UserAllowListAction, ValidationRules}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import javax.inject.{Inject, Singleton}
@@ -32,6 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class GetRecordsController @Inject() (
   authAction: AuthAction,
+  userAllowListAction: UserAllowListAction,
   override val uuidService: UuidService,
   getRecordsConnector: GetRecordsRouterConnector,
   appConfig: AppConfig,
@@ -42,7 +43,7 @@ class GetRecordsController @Inject() (
     with Logging {
 
   def getRecord(eori: String, recordId: String): Action[AnyContent] =
-    authAction(eori).async { implicit request =>
+    (authAction(eori) andThen userAllowListAction).async { implicit request =>
       val result = for {
         _               <- validateClientIdIfSupported //ToDO: remove this test after drop1.1 - TGP-1889
         _               <- EitherT
@@ -61,7 +62,7 @@ class GetRecordsController @Inject() (
     page: Option[Int],
     size: Option[Int]
   ): Action[AnyContent] =
-    authAction(eori).async { implicit request =>
+    (authAction(eori) andThen userAllowListAction).async { implicit request =>
       val result = for {
         _               <- validateClientIdIfSupported //ToDO: remove this test after drop1.1 - TGP-1889
         _               <- EitherT

@@ -26,7 +26,7 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.connectors.AdviceRouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, FakeUserAllowListAction}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
@@ -49,6 +49,7 @@ class RequestAdviceControllerSpec extends PlaySpec with AuthTestSupport with Bef
   private val adviceRouterConnector = mock[AdviceRouterConnector]
   private val sut                   = new RequestAdviceController(
     new FakeSuccessAuthAction(),
+    new FakeUserAllowListAction(),
     adviceRouterConnector,
     uuidService,
     stubControllerComponents()

@@ -26,7 +26,7 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.connectors.CreateRecordRouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, FakeUserAllowListAction}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.UpdateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateOrUpdateRecordResponseSupport
@@ -58,6 +58,7 @@ class CreateRecordControllerSpec
   private val createRecordConnector = mock[CreateRecordRouterConnector]
   private val sut                   = new CreateRecordController(
     new FakeSuccessAuthAction(),
+    new FakeUserAllowListAction(),
     createRecordConnector,
     uuidService,
     stubControllerComponents()

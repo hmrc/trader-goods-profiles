@@ -26,7 +26,7 @@ import play.api.mvc.Request
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.connectors.MaintainProfileRouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, FakeUserAllowListAction}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
@@ -56,7 +56,6 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
              |    "ukimsNumber": "XIUKIM47699357400020231115081800",
              |    "nirmsNumber": "RMS-GB-123456",
              |    "niphlNumber": "6 S12345"
-             |
              |}
              |""".stripMargin)
 
@@ -74,6 +73,7 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
 
   private val sut = new MaintainProfileController(
     new FakeSuccessAuthAction(),
+    new FakeUserAllowListAction(),
     connector,
     uuidService,
     stubControllerComponents()

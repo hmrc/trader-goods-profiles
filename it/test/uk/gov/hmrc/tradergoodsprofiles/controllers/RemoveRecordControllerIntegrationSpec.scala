@@ -77,6 +77,7 @@ class RemoveRecordControllerIntegrationSpec
     super.beforeEach()
 
     reset(authConnector)
+    stubForUserAllowList
     stubRouterResponse(NO_CONTENT, routerResponse.toString)
     when(uuidService.uuid).thenReturn(correlationId)
   }
@@ -254,6 +255,19 @@ class RemoveRecordControllerIntegrationSpec
         "message"       -> "Response body could not be parsed as JSON, body: error"
       )
 
+    }
+
+    "return forbidden when EORI is not on the user allow list" in {
+      withAuthorizedTrader()
+      stubForUserAllowListWhereUserItNotAllowed
+
+      val result = removeRecordAndWait()
+
+      result.status mustBe FORBIDDEN
+      result.json mustBe createExpectedJson(
+        "FORBIDDEN",
+        "This service is in private beta and not available to the public. We will aim to open the service to the public soon."
+      )
     }
 
   }

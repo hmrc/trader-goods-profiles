@@ -17,7 +17,9 @@
 package uk.gov.hmrc.tradergoodsprofiles.support
 
 import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, urlEqualTo}
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
+import com.github.tomakehurst.wiremock.stubbing.StubMapping
 
 trait WireMockServerSpec {
 
@@ -27,7 +29,27 @@ trait WireMockServerSpec {
   def configureServices: Map[String, Any] =
     Map(
       "microservice.services.trader-goods-profiles-router.host" -> wireHost,
-      "microservice.services.trader-goods-profiles-router.port" -> wireMock.port()
+      "microservice.services.trader-goods-profiles-router.port" -> wireMock.port(),
+      "microservice.services.user-allow-list.host"              -> wireHost,
+      "microservice.services.user-allow-list.port"              -> wireMock.port(),
+      "features.userAllowListEnabled"                           -> true
     )
 
+  def stubForUserAllowList: StubMapping =
+    wireMock.stubFor(
+      post(urlEqualTo(s"/user-allow-list/trader-goods-profiles/private-beta/check"))
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+        )
+    )
+
+  def stubForUserAllowListWhereUserItNotAllowed: StubMapping =
+    wireMock.stubFor(
+      post(urlEqualTo(s"/user-allow-list/trader-goods-profiles/private-beta/check"))
+        .willReturn(
+          aResponse()
+            .withStatus(404)
+        )
+    )
 }

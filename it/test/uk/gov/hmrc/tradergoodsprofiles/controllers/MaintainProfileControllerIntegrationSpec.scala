@@ -98,6 +98,7 @@ class MaintainProfileControllerIntegrationSpec
     super.beforeEach()
 
     reset(authConnector)
+    stubForUserAllowList
     stubRouterRequest(OK, expectedResponse.toString())
     when(uuidService.uuid).thenReturn(correlationId)
 
@@ -276,6 +277,19 @@ class MaintainProfileControllerIntegrationSpec
       result.json mustBe updateProfileExpectedJson(
         "INTERNAL_SERVER_ERROR",
         s"Internal server error for /$eoriNumber with error: runtime exception"
+      )
+    }
+
+    "return forbidden when EORI is not on the user allow list" in {
+      withAuthorizedTrader()
+      stubForUserAllowListWhereUserItNotAllowed
+
+      val result = updateProfileAndWait()
+
+      result.status mustBe FORBIDDEN
+      result.json mustBe updateProfileExpectedJson(
+        "FORBIDDEN",
+        "This service is in private beta and not available to the public. We will aim to open the service to the public soon."
       )
     }
   }

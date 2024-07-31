@@ -93,11 +93,14 @@ class GetRecordsControllerIntegrationSpec
     super.beforeEach()
 
     reset(authConnector)
+    stubForUserAllowList
     stubRouterRequest(getMultipleRecordsRouterUrl, 200, getMultipleRecordsRouterResponse.toString())
     stubRouterRequest(getSingleRecordRouterUrl, 200, getSingleRecordRouterResponse.toString())
     when(uuidService.uuid).thenReturn(correlationId)
     when(appConfig.isDrop1_1_enabled).thenReturn(false)
+    when(appConfig.userAllowListEnabled).thenReturn(true)
     when(appConfig.routerUrl).thenReturn(Url.parse(wireMock.baseUrl))
+    when(appConfig.userAllowListBaseUrl).thenReturn(Url.parse(wireMock.baseUrl))
   }
 
   override def beforeAll(): Unit = {
@@ -181,10 +184,11 @@ class GetRecordsControllerIntegrationSpec
     "return bad request when Accept header is invalid" in {
       withAuthorizedTrader()
 
-      val result  = await(
-        wsClient.url(getSingleRecordUrl)
-        .withHttpHeaders("X-Client-ID" -> "TSS")
-        .get()
+      val result = await(
+        wsClient
+          .url(getSingleRecordUrl)
+          .withHttpHeaders("X-Client-ID" -> "TSS")
+          .get()
       )
 
       result.status mustBe BAD_REQUEST
@@ -289,6 +293,18 @@ class GetRecordsControllerIntegrationSpec
       )
     }
 
+    "return forbidden when EORI is not on the user allow list" in {
+      withAuthorizedTrader()
+      stubForUserAllowListWhereUserItNotAllowed
+
+      val result = getRecordAndWait(getSingleRecordUrl)
+
+      result.status mustBe FORBIDDEN
+      result.json mustBe createExpectedJson(
+        "FORBIDDEN",
+        "This service is in private beta and not available to the public. We will aim to open the service to the public soon."
+      )
+    }
   }
 
   "GET multiple records" should {
@@ -347,7 +363,7 @@ class GetRecordsControllerIntegrationSpec
             .withHttpHeaders(
               "Accept"       -> "application/vnd.hmrc.1.0+json",
               "Content-Type" -> "application/json",
-              "X-Client-ID" -> "TSS"
+              "X-Client-ID"  -> "TSS"
             )
             .get()
         )
@@ -462,7 +478,7 @@ class GetRecordsControllerIntegrationSpec
     "return bad request when Accept header is invalid" in {
       withAuthorizedTrader()
 
-      val result  = await(
+      val result = await(
         wsClient
           .url(getMultipleRecordsUrl)
           .withHttpHeaders("X-Client-ID" -> "TSS")
@@ -518,18 +534,30 @@ class GetRecordsControllerIntegrationSpec
       )
     }
 
+    "return forbidden when EORI is not on the user allow list when getting multiple records" in {
+      withAuthorizedTrader()
+      stubForUserAllowListWhereUserItNotAllowed
+
+      val result = getRecordAndWait(getMultipleRecordsUrl)
+
+      result.status mustBe FORBIDDEN
+      result.json mustBe createExpectedJson(
+        "FORBIDDEN",
+        "This service is in private beta and not available to the public. We will aim to open the service to the public soon."
+      )
+    }
   }
 
   /* TGP-1889
    ToDo: remove the X-Client-ID header after drop1.1
-    */
+   */
   private def getRecordAndWait(url: String) =
     await(
       wsClient
         .url(url)
         .withHttpHeaders(
-          "Accept"       -> "application/vnd.hmrc.1.0+json",
-          "X-Client-ID" ->  "TSS"
+          "Accept"      -> "application/vnd.hmrc.1.0+json",
+          "X-Client-ID" -> "TSS"
         )
         .get()
     )
@@ -537,17 +565,16 @@ class GetRecordsControllerIntegrationSpec
   /* TGP-1889
    ToDo: after drop1.1 and refactory of the getRecordAndWait function,
    this function can be removed
-    */
+   */
   private def getRecordAndWaitWithOutClientIDHeader(url: String) =
     await(
       wsClient
         .url(url)
         .withHttpHeaders(
-          "Accept"       -> "application/vnd.hmrc.1.0+json",
+          "Accept" -> "application/vnd.hmrc.1.0+json"
         )
         .get()
     )
-
 
   private def createExpectedJson(code: String, message: String): Any =
     Json.obj(

@@ -79,3 +79,16 @@ case class ServerErrorResponse(correlationId: String, message: String) {
       )
     )
 }
+
+case class UserNotAllowedResponse(correlationId: String, message: String) {
+  def toResult: Result =
+    Forbidden(
+      Json.toJson(
+        ErrorResponse(
+          correlationId,
+          "FORBIDDEN",
+          message
+        )
+      )
+    )
+}

@@ -10,4 +10,4 @@ POST    /:eori/records/:recordId/advice             uk.gov.hmrc.tradergoodsprofi
 
 PUT     /:eori                                      uk.gov.hmrc.tradergoodsprofiles.controllers.MaintainProfileController.updateProfile(eori: String)
 
-PUT    /:eori/records/:recordId/advice           uk.gov.hmrc.tradergoodsprofiles.controllers.WithdrawAdviceController.withdrawAdvice(eori: String, recordId: String)
+PUT     /:eori/records/:recordId/advice             uk.gov.hmrc.tradergoodsprofiles.controllers.WithdrawAdviceController.withdrawAdvice(eori: String, recordId: String)

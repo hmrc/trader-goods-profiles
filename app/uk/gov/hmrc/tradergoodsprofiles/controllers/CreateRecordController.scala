@@ -23,7 +23,7 @@ import play.api.libs.json.Json.toJson
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
 import uk.gov.hmrc.tradergoodsprofiles.connectors.CreateRecordRouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidationRules}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, UserAllowListAction, ValidationRules}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import javax.inject.{Inject, Singleton}
@@ -32,6 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class CreateRecordController @Inject() (
   authAction: AuthAction,
+  userAllowListAction: UserAllowListAction,
   createRecordConnector: CreateRecordRouterConnector,
   override val uuidService: UuidService,
   override val controllerComponents: ControllerComponents
@@ -41,7 +42,7 @@ class CreateRecordController @Inject() (
     with Logging {
 
   def createRecord(eori: String): Action[JsValue] =
-    authAction(eori).async(parse.json) { implicit request =>
+    (authAction(eori) andThen userAllowListAction).async(parse.json) { implicit request =>
       val result = for {
         _               <- EitherT.fromEither[Future](validateAllHeaders)
         serviceResponse <-

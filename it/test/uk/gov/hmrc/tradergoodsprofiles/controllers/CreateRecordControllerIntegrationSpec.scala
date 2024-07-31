@@ -86,8 +86,8 @@ class CreateRecordControllerIntegrationSpec
 
     reset(authConnector)
     stubRouterRequest(CREATED, expectedResponse.toString())
+    stubForUserAllowList
     when(uuidService.uuid).thenReturn(correlationId)
-
   }
 
   override def beforeAll(): Unit = {
@@ -267,6 +267,19 @@ class CreateRecordControllerIntegrationSpec
       result.json mustBe createExpectedJson(
         "INTERNAL_SERVER_ERROR",
         s"Internal server error for /$eoriNumber/records with error: runtime exception"
+      )
+    }
+
+    "return forbidden when EORI is not on the user allow list" in {
+      withAuthorizedTrader()
+      stubForUserAllowListWhereUserItNotAllowed
+
+      val result = createRecordAndWait()
+
+      result.status mustBe FORBIDDEN
+      result.json mustBe createExpectedJson(
+        "FORBIDDEN",
+        "This service is in private beta and not available to the public. We will aim to open the service to the public soon."
       )
     }
 
