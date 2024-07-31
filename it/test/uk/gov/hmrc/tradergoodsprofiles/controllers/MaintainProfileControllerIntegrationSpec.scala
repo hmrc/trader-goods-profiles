@@ -107,6 +107,8 @@ class MaintainProfileControllerIntegrationSpec
     stubRouterRequest(OK, expectedResponse.toString())
     when(uuidService.uuid).thenReturn(correlationId)
     when(appConfig.routerUrl).thenReturn(Url.parse(wireMock.baseUrl))
+    when(appConfig.userAllowListEnabled).thenReturn(true)
+    when(appConfig.userAllowListBaseUrl).thenReturn(Url.parse(wireMock.baseUrl))
   }
 
   override def beforeAll(): Unit = {
