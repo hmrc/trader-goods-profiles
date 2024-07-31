@@ -19,8 +19,9 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers
 import cats.data.EitherT
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json.toJson
-import play.api.mvc.{Action, ControllerComponents}
+import play.api.mvc.{Action, ControllerComponents, Request, Result}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.connectors.UpdateRecordRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, UserAllowListAction, ValidationRules}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
@@ -32,6 +33,7 @@ class UpdateRecordController @Inject() (
   authAction: AuthAction,
   userAllowListAction: UserAllowListAction,
   updateRecordConnector: UpdateRecordRouterConnector,
+  appConfig: AppConfig,
   override val uuidService: UuidService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
@@ -41,11 +43,26 @@ class UpdateRecordController @Inject() (
   def updateRecord(eori: String, recordId: String): Action[JsValue] =
     (authAction(eori) andThen userAllowListAction).async(parse.json) { implicit request =>
       val result = for {
-        _               <- EitherT.fromEither[Future](validateAllHeaders(request))
+        _               <- validateClientIdIfSupported //ToDO: remove this test after drop1.1 - TGP-1903
         serviceResponse <- EitherT(updateRecordConnector.updateRecord(eori, recordId, request))
                              .leftMap(e => Status(e.status)(toJson(e.errorResponse)))
       } yield Ok(toJson(serviceResponse))
 
       result.merge
     }
+
+  /*
+ToDO: remove this test after drop1.1 - TGP-1903
+
+The client ID does not need to be checked anymore as EIS has removed it
+from the header
+   */
+  private def validateClientIdIfSupported(implicit request: Request[_]): EitherT[Future, Result, String] =
+    EitherT
+      .fromEither[Future](
+        if (!appConfig.isDrop1_1_enabled) validateClientIdHeader
+        else Right("")
+      )
+      .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
+
 }
