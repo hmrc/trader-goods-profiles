@@ -25,6 +25,7 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Request
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
+import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.connectors.MaintainProfileRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
@@ -40,13 +41,15 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
 
   private val requestHeaders = Seq(
     "Accept"       -> "application/vnd.hmrc.1.0+json",
-    "Content-Type" -> "application/json"
+    "Content-Type" -> "application/json",
+    "X-Client-ID"  -> "some client ID"
   )
 
   private val eori          = "GB123456789012"
   private val correlationId = "d677693e-9981-4ee3-8574-654981ebe606"
   private val uuidService   = mock[UuidService]
   private val connector     = mock[MaintainProfileRouterConnector]
+  private val appConfig     = mock[AppConfig]
 
   def updateProfileRequestData(): JsValue = Json
     .parse("""
@@ -75,25 +78,43 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
     new FakeSuccessAuthAction(),
     connector,
     uuidService,
+    appConfig,
     stubControllerComponents()
   )
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    reset(uuidService, connector)
+    reset(uuidService, connector, appConfig)
     when(uuidService.uuid).thenReturn(correlationId)
     when(connector.put(mockEq(eori), any[Request[JsValue]])(any()))
       .thenReturn(Future.successful(Right(updateProfileResponse)))
+    when(appConfig.isDrop1_1_enabled).thenReturn(false)
   }
 
   "MaintainProfileController" should {
 
+    // TODO: Create a single test - Ticket-2014
     "return 200 OK when the profile update is successful" in {
       val request: FakeRequest[JsValue] = FakeRequest()
         .withHeaders(requestHeaders: _*)
         .withBody(updateProfileRequest.body)
 
       val result = sut.updateProfile(eori)(request)
+
+      status(result) mustBe OK
+      contentAsJson(result) mustBe Json.toJson(updateProfileResponse)
+    }
+    // TODO: Create a single test - Ticket-2014
+    "return 200 OK without validating x-client-id when isDrop1_1_enabled is true" in {
+      when(appConfig.isDrop1_1_enabled).thenReturn(true)
+      val requestWithoutClientId = FakeRequest()
+        .withHeaders(
+          "Accept"       -> "application/vnd.hmrc.1.0+json",
+          "Content-Type" -> "application/json"
+        )
+        .withBody(updateProfileRequest.body)
+
+      val result = sut.updateProfile(eori)(requestWithoutClientId)
 
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(updateProfileResponse)

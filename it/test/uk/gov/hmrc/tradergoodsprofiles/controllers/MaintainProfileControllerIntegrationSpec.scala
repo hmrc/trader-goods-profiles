@@ -17,6 +17,7 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import com.github.tomakehurst.wiremock.client.WireMock._
+import io.lemonlabs.uri.Url
 import org.mockito.MockitoSugar.{reset, when}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar.mock
@@ -33,6 +34,7 @@ import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
+import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
@@ -80,6 +82,8 @@ class MaintainProfileControllerIntegrationSpec
   private val requestBody      = updateProfileRequest
   private val expectedResponse = Json.toJson(updateProfileResponse)
 
+  lazy private val appConfig = mock[AppConfig]
+
   override lazy val app: Application = {
     wireMock.start()
     configureFor(wireHost, wireMock.port())
@@ -89,7 +93,8 @@ class MaintainProfileControllerIntegrationSpec
       .overrides(
         bind[AuthConnector].to(authConnector),
         bind[UuidService].to(uuidService),
-        bind[HttpClientV2].to(httpClientV2)
+        bind[HttpClientV2].to(httpClientV2),
+        bind[AppConfig].to(appConfig)
       )
       .build()
   }
@@ -100,7 +105,7 @@ class MaintainProfileControllerIntegrationSpec
     reset(authConnector)
     stubRouterRequest(OK, expectedResponse.toString())
     when(uuidService.uuid).thenReturn(correlationId)
-
+    when(appConfig.routerUrl).thenReturn(Url.parse(wireMock.baseUrl))
   }
 
   override def beforeAll(): Unit = {
@@ -114,8 +119,10 @@ class MaintainProfileControllerIntegrationSpec
   }
 
   "MaintainProfileController" should {
+    // TODO: After the drop 1.1 create single test without the client id and remove the feature flag - TGP-2014
     "return 200 OK when the profile update is successful" in {
       withAuthorizedTrader()
+      when(appConfig.isDrop1_1_enabled).thenReturn(false)
 
       val result = updateProfileAndWait()
 
@@ -128,6 +135,26 @@ class MaintainProfileControllerIntegrationSpec
         verify(
           putRequestedFor(urlEqualTo(routerUrl))
             .withHeader("Content-Type", equalTo("application/json"))
+            .withHeader("Accept", equalTo("application/vnd.hmrc.1.0+json"))
+            .withHeader("X-Client-ID", equalTo("Some client Id"))
+        )
+      }
+    }
+    // TODO: After the drop 1.1 create single test without the client id and remove the feature flag - TGP-2014
+    "return 200 OK without validating x-client-id when isDrop1_1_enabled is true" in {
+      withAuthorizedTrader()
+      when(appConfig.isDrop1_1_enabled).thenReturn(true)
+
+      val result = updateProfileAndWaitWithoutClientId()
+
+      result.status mustBe OK
+      result.json mustBe expectedResponse
+
+      withClue("should add the right headers") {
+        verify(
+          putRequestedFor(urlEqualTo(routerUrl))
+            .withHeader("Content-Type", equalTo("application/json"))
+            .withHeader("Accept", equalTo("application/vnd.hmrc.1.0+json"))
         )
       }
     }
@@ -256,7 +283,21 @@ class MaintainProfileControllerIntegrationSpec
     }
   }
 
+  // TODO: After the drop 1.1 create single method without the client id and remove the feature flag - TGP-2014
   private def updateProfileAndWait(requestBody: JsValue = requestBody) =
+    await(
+      wsClient
+        .url(url)
+        .withHttpHeaders(
+          "X-Client-ID"  -> "Some client Id",
+          "Accept"       -> "application/vnd.hmrc.1.0+json",
+          "Content-Type" -> "application/json"
+        )
+        .put(requestBody)
+    )
+  // TODO: After the drop 1.1 create single method without the client id and remove the feature flag - TGP-2014
+
+  private def updateProfileAndWaitWithoutClientId(requestBody: JsValue = requestBody) =
     await(
       wsClient
         .url(url)
