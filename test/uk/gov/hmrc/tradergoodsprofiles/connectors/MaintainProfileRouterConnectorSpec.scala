@@ -18,6 +18,7 @@ package uk.gov.hmrc.tradergoodsprofiles.connectors
 
 import io.lemonlabs.uri.UrlPath
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
+import org.mockito.Mockito.never
 import org.mockito.MockitoSugar.{reset, verify, when}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, EitherValues}
@@ -56,6 +57,7 @@ class MaintainProfileRouterConnectorSpec
 
   "put" should {
     "return 200 when the profile is successfully updated" in {
+      when(appConfig.isDrop1_1_enabled).thenReturn(false)
 
       val response = MaintainProfileResponse(
         eori = "GB123456789012",
@@ -67,7 +69,7 @@ class MaintainProfileRouterConnectorSpec
       when(requestBuilder.execute[Either[ServiceError, MaintainProfileResponse]](any, any))
         .thenReturn(Future.successful(Right(response)))
 
-      val result = await(sut.put(eori, createRequest(updateProfileRequestData)))
+      val result = await(sut.put(eori, createRequest(updateProfileRequestData())))
 
       result.value mustBe response
 
@@ -77,9 +79,39 @@ class MaintainProfileRouterConnectorSpec
         verify(httpClient).put(eqTo(url"$expectedUrl"))(any)
         verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
         verify(requestBuilder).setHeader("Accept"                 -> "application/vnd.hmrc.1.0+json")
-        verify(requestBuilder).withBody(eqTo(updateProfileRequestData))(any, any, any)
+        verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
+        verify(requestBuilder).withBody(eqTo(updateProfileRequestData()))(any, any, any)
         verify(requestBuilder).execute(any, any)
       }
+    }
+
+    "not send the client ID in the header if drop.1.1" in {
+      when(appConfig.isDrop1_1_enabled).thenReturn(true)
+
+      val response = MaintainProfileResponse(
+        eori = "GB123456789012",
+        actorId = "GB987654321098",
+        ukimsNumber = Some("XIUKIM47699357400020231115081800"),
+        nirmsNumber = Some("RMS-GB-123456"),
+        niphlNumber = Some("6 S12345")
+      )
+      when(requestBuilder.execute[Either[ServiceError, MaintainProfileResponse]](any, any))
+        .thenReturn(Future.successful(Right(response)))
+
+      val result = await(sut.put(eori, createRequest(updateProfileRequestData())))
+      result.value mustBe response
+
+      withClue("send a request with the right parameters") {
+        val expectedUrl =
+          UrlPath.parse(s"$serverUrl/trader-goods-profiles-router/traders/$eori")
+        verify(httpClient).put(eqTo(url"$expectedUrl"))(any)
+        verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+        verify(requestBuilder).setHeader("Accept"                 -> "application/vnd.hmrc.1.0+json")
+        verify(requestBuilder, never()).setHeader("X-Client-ID"   -> "clientId")
+        verify(requestBuilder).withBody(eqTo(updateProfileRequestData()))(any, any, any)
+        verify(requestBuilder).execute(any, any)
+      }
+
     }
 
     "return an error" when {
@@ -89,7 +121,7 @@ class MaintainProfileRouterConnectorSpec
         when(requestBuilder.execute[Either[ServiceError, MaintainProfileResponse]](any, any))
           .thenReturn(Future.successful(Left(errorResponse)))
 
-        val result = await(sut.put(eori, createRequest(updateProfileRequestData)))
+        val result = await(sut.put(eori, createRequest(updateProfileRequestData())))
 
         result.left.value mustBe errorResponse
       }
@@ -98,7 +130,7 @@ class MaintainProfileRouterConnectorSpec
         when(requestBuilder.execute[Either[ServiceError, MaintainProfileResponse]](any, any))
           .thenReturn(Future.failed(new RuntimeException("error")))
 
-        val result = await(sut.put(eori, createRequest(updateProfileRequestData)))
+        val result = await(sut.put(eori, createRequest(updateProfileRequestData())))
 
         result.left.value mustBe ServiceError(
           INTERNAL_SERVER_ERROR,
@@ -112,7 +144,7 @@ class MaintainProfileRouterConnectorSpec
     }
   }
 
-  def updateProfileRequestData: JsValue = Json
+  def updateProfileRequestData(): JsValue = Json
     .parse("""
              |{
              |    "actorId": "GB987654321098",
