@@ -44,7 +44,7 @@ trait CreateOrUpdateRecordResponseSupport {
       adviceStatus = "Not Requested",
       goodsDescription = "Bananas",
       countryOfOrigin = "GB",
-      category = 2,
+      category = Some(2),
       assessments = Some(Seq(assessment)),
       supplementaryUnit = Some(13.12),
       measurementUnit = Some("Kilograms"),
