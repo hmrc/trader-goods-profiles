@@ -152,7 +152,6 @@ class UpdateRecordControllerIntegrationSpec
         verify(
           patchRequestedFor(urlEqualTo(routerUrl))
             .withHeader("Content-Type", equalTo("application/json"))
-          // .withHeader("X-Client-ID", equalTo("clientId"))
         )
       }
     }
