@@ -31,8 +31,8 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   lazy val internalAuthToken: String = config.get[String]("internal-auth.token")
 
-  lazy val withdrawAdviceEnabled: Boolean = config.get[Boolean]("features.withdrawAdviceEnabled")
-  lazy val requestAdviceEnabled: Boolean  = config.get[Boolean]("features.requestAdviceEnabled")
-  lazy val userAllowListEnabled: Boolean  = config.get[Boolean]("features.userAllowListEnabled")
-  lazy val isDrop1_1_enabled: Boolean     = config.getOptional[Boolean]("features.drop_1_1_enabled").getOrElse(false)
+  lazy val withdrawAdviceEnabled: Boolean = config.get[Boolean]("feature.withdrawAdviceEnabled")
+  lazy val requestAdviceEnabled: Boolean  = config.get[Boolean]("feature.requestAdviceEnabled")
+  lazy val userAllowListEnabled: Boolean  = config.get[Boolean]("feature.userAllowListEnabled")
+  lazy val isDrop1_1_enabled: Boolean     = config.getOptional[Boolean]("feature.drop_1_1_enabled").getOrElse(false)
 }
