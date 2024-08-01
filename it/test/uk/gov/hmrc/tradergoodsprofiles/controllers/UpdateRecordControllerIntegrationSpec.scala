@@ -17,6 +17,7 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import com.github.tomakehurst.wiremock.client.WireMock._
+import io.lemonlabs.uri.Url
 import org.mockito.MockitoSugar.{reset, when}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar.mock
@@ -33,6 +34,7 @@ import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
+import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.UpdateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateOrUpdateRecordResponseSupport
@@ -66,6 +68,7 @@ class UpdateRecordControllerIntegrationSpec
   private val routerUrl        = s"/trader-goods-profiles-router/traders/$eoriNumber/records/$recordId"
   private val requestBody      = createUpdateRecordRequestData
   private val expectedResponse = Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
+  lazy private val appConfig   = mock[AppConfig]
 
   private val routerError = Json.obj(
     "correlationId" -> correlationId,
@@ -89,7 +92,8 @@ class UpdateRecordControllerIntegrationSpec
       .overrides(
         bind[AuthConnector].to(authConnector),
         bind[UuidService].to(uuidService),
-        bind[HttpClientV2].to(httpClientV2)
+        bind[HttpClientV2].to(httpClientV2),
+        bind[AppConfig].to(appConfig)
       )
       .build()
   }
@@ -101,6 +105,10 @@ class UpdateRecordControllerIntegrationSpec
     stubForUserAllowList
     stubRouterRequest(OK, expectedResponse.toString())
     when(uuidService.uuid).thenReturn(correlationId)
+    when(appConfig.isDrop1_1_enabled).thenReturn(false)
+    when(appConfig.userAllowListEnabled).thenReturn(true)
+    when(appConfig.routerUrl).thenReturn(Url.parse(wireMock.baseUrl))
+    when(appConfig.userAllowListBaseUrl).thenReturn(Url.parse(wireMock.baseUrl))
 
   }
 
@@ -128,6 +136,22 @@ class UpdateRecordControllerIntegrationSpec
           patchRequestedFor(urlEqualTo(routerUrl))
             .withHeader("Content-Type", equalTo("application/json"))
             .withHeader("X-Client-ID", equalTo("clientId"))
+        )
+      }
+    }
+
+    "should not validate client ID is feature flag isDrop1_1_enabled is true" in {
+      withAuthorizedTrader()
+      when(appConfig.isDrop1_1_enabled).thenReturn(true)
+      val result = updateRecordAndWaitWithoutClientIdHeader()
+
+      result.status mustBe OK
+      result.json mustBe expectedResponse
+
+      withClue("should add the right headers") {
+        verify(
+          patchRequestedFor(urlEqualTo(routerUrl))
+            .withHeader("Content-Type", equalTo("application/json"))
         )
       }
     }

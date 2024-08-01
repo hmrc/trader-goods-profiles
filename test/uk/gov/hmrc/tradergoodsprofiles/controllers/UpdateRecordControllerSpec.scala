@@ -25,6 +25,7 @@ import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
+import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.connectors.UpdateRecordRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, FakeUserAllowListAction}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
@@ -56,10 +57,12 @@ class UpdateRecordControllerSpec
   private val correlationId = "d677693e-9981-4ee3-8574-654981ebe606"
   private val uuidService   = mock[UuidService]
   private val connector     = mock[UpdateRecordRouterConnector]
+  private val appConfig     = mock[AppConfig]
   private val sut           = new UpdateRecordController(
     new FakeSuccessAuthAction(),
     new FakeUserAllowListAction(),
     connector,
+    appConfig,
     uuidService,
     stubControllerComponents()
   )
@@ -79,6 +82,23 @@ class UpdateRecordControllerSpec
 
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
+    }
+
+    /*
+  ToDO: remove this test after drop1.1 - TGP-1903
+
+  The client ID does not need to be checked anymore as EIS has removed it
+  from the header
+     */
+    "not validate client ID is isDrop1_1_enabled is true" in {
+      when(appConfig.isDrop1_1_enabled).thenReturn(true)
+      val request1 = FakeRequest().withHeaders(
+        "Accept"       -> "application/vnd.hmrc.1.0+json",
+        "Content-Type" -> "application/json"
+      )
+      val result   = sut.updateRecord(eoriNumber, recordId)(request1.withBody(createUpdateRecordRequest.body))
+
+      status(result) mustBe OK
     }
 
     "return 500 when the router service returns an error" in {

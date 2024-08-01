@@ -51,7 +51,7 @@ class UpdateRecordRouterConnector @Inject() (
       .withContentType
       .withAcceptHeader
       .withBody(updateRecordRequest.body)
-      .withClientId
+      .withClientIdIfSupported //ToDo: Remove this after drop1.1 - TGP-1903
       .execute(httpReader[CreateOrUpdateRecordResponse], ec)
       .recover { case ex: Throwable =>
         logger.warn(
