@@ -18,6 +18,7 @@ package uk.gov.hmrc.tradergoodsprofiles.models.response
 
 import play.api.libs.json._
 import uk.gov.hmrc.tradergoodsprofiles.models.Assessment
+import uk.gov.hmrc.tradergoodsprofiles.models.responses.ReviewReason
 import uk.gov.hmrc.tradergoodsprofiles.utils.ResponseModelSupport.removeNulls
 
 import java.time.Instant
@@ -111,4 +112,10 @@ object CreateOrUpdateRecordResponse {
           "updatedDateTime"          -> createRecordResponse.updatedDateTime
         )
       )
+
+  private def translateReviewReason(reviewReason: Option[String], toReview: Boolean): Option[String] = {
+    val enumReviewReason: Option[ReviewReason] = reviewReason.flatMap(ReviewReason.fromString)
+    if (!toReview) None
+    else enumReviewReason.map(_.description)
+  }
 }

@@ -18,6 +18,7 @@ package uk.gov.hmrc.tradergoodsprofiles.models.response
 
 import play.api.libs.json._
 import uk.gov.hmrc.tradergoodsprofiles.models.Assessment
+import uk.gov.hmrc.tradergoodsprofiles.models.responses.ReviewReason
 import uk.gov.hmrc.tradergoodsprofiles.utils.ResponseModelSupport.removeNulls
 
 import java.time.Instant
@@ -73,7 +74,7 @@ object GetRecordResponse {
         "version"                  -> Json.toJson(o.version),
         "active"                   -> Json.toJson(o.active),
         "toReview"                 -> Json.toJson(o.toReview),
-        "reviewReason"             -> Json.toJson(o.reviewReason),
+        "reviewReason"             -> Json.toJson(translateReviewReason(o.reviewReason, o.toReview)),
         "declarable"               -> Json.toJson(o.declarable),
         "ukimsNumber"              -> Json.toJson(o.ukimsNumber),
         "nirmsNumber"              -> Json.toJson(o.nirmsNumber),
@@ -208,5 +209,10 @@ object GetRecordResponse {
         JsError(errors)
       }
     }
+  }
+  private def translateReviewReason(reviewReason: Option[String], toReview: Boolean): Option[String] = {
+    val enumReviewReason: Option[ReviewReason] = reviewReason.flatMap(ReviewReason.fromString)
+    if (!toReview) None
+    else enumReviewReason.map(_.description)
   }
 }
