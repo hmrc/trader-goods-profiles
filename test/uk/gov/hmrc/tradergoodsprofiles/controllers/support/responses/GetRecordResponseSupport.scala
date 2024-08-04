@@ -52,8 +52,50 @@ trait GetRecordResponseSupport {
       Some(timestamp),
       1,
       true,
+      true,
+      Some("The commodity code has expired. You'll need to change the commodity code and categorise the goods."),
+      "IMMI declarable",
+      "XIUKIM47699357400020231115081800",
+      Some("RMS-GB-123456"),
+      Some("6 S12345"),
       false,
-      Some("Commodity code changed"),
+      timestamp,
+      timestamp
+    )
+  }
+
+
+  def createGetRecordResponseForTranslated(
+                               eori: String,
+                               recordId: String,
+                               timestamp: Instant
+                             ): GetRecordResponse = {
+    val condition  = Condition(
+      Some("certificate"),
+      Some("Y923"),
+      Some("Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law"),
+      Some("Excluded product")
+    )
+    val assessment = Assessment(Some("a06846e9a5f61fa4ecf2c4e3b23631fc"), Some(1), Some(condition))
+    GetRecordResponse(
+      eori,
+      "GB123456789012",
+      recordId,
+      "SKU123456",
+      "123456",
+      "Not Requested",
+      "Bananas",
+      "GB",
+      Option(2),
+      Some(Seq(assessment)),
+      Some(13),
+      Some("Kilograms"),
+      timestamp,
+      Some(timestamp),
+      1,
+      true,
+      true,
+      Some("commodity"),
       "IMMI declarable",
       "XIUKIM47699357400020231115081800",
       Some("RMS-GB-123456"),
@@ -93,8 +135,8 @@ trait GetRecordResponseSupport {
       Some(timestamp),
       1,
       active = true,
-      toReview = false,
-      Some("Commodity code changed"),
+      toReview = true,
+      Some("The commodity code has expired. You'll need to change the commodity code and categorise the goods."),
       "IMMI declarable",
       "XIUKIM47699357400020231115081800",
       Some("RMS-GB-123456"),

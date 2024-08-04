@@ -41,7 +41,7 @@ class UpdateRecordController @Inject() (
     with ValidationRules {
 
   def updateRecord(eori: String, recordId: String): Action[JsValue] =
-    Action.async(parse.json) { implicit request =>
+    (authAction(eori) andThen userAllowListAction).async(parse.json) { implicit request =>
       val result = for {
         _               <- validateClientIdIfSupported //ToDO: remove this test after drop1.1 - TGP-1903
         serviceResponse <- EitherT(updateRecordConnector.updateRecord(eori, recordId, request))

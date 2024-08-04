@@ -44,7 +44,7 @@ class CreateRecordController @Inject() (
     with Logging {
 
   def createRecord(eori: String): Action[JsValue] =
-    Action.async(parse.json) { implicit request =>
+    (authAction(eori) andThen userAllowListAction).async(parse.json) { implicit request =>
       val result = for {
         _               <- validateClientIdIfSupported //ToDO: remove this test after drop1.1 - TGP-1889
         _               <- EitherT.fromEither[Future](validateAcceptAndContentTypeHeaders)
