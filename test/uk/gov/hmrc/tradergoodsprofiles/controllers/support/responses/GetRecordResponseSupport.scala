@@ -64,12 +64,11 @@ trait GetRecordResponseSupport {
     )
   }
 
-
   def createGetRecordResponseForTranslated(
-                               eori: String,
-                               recordId: String,
-                               timestamp: Instant
-                             ): GetRecordResponse = {
+    eori: String,
+    recordId: String,
+    timestamp: Instant
+  ): GetRecordResponse = {
     val condition  = Condition(
       Some("certificate"),
       Some("Y923"),

@@ -103,7 +103,6 @@ object GoodsItemRecords {
         "version"                  -> goodsItemRecords.version,
         "active"                   -> goodsItemRecords.active,
         "toReview"                 -> goodsItemRecords.toReview,
-        //"reviewReason"             -> translateReviewReason(goodsItemRecords.reviewReason,goodsItemRecords.toReview),
         "reviewReason"             -> goodsItemRecords.reviewReason,
         "declarable"               -> goodsItemRecords.declarable,
         "ukimsNumber"              -> goodsItemRecords.ukimsNumber,
@@ -115,10 +114,4 @@ object GoodsItemRecords {
       )
     )
 
-  private def translateReviewReason(reviewReason: Option[String], toReview: Boolean): Option[String] = {
-    println("++++++++GoodsItemRecords inside+++++++++++"+reviewReason,toReview)
-    val enumReviewReason: Option[ReviewReason] = reviewReason.flatMap(ReviewReason.fromString)
-    if (!toReview) None
-    else enumReviewReason.map(_.description)
-  }
 }
