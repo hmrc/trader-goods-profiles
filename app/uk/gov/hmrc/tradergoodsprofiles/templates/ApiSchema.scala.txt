@@ -708,7 +708,6 @@ components:
         - adviceStatus
         - goodsDescription
         - countryOfOrigin
-        - category
         - comcodeEffectiveFromDate
         - version
         - active
