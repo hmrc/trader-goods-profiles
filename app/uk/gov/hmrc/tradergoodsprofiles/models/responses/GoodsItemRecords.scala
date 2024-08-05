@@ -112,4 +112,5 @@ object GoodsItemRecords {
         "updatedDateTime"          -> goodsItemRecords.updatedDateTime
       )
     )
+
 }

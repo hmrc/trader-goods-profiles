@@ -32,15 +32,21 @@ class GetRecordResponseSpec extends PlaySpec with GetRecordResponseSupport {
     timestamp
   )
 
+  private val getRecordResponseTranslated = createGetRecordResponseForTranslated(
+    "GB123456789012",
+    "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f",
+    timestamp
+  )
+
   "toJson" should {
     "convert Object to json" in {
-      Json.toJson(getRecordResponse) mustBe GetRecordResponseAsJson
+      Json.toJson(getRecordResponseTranslated) mustBe GetRecordResponseAsJson
     }
   }
 
   "fromJson" should {
     "convert json to object" in {
-      val result: JsResult[GetRecordResponse] = GetRecordResponseAsJson.validate[GetRecordResponse]
+      val result: JsResult[GetRecordResponse] = GetRecordResponseAsJsonForTranslated.validate[GetRecordResponse]
 
       result.isSuccess mustBe true
       result.get mustBe getRecordResponse
@@ -84,8 +90,8 @@ class GetRecordResponseSpec extends PlaySpec with GetRecordResponseSupport {
       "comcodeEffectiveToDate"   -> timestamp,
       "version"                  -> 1,
       "active"                   -> true,
-      "toReview"                 -> false,
-      "reviewReason"             -> "Commodity code changed",
+      "toReview"                 -> true,
+      "reviewReason"             -> "The commodity code has expired. You'll need to change the commodity code and categorise the goods.",
       "declarable"               -> "IMMI declarable",
       "ukimsNumber"              -> "XIUKIM47699357400020231115081800",
       "nirmsNumber"              -> "RMS-GB-123456",
@@ -94,4 +100,45 @@ class GetRecordResponseSpec extends PlaySpec with GetRecordResponseSupport {
       "createdDateTime"          -> timestamp,
       "updatedDateTime"          -> timestamp
     )
+
+  private def GetRecordResponseAsJsonForTranslated: JsObject =
+    Json.obj(
+      "eori"                     -> "GB123456789012",
+      "actorId"                  -> "GB123456789012",
+      "recordId"                 -> "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f",
+      "traderRef"                -> "SKU123456",
+      "comcode"                  -> "123456",
+      "adviceStatus"             -> "Not Requested",
+      "goodsDescription"         -> "Bananas",
+      "countryOfOrigin"          -> "GB",
+      "category"                 -> 2,
+      "assessments"              -> Json.arr(
+        Json.obj(
+          "assessmentId"    -> "a06846e9a5f61fa4ecf2c4e3b23631fc",
+          "primaryCategory" -> 1,
+          "condition"       -> Json.obj(
+            "type"                 -> "certificate",
+            "conditionId"          -> "Y923",
+            "conditionDescription" -> "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
+            "conditionTraderText"  -> "Excluded product"
+          )
+        )
+      ),
+      "supplementaryUnit"        -> 13,
+      "measurementUnit"          -> "Kilograms",
+      "comcodeEffectiveFromDate" -> timestamp,
+      "comcodeEffectiveToDate"   -> timestamp,
+      "version"                  -> 1,
+      "active"                   -> true,
+      "toReview"                 -> true,
+      "reviewReason"             -> "commodity",
+      "declarable"               -> "IMMI declarable",
+      "ukimsNumber"              -> "XIUKIM47699357400020231115081800",
+      "nirmsNumber"              -> "RMS-GB-123456",
+      "niphlNumber"              -> "6 S12345",
+      "locked"                   -> false,
+      "createdDateTime"          -> timestamp,
+      "updatedDateTime"          -> timestamp
+    )
+
 }
