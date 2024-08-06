@@ -46,5 +46,27 @@ class AppConfigSpec extends PlaySpec {
     "return false if isDrop1_1_Enabled is missing" in {
       createAppConfig("").isDrop1_1_enabled mustBe false
     }
+
+    "return false if isDrop2Enabled is missing" in {
+      createAppConfig("").isDrop2Enabled mustBe false
+    }
+
+    "return false if isDrop2Enabled is false" in {
+      val validAppConfig =
+        """
+          |appName=trader-goods-profiles-router
+          |features.drop2Enabled=false
+          |""".stripMargin
+      createAppConfig(validAppConfig).isDrop2Enabled mustBe false
+    }
+
+    "return true if isDrop2Enabled is true" in {
+      val validAppConfig =
+        """
+          |appName=trader-goods-profiles-router
+          |features.drop2Enabled=true
+          |""".stripMargin
+      createAppConfig(validAppConfig).isDrop2Enabled mustBe true
+    }
   }
 }
