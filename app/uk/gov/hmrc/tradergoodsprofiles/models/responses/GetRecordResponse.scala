@@ -187,7 +187,7 @@ object GetRecordResponse {
             version.get,
             active.get,
             toReview.get,
-            translateReviewReason(reviewReason.get, toReview.get),
+            reviewReason.get,
             declarable.get,
             ukimsNumber.get,
             nirmsNumber.get,
