@@ -639,7 +639,6 @@ components:
         - adviceStatus
         - goodsDescription
         - countryOfOrigin
-        - category
         - comcodeEffectiveFromDate
         - version
         - active
@@ -1049,19 +1048,20 @@ components:
       example: The commodity code has expired. You'll need to
         change the commodity code and categorise the goods.
       description: >-
-        The commodity code has expired. You'll need to
-        change the commodity code and categorise the goods.
+        The commodity code has expired. You'll need to change the commodity code and categorise the goods.
+
 
         The commodity code or restrictions have changed. You'll need to categorise the record.
 
-        HMRC have reviewed the record. The goods description is unclear.
-        If you want to use this record on an IMMI, you'll need to amend the goods description.
 
-        HMRC have reviewed this record. The goods description does not have enough detail.
-        If you want to use this record on an IMMI, you'll need to amend the goods description.
+        HMRC have reviewed the record. The goods description is unclear. If you want to use this record on an IMMI, you'll need to amend the goods description.
 
-        HMRC have reviewed this record. The commodity code and goods description do not match.
-        If you want to use this record on an IMMI, you'll need to amend the commodity code and the goods description.
+
+        HMRC have reviewed this record. The goods description does not have enough detail. If you want to use this record on an IMMI, you'll need to amend the goods description.
+
+
+        HMRC have reviewed this record. The commodity code and goods description do not match. If you want to use this record on an IMMI, you'll need to amend the commodity code and the goods description.
+
 
     declarable:
       type: string
