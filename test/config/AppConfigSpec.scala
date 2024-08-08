@@ -55,7 +55,7 @@ class AppConfigSpec extends PlaySpec {
       val validAppConfig =
         """
           |appName=trader-goods-profiles-router
-          |features.drop2Enabled=false
+          |feature.drop2Enabled=false
           |""".stripMargin
       createAppConfig(validAppConfig).isDrop2Enabled mustBe false
     }
@@ -64,7 +64,7 @@ class AppConfigSpec extends PlaySpec {
       val validAppConfig =
         """
           |appName=trader-goods-profiles-router
-          |features.drop2Enabled=true
+          |feature.drop2Enabled=true
           |""".stripMargin
       createAppConfig(validAppConfig).isDrop2Enabled mustBe true
     }

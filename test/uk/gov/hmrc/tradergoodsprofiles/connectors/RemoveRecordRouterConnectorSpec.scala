@@ -17,6 +17,7 @@
 package uk.gov.hmrc.tradergoodsprofiles.connectors
 
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
+import org.mockito.Mockito.never
 import org.mockito.MockitoSugar.{reset, verify, when}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, EitherValues}
@@ -49,6 +50,7 @@ class RemoveRecordRouterConnectorSpec
     commonSetUp
     when(httpClient.delete(any)(any)).thenReturn(requestBuilder)
     when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
+    when(appConfig.isDrop2Enabled).thenReturn(false)
   }
 
   "remove" should {
@@ -60,14 +62,30 @@ class RemoveRecordRouterConnectorSpec
       val result = await(sut.removeRecord(eori, recordId, actorId))
 
       result.value mustBe NO_CONTENT
-      withClue("send a request with the right url") {
+      withClue("send a request with the right url when drop2Enabled is false") {
         val expectedUrl =
           s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId?actorId=$actorId"
         verify(httpClient).delete(eqTo(url"$expectedUrl"))(any)
+        //Todo: set header can be removed for drop2 - TGP-2029
         verify(requestBuilder).setHeader("X-Client-ID" -> "clientId")
         verify(requestBuilder).setHeader("Accept"      -> "application/vnd.hmrc.1.0+json")
         verify(requestBuilder).execute(any, any)
       }
+    }
+
+    //Todo: keep this for drop2 - TGP-2029
+    "return 204 when drop2Enabled is true" in {
+      when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
+        .thenReturn(Future.successful(Right(NO_CONTENT)))
+      when(appConfig.isDrop2Enabled).thenReturn(true)
+
+      await(sut.removeRecord(eori, recordId, actorId))
+
+      val expectedUrl =
+        s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId?actorId=$actorId"
+      verify(httpClient).delete(eqTo(url"$expectedUrl"))(any)
+      verify(requestBuilder, never()).setHeader(any)
+      verify(requestBuilder).execute(any, any)
     }
 
     "return an error response" when {

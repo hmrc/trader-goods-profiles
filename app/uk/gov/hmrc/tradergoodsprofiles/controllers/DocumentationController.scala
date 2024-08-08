@@ -45,11 +45,11 @@ class DocumentationController @Inject() (
     }
 
   private def returnTemplatedYaml(): Action[AnyContent] = Action {
-    val includeRequestAdviceEndpoint  = appConfig.requestAdviceEnabled
-    val includeWithdrawAdviceEndpoint = appConfig.withdrawAdviceEnabled
-
-    logger.info(s"Generating OpenAPI Spec with includeWithdrawAdviceEndpoint: $includeRequestAdviceEndpoint")
-    logger.info(s"Generating OpenAPI Spec with includeWithdrawAdviceEndpoint: $includeWithdrawAdviceEndpoint")
+    logger.info(
+      s"""Generating OpenAPI Spec with includeWithdrawAdviceEndpoint: ${appConfig.requestAdviceEnabled},
+          includeWithdrawAdviceEndpoint: ${appConfig.withdrawAdviceEnabled},
+          drop2Enabled: ${appConfig.isDrop2Enabled}"""
+    )
     Ok(apiSpec()).as("application/yaml")
   }
 
