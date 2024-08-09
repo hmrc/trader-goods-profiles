@@ -25,6 +25,7 @@ import play.api.http.Status.{INTERNAL_SERVER_ERROR, NO_CONTENT, OK}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
+import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RemoveRecordRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, FakeUserAllowListAction}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
@@ -38,6 +39,10 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
+  /*
+    TODO: remove for drop2 - TGP-2029
+    The request should have no headers.
+   */
   private val request = FakeRequest()
     .withHeaders(
       "Accept"       -> "application/vnd.hmrc.1.0+json",
@@ -54,10 +59,12 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
   private val correlationId                 = "d677693e-9981-4ee3-8574-654981ebe606"
   private val uuidService                   = mock[UuidService]
   private val connector                     = mock[RemoveRecordRouterConnector]
+  private val appConfig                     = mock[AppConfig]
   private val sut                           = new RemoveRecordController(
     new FakeSuccessAuthAction(),
     new FakeUserAllowListAction(),
     connector,
+    appConfig,
     uuidService,
     stubControllerComponents()
   )
@@ -65,18 +72,30 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
   override def beforeEach(): Unit = {
     super.beforeEach()
 
-    reset(uuidService, connector)
+    reset(uuidService, connector, appConfig)
     when(uuidService.uuid).thenReturn(correlationId)
     when(connector.removeRecord(any, any, any)(any))
       .thenReturn(Future.successful(Right(OK)))
+    when(appConfig.isDrop2Enabled).thenReturn(false)
   }
 
   "removeRecord" should {
-    "return 204" in {
+
+    /*
+    TODO: this test need to be removed for drop2 - TGP-2029
+    The request should have no headers.
+     */
+    "return 204 when drop2Enabled feature flag is false" in {
       val result = sut.removeRecord(eoriNumber, recordId, actorId)(request)
       status(result) mustBe NO_CONTENT
     }
 
+    "return 204 when drop2Enabled feature flag is true" in {
+      when(appConfig.isDrop2Enabled).thenReturn(true)
+
+      val result = sut.removeRecord(eoriNumber, recordId, actorId)(FakeRequest())
+      status(result) mustBe NO_CONTENT
+    }
     "remove the record from router" in {
       val result = sut.removeRecord(eoriNumber, recordId, actorId)(request)
 
