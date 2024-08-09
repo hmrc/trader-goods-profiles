@@ -24,7 +24,6 @@ import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.templates.txt.ApiSchema
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
 
 @Singleton
 class DocumentationController @Inject() (
@@ -38,7 +37,7 @@ class DocumentationController @Inject() (
     assets.at("/public/api", "definition.json")
 
   def specification(version: String, file: String): Action[AnyContent] =
-    if (file == "application.yaml") {
+    if ("application.yaml".equalsIgnoreCase(file)) {
       returnTemplatedYaml()
     } else {
       returnStaticAsset(version, file)
@@ -53,12 +52,6 @@ class DocumentationController @Inject() (
     Ok(apiSpec()).as("application/yaml")
   }
 
-  private def returnStaticAsset(version: String, file: String): Action[AnyContent] = Action.async { implicit request =>
-    val path     = s"/public/api/conf/$version/$file"
-    val resource = Option(getClass.getResource(path))
-    resource match {
-      case Some(_) => assets.at(path).apply(request)
-      case None    => Future.successful(NotFound)
-    }
-  }
+  private def returnStaticAsset(version: String, file: String): Action[AnyContent] =
+    assets.at(s"/public/api/conf/$version", file)
 }
