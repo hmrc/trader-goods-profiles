@@ -36,14 +36,12 @@ class DocumentationController @Inject() (
   def definition(): Action[AnyContent] =
     assets.at("/public/api", "definition.json")
 
-  def specification(version: String, file: String): Action[AnyContent] = {
-    assets.at(s"/public/api/conf/$version", file)
+  def specification(version: String, file: String): Action[AnyContent] =
     if ("application.yaml".equalsIgnoreCase(file)) {
       returnTemplatedYaml()
     } else {
       returnStaticAsset(version, file)
     }
-  }
 
   private def returnTemplatedYaml(): Action[AnyContent] = Action {
     val includeRequestAdviceEndpoint  = appConfig.requestAdviceEnabled
