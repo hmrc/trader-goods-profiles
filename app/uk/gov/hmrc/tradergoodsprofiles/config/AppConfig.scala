@@ -38,6 +38,6 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   lazy val isDrop2Enabled: Boolean =
     config
-      .getOptional[Boolean]("features.drop2Enabled")
+      .getOptional[Boolean]("feature.drop2Enabled")
       .getOrElse(false)
 }
