@@ -40,11 +40,11 @@ class UpdateRecordController @Inject() (
     extends BackendController(cc)
     with ValidationRules {
 
-  def updateRecord(eori: String, recordId: String): Action[JsValue] =
+  def patchRecord(eori: String, recordId: String): Action[JsValue] =
     (authAction(eori) andThen userAllowListAction).async(parse.json) { implicit request =>
       val result = for {
         _               <- validateClientIdIfSupported //ToDO: remove this test after drop1.1 - TGP-1903
-        serviceResponse <- EitherT(updateRecordConnector.updateRecord(eori, recordId, request))
+        serviceResponse <- EitherT(updateRecordConnector.patch(eori, recordId, request))
                              .leftMap(e => Status(e.status)(toJson(e.errorResponse)))
       } yield Ok(toJson(serviceResponse))
 

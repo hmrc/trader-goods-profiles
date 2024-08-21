@@ -71,14 +71,14 @@ class UpdateRecordControllerSpec
     super.beforeEach()
     reset(uuidService, connector)
     when(uuidService.uuid).thenReturn(correlationId)
-    when(connector.updateRecord(any, any, any)(any))
+    when(connector.patch(any, any, any)(any))
       .thenReturn(Future.successful(Right(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))))
   }
 
   "updateRecord" should {
     "return 200 when the record is successfully updated" in {
 
-      val result = sut.updateRecord(eoriNumber, recordId)(request.withBody(createUpdateRecordRequest.body))
+      val result = sut.patchRecord(eoriNumber, recordId)(request.withBody(createUpdateRecordRequest.body))
 
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
@@ -96,7 +96,7 @@ class UpdateRecordControllerSpec
         "Accept"       -> "application/vnd.hmrc.1.0+json",
         "Content-Type" -> "application/json"
       )
-      val result   = sut.updateRecord(eoriNumber, recordId)(request1.withBody(createUpdateRecordRequest.body))
+      val result   = sut.patchRecord(eoriNumber, recordId)(request1.withBody(createUpdateRecordRequest.body))
 
       status(result) mustBe OK
     }
@@ -115,10 +115,10 @@ class UpdateRecordControllerSpec
         )
       val serviceError  = ServiceError(INTERNAL_SERVER_ERROR, errorResponse)
 
-      when(connector.updateRecord(any, any, any)(any))
+      when(connector.patch(any, any, any)(any))
         .thenReturn(Future.successful(Left(serviceError)))
 
-      val result = sut.updateRecord(eoriNumber, recordId)(request.withBody(createUpdateRecordRequest.body))
+      val result = sut.patchRecord(eoriNumber, recordId)(request.withBody(createUpdateRecordRequest.body))
 
       status(result) mustBe INTERNAL_SERVER_ERROR
       contentAsJson(result) mustBe expectedJson

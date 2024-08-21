@@ -40,7 +40,7 @@ class UpdateRecordRouterConnector @Inject() (
     with RouterHttpReader
     with Logging {
 
-  def updateRecord(
+  def patch(
     eori: String,
     recordId: String,
     updateRecordRequest: Request[JsValue]

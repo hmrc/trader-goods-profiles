@@ -65,7 +65,7 @@ class UpdateRecordRouterConnectorSpec
       when(requestBuilder.execute[Either[ServiceError, CreateOrUpdateRecordResponse]](any, any))
         .thenReturn(Future.successful(Right(response)))
 
-      val result = await(sut.updateRecord(eori, recordId, createUpdateRecordRequest))
+      val result = await(sut.patch(eori, recordId, createUpdateRecordRequest))
 
       result.value mustBe response
 
@@ -88,7 +88,7 @@ class UpdateRecordRouterConnectorSpec
         when(requestBuilder.execute[Either[ServiceError, CreateOrUpdateRecordResponse]](any, any))
           .thenReturn(Future.successful(Left(expectedResponse)))
 
-        val result = await(sut.updateRecord(eori, recordId, createUpdateRecordRequest))
+        val result = await(sut.patch(eori, recordId, createUpdateRecordRequest))
 
         result.left.value mustBe expectedResponse
       }
@@ -98,7 +98,7 @@ class UpdateRecordRouterConnectorSpec
         when(requestBuilder.execute[Either[ServiceError, CreateOrUpdateRecordResponse]](any, any))
           .thenReturn(Future.failed(new RuntimeException("error")))
 
-        val result = await(sut.updateRecord(eori, recordId, createUpdateRecordRequest))
+        val result = await(sut.patch(eori, recordId, createUpdateRecordRequest))
 
         val expectedErrorResponse =
           ErrorResponse(correlationId, "INTERNAL_SERVER_ERROR", "Could not update record due to an internal error")
