@@ -3,6 +3,7 @@
 @includeWithdrawAdviceEndpoint = @{appConfig.withdrawAdviceEnabled}
 @includeRequestAdviceEndpoint = @{appConfig.requestAdviceEnabled}
 @includeAcceptHeaderForRemoveRecord = @{!appConfig.isDrop2Enabled}
+@includeInDrop2 = @{appConfig.isDrop2Enabled}
 ---
 openapi: 3.0.3
 info:
@@ -111,7 +112,7 @@ paths:
         - Goods records
       summary: Update an existing trader goods record
       description: Update an existing TGP record
-      operationId: updateTraderGoodsProfileRecord
+      operationId: patchTraderGoodsProfileRecord
       parameters:
         - $ref: '#/components/parameters/Content-Type'
         - $ref: '#/components/parameters/Accept'
@@ -181,6 +182,83 @@ paths:
       security:
         - userRestricted:
             - trader-goods-profiles
+@if(includeInDrop2){
+    put:
+          tags:
+            - Goods records
+          summary: Update an existing trader goods record
+          description: Update an existing TGP record
+          operationId: updateTraderGoodsProfileRecord
+          parameters:
+            - $ref: '#/components/parameters/Content-Type'
+            - $ref: '#/components/parameters/Accept'
+            - $ref: '#/components/parameters/Authorization'
+            - $ref: '#/components/parameters/eoriParam'
+            - $ref: '#/components/parameters/recordParam'
+          requestBody:
+            description: Update an existent TGP record
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/UpdateTGPRecordSchema'
+            required: true
+          responses:
+            '200':
+              description: OK;   Request completed successfully
+              content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/TGPRecordResponseSchema'
+            '400':
+              description: Bad Request
+              content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/BadRequestError'
+                  examples:
+                    traderRefNotUnique:
+                      value:
+                        correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
+                        code: BAD_REQUEST
+                        message: Bad request
+                        errors:
+                          - code: INVALID_REQUEST_PARAMETER
+                            message: >-
+                              traderRef is not unique for all the provided
+                              traderEori goods records
+                            errorNumber: 5
+                    recordIsLocked:
+                      value:
+                        correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
+                        code: BAD_REQUEST
+                        message: Bad request
+                        errors:
+                          - code: INVALID_REQUEST_PARAMETER
+                            message: >-
+                              Record is locked and cannot be updated until
+                              advice request withdrawn.
+                            errorNumber: 27
+                    recordIsAlreadyDeactivated:
+                      value:
+                        correlationId: 3e8dae97-b586-4cef-8511-68ac12da9028
+                        code: BAD_REQUEST
+                        message: Bad request
+                        errors:
+                          - code: INVALID_REQUEST_PARAMETER
+                            message: A deactivated record cannot be updated.
+                            errorNumber: 31
+            '401':
+              $ref: '#/components/responses/Unauthorized'
+            '403':
+              description: Forbidden;   User was valid, but not allowed to perform this action
+            '404':
+              description: TGP record not found to update
+            '500':
+              $ref: '#/components/responses/InternalServerError'
+          security:
+            - userRestricted:
+                - trader-goods-profiles
+}
     delete:
       tags:
         - Goods records

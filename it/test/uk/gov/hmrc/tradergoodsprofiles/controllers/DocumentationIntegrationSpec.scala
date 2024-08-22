@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
+import org.mockito.MockitoSugar.{reset, when}
+import org.scalatest.BeforeAndAfterEach
+import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
@@ -23,16 +26,28 @@ import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WSClient
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import play.api.inject.bind
+import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 
-class DocumentationIntegrationSpec extends PlaySpec with GuiceOneServerPerSuite {
+class DocumentationIntegrationSpec extends PlaySpec with GuiceOneServerPerSuite with BeforeAndAfterEach {
 
-  lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
+  private val wsClient: WSClient = app.injector.instanceOf[WSClient]
+  private lazy val appConfig = mock[AppConfig]
 
   override def fakeApplication(): Application =
     GuiceApplicationBuilder()
       .configure("metrics.enabled" -> false)
+      .overrides(
+        bind[AppConfig].toInstance(appConfig)
+      )
       .build()
 
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+
+    reset(appConfig)
+    when(appConfig.isDrop2Enabled).thenReturn(false)
+  }
   "DocumentationController" should {
     "return the definition specification" in {
       val response = await(wsClient.url(s"http://localhost:$port/api/definition").get())
@@ -47,6 +62,21 @@ class DocumentationIntegrationSpec extends PlaySpec with GuiceOneServerPerSuite 
 
       response.status mustBe OK
       response.body must not be empty
+    }
+
+    "return an OpenAPi Specification (OAS) without updateRecord (PUT) endpoint" in {
+      val response = await(wsClient.url(s"http://localhost:$port/api/conf/1.0/application.yaml").get())
+
+      response.status mustBe OK
+      response.body must not.include("updateTraderGoodsProfileRecord")
+    }
+
+    "return an OpenAPi Specification (OAS) with updateRecord (PUT) endpoint" in {
+      when(appConfig.isDrop2Enabled).thenReturn(true)
+      val response = await(wsClient.url(s"http://localhost:$port/api/conf/1.0/application.yaml").get())
+
+      response.status mustBe OK
+      response.body must include("updateTraderGoodsProfileRecord")
     }
 
     "return a 404 if not specification found" in {
