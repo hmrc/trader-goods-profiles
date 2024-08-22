@@ -44,11 +44,23 @@ class UpdateRecordController @Inject() (
     (authAction(eori) andThen userAllowListAction).async(parse.json) { implicit request =>
       val result = for {
         _               <- validateClientIdIfSupported //ToDO: remove this test after drop1.1 - TGP-1903
+        _               <- EitherT.fromEither[Future](validateAcceptAndContentTypeHeaders)
         serviceResponse <- EitherT(updateRecordConnector.patch(eori, recordId, request))
                              .leftMap(e => Status(e.status)(toJson(e.errorResponse)))
       } yield Ok(toJson(serviceResponse))
 
       result.merge
+    }
+
+  def updateRecord(eori: String, recordId: String): Action[JsValue] =
+    (authAction(eori) andThen userAllowListAction).async(parse.json) { implicit request =>
+      {
+        for {
+          _             <- EitherT.fromEither[Future](validateAcceptAndContentTypeHeaders)
+          updatedRecord <- EitherT(updateRecordConnector.put(eori, recordId, request))
+                             .leftMap(e => Status(e.status)(toJson(e.errorResponse)))
+        } yield Ok(toJson(updatedRecord))
+      }.merge
     }
 
   /*
@@ -64,5 +76,4 @@ from the header
         else Right("")
       )
       .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
-
 }

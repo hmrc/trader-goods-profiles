@@ -54,20 +54,47 @@ class UpdateRecordRouterConnector @Inject() (
       .withClientIdIfSupported //ToDo: Remove this after drop1.1 - TGP-1903
       .execute(httpReader[CreateOrUpdateRecordResponse], ec)
       .recover { case ex: Throwable =>
-        logger.warn(
-          s"""[UpdateRecordRouterConnector] - Exception when updating record for eori number $eori,
-               recordId $recordId and message ${ex.getMessage}""".stripMargin,
-          ex
-        )
-
-        Left(
-          ServiceError(
-            INTERNAL_SERVER_ERROR,
-            ErrorResponse
-              .serverErrorResponse(uuidService.uuid, "Could not update record due to an internal error")
-          )
-        )
+        logAndReturnInternalServerError(eori, recordId, url, ex)
       }
+  }
+
+  def put(
+    eori: String,
+    recordId: String,
+    updateRecordRequest: Request[JsValue]
+  )(implicit hc: HeaderCarrier): Future[Either[ServiceError, CreateOrUpdateRecordResponse]] = {
+    val url = appConfig.routerUrl.withPath(routerUpdateRecordUrlPath(eori, recordId))
+    httpClient
+      .put(url"$url")
+      .withContentType
+      .withAcceptHeader
+      .withBody(updateRecordRequest.body)
+      .execute(httpReader[CreateOrUpdateRecordResponse], ec)
+      .recover { case ex: Throwable =>
+        logAndReturnInternalServerError(eori, recordId, url, ex)
+      }
+
+  }
+
+  private def logAndReturnInternalServerError(
+    eori: String,
+    recordId: String,
+    url: appConfig.routerUrl.Self,
+    ex: Throwable
+  ): Left[ServiceError, Nothing] = {
+    logger.warn(
+      s"""[UpdateRecordRouterConnector] - Exception when updating record for eori number $eori,
+               recordId $recordId, url: $url and message ${ex.getMessage}""".stripMargin,
+      ex
+    )
+
+    Left(
+      ServiceError(
+        INTERNAL_SERVER_ERROR,
+        ErrorResponse
+          .serverErrorResponse(uuidService.uuid, "Could not update record due to an internal error")
+      )
+    )
   }
 
   private def routerUpdateRecordUrlPath(eori: String, recordId: String): UrlPath =
