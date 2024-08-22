@@ -23,6 +23,9 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, EitherValues}
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND}
 import play.api.http.{HeaderNames, MimeTypes}
+import play.api.libs.json.JsValue
+import play.api.mvc.Request
+import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.StringContextOps
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.UpdateRecordRequestSupport
@@ -43,9 +46,11 @@ class UpdateRecordRouterConnectorSpec
     with UpdateRecordRequestSupport
     with BeforeAndAfterEach {
 
-  private val eori     = "GB123456789012"
-  private val recordId = UUID.randomUUID().toString
-  private val sut      = new UpdateRecordRouterConnector(httpClient, appConfig, uuidService)
+  private val eori                                        = "GB123456789012"
+  private val recordId                                    = UUID.randomUUID().toString
+  private val createUpdateRecordRequest: Request[JsValue] = FakeRequest().withBody(createUpdateRecordRequestData)
+
+  private val sut = new UpdateRecordRouterConnector(httpClient, appConfig, uuidService)
 
   override def beforeEach(): Unit = {
     super.beforeEach()

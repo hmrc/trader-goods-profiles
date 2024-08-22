@@ -49,11 +49,6 @@ class UpdateRecordControllerSpec
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
-  private val request       = FakeRequest().withHeaders(
-    "Accept"       -> "application/vnd.hmrc.1.0+json",
-    "Content-Type" -> "application/json",
-    "X-Client-ID"  -> "some client ID"
-  )
   private val recordId      = UUID.randomUUID().toString
   private val timestamp     = Instant.parse("2024-01-12T12:12:12Z")
   private val correlationId = "d677693e-9981-4ee3-8574-654981ebe606"
@@ -73,15 +68,19 @@ class UpdateRecordControllerSpec
     super.beforeEach()
     reset(uuidService, connector)
     when(uuidService.uuid).thenReturn(correlationId)
-//    when(connector.patch(any, any, any)(any))
-//      .thenReturn(Future.successful(Right(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))))
   }
 
   "patchRecord" should {
+    val request = createFakeRequestWithHeaders(
+      "Accept"       -> "application/vnd.hmrc.1.0+json",
+      "Content-Type" -> "application/json",
+      "X-Client-ID"  -> "some client ID"
+    )
+
     "return 200 when the record is successfully updated" in {
       when(connector.patch(any, any, any)(any))
         .thenReturn(Future.successful(Right(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))))
-      val result = sut.patchRecord(eoriNumber, recordId)(request.withBody(createUpdateRecordRequest.body))
+      val result = sut.patchRecord(eoriNumber, recordId)(request)
 
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
@@ -97,11 +96,12 @@ class UpdateRecordControllerSpec
       when(connector.patch(any, any, any)(any))
         .thenReturn(Future.successful(Right(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))))
       when(appConfig.isDrop1_1_enabled).thenReturn(true)
-      val request1 = FakeRequest().withHeaders(
+
+      val request = createFakeRequestWithHeaders(
         "Accept"       -> "application/vnd.hmrc.1.0+json",
         "Content-Type" -> "application/json"
       )
-      val result   = sut.patchRecord(eoriNumber, recordId)(request1.withBody(createUpdateRecordRequestData))
+      val result  = sut.patchRecord(eoriNumber, recordId)(request)
 
       status(result) mustBe OK
     }
@@ -110,7 +110,7 @@ class UpdateRecordControllerSpec
       when(connector.patch(any, any, any)(any))
         .thenReturn(Future.successful(Left(createRouterErrorResponse)))
 
-      val result = sut.patchRecord(eoriNumber, recordId)(request.withBody(createUpdateRecordRequest.body))
+      val result = sut.patchRecord(eoriNumber, recordId)(request)
 
       status(result) mustBe INTERNAL_SERVER_ERROR
       contentAsJson(result) mustBe Json.obj(
