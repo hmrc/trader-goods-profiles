@@ -16,21 +16,23 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
-import org.mockito.ArgumentMatchersSugar.any
-import org.mockito.MockitoSugar.{reset, when}
+import org.mockito.ArgumentMatchersSugar.{any, eqTo}
+import org.mockito.MockitoSugar.{reset, verify, when}
+import org.mockito.captor.ArgCaptor
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.Request
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.connectors.UpdateRecordRouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, FakeUserAllowListAction}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.UpdateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateOrUpdateRecordResponseSupport
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, FakeUserAllowListAction}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
@@ -47,11 +49,6 @@ class UpdateRecordControllerSpec
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
-  private val request       = FakeRequest().withHeaders(
-    "Accept"       -> "application/vnd.hmrc.1.0+json",
-    "Content-Type" -> "application/json",
-    "X-Client-ID"  -> "some client ID"
-  )
   private val recordId      = UUID.randomUUID().toString
   private val timestamp     = Instant.parse("2024-01-12T12:12:12Z")
   private val correlationId = "d677693e-9981-4ee3-8574-654981ebe606"
@@ -71,14 +68,19 @@ class UpdateRecordControllerSpec
     super.beforeEach()
     reset(uuidService, connector)
     when(uuidService.uuid).thenReturn(correlationId)
-    when(connector.updateRecord(any, any, any)(any))
-      .thenReturn(Future.successful(Right(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))))
   }
 
-  "updateRecord" should {
-    "return 200 when the record is successfully updated" in {
+  "patchRecord" should {
+    val request = createFakeRequestWithHeaders(
+      "Accept"       -> "application/vnd.hmrc.1.0+json",
+      "Content-Type" -> "application/json",
+      "X-Client-ID"  -> "some client ID"
+    )
 
-      val result = sut.updateRecord(eoriNumber, recordId)(request.withBody(createUpdateRecordRequest.body))
+    "return 200 when the record is successfully updated" in {
+      when(connector.patch(any, any, any)(any))
+        .thenReturn(Future.successful(Right(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))))
+      val result = sut.patchRecord(eoriNumber, recordId)(request)
 
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
@@ -91,77 +93,128 @@ class UpdateRecordControllerSpec
   from the header
      */
     "not validate client ID is isDrop1_1_enabled is true" in {
+      when(connector.patch(any, any, any)(any))
+        .thenReturn(Future.successful(Right(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))))
       when(appConfig.isDrop1_1_enabled).thenReturn(true)
-      val request1 = FakeRequest().withHeaders(
+
+      val request = createFakeRequestWithHeaders(
         "Accept"       -> "application/vnd.hmrc.1.0+json",
         "Content-Type" -> "application/json"
       )
-      val result   = sut.updateRecord(eoriNumber, recordId)(request1.withBody(createUpdateRecordRequest.body))
+      val result  = sut.patchRecord(eoriNumber, recordId)(request)
 
       status(result) mustBe OK
     }
 
     "return 500 when the router service returns an error" in {
+      when(connector.patch(any, any, any)(any))
+        .thenReturn(Future.successful(Left(createRouterErrorResponse)))
 
-      val expectedJson  = Json.obj(
+      val result = sut.patchRecord(eoriNumber, recordId)(request)
+
+      status(result) mustBe INTERNAL_SERVER_ERROR
+      contentAsJson(result) mustBe Json.obj(
         "correlationId" -> uuidService.uuid,
         "code"          -> "INTERNAL_SERVER_ERROR",
         "message"       -> "Sorry, the service is unavailable. You'll be able to use the service later"
       )
-      val errorResponse =
-        ErrorResponse.serverErrorResponse(
-          uuidService.uuid,
-          "Sorry, the service is unavailable. You'll be able to use the service later"
-        )
-      val serviceError  = ServiceError(INTERNAL_SERVER_ERROR, errorResponse)
+    }
 
-      when(connector.updateRecord(any, any, any)(any))
-        .thenReturn(Future.successful(Left(serviceError)))
+    "return a 400" when {
+      "Content-Type header is invalid" in {
+        when(connector.patch(any, any, any)(any))
+          .thenReturn(Future.successful(Right(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))))
 
-      val result = sut.updateRecord(eoriNumber, recordId)(request.withBody(createUpdateRecordRequest.body))
+        val request = createFakeRequestWithHeaders("Accept" -> "application/vnd.hmrc.1.0+json")
+        val result  = sut.patchRecord(eoriNumber, recordId)(request)
 
-      status(result) mustBe INTERNAL_SERVER_ERROR
-      contentAsJson(result) mustBe expectedJson
+        status(result) mustBe BAD_REQUEST
+      }
+
+      "Accept header is invalid" in {
+        when(connector.patch(any, any, any)(any))
+          .thenReturn(Future.successful(Right(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))))
+
+        val request = createFakeRequestWithHeaders("Content-Type" -> "application/json")
+        val result  = sut.patchRecord(eoriNumber, recordId)(request)
+
+        status(result) mustBe BAD_REQUEST
+      }
     }
   }
 
-  lazy val invalidUpdateRecordRequestDataForAssessmentArray: JsValue = Json
-    .parse("""
-             |{
-             |    "recordId": "b2fa315b-2d31-4629-90fc-a7b1a5119873",
-             |    "actorId": "GB098765432112",
-             |    "traderRef": "BAN001001",
-             |    "comcode": "10410100",
-             |    "goodsDescription": "Organic bananas",
-             |    "countryOfOrigin": "EC",
-             |    "category": 1,
-             |    "assessments": [
-             |        {
-             |            "assessmentId": "abc123",
-             |            "primaryCategory": 1,
-             |            "condition": {
-             |                "type": "abc123",
-             |                "conditionId": "Y923",
-             |                "conditionDescription": "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
-             |                "conditionTraderText": "Excluded product"
-             |            }
-             |        },
-             |        {
-             |            "assessmentId": "",
-             |            "primaryCategory": "test",
-             |            "condition": {
-             |                "type": "",
-             |                "conditionId": "",
-             |                "conditionDescription": "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
-             |                "conditionTraderText": "Excluded product"
-             |            }
-             |        }
-             |    ],
-             |    "supplementaryUnit": 500,
-             |    "measurementUnit": "Square metre (m2)",
-             |    "comcodeEffectiveFromDate": "2024-11-18T23:20:19Z",
-             |    "comcodeEffectiveToDate": "2024-11-18T23:20:19Z"
-             |}
-             |""".stripMargin)
+  "updateRecord" should {
 
+    val putRequest = createFakeRequestWithHeaders(
+      "Accept"       -> "application/vnd.hmrc.1.0+json",
+      "Content-Type" -> "application/json"
+    )
+
+    "return 200 when the record is successfully updated" in {
+      when(connector.put(any, any, any)(any))
+        .thenReturn(Future.successful(Right(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))))
+
+      val result = sut.updateRecord(eoriNumber, recordId)(putRequest)
+
+      status(result) mustBe OK
+      contentAsJson(result) mustBe Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
+
+      withClue("should sent a request") {
+        val captor = ArgCaptor[Request[JsValue]]
+        verify(connector).put(eqTo(eoriNumber), eqTo(recordId), captor.capture)(any)
+
+        captor.value.body mustBe createUpdateRecordRequestData
+      }
+    }
+
+    "return 500 when the router service returns an error" in {
+      when(connector.put(any, any, any)(any))
+        .thenReturn(Future.successful(Left(createRouterErrorResponse)))
+
+      val result = sut.updateRecord(eoriNumber, recordId)(putRequest)
+
+      status(result) mustBe INTERNAL_SERVER_ERROR
+      contentAsJson(result) mustBe Json.obj(
+        "correlationId" -> uuidService.uuid,
+        "code"          -> "INTERNAL_SERVER_ERROR",
+        "message"       -> "Sorry, the service is unavailable. You'll be able to use the service later"
+      )
+    }
+
+    "return a 400" when {
+      "Content-Type header is invalid" in {
+        when(connector.put(any, any, any)(any))
+          .thenReturn(Future.successful(Right(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))))
+
+        val request = createFakeRequestWithHeaders("Accept" -> "application/vnd.hmrc.1.0+json")
+        val result  = sut.updateRecord(eoriNumber, recordId)(request)
+
+        status(result) mustBe BAD_REQUEST
+      }
+
+      "Accept header is invalid" in {
+        when(connector.put(any, any, any)(any))
+          .thenReturn(Future.successful(Right(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))))
+
+        val request = createFakeRequestWithHeaders("Content-Type" -> "application/json")
+        val result  = sut.updateRecord(eoriNumber, recordId)(request)
+
+        status(result) mustBe BAD_REQUEST
+      }
+    }
+  }
+
+  private def createFakeRequestWithHeaders(headers: (String, String)*) =
+    FakeRequest()
+      .withHeaders(headers: _*)
+      .withBody(createUpdateRecordRequestData)
+
+  private def createRouterErrorResponse: ServiceError = {
+    val errorResponse = ErrorResponse.serverErrorResponse(
+      correlationId,
+      "Sorry, the service is unavailable. You'll be able to use the service later"
+    )
+
+    ServiceError(INTERNAL_SERVER_ERROR, errorResponse)
+  }
 }

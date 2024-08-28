@@ -17,6 +17,7 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import io.lemonlabs.uri.Url
 import org.mockito.MockitoSugar.{reset, when}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
@@ -33,13 +34,12 @@ import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.test.HttpClientV2Support
+import uk.gov.hmrc.http.test.{HttpClientV2Support, WireMockSupport}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.UpdateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateOrUpdateRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
-import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
 
 import java.time.Instant
 import java.util.UUID
@@ -50,7 +50,7 @@ class UpdateRecordControllerIntegrationSpec
     with GuiceOneServerPerSuite
     with HttpClientV2Support
     with AuthTestSupport
-    with WireMockServerSpec
+    with WireMockSupport
     with CreateOrUpdateRecordResponseSupport
     with UpdateRecordRequestSupport
     with BeforeAndAfterEach
@@ -70,6 +70,14 @@ class UpdateRecordControllerIntegrationSpec
   private val expectedResponse = Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
   lazy private val appConfig   = mock[AppConfig]
 
+  lazy val configureServices: Map[String, Any] =
+    Map(
+      "microservice.services.trader-goods-profiles-router.host" -> wireMockHost,
+      "microservice.services.trader-goods-profiles-router.port" -> wireMockPort,
+      "microservice.services.user-allow-list.host"              -> wireMockHost,
+      "microservice.services.user-allow-list.port"              -> wireMockPort,
+      "feature.userAllowListEnabled"                            -> true
+    )
   private val routerError = Json.obj(
     "correlationId" -> correlationId,
     "code"          -> "BAD_REQUEST",
@@ -84,9 +92,6 @@ class UpdateRecordControllerIntegrationSpec
   )
 
   override lazy val app: Application = {
-    wireMock.start()
-    configureFor(wireHost, wireMock.port())
-
     GuiceApplicationBuilder()
       .configure(configureServices)
       .overrides(
@@ -107,22 +112,15 @@ class UpdateRecordControllerIntegrationSpec
     when(uuidService.uuid).thenReturn(correlationId)
     when(appConfig.isDrop1_1_enabled).thenReturn(false)
     when(appConfig.userAllowListEnabled).thenReturn(true)
-    when(appConfig.routerUrl).thenReturn(Url.parse(wireMock.baseUrl))
-    when(appConfig.userAllowListBaseUrl).thenReturn(Url.parse(wireMock.baseUrl))
+    when(appConfig.routerUrl).thenReturn(Url.parse(wireMockUrl))
+    when(appConfig.userAllowListBaseUrl).thenReturn(Url.parse(wireMockUrl))
 
   }
 
-  override def beforeAll(): Unit = {
-    super.beforeAll()
-    wireMock.resetAll()
-  }
 
-  override def afterAll(): Unit = {
-    super.afterAll()
-    wireMock.stop()
-  }
 
-  "UpdateRecordController" should {
+  "patch" should {
+
     "successfully update a record and return 200" in {
       withAuthorizedTrader()
 
@@ -268,6 +266,107 @@ class UpdateRecordControllerIntegrationSpec
 
   }
 
+  "put" should {
+    "successfully update a record and return 200" in {
+      withAuthorizedTrader()
+      stubRouterPutRequest(OK, expectedResponse.toString())
+
+      val result = await(
+        wsClient
+          .url(url)
+          .withHttpHeaders(
+            "Accept"       -> "application/vnd.hmrc.1.0+json",
+            "Content-Type" -> "application/json"
+          )
+          .put(requestBody)
+      )
+
+      result.status mustBe OK
+      result.json mustBe expectedResponse
+
+      withClue("should add the right headers") {
+        verify(
+          putRequestedFor(urlEqualTo(routerUrl))
+            .withHeader("Content-Type", equalTo("application/json"))
+            .withHeader("Accept", equalTo("application/vnd.hmrc.1.0+json"))
+        )
+      }
+    }
+
+    "return an UNAUTHORIZED error" in {
+      withUnauthorizedTrader(InsufficientEnrolments("error"))
+      stubRouterPutRequest(OK, expectedResponse.toString())
+
+      val result = await(
+        wsClient
+          .url(url)
+          .withHttpHeaders(
+            "Accept"       -> "application/vnd.hmrc.1.0+json",
+            "Content-Type" -> "application/json"
+          )
+          .put(requestBody)
+      )
+
+      result.status mustBe UNAUTHORIZED
+    }
+
+    "return an error from the router" in {
+
+      val routerErrorResponse = Json.obj(
+        "correlationId" -> correlationId,
+        "code"          -> "BAD_REQUEST",
+        "message"       -> "Bad Request",
+        "errors"        -> Seq(
+          Json.obj(
+            "code"        -> "INVALID_HEADER_PARAMETER",
+            "message"     -> "Accept was missing from Header or is in wrong format",
+            "errorNumber" -> 11
+          )
+        )
+      )
+
+      stubRouterPutRequest(400, routerErrorResponse.toString)
+      withAuthorizedTrader()
+
+      val result = await(
+        wsClient
+          .url(url)
+          .withHttpHeaders(
+            "Accept"       -> "application/vnd.hmrc.1.0+json",
+            "Content-Type" -> "application/json"
+          )
+          .put(requestBody)
+      )
+
+
+      result.status mustBe BAD_REQUEST
+      result.json mustBe routerErrorResponse
+
+    }
+
+    "return forbidden when EORI is not on the user allow list" in {
+      withAuthorizedTrader()
+      stubRouterPutRequest(OK, expectedResponse.toString())
+      stubForUserAllowListWhereUserItNotAllowed
+
+      val result = await(
+        wsClient
+          .url(url)
+          .withHttpHeaders(
+            "Accept"       -> "application/vnd.hmrc.1.0+json",
+            "Content-Type" -> "application/json"
+          )
+          .put(requestBody)
+      )
+
+      result.status mustBe FORBIDDEN
+      result.json mustBe updateExpectedJson(
+        "FORBIDDEN",
+        "This service is in private beta and not available to the public. We will aim to open the service to the public soon."
+      )
+    }
+  }
+
   private def updateRecordAndWaitWithoutClientIdHeader() =
     await(
       wsClient
@@ -292,8 +391,18 @@ class UpdateRecordControllerIntegrationSpec
     )
 
   private def stubRouterRequest(status: Int, responseBody: String)                      =
-    wireMock.stubFor(
+    stubFor(
       patch(urlEqualTo(routerUrl))
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withBody(responseBody)
+        )
+    )
+
+  private def stubRouterPutRequest(status: Int, responseBody: String)                      =
+    stubFor(
+      put(urlEqualTo(routerUrl))
         .willReturn(
           aResponse()
             .withStatus(status)
@@ -321,7 +430,7 @@ class UpdateRecordControllerIntegrationSpec
       "message"       -> message
     )
 
-  lazy val invalidUpdateRecordRequestDataForAssessmentArray: JsValue = Json
+  val invalidUpdateRecordRequestDataForAssessmentArray: JsValue = Json
     .parse("""
              |{
              |    "recordId": "b2fa315b-2d31-4629-90fc-a7b1a5119873",
@@ -359,4 +468,22 @@ class UpdateRecordControllerIntegrationSpec
              |    "comcodeEffectiveToDate": "2024-11-18T23:20:19Z"
              |}
              |""".stripMargin)
+
+  def stubForUserAllowList: StubMapping =
+    stubFor(
+      post(urlEqualTo(s"/user-allow-list/trader-goods-profiles/private-beta/check"))
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+        )
+    )
+
+  def stubForUserAllowListWhereUserItNotAllowed: StubMapping =
+    stubFor(
+      post(urlEqualTo(s"/user-allow-list/trader-goods-profiles/private-beta/check"))
+        .willReturn(
+          aResponse()
+            .withStatus(404)
+        )
+    )
 }

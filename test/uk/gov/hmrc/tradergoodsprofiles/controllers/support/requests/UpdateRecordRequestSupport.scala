@@ -17,8 +17,6 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests
 
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.Request
-import play.api.test.FakeRequest
 
 trait UpdateRecordRequestSupport {
 
@@ -49,10 +47,4 @@ trait UpdateRecordRequestSupport {
              |    "comcodeEffectiveToDate": "2024-11-18T23:20:19Z"
              |}
              |""".stripMargin)
-
-  def updateJsonRequest: Request[JsValue] =
-    FakeRequest().withBody(createUpdateRecordRequestData)
-
-  val createUpdateRecordRequest: Request[JsValue] = updateJsonRequest
-
 }

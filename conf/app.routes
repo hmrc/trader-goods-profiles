@@ -1,13 +1,24 @@
 # microservice specific routes
 
-
+# Get Records
 GET     /:eori/records/:recordId                    uk.gov.hmrc.tradergoodsprofiles.controllers.GetRecordsController.getRecord(eori: String, recordId: String)
-POST    /:eori/records                              uk.gov.hmrc.tradergoodsprofiles.controllers.CreateRecordController.createRecord(eori: String)
-DELETE  /:eori/records/:recordId                    uk.gov.hmrc.tradergoodsprofiles.controllers.RemoveRecordController.removeRecord(eori: String, recordId: String, actorId: String)
 GET     /:eori/records                              uk.gov.hmrc.tradergoodsprofiles.controllers.GetRecordsController.getRecords(eori: String, lastUpdatedDate:Option[String] ?= None, page: Option[Int] ?= None, size: Option[Int] ?= None)
-PATCH   /:eori/records/:recordId                    uk.gov.hmrc.tradergoodsprofiles.controllers.UpdateRecordController.updateRecord(eori: String, recordId: String)
+
+# Create Record
+POST    /:eori/records                              uk.gov.hmrc.tradergoodsprofiles.controllers.CreateRecordController.createRecord(eori: String)
+
+# Delete Record
+DELETE  /:eori/records/:recordId                    uk.gov.hmrc.tradergoodsprofiles.controllers.RemoveRecordController.removeRecord(eori: String, recordId: String, actorId: String)
+
+# Update Record
+PATCH   /:eori/records/:recordId                    uk.gov.hmrc.tradergoodsprofiles.controllers.UpdateRecordController.patchRecord(eori: String, recordId: String)
+PUT     /:eori/records/:recordId                    uk.gov.hmrc.tradergoodsprofiles.controllers.UpdateRecordController.updateRecord(eori: String, recordId: String)
+
+# Request Advice
 POST    /:eori/records/:recordId/advice             uk.gov.hmrc.tradergoodsprofiles.controllers.RequestAdviceController.requestAdvice(eori: String, recordId: String)
 
+# Update Profile
 PUT     /:eori                                      uk.gov.hmrc.tradergoodsprofiles.controllers.MaintainProfileController.updateProfile(eori: String)
 
+# withdrawAdvice
 PUT     /:eori/records/:recordId/advice             uk.gov.hmrc.tradergoodsprofiles.controllers.WithdrawAdviceController.withdrawAdvice(eori: String, recordId: String)
