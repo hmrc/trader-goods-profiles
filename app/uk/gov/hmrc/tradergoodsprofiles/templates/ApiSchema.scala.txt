@@ -1015,12 +1015,10 @@ components:
         pass this as traderRef.
     comcode:
       type: string
-      minLength: 6
-      maxLength: 10
+      pattern: ^([0-9]{6}|[0-9]{8}|[0-9]{10})$
       example: '0810100000'
       description: >-
-        A code specific to goods that is internationally recognised. Can be 6, 8
-        or 10 digits.
+        A code specific to goods that must be 6, 8, or 10 digits long. Only numeric values are allowed.
     adviceStatus:
       type: string
       minLength: 1
