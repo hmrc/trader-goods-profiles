@@ -124,7 +124,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateTGPRecordSchema'
+              $ref: '#/components/schemas/PatchTGPRecordSchema'
         required: true
       responses:
         '200':
@@ -649,10 +649,43 @@ components:
           $ref: '#/components/schemas/comcodeEffectiveFromDate'
         comcodeEffectiveToDate:
           $ref: '#/components/schemas/comcodeEffectiveToDate'
+    PatchTGPRecordSchema:
+      type: object
+      required:
+        - actorId
+      properties:
+        actorId:
+          $ref: '#/components/schemas/actorId'
+        traderRef:
+          $ref: '#/components/schemas/traderRef'
+        comcode:
+          $ref: '#/components/schemas/comcode'
+        goodsDescription:
+          $ref: '#/components/schemas/goodsDescription'
+        countryOfOrigin:
+          $ref: '#/components/schemas/countryOfOrigin'
+        category:
+          $ref: '#/components/schemas/category'
+        assessments:
+          $ref: '#/components/schemas/assessments'
+        supplementaryUnit:
+          $ref: '#/components/schemas/supplementaryUnit'
+        measurementUnit:
+          $ref: '#/components/schemas/measurementUnit'
+        comcodeEffectiveFromDate:
+          $ref: '#/components/schemas/comcodeEffectiveFromDate'
+        comcodeEffectiveToDate:
+          $ref: '#/components/schemas/comcodeEffectiveToDate'
     UpdateTGPRecordSchema:
       type: object
       required:
         - actorId
+        - traderRef
+        - comcode
+        - goodsDescription
+        - countryOfOrigin
+        - category
+        - comcodeEffectiveFromDate
       properties:
         actorId:
           $ref: '#/components/schemas/actorId'
