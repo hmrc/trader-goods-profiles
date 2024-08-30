@@ -1,11 +1,4 @@
 {
-  "scopes": [
-    {
-      "key": "trader-goods-profiles",
-      "name": "Trader Goods Profiles",
-      "description": "Allow full access to the Trader Goods Profiles public API"
-    }
-  ],
   "api": {
     "name": "Trader Goods Profiles",
     "description": "The externally facing API for the TGP service",
