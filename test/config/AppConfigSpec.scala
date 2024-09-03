@@ -39,13 +39,6 @@ class AppConfigSpec extends PlaySpec {
   val configService: AppConfig = createAppConfig(validAppConfig)
 
   "AppConfig" should {
-    "return true for isDrop1_1_Enabled" in {
-      configService.isDrop1_1_enabled mustBe true
-    }
-
-    "return false if isDrop1_1_Enabled is missing" in {
-      createAppConfig("").isDrop1_1_enabled mustBe false
-    }
 
     "return false if isDrop2Enabled is missing" in {
       createAppConfig("").isDrop2Enabled mustBe false
