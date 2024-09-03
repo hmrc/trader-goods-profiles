@@ -39,7 +39,7 @@ trait BaseConnector {
       }
 
     def withClientIdIfSupported(implicit hc: HeaderCarrier): RequestBuilder =
-      if (appConfig.isDrop1_1_enabled) requestBuilder
+      if (appConfig.isClientIdOptional) requestBuilder
       else {
         hc.headers(Seq(XClientIdHeader)).headOption match {
           case Some(header) => requestBuilder.setHeader(header)
