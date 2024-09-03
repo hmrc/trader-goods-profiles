@@ -55,7 +55,6 @@ class RemoveRecordController @Inject() (
   ToDo: remove this validation for drop2 - TGP-2029
    */
   private def validateHeadersForDrop2(implicit request: Request[_]): Either[Result, _] =
-    if (appConfig.isDrop2Enabled) Right("Success")
-    else if (appConfig.acceptHeaderEnabled) Right("Success")
+    if (appConfig.isDrop2Enabled || appConfig.acceptHeaderEnabled) Right("Success")
     else validateAcceptAndClientIdHeaders
 }
