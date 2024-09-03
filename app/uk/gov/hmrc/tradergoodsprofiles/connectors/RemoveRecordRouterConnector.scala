@@ -48,7 +48,7 @@ class RemoveRecordRouterConnector @Inject() (
     httpClient
       .delete(url"$url")
       .withClientIdForDrop2(appConfig) //TODO: remove this validation for drop2 - TGP-2029
-      .withAcceptHeaderForDrop2(appConfig) //TODO: remove this validation for drop2 - TGP-2029
+      .withAcceptHeader(appConfig) //TODO: remove this validation for drop2 - TGP-2029
       .execute(httpReaderWithoutResponseBody, ec)
       .recover { case ex: Throwable =>
         logger.warn(
@@ -87,8 +87,8 @@ object RemoveRecordRouterConnector {
         }
       }
 
-    def withAcceptHeaderForDrop2(appConfig: AppConfig)(implicit hc: HeaderCarrier): RequestBuilder =
-      if (appConfig.isDrop2Enabled) requestBuilder
+    def withAcceptHeader(appConfig: AppConfig)(implicit hc: HeaderCarrier): RequestBuilder =
+      if (appConfig.acceptHeaderEnabled) requestBuilder
       else {
         hc.headers(Seq(HeaderNames.ACCEPT)).headOption match {
           case Some(header) => requestBuilder.setHeader(header)
