@@ -67,7 +67,7 @@ class CreateRecordController @Inject() (
   private def validateClientIdIfSupported(implicit request: Request[_]): EitherT[Future, Result, String] =
     EitherT
       .fromEither[Future](
-        if (!appConfig.isDrop1_1_enabled) validateClientIdHeader
+        if (!appConfig.isClientIdOptional) validateClientIdHeader
         else Right("")
       )
       .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))

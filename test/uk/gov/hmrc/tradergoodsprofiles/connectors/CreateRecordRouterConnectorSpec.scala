@@ -18,6 +18,7 @@ package uk.gov.hmrc.tradergoodsprofiles.connectors
 
 import io.lemonlabs.uri.UrlPath
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
+import org.mockito.Mockito.never
 import org.mockito.MockitoSugar.{reset, verify, when}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, EitherValues}
@@ -28,7 +29,7 @@ import uk.gov.hmrc.http.StringContextOps
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.RouterCreateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateOrUpdateRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
-import uk.gov.hmrc.tradergoodsprofiles.models.response.CreateOrUpdateRecordResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.response.{CreateOrUpdateRecordResponse, GetRecordResponse}
 import uk.gov.hmrc.tradergoodsprofiles.support.BaseConnectorSpec
 
 import java.time.Instant
@@ -75,6 +76,26 @@ class CreateRecordRouterConnectorSpec
         verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
         verify(requestBuilder).setHeader("Accept"                 -> "application/vnd.hmrc.1.0+json")
         verify(requestBuilder).setHeader("X-Client-ID"            -> "clientId")
+        verify(requestBuilder).withBody(eqTo(createRouterCreateRecordRequestData))(any, any, any)
+        verify(requestBuilder).execute(any, any)
+      }
+    }
+
+    "not send the client ID in the header when isClientIdOptional is true" in {
+      when(appConfig.isClientIdOptional).thenReturn(true)
+      val response = createCreateOrUpdateRecordResponse("any-recordId", eori, Instant.now)
+      when(requestBuilder.execute[Either[ServiceError, CreateOrUpdateRecordResponse]](any, any))
+        .thenReturn(Future.successful(Right(response)))
+
+      val result = await(sut.createRecord(eori, createRouterCreateRecordRequest))
+
+      result.value mustBe response
+
+      withClue("send a request with the right url") {
+        val expectedUrl = UrlPath.parse(s"$serverUrl/trader-goods-profiles-router/traders/$eori/records")
+        verify(httpClient).post(eqTo(url"$expectedUrl"))(any)
+        verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+        verify(requestBuilder).setHeader("Accept"                 -> "application/vnd.hmrc.1.0+json")
         verify(requestBuilder).withBody(eqTo(createRouterCreateRecordRequestData))(any, any, any)
         verify(requestBuilder).execute(any, any)
       }
