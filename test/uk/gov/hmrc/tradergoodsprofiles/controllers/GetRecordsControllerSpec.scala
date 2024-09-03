@@ -74,7 +74,7 @@ class GetRecordsControllerSpec
       .thenReturn(Future.successful(Right(createGetRecordResponse(eoriNumber, recordId, timestamp))))
     when(getRecordsConnector.get(any, any, any, any)(any))
       .thenReturn(Future.successful(Right(createGetRecordsResponse(eoriNumber, recordId, timestamp))))
-    when(appConfig.isDrop1_1_enabled).thenReturn(false)
+    when(appConfig.isClientIdOptional).thenReturn(false)
   }
 
   "getRecord" should {
@@ -91,8 +91,8 @@ class GetRecordsControllerSpec
     The client ID does not need to be checked anymore as EIS has removed it
     from the header
      */
-    "not validate client ID is isDrop1_1_enabled is true" in {
-      when(appConfig.isDrop1_1_enabled).thenReturn(true)
+    "not validate client ID is isClientIdOptional is true" in {
+      when(appConfig.isClientIdOptional).thenReturn(true)
       val request1 = FakeRequest().withHeaders(
         "Accept"       -> "application/vnd.hmrc.1.0+json",
         "Content-Type" -> "application/json"
@@ -145,8 +145,8 @@ class GetRecordsControllerSpec
     The client ID does not need to be checked anymore as EIS has removed it
     from the header
      */
-    "not validate client ID is isDrop1_1_enabled is true" in {
-      when(appConfig.isDrop1_1_enabled).thenReturn(true)
+    "not validate client ID is isClientIdOptional is true" in {
+      when(appConfig.isClientIdOptional).thenReturn(true)
       val request1 = FakeRequest().withHeaders(
         "Accept"       -> "application/vnd.hmrc.1.0+json",
         "Content-Type" -> "application/json"
