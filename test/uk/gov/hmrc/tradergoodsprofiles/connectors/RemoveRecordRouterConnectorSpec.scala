@@ -90,6 +90,21 @@ class RemoveRecordRouterConnectorSpec
       verify(requestBuilder).execute(any, any)
     }
 
+    "return 204 when acceptHeaderEnabled is true" in {
+      when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
+        .thenReturn(Future.successful(Right(NO_CONTENT)))
+      when(appConfig.isDrop2Enabled).thenReturn(true)
+      when(appConfig.acceptHeaderEnabled).thenReturn(true)
+
+      await(sut.removeRecord(eori, recordId, actorId))
+
+      val expectedUrl =
+        s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId?actorId=$actorId"
+      verify(httpClient).delete(eqTo(url"$expectedUrl"))(any)
+      verify(requestBuilder, never()).setHeader(any)
+      verify(requestBuilder).execute(any, any)
+    }
+
     "return an error response" when {
       "router API return an error" in {
         val expectedErrorResponse = ErrorResponse("123", "code", "error")

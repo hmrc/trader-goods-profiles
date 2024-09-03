@@ -56,5 +56,6 @@ class RemoveRecordController @Inject() (
    */
   private def validateHeadersForDrop2(implicit request: Request[_]): Either[Result, _] =
     if (appConfig.isDrop2Enabled) Right("Success")
+    else if (appConfig.acceptHeaderEnabled) Right("Success")
     else validateAcceptAndClientIdHeaders
 }

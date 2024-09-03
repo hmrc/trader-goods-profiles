@@ -77,6 +77,7 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
     when(connector.removeRecord(any, any, any)(any))
       .thenReturn(Future.successful(Right(OK)))
     when(appConfig.isDrop2Enabled).thenReturn(false)
+    when(appConfig.acceptHeaderEnabled).thenReturn(false)
   }
 
   "removeRecord" should {
@@ -96,6 +97,14 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
       val result = sut.removeRecord(eoriNumber, recordId, actorId)(FakeRequest())
       status(result) mustBe NO_CONTENT
     }
+
+    "return 204 when acceptHeaderEnabled feature flag is true" in {
+      when(appConfig.acceptHeaderEnabled).thenReturn(true)
+
+      val result = sut.removeRecord(eoriNumber, recordId, actorId)(FakeRequest())
+      status(result) mustBe NO_CONTENT
+    }
+
     "remove the record from router" in {
       val result = sut.removeRecord(eoriNumber, recordId, actorId)(request)
 
