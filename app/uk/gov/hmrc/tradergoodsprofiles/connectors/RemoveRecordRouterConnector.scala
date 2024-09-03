@@ -79,7 +79,7 @@ class RemoveRecordRouterConnector @Inject() (
 object RemoveRecordRouterConnector {
   implicit class HttpHeaderHelper(requestBuilder: RequestBuilder) {
     def withClientIdForDrop2(appConfig: AppConfig)(implicit hc: HeaderCarrier): RequestBuilder =
-      if (appConfig.isDrop2Enabled) requestBuilder
+      if (appConfig.isClientIdOptional) requestBuilder
       else {
         hc.headers(Seq(XClientIdHeader)).headOption match {
           case Some(header) => requestBuilder.setHeader(header)

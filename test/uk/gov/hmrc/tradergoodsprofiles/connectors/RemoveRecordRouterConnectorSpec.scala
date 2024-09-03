@@ -50,7 +50,7 @@ class RemoveRecordRouterConnectorSpec
     commonSetUp
     when(httpClient.delete(any)(any)).thenReturn(requestBuilder)
     when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
-    when(appConfig.isDrop2Enabled).thenReturn(false)
+    when(appConfig.isClientIdOptional).thenReturn(false)
   }
 
   "remove" should {
@@ -84,7 +84,21 @@ class RemoveRecordRouterConnectorSpec
       val expectedUrl =
         s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId?actorId=$actorId"
       verify(httpClient).delete(eqTo(url"$expectedUrl"))(any)
-      verify(requestBuilder, never()).setHeader(any)
+      verify(requestBuilder, never()).setHeader(any, any)
+      verify(requestBuilder).execute(any, any)
+    }
+
+    "return 204 when isClientIdOptional is true" in {
+      when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
+        .thenReturn(Future.successful(Right(NO_CONTENT)))
+      when(appConfig.isClientIdOptional).thenReturn(true)
+
+      await(sut.removeRecord(eori, recordId, actorId))
+
+      val expectedUrl =
+        s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId?actorId=$actorId"
+      verify(httpClient).delete(eqTo(url"$expectedUrl"))(any)
+      verify(requestBuilder, never()).setHeader(any, any)
       verify(requestBuilder).execute(any, any)
     }
 

@@ -76,7 +76,7 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
     when(uuidService.uuid).thenReturn(correlationId)
     when(connector.removeRecord(any, any, any)(any))
       .thenReturn(Future.successful(Right(OK)))
-    when(appConfig.isDrop2Enabled).thenReturn(false)
+    when(appConfig.isClientIdOptional).thenReturn(false)
   }
 
   "removeRecord" should {
@@ -91,7 +91,7 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
     }
 
     "return 204 when drop2Enabled feature flag is true" in {
-      when(appConfig.isDrop2Enabled).thenReturn(true)
+      when(appConfig.isClientIdOptional).thenReturn(true)
 
       val result = sut.removeRecord(eoriNumber, recordId, actorId)(FakeRequest())
       status(result) mustBe NO_CONTENT
