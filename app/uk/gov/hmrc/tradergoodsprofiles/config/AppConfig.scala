@@ -40,4 +40,9 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
     config
       .getOptional[Boolean]("feature.drop2Enabled")
       .getOrElse(false)
+
+  lazy val isClientIdOptional: Boolean =
+    config
+      .getOptional[Boolean]("features.clientIdOptional")
+      .getOrElse(false)
 }
