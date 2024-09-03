@@ -88,6 +88,27 @@ class UpdateRecordRouterConnectorSpec
       }
     }
 
+    "not send the client ID in the header when isClientIdOptional is true" in {
+      when(appConfig.isClientIdOptional).thenReturn(true)
+      val response = createCreateOrUpdateRecordResponse(recordId, eori, Instant.now)
+      when(requestBuilder.execute[Either[ServiceError, CreateOrUpdateRecordResponse]](any, any))
+        .thenReturn(Future.successful(Right(response)))
+
+      val result = await(sut.patch(eori, recordId, createUpdateRecordRequest))
+
+      result.value mustBe response
+
+      withClue("send a request with the right url") {
+        val expectedUrl =
+          UrlPath.parse(s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId")
+        verify(httpClient).patch(eqTo(url"$expectedUrl"))(any)
+        verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+        verify(requestBuilder).setHeader("Accept"                 -> "application/vnd.hmrc.1.0+json")
+        verify(requestBuilder).withBody(eqTo(createUpdateRecordRequestData))(any, any, any)
+        verify(requestBuilder).execute(any, any)
+      }
+    }
+
     "return an error" when {
       "router connector return an error" in {
         val expectedErrorResponse = ErrorResponse("123", "code", "error")
