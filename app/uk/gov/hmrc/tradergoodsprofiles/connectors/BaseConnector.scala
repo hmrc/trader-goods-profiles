@@ -57,9 +57,13 @@ trait BaseConnector {
       if (isHeaderSupported) withAcceptHeader
       else requestBuilder
 
+    def withContentTypeHeaderIfSupported(isHeaderSupported: Boolean)(implicit hc: HeaderCarrier): RequestBuilder =
+      if (isHeaderSupported) withContentType
+      else requestBuilder
+
     def withContentType(implicit hc: HeaderCarrier): RequestBuilder = {
-      val acceptHeader = hc.headers(Seq(HeaderNames.CONTENT_TYPE)).headOption
-      acceptHeader match {
+      val contentTypeHeader = hc.headers(Seq(HeaderNames.CONTENT_TYPE)).headOption
+      contentTypeHeader match {
         case Some(header) => requestBuilder.setHeader(header)
         case None         => requestBuilder
       }
