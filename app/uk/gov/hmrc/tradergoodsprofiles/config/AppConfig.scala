@@ -42,6 +42,6 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   lazy val isClientIdOptional: Boolean =
     config
-      .getOptional[Boolean]("features.clientIdOptional")
+      .getOptional[Boolean]("feature.clientIdOptional")
       .getOrElse(false)
 }
