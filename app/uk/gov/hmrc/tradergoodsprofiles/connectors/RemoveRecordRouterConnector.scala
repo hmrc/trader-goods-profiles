@@ -18,15 +18,12 @@ package uk.gov.hmrc.tradergoodsprofiles.connectors
 
 import io.lemonlabs.uri.{QueryString, Url, UrlPath}
 import play.api.Logging
-import play.api.http.HeaderNames
 import play.api.http.Status.INTERNAL_SERVER_ERROR
-import uk.gov.hmrc.http.client.{HttpClientV2, RequestBuilder}
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
-import uk.gov.hmrc.tradergoodsprofiles.connectors.RemoveRecordRouterConnector.HttpHeaderHelper
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
-import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.XClientIdHeader
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -47,8 +44,8 @@ class RemoveRecordRouterConnector @Inject() (
 
     httpClient
       .delete(url"$url")
-      .withClientIdForDrop2(appConfig) //TODO: remove this validation for drop2 - TGP-2029
-      .withAcceptHeaderForDrop2(appConfig) //TODO: remove this validation for drop2 - TGP-2029
+      .withClientIdIfSupported(!appConfig.isDrop2Enabled) //TODO: remove this validation for drop2 - TGP-2029
+      .withAcceptHeaderIfSupported(!appConfig.acceptHeaderDisabled)
       .execute(httpReaderWithoutResponseBody, ec)
       .recover { case ex: Throwable =>
         logger.warn(
@@ -73,27 +70,4 @@ class RemoveRecordRouterConnector @Inject() (
       .withPath(UrlPath.parse(s"$routerBaseRoute/traders/$eoriNumber/records/$recordId"))
       .withQueryString(QueryString.fromPairs("actorId" -> actorId))
 
-}
-
-//TODO: remove this for drop2 - TGP-2029
-object RemoveRecordRouterConnector {
-  implicit class HttpHeaderHelper(requestBuilder: RequestBuilder) {
-    def withClientIdForDrop2(appConfig: AppConfig)(implicit hc: HeaderCarrier): RequestBuilder =
-      if (appConfig.isDrop2Enabled) requestBuilder
-      else {
-        hc.headers(Seq(XClientIdHeader)).headOption match {
-          case Some(header) => requestBuilder.setHeader(header)
-          case None         => requestBuilder
-        }
-      }
-
-    def withAcceptHeaderForDrop2(appConfig: AppConfig)(implicit hc: HeaderCarrier): RequestBuilder =
-      if (appConfig.isDrop2Enabled) requestBuilder
-      else {
-        hc.headers(Seq(HeaderNames.ACCEPT)).headOption match {
-          case Some(header) => requestBuilder.setHeader(header)
-          case None         => requestBuilder
-        }
-      }
-  }
 }

@@ -39,13 +39,11 @@ trait BaseConnector {
       }
 
     def withClientIdIfSupported(implicit hc: HeaderCarrier): RequestBuilder =
-      if (appConfig.isDrop1_1_enabled) requestBuilder
-      else {
-        hc.headers(Seq(XClientIdHeader)).headOption match {
-          case Some(header) => requestBuilder.setHeader(header)
-          case None         => requestBuilder
-        }
-      }
+      withClientIdIfSupported(!appConfig.isDrop1_1_enabled)
+
+    def withClientIdIfSupported(isHeaderSupported: Boolean)(implicit hc: HeaderCarrier): RequestBuilder =
+      if (isHeaderSupported) withClientId
+      else requestBuilder
 
     def withAcceptHeader(implicit hc: HeaderCarrier): RequestBuilder = {
       val acceptHeader = hc.headers(Seq(HeaderNames.ACCEPT)).headOption
@@ -54,6 +52,10 @@ trait BaseConnector {
         case None         => requestBuilder
       }
     }
+
+    def withAcceptHeaderIfSupported(isHeaderSupported: Boolean)(implicit hc: HeaderCarrier): RequestBuilder =
+      if (isHeaderSupported) withAcceptHeader
+      else requestBuilder
 
     def withContentType(implicit hc: HeaderCarrier): RequestBuilder = {
       val acceptHeader = hc.headers(Seq(HeaderNames.CONTENT_TYPE)).headOption
