@@ -98,7 +98,7 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
       status(result) mustBe NO_CONTENT
     }
 
-    "return 204 when acceptHeaderEnabled feature flag is true" in {
+    "return 204 when acceptHeaderDisabled feature flag is true" in {
       when(appConfig.acceptHeaderDisabled).thenReturn(true)
 
       val result = sut.removeRecord(eoriNumber, recordId, actorId)(FakeRequest())
