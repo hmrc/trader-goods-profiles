@@ -78,7 +78,7 @@ class UpdateRecordControllerIntegrationSpec
       "microservice.services.user-allow-list.port"              -> wireMockPort,
       "feature.userAllowListEnabled"                            -> true
     )
-  private val routerError = Json.obj(
+  private val routerError                      = Json.obj(
     "correlationId" -> correlationId,
     "code"          -> "BAD_REQUEST",
     "message"       -> "Bad Request",
@@ -91,7 +91,7 @@ class UpdateRecordControllerIntegrationSpec
     )
   )
 
-  override lazy val app: Application = {
+  override lazy val app: Application =
     GuiceApplicationBuilder()
       .configure(configureServices)
       .overrides(
@@ -101,7 +101,6 @@ class UpdateRecordControllerIntegrationSpec
         bind[AppConfig].to(appConfig)
       )
       .build()
-  }
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -116,8 +115,6 @@ class UpdateRecordControllerIntegrationSpec
     when(appConfig.userAllowListBaseUrl).thenReturn(Url.parse(wireMockUrl))
 
   }
-
-
 
   "patch" should {
 
@@ -276,7 +273,8 @@ class UpdateRecordControllerIntegrationSpec
           .url(url)
           .withHttpHeaders(
             "Accept"       -> "application/vnd.hmrc.1.0+json",
-            "Content-Type" -> "application/json"
+            "Content-Type" -> "application/json",
+            "X-Client-ID"  -> "clientId"
           )
           .put(requestBody)
       )
@@ -302,7 +300,8 @@ class UpdateRecordControllerIntegrationSpec
           .url(url)
           .withHttpHeaders(
             "Accept"       -> "application/vnd.hmrc.1.0+json",
-            "Content-Type" -> "application/json"
+            "Content-Type" -> "application/json",
+            "X-Client-ID"  -> "clientId"
           )
           .put(requestBody)
       )
@@ -333,7 +332,8 @@ class UpdateRecordControllerIntegrationSpec
           .url(url)
           .withHttpHeaders(
             "Accept"       -> "application/vnd.hmrc.1.0+json",
-            "Content-Type" -> "application/json"
+            "Content-Type" -> "application/json",
+            "X-Client-ID"  -> "clientId"
           )
           .put(requestBody)
       )
@@ -390,7 +390,7 @@ class UpdateRecordControllerIntegrationSpec
         .patch(requestBody)
     )
 
-  private def stubRouterRequest(status: Int, responseBody: String)                      =
+  private def stubRouterRequest(status: Int, responseBody: String) =
     stubFor(
       patch(urlEqualTo(routerUrl))
         .willReturn(
@@ -400,7 +400,7 @@ class UpdateRecordControllerIntegrationSpec
         )
     )
 
-  private def stubRouterPutRequest(status: Int, responseBody: String)                      =
+  private def stubRouterPutRequest(status: Int, responseBody: String)                   =
     stubFor(
       put(urlEqualTo(routerUrl))
         .willReturn(

@@ -66,7 +66,7 @@ class AppConfigSpec extends PlaySpec {
       val config =
         """
           |appName=trader-goods-profiles-router
-          |features.clientIdOptional=true
+          |feature.clientIdOptional=true
           |""".stripMargin
       createAppConfig(config).isClientIdOptional mustBe true
     }
