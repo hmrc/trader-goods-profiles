@@ -51,7 +51,7 @@ class RemoveRecordRouterConnectorSpec
     when(httpClient.delete(any)(any)).thenReturn(requestBuilder)
     when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
     when(appConfig.isDrop2Enabled).thenReturn(false)
-    when(appConfig.acceptHeaderEnabled).thenReturn(false)
+    when(appConfig.acceptHeaderDisabled).thenReturn(false)
   }
 
   "remove" should {
@@ -79,7 +79,7 @@ class RemoveRecordRouterConnectorSpec
       when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
         .thenReturn(Future.successful(Right(NO_CONTENT)))
       when(appConfig.isDrop2Enabled).thenReturn(true)
-      when(appConfig.acceptHeaderEnabled).thenReturn(true)
+      when(appConfig.acceptHeaderDisabled).thenReturn(true)
 
       await(sut.removeRecord(eori, recordId, actorId))
 
@@ -94,7 +94,7 @@ class RemoveRecordRouterConnectorSpec
       when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
         .thenReturn(Future.successful(Right(NO_CONTENT)))
       when(appConfig.isDrop2Enabled).thenReturn(true)
-      when(appConfig.acceptHeaderEnabled).thenReturn(true)
+      when(appConfig.acceptHeaderDisabled).thenReturn(true)
 
       await(sut.removeRecord(eori, recordId, actorId))
 

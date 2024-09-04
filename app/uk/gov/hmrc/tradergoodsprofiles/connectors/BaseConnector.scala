@@ -53,10 +53,9 @@ trait BaseConnector {
       }
     }
 
-    def withAcceptHeaderIfSupported(isHeaderSupported: Boolean)(implicit hc: HeaderCarrier): RequestBuilder = {
+    def withAcceptHeaderIfSupported(isHeaderSupported: Boolean)(implicit hc: HeaderCarrier): RequestBuilder =
       if (isHeaderSupported) withAcceptHeader
       else requestBuilder
-    }
 
     def withContentType(implicit hc: HeaderCarrier): RequestBuilder = {
       val acceptHeader = hc.headers(Seq(HeaderNames.CONTENT_TYPE)).headOption
