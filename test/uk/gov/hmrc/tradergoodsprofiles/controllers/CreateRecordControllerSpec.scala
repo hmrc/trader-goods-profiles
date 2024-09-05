@@ -27,10 +27,10 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.connectors.CreateRecordRouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, FakeUserAllowListAction}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.UpdateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateOrUpdateRecordResponseSupport
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, FakeUserAllowListAction}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
@@ -79,6 +79,23 @@ class CreateRecordControllerSpec
     "return 201 when the record is successfully created" in {
 
       val result = sut.createRecord(eoriNumber)(request.withBody(createUpdateRecordRequestData))
+
+      status(result) mustBe CREATED
+      contentAsJson(result) mustBe Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
+    }
+
+    /*
+    ToDO: remove this test after drop1.1 - TGP-1889
+    The client ID does not need to be checked anymore as EIS has removed it
+    from the header
+     */
+    "not validate client ID is isClientIdHeaderDisabled is true" in {
+      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
+      val request1 = FakeRequest().withHeaders(
+        "Accept"       -> "application/vnd.hmrc.1.0+json",
+        "Content-Type" -> "application/json"
+      )
+      val result   = sut.createRecord(eoriNumber)(request1.withBody(createUpdateRecordRequestData))
 
       status(result) mustBe CREATED
       contentAsJson(result) mustBe Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
