@@ -77,8 +77,8 @@ class GetRecordsRouterConnectorSpec
       }
     }
 
-    "not send the client ID in the header if drop.1.1" in {
-      when(appConfig.isDrop1_1_enabled).thenReturn(true)
+    "not send the client ID in the header when isClientIdHeaderDisabled is true" in {
+      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
       val routerResponse = createGetRecordResponse("eori", "recoreId", Instant.now)
       when(requestBuilder.execute[Either[ServiceError, GetRecordResponse]](any, any))
         .thenReturn(Future.successful(Right(routerResponse)))
@@ -140,8 +140,8 @@ class GetRecordsRouterConnectorSpec
       }
     }
 
-    "not send the client ID in the header if drop.1.1" in {
-      when(appConfig.isDrop1_1_enabled).thenReturn(true)
+    "not send the client ID in the header when isClientIdHeaderDisabled is true" in {
+      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
       val routerResponse = createGetRecordsResponse("eori", "recoreId", Instant.now)
       when(requestBuilder.execute[Either[ServiceError, GetRecordsResponse]](any, any))
         .thenReturn(Future.successful(Right(routerResponse)))
