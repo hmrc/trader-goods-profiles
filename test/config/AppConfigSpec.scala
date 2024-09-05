@@ -51,6 +51,10 @@ class AppConfigSpec extends PlaySpec {
       createAppConfig("").isDrop2Enabled mustBe false
     }
 
+    "return false if contentTypeHeaderDisabled is missing" in {
+      createAppConfig("").isContentTypeHeaderDisabled mustBe false
+    }
+
     "return false if isDrop2Enabled is false" in {
       val validAppConfig =
         """
@@ -67,6 +71,24 @@ class AppConfigSpec extends PlaySpec {
           |feature.drop2Enabled=true
           |""".stripMargin
       createAppConfig(validAppConfig).isDrop2Enabled mustBe true
+    }
+
+    "return false if contentTypeHeaderDisabled is false" in {
+      val validAppConfig =
+        """
+          |appName=trader-goods-profiles-router
+          |feature.contentTypeHeaderDisabled=false
+          |""".stripMargin
+      createAppConfig(validAppConfig).isContentTypeHeaderDisabled mustBe false
+    }
+
+    "return true if contentTypeHeaderDisabled is true" in {
+      val validAppConfig =
+        """
+          |appName=trader-goods-profiles-router
+          |feature.contentTypeHeaderDisabled=true
+          |""".stripMargin
+      createAppConfig(validAppConfig).isContentTypeHeaderDisabled mustBe true
     }
   }
 }
