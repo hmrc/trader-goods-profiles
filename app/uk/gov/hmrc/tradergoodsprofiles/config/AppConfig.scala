@@ -34,7 +34,6 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   lazy val withdrawAdviceEnabled: Boolean    = config.get[Boolean]("feature.withdrawAdviceEnabled")
   lazy val requestAdviceEnabled: Boolean     = config.get[Boolean]("feature.requestAdviceEnabled")
   lazy val userAllowListEnabled: Boolean     = config.get[Boolean]("feature.userAllowListEnabled")
-  lazy val isDrop1_1_enabled: Boolean        = config.getOptional[Boolean]("feature.drop_1_1_enabled").getOrElse(false)
   lazy val acceptHeaderDisabled: Boolean     = config.get[Boolean]("feature.acceptHeaderDisabled")
   lazy val isClientIdHeaderDisabled: Boolean =
     config.getOptional[Boolean]("feature.clientIdHeaderDisabled").getOrElse(false)
