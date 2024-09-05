@@ -18,7 +18,7 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import cats.data.EitherT
 import play.api.libs.json.Json.toJson
-import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
+import play.api.mvc._
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RemoveRecordRouterConnector
@@ -43,7 +43,8 @@ class RemoveRecordController @Inject() (
   def removeRecord(eori: String, recordId: String, actorId: String): Action[AnyContent] =
     (authAction(eori) andThen userAllowListAction).async { implicit request =>
       val result = for {
-        _ <- EitherT.fromEither[Future](validateHeadersForDrop2)
+        _ <- validateClientIdHeaderIfSupported
+        _ <- validateAcceptHeaderIfSupported
         _ <- EitherT(removeRecordConnector.removeRecord(eori, recordId, actorId))
                .leftMap(e => Status(e.status)(toJson(e.errorResponse)))
       } yield NoContent
@@ -51,12 +52,19 @@ class RemoveRecordController @Inject() (
       result.merge
     }
 
-  /*
-  ToDo: remove this validation for drop2 - TGP-2029
-  ToDo: remove the appConfig.isDrop2Enabled flag when we are done with the TGP-2366,2364,2367.
-   */
+  private def validateClientIdHeaderIfSupported(implicit request: Request[_]): EitherT[Future, Result, String] =
+    EitherT
+      .fromEither[Future](
+        if (!appConfig.isClientIdHeaderDisabled) validateClientIdHeader
+        else Right("")
+      )
+      .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
 
-  private def validateHeadersForDrop2(implicit request: Request[_]): Either[Result, _] =
-    if (appConfig.isDrop2Enabled || appConfig.acceptHeaderDisabled) Right("Success")
-    else validateAcceptAndClientIdHeaders
+  private def validateAcceptHeaderIfSupported(implicit request: Request[_]): EitherT[Future, Result, String] =
+    EitherT
+      .fromEither[Future](
+        if (!appConfig.acceptHeaderDisabled) validateAcceptHeader
+        else Right("")
+      )
+      .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
 }
