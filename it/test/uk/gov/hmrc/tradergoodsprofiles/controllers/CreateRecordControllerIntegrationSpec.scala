@@ -17,6 +17,7 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import com.github.tomakehurst.wiremock.client.WireMock._
+import io.lemonlabs.uri.Url
 import org.mockito.MockitoSugar.{reset, when}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar.mock
@@ -79,7 +80,8 @@ class CreateRecordControllerIntegrationSpec
       .overrides(
         bind[AuthConnector].to(authConnector),
         bind[UuidService].to(uuidService),
-        bind[HttpClientV2].to(httpClientV2)
+        bind[HttpClientV2].to(httpClientV2),
+        bind[AppConfig].to(appConfig)
       )
       .build()
   }
@@ -92,6 +94,9 @@ class CreateRecordControllerIntegrationSpec
     stubForUserAllowList
     when(uuidService.uuid).thenReturn(correlationId)
     when(appConfig.isClientIdHeaderDisabled).thenReturn(false)
+    when(appConfig.userAllowListEnabled).thenReturn(true)
+    when(appConfig.routerUrl).thenReturn(Url.parse(wireMock.baseUrl))
+    when(appConfig.userAllowListBaseUrl).thenReturn(Url.parse(wireMock.baseUrl))
   }
 
   override def beforeAll(): Unit = {

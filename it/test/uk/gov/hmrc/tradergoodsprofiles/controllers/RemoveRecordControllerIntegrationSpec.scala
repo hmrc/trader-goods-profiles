@@ -18,6 +18,7 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
+import io.lemonlabs.uri.Url
 import org.mockito.MockitoSugar.{reset, when}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar.mock
@@ -34,6 +35,7 @@ import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
+import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
@@ -59,6 +61,8 @@ class RemoveRecordControllerIntegrationSpec
   private val routerUrl      = s"/trader-goods-profiles-router/traders/$eoriNumber/records/$recordId?actorId=$actorId"
   private val routerResponse = NO_CONTENT
 
+  lazy private val appConfig = mock[AppConfig]
+
   override lazy val app: Application = {
     wireMock.start()
     WireMock.configureFor(wireHost, wireMock.port())
@@ -68,7 +72,8 @@ class RemoveRecordControllerIntegrationSpec
       .overrides(
         bind[AuthConnector].to(authConnector),
         bind[UuidService].to(uuidService),
-        bind[HttpClientV2].to(httpClientV2)
+        bind[HttpClientV2].to(httpClientV2),
+        bind[AppConfig].to(appConfig)
       )
       .build()
   }
@@ -80,6 +85,10 @@ class RemoveRecordControllerIntegrationSpec
     stubForUserAllowList
     stubRouterResponse(NO_CONTENT, routerResponse.toString)
     when(uuidService.uuid).thenReturn(correlationId)
+    when(appConfig.isClientIdHeaderDisabled).thenReturn(false)
+    when(appConfig.userAllowListEnabled).thenReturn(true)
+    when(appConfig.routerUrl).thenReturn(Url.parse(wireMock.baseUrl))
+    when(appConfig.userAllowListBaseUrl).thenReturn(Url.parse(wireMock.baseUrl))
   }
 
   override def beforeAll(): Unit = {
