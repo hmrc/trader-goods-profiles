@@ -78,6 +78,12 @@ class UpdateRecordControllerSpec
       "X-Client-ID"  -> "some client ID"
     )
 
+    val requestWithoutClientId = createFakeRequestWithHeaders(
+      "Accept"       -> "application/vnd.hmrc.1.0+json",
+      "Content-Type" -> "application/json",
+      "X-Client-ID"  -> "some client ID"
+    )
+
     "return 200 when the record is successfully updated" in {
       when(connector.patch(any, any, any)(any))
         .thenReturn(Future.successful(Right(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))))
@@ -97,7 +103,7 @@ class UpdateRecordControllerSpec
       when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
       when(connector.patch(any, any, any)(any))
         .thenReturn(Future.successful(Right(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))))
-      val result = sut.patchRecord(eoriNumber, recordId)(request)
+      val result = sut.patchRecord(eoriNumber, recordId)(requestWithoutClientId)
 
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
