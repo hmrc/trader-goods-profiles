@@ -27,8 +27,8 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RemoveRecordRouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, FakeUserAllowListAction}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, FakeUserAllowListAction}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
@@ -76,7 +76,7 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
     when(uuidService.uuid).thenReturn(correlationId)
     when(connector.removeRecord(any, any, any)(any))
       .thenReturn(Future.successful(Right(OK)))
-    when(appConfig.isDrop2Enabled).thenReturn(false)
+    when(appConfig.isClientIdHeaderDisabled).thenReturn(false)
     when(appConfig.acceptHeaderDisabled).thenReturn(false)
   }
 
@@ -86,22 +86,43 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
     TODO: this test need to be removed for drop2 - TGP-2029
     The request should have no headers.
      */
-    "return 204 when drop2Enabled feature flag is false" in {
+    "return 204 when isClientIdHeaderDisabled feature flag is false" in {
       val result = sut.removeRecord(eoriNumber, recordId, actorId)(request)
       status(result) mustBe NO_CONTENT
     }
 
-    "return 204 when drop2Enabled feature flag is true" in {
-      when(appConfig.isDrop2Enabled).thenReturn(true)
+    "return 204 when isClientIdHeaderDisabled feature flag is true" in {
+      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
 
-      val result = sut.removeRecord(eoriNumber, recordId, actorId)(FakeRequest())
+      val result = sut.removeRecord(eoriNumber, recordId, actorId)(
+        FakeRequest().withHeaders(
+          "Accept" -> "application/vnd.hmrc.1.0+json"
+        )
+      )
       status(result) mustBe NO_CONTENT
     }
 
     "return 204 when acceptHeaderDisabled feature flag is true" in {
       when(appConfig.acceptHeaderDisabled).thenReturn(true)
 
-      val result = sut.removeRecord(eoriNumber, recordId, actorId)(FakeRequest())
+      val result = sut.removeRecord(eoriNumber, recordId, actorId)(
+        FakeRequest().withHeaders(
+          "X-Client-ID" -> "some client ID"
+        )
+      )
+      status(result) mustBe NO_CONTENT
+    }
+
+    "return 204 when acceptHeaderDisabled and isClientIdHeaderDisabled are true" in {
+      when(appConfig.acceptHeaderDisabled).thenReturn(true)
+      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
+
+      val result = sut.removeRecord(eoriNumber, recordId, actorId)(
+        FakeRequest().withHeaders(
+          "X-Client-ID" -> "some client ID",
+          "Accept"      -> "application/vnd.hmrc.1.0+json"
+        )
+      )
       status(result) mustBe NO_CONTENT
     }
 

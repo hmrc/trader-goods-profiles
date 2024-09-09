@@ -39,7 +39,7 @@ trait BaseConnector {
       }
 
     def withClientIdIfSupported(implicit hc: HeaderCarrier): RequestBuilder =
-      withClientIdIfSupported(!appConfig.isDrop1_1_enabled)
+      withClientIdIfSupported(!appConfig.isClientIdHeaderDisabled)
 
     def withClientIdIfSupported(isHeaderSupported: Boolean)(implicit hc: HeaderCarrier): RequestBuilder =
       if (isHeaderSupported) withClientId

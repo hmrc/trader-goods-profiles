@@ -17,6 +17,7 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import com.github.tomakehurst.wiremock.client.WireMock._
+import io.lemonlabs.uri.Url
 import org.mockito.MockitoSugar.{reset, when}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar.mock
@@ -33,6 +34,7 @@ import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
+import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.UpdateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateOrUpdateRecordResponseSupport
@@ -67,6 +69,8 @@ class CreateRecordControllerIntegrationSpec
   private val requestBody      = createUpdateRecordRequestData
   private val expectedResponse = Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
 
+  lazy private val appConfig = mock[AppConfig]
+
   override lazy val app: Application = {
     wireMock.start()
     configureFor(wireHost, wireMock.port())
@@ -76,7 +80,8 @@ class CreateRecordControllerIntegrationSpec
       .overrides(
         bind[AuthConnector].to(authConnector),
         bind[UuidService].to(uuidService),
-        bind[HttpClientV2].to(httpClientV2)
+        bind[HttpClientV2].to(httpClientV2),
+        bind[AppConfig].to(appConfig)
       )
       .build()
   }
@@ -88,6 +93,10 @@ class CreateRecordControllerIntegrationSpec
     stubRouterRequest(CREATED, expectedResponse.toString())
     stubForUserAllowList
     when(uuidService.uuid).thenReturn(correlationId)
+    when(appConfig.isClientIdHeaderDisabled).thenReturn(false)
+    when(appConfig.userAllowListEnabled).thenReturn(true)
+    when(appConfig.routerUrl).thenReturn(Url.parse(wireMock.baseUrl))
+    when(appConfig.userAllowListBaseUrl).thenReturn(Url.parse(wireMock.baseUrl))
   }
 
   override def beforeAll(): Unit = {
@@ -114,6 +123,24 @@ class CreateRecordControllerIntegrationSpec
           postRequestedFor(urlEqualTo(routerUrl))
             .withHeader("Content-Type", equalTo("application/json"))
             .withHeader("X-Client-ID", equalTo("clientId"))
+            .withHeader("Accept", equalTo("application/vnd.hmrc.1.0+json"))
+        )
+      }
+    }
+
+    "should not validate client ID is feature flag isClientIdHeaderDisabled is true" in {
+      withAuthorizedTrader()
+      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
+
+      val result = createRecordAndWait()
+
+      result.status mustBe CREATED
+      result.json mustBe expectedResponse
+
+      withClue("should add the right headers") {
+        verify(
+          postRequestedFor(urlEqualTo(routerUrl))
+            .withHeader("Content-Type", equalTo("application/json"))
             .withHeader("Accept", equalTo("application/vnd.hmrc.1.0+json"))
         )
       }

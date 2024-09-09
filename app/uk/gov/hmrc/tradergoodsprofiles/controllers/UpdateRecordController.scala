@@ -72,7 +72,7 @@ from the header
   private def validateClientIdIfSupported(implicit request: Request[_]): EitherT[Future, Result, String] =
     EitherT
       .fromEither[Future](
-        if (!appConfig.isDrop1_1_enabled) validateClientIdHeader
+        if (!appConfig.isClientIdHeaderDisabled) validateClientIdHeader
         else Right("")
       )
       .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))

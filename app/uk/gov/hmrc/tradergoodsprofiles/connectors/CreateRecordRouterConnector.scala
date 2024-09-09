@@ -51,7 +51,7 @@ class CreateRecordRouterConnector @Inject() (
       .withContentType
       .withAcceptHeader
       .withBody(createRecordRequest.body)
-      .withClientId
+      .withClientIdIfSupported
       .execute(httpReader[CreateOrUpdateRecordResponse], ec)
       .recover { case ex: Throwable =>
         logger.warn(

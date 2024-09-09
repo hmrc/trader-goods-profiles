@@ -68,10 +68,17 @@ class UpdateRecordControllerSpec
     super.beforeEach()
     reset(uuidService, connector)
     when(uuidService.uuid).thenReturn(correlationId)
+    when(appConfig.isClientIdHeaderDisabled).thenReturn(false)
   }
 
   "patchRecord" should {
     val request = createFakeRequestWithHeaders(
+      "Accept"       -> "application/vnd.hmrc.1.0+json",
+      "Content-Type" -> "application/json",
+      "X-Client-ID"  -> "some client ID"
+    )
+
+    val requestWithoutClientId = createFakeRequestWithHeaders(
       "Accept"       -> "application/vnd.hmrc.1.0+json",
       "Content-Type" -> "application/json",
       "X-Client-ID"  -> "some client ID"
@@ -92,18 +99,14 @@ class UpdateRecordControllerSpec
   The client ID does not need to be checked anymore as EIS has removed it
   from the header
      */
-    "not validate client ID is isDrop1_1_enabled is true" in {
+    "not validate client ID is isClientIdHeaderDisabled is true" in {
+      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
       when(connector.patch(any, any, any)(any))
         .thenReturn(Future.successful(Right(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))))
-      when(appConfig.isDrop1_1_enabled).thenReturn(true)
-
-      val request = createFakeRequestWithHeaders(
-        "Accept"       -> "application/vnd.hmrc.1.0+json",
-        "Content-Type" -> "application/json"
-      )
-      val result  = sut.patchRecord(eoriNumber, recordId)(request)
+      val result = sut.patchRecord(eoriNumber, recordId)(requestWithoutClientId)
 
       status(result) mustBe OK
+      contentAsJson(result) mustBe Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
     }
 
     "return 500 when the router service returns an error" in {

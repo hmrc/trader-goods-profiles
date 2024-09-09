@@ -57,7 +57,7 @@ class MaintainProfileRouterConnectorSpec
 
   "put" should {
     "return 200 when the profile is successfully updated" in {
-      when(appConfig.isDrop1_1_enabled).thenReturn(false)
+      when(appConfig.isClientIdHeaderDisabled).thenReturn(false)
 
       val response = MaintainProfileResponse(
         eori = "GB123456789012",
@@ -85,8 +85,8 @@ class MaintainProfileRouterConnectorSpec
       }
     }
 
-    "not send the client ID in the header if drop.1.1" in {
-      when(appConfig.isDrop1_1_enabled).thenReturn(true)
+    "not send the client ID in the header when isClientIdHeaderDisabled is true" in {
+      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
 
       val response = MaintainProfileResponse(
         eori = "GB123456789012",
