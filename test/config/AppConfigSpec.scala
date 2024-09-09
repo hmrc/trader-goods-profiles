@@ -27,7 +27,7 @@ class AppConfigSpec extends PlaySpec {
   private val validAppConfig =
     """
       |appName=trader-goods-profiles
-      |feature.drop_1_1_enabled=true
+      |feature.clientIdHeaderDisabled=true
     """.stripMargin
 
   private def createAppConfig(configSettings: String) = {
