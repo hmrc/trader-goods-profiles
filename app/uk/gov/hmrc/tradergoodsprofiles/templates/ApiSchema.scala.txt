@@ -624,7 +624,6 @@ components:
         - comcode
         - goodsDescription
         - countryOfOrigin
-        - category
         - comcodeEffectiveFromDate
       properties:
         actorId:
@@ -684,7 +683,6 @@ components:
         - comcode
         - goodsDescription
         - countryOfOrigin
-        - category
         - comcodeEffectiveFromDate
       properties:
         actorId:
