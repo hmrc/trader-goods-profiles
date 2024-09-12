@@ -345,7 +345,6 @@ class CreateRecordControllerIntegrationSpec
       createBadRequestJson("Mandatory field comcode was missing from body or is in the wrong format", 11),
       createBadRequestJson("Mandatory field goodsDescription was missing from body or is in the wrong format", 12),
       createBadRequestJson("Mandatory field countryOfOrigin was missing from body or is in the wrong format", 13),
-      createBadRequestJson("Mandatory field category was missing from body or is in the wrong format", 14),
       createBadRequestJson(
         "Mandatory field comcodeEffectiveFromDate was missing from body or is in the wrong format",
         23
