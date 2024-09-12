@@ -63,7 +63,7 @@ class UpdateRecordRouterConnectorSpec
     when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
     when(requestBuilder.withBody(any[Object])(any, any, any))
       .thenReturn(requestBuilder)
-    when(appConfig.isClientIdHeaderDisabled).thenReturn(false)
+    when(appConfig.sendClientId).thenReturn(true)
   }
 
   "patch" should {
@@ -89,8 +89,8 @@ class UpdateRecordRouterConnectorSpec
       }
     }
 
-    "should not send client ID is feature flag isClientIdHeaderDisabled is true" in {
-      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
+    "should not send client ID is feature flag sendClientId is false" in {
+      when(appConfig.sendClientId).thenReturn(false)
       val response = createCreateOrUpdateRecordResponse(recordId, eori, Instant.now)
       when(requestBuilder.execute[Either[ServiceError, CreateOrUpdateRecordResponse]](any, any))
         .thenReturn(Future.successful(Right(response)))

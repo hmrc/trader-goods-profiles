@@ -54,6 +54,7 @@ class GetRecordsRouterConnectorSpec
     when(uuidService.uuid).thenReturn(correlationId)
     when(httpClient.get(any)(any)).thenReturn(requestBuilder)
     when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
+    when(appConfig.sendClientId).thenReturn(true)
   }
 
   "get single record" should {
@@ -77,8 +78,8 @@ class GetRecordsRouterConnectorSpec
       }
     }
 
-    "not send the client ID in the header when isClientIdHeaderDisabled is true" in {
-      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
+    "not send the client ID in the header when sendClientId is false" in {
+      when(appConfig.sendClientId).thenReturn(false)
       val routerResponse = createGetRecordResponse("eori", "recoreId", Instant.now)
       when(requestBuilder.execute[Either[ServiceError, GetRecordResponse]](any, any))
         .thenReturn(Future.successful(Right(routerResponse)))
@@ -140,8 +141,8 @@ class GetRecordsRouterConnectorSpec
       }
     }
 
-    "not send the client ID in the header when isClientIdHeaderDisabled is true" in {
-      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
+    "not send the client ID in the header when sendClientId is false" in {
+      when(appConfig.sendClientId).thenReturn(false)
       val routerResponse = createGetRecordsResponse("eori", "recoreId", Instant.now)
       when(requestBuilder.execute[Either[ServiceError, GetRecordsResponse]](any, any))
         .thenReturn(Future.successful(Right(routerResponse)))

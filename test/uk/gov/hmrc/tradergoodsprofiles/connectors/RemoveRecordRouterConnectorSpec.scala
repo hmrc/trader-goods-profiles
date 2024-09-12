@@ -50,7 +50,7 @@ class RemoveRecordRouterConnectorSpec
     commonSetUp
     when(httpClient.delete(any)(any)).thenReturn(requestBuilder)
     when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
-    when(appConfig.isClientIdHeaderDisabled).thenReturn(false)
+    when(appConfig.sendClientId).thenReturn(true)
     when(appConfig.acceptHeaderDisabled).thenReturn(false)
   }
 
@@ -63,7 +63,7 @@ class RemoveRecordRouterConnectorSpec
       val result = await(sut.removeRecord(eori, recordId, actorId))
 
       result.value mustBe NO_CONTENT
-      withClue("send a request with the right url when isClientIdHeaderDisabled is false") {
+      withClue("send a request with the right url when sendClientId is true") {
         val expectedUrl =
           s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId?actorId=$actorId"
         verify(httpClient).delete(eqTo(url"$expectedUrl"))(any)
@@ -75,10 +75,10 @@ class RemoveRecordRouterConnectorSpec
     }
 
     //Todo: keep this for drop2 - TGP-2029
-    "return 204 when isClientIdHeaderDisabled is true" in {
+    "return 204 when sendClientId is false" in {
       when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
         .thenReturn(Future.successful(Right(NO_CONTENT)))
-      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
+      when(appConfig.sendClientId).thenReturn(false)
 
       await(sut.removeRecord(eori, recordId, actorId))
 
@@ -103,11 +103,11 @@ class RemoveRecordRouterConnectorSpec
       verify(requestBuilder).execute(any, any)
     }
 
-    "return 204 when isClientIdHeaderDisabled and acceptHeaderDisabled are true" in {
+    "return 204 when sendClientId and acceptHeaderDisabled are true" in {
       when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
         .thenReturn(Future.successful(Right(NO_CONTENT)))
-      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
-      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
+      when(appConfig.sendClientId).thenReturn(true)
+      when(appConfig.sendClientId).thenReturn(true)
 
       await(sut.removeRecord(eori, recordId, actorId))
 

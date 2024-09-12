@@ -27,7 +27,7 @@ class AppConfigSpec extends PlaySpec {
   private val validAppConfig =
     """
       |appName=trader-goods-profiles
-      |feature.clientIdHeaderDisabled=true
+      |feature.sendClientId=true
     """.stripMargin
 
   private def createAppConfig(configSettings: String) = {
@@ -62,26 +62,26 @@ class AppConfigSpec extends PlaySpec {
       createAppConfig(validAppConfig).isDrop2Enabled mustBe true
     }
 
-    "return true for clientIdHeaderDisabled when it is set to true" in {
+    "return true for sendClientId when it is set to true" in {
       val config =
         """
           |appName=trader-goods-profiles-router
-          |feature.clientIdHeaderDisabled=true
+          |feature.sendClientId=true
           |""".stripMargin
-      createAppConfig(config).isClientIdHeaderDisabled mustBe true
+      createAppConfig(config).sendClientId mustBe true
     }
 
-    "return false for clientIdHeaderDisabled when it is missing" in {
-      createAppConfig("").isClientIdHeaderDisabled mustBe false
+    "return true for sendClientId when it is missing" in {
+      createAppConfig("").sendClientId mustBe true
     }
 
-    "return false for clientIdHeaderDisabled when it is set to false" in {
+    "return false for sendClientId when it is set to false" in {
       val config =
         """
           |appName=trader-goods-profiles-router
-          |feature.clientIdHeaderDisabled=false
+          |feature.sendClientId=false
           |""".stripMargin
-      createAppConfig(config).isClientIdHeaderDisabled mustBe false
+      createAppConfig(config).sendClientId mustBe false
     }
   }
 }

@@ -110,7 +110,7 @@ class UpdateRecordControllerIntegrationSpec
     stubForUserAllowList
     stubRouterRequest(OK, expectedResponse.toString())
     when(uuidService.uuid).thenReturn(correlationId)
-    when(appConfig.isClientIdHeaderDisabled).thenReturn(false)
+    when(appConfig.sendClientId).thenReturn(true)
     when(appConfig.userAllowListEnabled).thenReturn(true)
     when(appConfig.routerUrl).thenReturn(Url.parse(wireMockUrl))
     when(appConfig.userAllowListBaseUrl).thenReturn(Url.parse(wireMockUrl))
@@ -138,9 +138,9 @@ class UpdateRecordControllerIntegrationSpec
       }
     }
 
-    "should not validate client ID is feature flag isClientIdHeaderDisabled is true" in {
+    "should not validate client ID is feature flag sendClientId is false" in {
       withAuthorizedTrader()
-      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
+      when(appConfig.sendClientId).thenReturn(false)
       val result = updateRecordAndWaitWithoutClientIdHeader()
 
       result.status mustBe OK

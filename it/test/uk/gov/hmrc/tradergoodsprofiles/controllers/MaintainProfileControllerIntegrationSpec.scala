@@ -125,7 +125,7 @@ class MaintainProfileControllerIntegrationSpec
     // TODO: After the drop 1.1 create single test without the client id and remove the feature flag - TGP-2014
     "return 200 OK when the profile update is successful" in {
       withAuthorizedTrader()
-      when(appConfig.isClientIdHeaderDisabled).thenReturn(false)
+      when(appConfig.sendClientId).thenReturn(true)
 
       val result = updateProfileAndWait()
 
@@ -144,9 +144,9 @@ class MaintainProfileControllerIntegrationSpec
       }
     }
     // TODO: After the drop 1.1 create single test without the client id and remove the feature flag - TGP-2014
-    "return 200 OK without validating x-client-id when isClientIdHeaderDisabled is true" in {
+    "return 200 OK without validating x-client-id when sendClientId is false" in {
       withAuthorizedTrader()
-      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
+      when(appConfig.sendClientId).thenReturn(false)
 
       val result = updateProfileAndWaitWithoutClientId()
 
