@@ -93,7 +93,7 @@ class CreateRecordControllerIntegrationSpec
     stubRouterRequest(CREATED, expectedResponse.toString())
     stubForUserAllowList
     when(uuidService.uuid).thenReturn(correlationId)
-    when(appConfig.isClientIdHeaderDisabled).thenReturn(false)
+    when(appConfig.sendClientId).thenReturn(true)
     when(appConfig.userAllowListEnabled).thenReturn(true)
     when(appConfig.routerUrl).thenReturn(Url.parse(wireMock.baseUrl))
     when(appConfig.userAllowListBaseUrl).thenReturn(Url.parse(wireMock.baseUrl))
@@ -128,9 +128,9 @@ class CreateRecordControllerIntegrationSpec
       }
     }
 
-    "should not validate client ID is feature flag isClientIdHeaderDisabled is true" in {
+    "should not validate client ID is feature flag sendClientId is false" in {
       withAuthorizedTrader()
-      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
+      when(appConfig.sendClientId).thenReturn(false)
 
       val result = createRecordAndWait()
 

@@ -44,7 +44,7 @@ class RemoveRecordRouterConnector @Inject() (
 
     httpClient
       .delete(url"$url")
-      .withClientIdIfSupported(!appConfig.isClientIdHeaderDisabled) //TODO: remove this validation for drop2 - TGP-2029
+      .withClientIdIfSupported(appConfig.sendClientId) //TODO: remove this validation for drop2 - TGP-2029
       .withAcceptHeaderIfSupported(!appConfig.acceptHeaderDisabled)
       .execute(httpReaderWithoutResponseBody, ec)
       .recover { case ex: Throwable =>

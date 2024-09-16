@@ -68,7 +68,7 @@ class UpdateRecordControllerSpec
     super.beforeEach()
     reset(uuidService, connector)
     when(uuidService.uuid).thenReturn(correlationId)
-    when(appConfig.isClientIdHeaderDisabled).thenReturn(false)
+    when(appConfig.sendClientId).thenReturn(false)
   }
 
   "patchRecord" should {
@@ -99,8 +99,8 @@ class UpdateRecordControllerSpec
   The client ID does not need to be checked anymore as EIS has removed it
   from the header
      */
-    "not validate client ID is isClientIdHeaderDisabled is true" in {
-      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
+    "not validate client ID is sendClientId is false" in {
+      when(appConfig.sendClientId).thenReturn(false)
       when(connector.patch(any, any, any)(any))
         .thenReturn(Future.successful(Right(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))))
       val result = sut.patchRecord(eoriNumber, recordId)(requestWithoutClientId)

@@ -88,7 +88,7 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
     when(uuidService.uuid).thenReturn(correlationId)
     when(connector.put(mockEq(eori), any[Request[JsValue]])(any()))
       .thenReturn(Future.successful(Right(updateProfileResponse)))
-    when(appConfig.isClientIdHeaderDisabled).thenReturn(false)
+    when(appConfig.sendClientId).thenReturn(false)
   }
 
   "MaintainProfileController" should {
@@ -105,15 +105,15 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
       contentAsJson(result) mustBe Json.toJson(updateProfileResponse)
     }
     // TODO: Create a single test - Ticket-2014
-    "return 200 OK without validating x-client-id when isClientIdHeaderDisabled is true" in {
+    "return 200 OK without validating x-client-id when sendClientId is false" in {
+      when(appConfig.sendClientId).thenReturn(false)
+
       val requestWithoutClientId = FakeRequest()
         .withHeaders(
           "Accept"       -> "application/vnd.hmrc.1.0+json",
           "Content-Type" -> "application/json"
         )
         .withBody(updateProfileRequest.body)
-
-      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
 
       val result = sut.updateProfile(eori)(requestWithoutClientId)
 

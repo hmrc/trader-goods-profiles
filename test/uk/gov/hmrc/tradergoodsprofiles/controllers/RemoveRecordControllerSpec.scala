@@ -76,7 +76,7 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
     when(uuidService.uuid).thenReturn(correlationId)
     when(connector.removeRecord(any, any, any)(any))
       .thenReturn(Future.successful(Right(OK)))
-    when(appConfig.isClientIdHeaderDisabled).thenReturn(false)
+    when(appConfig.sendClientId).thenReturn(false)
     when(appConfig.acceptHeaderDisabled).thenReturn(false)
   }
 
@@ -86,13 +86,13 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
     TODO: this test need to be removed for drop2 - TGP-2029
     The request should have no headers.
      */
-    "return 204 when isClientIdHeaderDisabled feature flag is false" in {
+    "return 204 when sendClientId feature flag is true" in {
       val result = sut.removeRecord(eoriNumber, recordId, actorId)(request)
       status(result) mustBe NO_CONTENT
     }
 
-    "return 204 when isClientIdHeaderDisabled feature flag is true" in {
-      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
+    "return 204 when sendClientId feature flag is false" in {
+      when(appConfig.sendClientId).thenReturn(false)
 
       val result = sut.removeRecord(eoriNumber, recordId, actorId)(
         FakeRequest().withHeaders(
@@ -113,9 +113,9 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
       status(result) mustBe NO_CONTENT
     }
 
-    "return 204 when acceptHeaderDisabled and isClientIdHeaderDisabled are true" in {
+    "return 204 when acceptHeaderDisabled and sendClientId are true" in {
       when(appConfig.acceptHeaderDisabled).thenReturn(true)
-      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
+      when(appConfig.sendClientId).thenReturn(true)
 
       val result = sut.removeRecord(eoriNumber, recordId, actorId)(
         FakeRequest().withHeaders(

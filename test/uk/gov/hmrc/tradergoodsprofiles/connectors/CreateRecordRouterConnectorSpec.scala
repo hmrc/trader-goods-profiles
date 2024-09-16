@@ -56,7 +56,7 @@ class CreateRecordRouterConnectorSpec
     when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
     when(requestBuilder.withBody(any[Object])(any, any, any))
       .thenReturn(requestBuilder)
-    when(appConfig.isClientIdHeaderDisabled).thenReturn(false)
+    when(appConfig.sendClientId).thenReturn(true)
   }
 
   "create" should {
@@ -81,8 +81,8 @@ class CreateRecordRouterConnectorSpec
       }
     }
 
-    "not send the client ID in the header when isClientIdHeaderDisabled is true" in {
-      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
+    "not send the client ID in the header when sendClientId is false" in {
+      when(appConfig.sendClientId).thenReturn(false)
       val response = createCreateOrUpdateRecordResponse("any-recordId", eori, Instant.now)
       when(requestBuilder.execute[Either[ServiceError, CreateOrUpdateRecordResponse]](any, any))
         .thenReturn(Future.successful(Right(response)))

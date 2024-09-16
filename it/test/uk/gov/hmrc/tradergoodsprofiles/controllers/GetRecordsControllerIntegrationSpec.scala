@@ -97,7 +97,7 @@ class GetRecordsControllerIntegrationSpec
     stubRouterRequest(getMultipleRecordsRouterUrl, 200, getMultipleRecordsRouterResponse.toString())
     stubRouterRequest(getSingleRecordRouterUrl, 200, getSingleRecordRouterResponse.toString())
     when(uuidService.uuid).thenReturn(correlationId)
-    when(appConfig.isClientIdHeaderDisabled).thenReturn(false)
+    when(appConfig.sendClientId).thenReturn(true)
     when(appConfig.userAllowListEnabled).thenReturn(true)
     when(appConfig.routerUrl).thenReturn(Url.parse(wireMock.baseUrl))
     when(appConfig.userAllowListBaseUrl).thenReturn(Url.parse(wireMock.baseUrl))
@@ -129,9 +129,9 @@ class GetRecordsControllerIntegrationSpec
       }
     }
 
-    "should not validate client ID is feature flag isClientIdHeaderDisabled is true" in {
+    "should not validate client ID is feature flag sendClientId is false" in {
       withAuthorizedTrader()
-      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
+      when(appConfig.sendClientId).thenReturn(false)
 
       val result = getRecordAndWaitWithOutClientIDHeader(getSingleRecordUrl)
 
@@ -327,9 +327,9 @@ class GetRecordsControllerIntegrationSpec
     ToDo: remove this test after drop1.1 and refactor getRecordAndWait
     to remove the client ID header
      */
-    "should not validate client ID is feature flag isClientIdHeaderDisabled is true" in {
+    "should not validate client ID is feature flag sendClientId is false" in {
       withAuthorizedTrader()
-      when(appConfig.isClientIdHeaderDisabled).thenReturn(true)
+      when(appConfig.sendClientId).thenReturn(false)
 
       val result = getRecordAndWaitWithOutClientIDHeader(getMultipleRecordsUrl)
 

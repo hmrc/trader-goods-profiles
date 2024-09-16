@@ -31,12 +31,12 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   lazy val internalAuthToken: String = config.get[String]("internal-auth.token")
 
-  lazy val withdrawAdviceEnabled: Boolean    = config.get[Boolean]("feature.withdrawAdviceEnabled")
-  lazy val requestAdviceEnabled: Boolean     = config.get[Boolean]("feature.requestAdviceEnabled")
-  lazy val userAllowListEnabled: Boolean     = config.get[Boolean]("feature.userAllowListEnabled")
-  lazy val acceptHeaderDisabled: Boolean     = config.get[Boolean]("feature.acceptHeaderDisabled")
-  lazy val isClientIdHeaderDisabled: Boolean =
-    config.getOptional[Boolean]("feature.clientIdHeaderDisabled").getOrElse(false)
+  lazy val withdrawAdviceEnabled: Boolean = config.get[Boolean]("feature.withdrawAdviceEnabled")
+  lazy val requestAdviceEnabled: Boolean  = config.get[Boolean]("feature.requestAdviceEnabled")
+  lazy val userAllowListEnabled: Boolean  = config.get[Boolean]("feature.userAllowListEnabled")
+  lazy val acceptHeaderDisabled: Boolean  = config.get[Boolean]("feature.acceptHeaderDisabled")
+  lazy val sendClientId: Boolean          =
+    config.getOptional[Boolean]("feature.sendClientId").getOrElse(true)
 
   lazy val isDrop2Enabled: Boolean =
     config
