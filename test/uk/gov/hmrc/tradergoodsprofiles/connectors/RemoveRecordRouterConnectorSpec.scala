@@ -51,7 +51,7 @@ class RemoveRecordRouterConnectorSpec
     when(httpClient.delete(any)(any)).thenReturn(requestBuilder)
     when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
     when(appConfig.sendClientId).thenReturn(true)
-    when(appConfig.acceptHeaderDisabled).thenReturn(false)
+    when(appConfig.sendAcceptHeader).thenReturn(true)
   }
 
   "remove" should {
@@ -89,10 +89,10 @@ class RemoveRecordRouterConnectorSpec
       verify(requestBuilder).execute(any, any)
     }
 
-    "return 204 when acceptHeaderDisabled is true" in {
+    "return 204 when sendAcceptHeader is false" in {
       when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
         .thenReturn(Future.successful(Right(NO_CONTENT)))
-      when(appConfig.acceptHeaderDisabled).thenReturn(true)
+      when(appConfig.sendAcceptHeader).thenReturn(false)
 
       await(sut.removeRecord(eori, recordId, actorId))
 
@@ -103,7 +103,7 @@ class RemoveRecordRouterConnectorSpec
       verify(requestBuilder).execute(any, any)
     }
 
-    "return 204 when sendClientId and acceptHeaderDisabled are true" in {
+    "return 204 when sendClientId and sendAcceptHeader are true" in {
       when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
         .thenReturn(Future.successful(Right(NO_CONTENT)))
       when(appConfig.sendClientId).thenReturn(true)

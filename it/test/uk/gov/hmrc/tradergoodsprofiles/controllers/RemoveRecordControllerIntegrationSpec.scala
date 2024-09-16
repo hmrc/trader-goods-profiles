@@ -86,6 +86,7 @@ class RemoveRecordControllerIntegrationSpec
     stubRouterResponse(NO_CONTENT, routerResponse.toString)
     when(uuidService.uuid).thenReturn(correlationId)
     when(appConfig.sendClientId).thenReturn(true)
+    when(appConfig.sendAcceptHeader).thenReturn(true)
     when(appConfig.userAllowListEnabled).thenReturn(true)
     when(appConfig.routerUrl).thenReturn(Url.parse(wireMock.baseUrl))
     when(appConfig.userAllowListBaseUrl).thenReturn(Url.parse(wireMock.baseUrl))
