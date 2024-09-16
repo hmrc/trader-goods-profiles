@@ -63,7 +63,7 @@ class RemoveRecordController @Inject() (
   private def validateAcceptHeaderIfSupported(implicit request: Request[_]): EitherT[Future, Result, String] =
     EitherT
       .fromEither[Future](
-        if (!appConfig.acceptHeaderDisabled) validateAcceptHeader
+        if (appConfig.sendAcceptHeader) validateAcceptHeader
         else Right("")
       )
       .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))

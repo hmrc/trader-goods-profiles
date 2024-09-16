@@ -2,7 +2,7 @@
 @()
 @includeWithdrawAdviceEndpoint = @{appConfig.withdrawAdviceEnabled}
 @includeRequestAdviceEndpoint = @{appConfig.requestAdviceEnabled}
-@includeAcceptHeaderForRemoveRecord = @{!appConfig.acceptHeaderDisabled}
+@includeAcceptHeaderForRemoveRecord = @{appConfig.sendAcceptHeader}
 @includeInDrop2 = @{appConfig.isDrop2Enabled}
 ---
 openapi: 3.0.3
