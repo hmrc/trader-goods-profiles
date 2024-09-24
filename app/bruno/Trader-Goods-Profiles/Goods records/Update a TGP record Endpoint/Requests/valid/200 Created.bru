@@ -1,0 +1,53 @@
+meta {
+  name: 200 Created
+  type: http
+  seq: 1
+}
+
+patch {
+  url: http://localhost:10902/GB123456789001/records/8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/vnd.hmrc.1.0+json
+  ~X-Client-ID: TEST
+}
+
+auth:basic {
+  username: 
+  password: 
+}
+
+auth:bearer {
+  token: BXQ3/Treo4kQCZvVcCqKPpO4H8c3/7uZaiuKWi7NXQQoUYd1rGbSocyafVw4LYm6XVKrAXgeqe1VSQPfF9E9BS8gUYpWFkO0tWy2yeoZv3CRsqyDx5U8DDGdbGadSkQNQoT+edwtObrCSx6PjMh8dMF6hbJYrddCpFYyZ6cX7tL9KwIkeIPK/mMlBESjue4V
+}
+
+body:json {
+  {
+    "actorId": "GB987654321098",
+    "traderRef": "SKU123456",
+    "comcode": "123456",
+    "goodsDescription": "Bananas",
+    "countryOfOrigin": "GB",
+    "category": 2,
+    "assessments": [
+      {
+        "assessmentId": "a06846e9a5f61fa4ecf2c4e3b23631fc",
+        "primaryCategory": 1,
+        "condition": {
+          "type": "certificate",
+          "conditionId": "Y923",
+          "conditionDescription": "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law Products not c",
+          "conditionTraderText": "Products"
+        }
+      }
+    ],
+    "supplementaryUnit": 314748363335011.123456744444444444444444222,
+    "measurementUnit": "Products not considered as waste according to Regulation (EC) No 1013/2006 as retaine",
+    "comcodeEffectiveFromDate": "2023-01-01T00:00:00Z",
+    "comcodeEffectiveToDate": "2023-01-01T00:00:00Z"
+  }
+}

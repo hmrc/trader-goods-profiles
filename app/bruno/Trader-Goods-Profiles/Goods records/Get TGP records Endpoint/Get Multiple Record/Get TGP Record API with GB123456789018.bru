@@ -1,0 +1,35 @@
+meta {
+  name: Get TGP Record API with GB123456789018
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:10902/GB123456789001/records?page=0&size=1000&updatedSince=2024-04-18T23:20:19Z
+  body: json
+  auth: bearer
+}
+
+params:query {
+  page: 0
+  size: 1000
+  updatedSince: 2024-04-18T23:20:19Z
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/vnd.hmrc.1.0+json
+  X-Client-ID: 1234
+  ~: 
+  ~: 
+  ~: 
+}
+
+auth:basic {
+  username: 
+  password: 
+}
+
+auth:bearer {
+  token: BXQ3/Treo4kQCZvVcCqKPpdjLLPPcWdv5YBaTeoJsbasnMxKUCgCfX3JORCiH/zNF2d1G9oCES0ZqHi8nvdhIPoPx9cHTBMOrEzJXffhs1YTZp+gq5S3VSGvHIeHryzLL6qUOXj8AnWajes4VJZ7tg53UzXVE6SqqSXHXriWkHT9KwIkeIPK/mMlBESjue4V
+}

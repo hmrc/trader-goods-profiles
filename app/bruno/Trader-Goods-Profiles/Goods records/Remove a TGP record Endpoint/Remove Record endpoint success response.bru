@@ -1,0 +1,33 @@
+meta {
+  name: Remove Record endpoint success response
+  type: http
+  seq: 1
+}
+
+delete {
+  url: http://localhost:10902/GB123456789001/records/b2fa315b-2d31-4629-90fc-a7b1a5119873?actorId=GB1234567890012
+  body: json
+  auth: bearer
+}
+
+params:query {
+  actorId: GB1234567890012
+}
+
+headers {
+  Accept: application/vnd.hmrc.1.0+json
+  X-Client-ID: 1234
+  ~Content-Type: application/json
+  ~: 
+  ~: 
+  ~: 
+}
+
+auth:basic {
+  username: 
+  password: 
+}
+
+auth:bearer {
+  token: BXQ3/Treo4kQCZvVcCqKPo632MikoWG3l1pe1XjqFQzoeGgte0S8R1Ky944LwSwbSkyV9yIgBgd/UjnKFNMdKLWSNoqylBqn6nZpzMV8aiRIek45u+xtilpNOnt5iSmQeI2yus4vrCb542VGY5QGgB2d/gv7DSOVe2TiBPx+6fX9KwIkeIPK/mMlBESjue4V
+}
