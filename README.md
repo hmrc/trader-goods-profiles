@@ -18,7 +18,7 @@ By default, this service runs on port `10902`.
 
 ## Running
 
-In order to run the following examples, ensure you first have [trader-goods-profiles-router](https://github.com/hmrc/trader-goods-profiles-stubs) running;
+In order to run the following examples, ensure you first have [trader-goods-profiles-router](https://github.com/hmrc/trader-goods-profiles-router) running;
 
 
 You can then run this service in a variety of ways.
