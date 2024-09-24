@@ -40,7 +40,7 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
   implicit val ec: ExecutionContext = ExecutionContext.global
 
   /*
-    TODO: remove for drop2 - TGP-2029
+    TODO: remove for eis implementation - TGP-2029
     The request should have no headers.
    */
   private val request = FakeRequest()
@@ -83,15 +83,15 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
   "removeRecord" should {
 
     /*
-    TODO: this test need to be removed for drop2 - TGP-2029
+    TODO: this test need to be removed for eis implementation - TGP-2029
     The request should have no headers.
      */
-    "return 204 when sendClientId feature flag is true" in {
+    "return 204 when sendClientId features flag is true" in {
       val result = sut.removeRecord(eoriNumber, recordId, actorId)(request)
       status(result) mustBe NO_CONTENT
     }
 
-    "return 204 when sendClientId feature flag is false" in {
+    "return 204 when sendClientId features flag is false" in {
       when(appConfig.sendClientId).thenReturn(false)
 
       val result = sut.removeRecord(eoriNumber, recordId, actorId)(
@@ -102,7 +102,7 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
       status(result) mustBe NO_CONTENT
     }
 
-    "return 204 when sendAcceptHeader feature flag is false" in {
+    "return 204 when sendAcceptHeader features flag is false" in {
       when(appConfig.sendAcceptHeader).thenReturn(false)
 
       val result = sut.removeRecord(eoriNumber, recordId, actorId)(

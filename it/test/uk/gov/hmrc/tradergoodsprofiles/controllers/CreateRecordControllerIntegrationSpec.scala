@@ -128,7 +128,7 @@ class CreateRecordControllerIntegrationSpec
       }
     }
 
-    "should not validate client ID is feature flag sendClientId is false" in {
+    "should not validate client ID is features flag sendClientId is false" in {
       withAuthorizedTrader()
       when(appConfig.sendClientId).thenReturn(false)
 

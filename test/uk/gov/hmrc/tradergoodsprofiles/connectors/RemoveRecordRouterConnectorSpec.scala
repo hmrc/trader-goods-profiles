@@ -67,14 +67,14 @@ class RemoveRecordRouterConnectorSpec
         val expectedUrl =
           s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId?actorId=$actorId"
         verify(httpClient).delete(eqTo(url"$expectedUrl"))(any)
-        //Todo: set header can be removed for drop2 - TGP-2029
+        //Todo: set header can be removed for eis implementation - TGP-2029
         verify(requestBuilder).setHeader("X-Client-ID" -> "clientId")
         verify(requestBuilder).setHeader("Accept"      -> "application/vnd.hmrc.1.0+json")
         verify(requestBuilder).execute(any, any)
       }
     }
 
-    //Todo: keep this for drop2 - TGP-2029
+    //Todo: keep this for eis implementation - TGP-2029
     "return 204 when sendClientId is false" in {
       when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
         .thenReturn(Future.successful(Right(NO_CONTENT)))

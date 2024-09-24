@@ -27,7 +27,7 @@ class AppConfigSpec extends PlaySpec {
   private val validAppConfig =
     """
       |appName=trader-goods-profiles
-      |feature.sendClientId=true
+      |features.sendClientId=true
     """.stripMargin
 
   private def createAppConfig(configSettings: String) = {
@@ -40,33 +40,33 @@ class AppConfigSpec extends PlaySpec {
 
   "AppConfig" should {
 
-    "return false if isDrop2Enabled is missing" in {
-      createAppConfig("").isDrop2Enabled mustBe false
+    "return false if putMethodEnabled is missing" in {
+      createAppConfig("").putMethodEnabled mustBe false
     }
 
-    "return false if isDrop2Enabled is false" in {
+    "return false if putMethodEnabled is false" in {
       val validAppConfig =
         """
           |appName=trader-goods-profiles-router
-          |feature.drop2Enabled=false
+          |features.putMethodEnabled=false
           |""".stripMargin
-      createAppConfig(validAppConfig).isDrop2Enabled mustBe false
+      createAppConfig(validAppConfig).putMethodEnabled mustBe false
     }
 
-    "return true if isDrop2Enabled is true" in {
+    "return true if putMethodEnabled is true" in {
       val validAppConfig =
         """
           |appName=trader-goods-profiles-router
-          |feature.drop2Enabled=true
+          |features.putMethodEnabled=true
           |""".stripMargin
-      createAppConfig(validAppConfig).isDrop2Enabled mustBe true
+      createAppConfig(validAppConfig).putMethodEnabled mustBe true
     }
 
     "return true for sendClientId when it is set to true" in {
       val config =
         """
           |appName=trader-goods-profiles-router
-          |feature.sendClientId=true
+          |features.sendClientId=true
           |""".stripMargin
       createAppConfig(config).sendClientId mustBe true
     }
@@ -79,7 +79,7 @@ class AppConfigSpec extends PlaySpec {
       val config =
         """
           |appName=trader-goods-profiles-router
-          |feature.sendClientId=false
+          |features.sendClientId=false
           |""".stripMargin
       createAppConfig(config).sendClientId mustBe false
     }

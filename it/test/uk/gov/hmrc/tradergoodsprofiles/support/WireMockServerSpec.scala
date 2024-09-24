@@ -32,7 +32,7 @@ trait WireMockServerSpec {
       "microservice.services.trader-goods-profiles-router.port" -> wireMock.port(),
       "microservice.services.user-allow-list.host"              -> wireHost,
       "microservice.services.user-allow-list.port"              -> wireMock.port(),
-      "feature.userAllowListEnabled"                            -> true
+      "features.userAllowListEnabled"                            -> true
     )
 
   def stubForUserAllowList: StubMapping =

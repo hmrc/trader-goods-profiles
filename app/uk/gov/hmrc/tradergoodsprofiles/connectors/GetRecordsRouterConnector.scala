@@ -45,7 +45,7 @@ class GetRecordsRouterConnector @Inject() (
 
     httpClient
       .get(url"$url")
-      .withClientIdIfSupported //ToDo: Remove this after drop1.1 - TGP-1889
+      .withClientIdIfSupported //ToDo: Remove this as EIS does not accept the client Id  - TGP-1889
       .withAcceptHeader
       .execute(httpReader[GetRecordResponse], ec)
       .recover { case ex: Throwable =>
@@ -75,7 +75,7 @@ class GetRecordsRouterConnector @Inject() (
     val url = routerGetRecordsOptionalUrl(eori, lastUpdatedDate, page, size)
     httpClient
       .get(url"$url")
-      .withClientIdIfSupported //ToDo: Remove this after drop1.1 - TGP-1889
+      .withClientIdIfSupported //ToDo: Remove this as EIS does not accept the client Id - TGP-1889
       .withAcceptHeader
       .execute(httpReader[GetRecordsResponse], ec)
       .recover { case ex: Throwable =>

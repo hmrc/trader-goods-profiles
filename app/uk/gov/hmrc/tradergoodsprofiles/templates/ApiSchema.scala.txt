@@ -3,7 +3,7 @@
 @includeWithdrawAdviceEndpoint = @{appConfig.withdrawAdviceEnabled}
 @includeRequestAdviceEndpoint = @{appConfig.requestAdviceEnabled}
 @includeAcceptHeaderForRemoveRecord = @{appConfig.sendAcceptHeader}
-@includeInDrop2 = @{appConfig.isDrop2Enabled}
+@includePutMethodEnabled = @{appConfig.putMethodEnabled}
 ---
 openapi: 3.0.3
 info:
@@ -182,7 +182,7 @@ paths:
       security:
         - userRestricted:
             - trader-goods-profiles
-@if(includeInDrop2){
+@if(includePutMethodEnabled){
     put:
           tags:
             - Goods records

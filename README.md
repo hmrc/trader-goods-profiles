@@ -14,6 +14,21 @@ Trader Goods Profiles service.
 These APIs provide endpoints for various operations related to goods traders and profiles. Developers can utilize these
 endpoints to retrieve, create, update, and delete trader profiles, as well as perform other relevant actions.
 
+By default, this service runs on port `10902`.
+
+## Running
+
+In order to run the following examples, ensure you first have [trader-goods-profiles-router](https://github.com/hmrc/trader-goods-profiles-stubs) running;
+
+
+You can then run this service in a variety of ways.
+
+For sbt:
+
+``` 
+sbt run
+```
+
 ### Test the API locally
 
 Notice: You can use the run_local.sh script file to load all needed services and start the trader-goods-profiles service.
@@ -67,6 +82,23 @@ system and EIS, ensuring efficient data exchange and integration.
 ### Dev
 
 Before pushing, you can run [precheck.sh](./precheck.sh) which will run all the tests, as well as check the format.
+
+Testing locally with the [trader-goods-profile-api-tests](https://github.com/hmrc/trader-goods-profiles-api-tests)
+before pushing to verify the changes work perfectly.
+
+### Tests
+
+#### Unit
+
+```
+sbt test
+```
+
+#### Integration
+
+``` 
+sbt "it/test"
+```
 
 ### License
 

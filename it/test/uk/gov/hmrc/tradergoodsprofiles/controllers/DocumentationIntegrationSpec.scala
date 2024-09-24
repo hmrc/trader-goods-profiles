@@ -46,7 +46,7 @@ class DocumentationIntegrationSpec extends PlaySpec with GuiceOneServerPerSuite 
     super.beforeEach()
 
     reset(appConfig)
-    when(appConfig.isDrop2Enabled).thenReturn(false)
+    when(appConfig.putMethodEnabled).thenReturn(false)
   }
   "DocumentationController" should {
     "return the definition specification" in {
@@ -72,7 +72,7 @@ class DocumentationIntegrationSpec extends PlaySpec with GuiceOneServerPerSuite 
     }
 
     "return an OpenAPi Specification (OAS) with updateRecord (PUT) endpoint" in {
-      when(appConfig.isDrop2Enabled).thenReturn(true)
+      when(appConfig.putMethodEnabled).thenReturn(true)
       val response = await(wsClient.url(s"http://localhost:$port/api/conf/1.0/application.yaml").get())
 
       response.status mustBe OK

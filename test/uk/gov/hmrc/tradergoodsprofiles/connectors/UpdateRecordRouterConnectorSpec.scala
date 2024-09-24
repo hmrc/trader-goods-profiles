@@ -89,7 +89,7 @@ class UpdateRecordRouterConnectorSpec
       }
     }
 
-    "should not send client ID is feature flag sendClientId is false" in {
+    "should not send client ID is features flag sendClientId is false" in {
       when(appConfig.sendClientId).thenReturn(false)
       val response = createCreateOrUpdateRecordResponse(recordId, eori, Instant.now)
       when(requestBuilder.execute[Either[ServiceError, CreateOrUpdateRecordResponse]](any, any))
