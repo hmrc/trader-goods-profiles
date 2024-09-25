@@ -47,7 +47,7 @@ class MaintainProfileController @Inject() (
     (authAction(eori) andThen userAllowListAction).async(parse.json) { implicit request =>
       val result = for {
         _               <- EitherT.fromEither[Future](validateAcceptAndContentTypeHeaders)
-        _               <- validateClientIdIfSupported //ToDO: remove this test after drop1.1 - TGP-1889
+        _               <- validateClientIdIfSupported //ToDO: remove this test after eis impl - TGP-1889
         serviceResponse <-
           EitherT(maintainProfileRouterConnector.put(eori, request)).leftMap(e =>
             Status(e.status)(toJson(e.errorResponse))

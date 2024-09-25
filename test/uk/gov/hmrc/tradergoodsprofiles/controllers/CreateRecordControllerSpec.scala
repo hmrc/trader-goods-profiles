@@ -85,7 +85,7 @@ class CreateRecordControllerSpec
     }
 
     /*
-    ToDO: remove this test after drop1.1 - TGP-1889
+    ToDO: remove this test after eis implementation- TGP-1889
     The client ID does not need to be checked anymore as EIS has removed it
     from the header
      */

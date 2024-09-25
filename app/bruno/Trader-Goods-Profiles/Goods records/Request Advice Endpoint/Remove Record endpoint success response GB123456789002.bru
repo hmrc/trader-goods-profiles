@@ -1,0 +1,37 @@
+meta {
+  name: Remove Record endpoint success response GB123456789002
+  type: http
+  seq: 15
+}
+
+post {
+  url: http://localhost:10902/GB123456789002/records/8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f/accreditations
+  body: xml
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/vnd.hmrc.1.0+json
+  X-Client-ID: 1234
+  ~: 
+  ~: 
+  ~: 
+}
+
+auth:basic {
+  username: 
+  password: 
+}
+
+auth:bearer {
+  token: BXQ3/Treo4kQCZvVcCqKPnWaNrqoYzSC1vrwouAkrK6AGnHuOnaQ2Dv07Ohqo/veUKIC+UOKJmju8syoCpke7ZbDG/mjhcNKLqNIiXfxCs4ydGR3uo88/Ahd6gJHrXnDdKuNmFH0hcJMlgZ6882cDIuEbed1s2tqoZ8fEFccfcX9KwIkeIPK/mMlBESjue4V
+}
+
+body:xml {
+  {
+    "actorId": "GB987654321098",
+    "requestorName": "Mr. Phil Edwards",
+    "requestorEmail": "Phil.Edwards@gmail.com"
+  }
+}

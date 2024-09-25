@@ -122,7 +122,7 @@ class MaintainProfileControllerIntegrationSpec
   }
 
   "MaintainProfileController" should {
-    // TODO: After the drop 1.1 create single test without the client id and remove the feature flag - TGP-2014
+    // TODO: After the eis implementation create single test without the client id and remove the features flag - TGP-2014
     "return 200 OK when the profile update is successful" in {
       withAuthorizedTrader()
       when(appConfig.sendClientId).thenReturn(true)
@@ -143,7 +143,7 @@ class MaintainProfileControllerIntegrationSpec
         )
       }
     }
-    // TODO: After the drop 1.1 create single test without the client id and remove the feature flag - TGP-2014
+    // TODO: After the eis implementation create single test without the client id and remove the features flag - TGP-2014
     "return 200 OK without validating x-client-id when sendClientId is false" in {
       withAuthorizedTrader()
       when(appConfig.sendClientId).thenReturn(false)
@@ -299,7 +299,7 @@ class MaintainProfileControllerIntegrationSpec
     }
   }
 
-  // TODO: After the drop 1.1 create single method without the client id and remove the feature flag - TGP-2014
+  // TODO: After the eis implementation create single method without the client id and remove the features flag - TGP-2014
   private def updateProfileAndWait(requestBody: JsValue = requestBody) =
     await(
       wsClient
@@ -311,7 +311,7 @@ class MaintainProfileControllerIntegrationSpec
         )
         .put(requestBody)
     )
-  // TODO: After the drop 1.1 create single method without the client id and remove the feature flag - TGP-2014
+  // TODO: After the eis implementation create single method without the client id and remove the features flag - TGP-2014
 
   private def updateProfileAndWaitWithoutClientId(requestBody: JsValue = requestBody) =
     await(

@@ -83,7 +83,7 @@ class UserAllowListActionSpec extends AnyWordSpec with Matchers with ScalaFuture
       assertThrows[UnexpectedResponseException](await(sut.refine(request)))
     }
 
-    "should return a successful future if the userAllowListEnabled feature flag is false" in {
+    "should return a successful future if the userAllowListEnabled features flag is false" in {
       val request = UserRequest(FakeRequest(), "12345")
 
       when(appConfig.userAllowListEnabled).thenReturn(false)

@@ -46,7 +46,7 @@ class CreateRecordController @Inject() (
   def createRecord(eori: String): Action[JsValue] =
     (authAction(eori) andThen userAllowListAction).async(parse.json) { implicit request =>
       val result = for {
-        _               <- validateClientIdIfSupported //ToDO: remove this test after drop1.1 - TGP-1889
+        _               <- validateClientIdIfSupported
         _               <- EitherT.fromEither[Future](validateAcceptAndContentTypeHeaders)
         serviceResponse <-
           EitherT(createRecordConnector.createRecord(eori, request)).leftMap(e =>
@@ -59,8 +59,7 @@ class CreateRecordController @Inject() (
     }
 
   /*
-  ToDO: remove this test after drop1.1 - TGP-1889
-
+  ToDO: remove this test - TGP-1889
   The client ID does not need to be checked anymore as EIS has removed it
   from the header
    */

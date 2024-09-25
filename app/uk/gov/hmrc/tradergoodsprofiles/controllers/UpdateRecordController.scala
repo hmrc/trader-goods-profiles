@@ -43,7 +43,7 @@ class UpdateRecordController @Inject() (
   def patchRecord(eori: String, recordId: String): Action[JsValue] =
     (authAction(eori) andThen userAllowListAction).async(parse.json) { implicit request =>
       val result = for {
-        _               <- validateClientIdIfSupported //ToDO: remove this test after drop1.1 - TGP-1903
+        _               <- validateClientIdIfSupported
         _               <- EitherT.fromEither[Future](validateAcceptAndContentTypeHeaders)
         serviceResponse <- EitherT(updateRecordConnector.patch(eori, recordId, request))
                              .leftMap(e => Status(e.status)(toJson(e.errorResponse)))
@@ -64,7 +64,7 @@ class UpdateRecordController @Inject() (
     }
 
   /*
-ToDO: remove this test after drop1.1 - TGP-1903
+ToDO: remove this test after eis impl - TGP-1903
 
 The client ID does not need to be checked anymore as EIS has removed it
 from the header

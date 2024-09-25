@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Trader-Goods-Profiles",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

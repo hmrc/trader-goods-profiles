@@ -45,7 +45,7 @@ class GetRecordsController @Inject() (
   def getRecord(eori: String, recordId: String): Action[AnyContent] =
     (authAction(eori) andThen userAllowListAction).async { implicit request =>
       val result = for {
-        _               <- validateClientIdIfSupported //ToDO: remove this test after drop1.1 - TGP-1889
+        _               <- validateClientIdIfSupported
         _               <- EitherT
                              .fromEither[Future](validateAcceptHeader)
                              .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
@@ -64,7 +64,7 @@ class GetRecordsController @Inject() (
   ): Action[AnyContent] =
     (authAction(eori) andThen userAllowListAction).async { implicit request =>
       val result = for {
-        _               <- validateClientIdIfSupported //ToDO: remove this test after drop1.1 - TGP-1889
+        _               <- validateClientIdIfSupported
         _               <- EitherT
                              .fromEither[Future](validateAcceptHeader)
                              .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
@@ -78,7 +78,7 @@ class GetRecordsController @Inject() (
     }
 
   /*
-  ToDO: remove this test after drop1.1 - TGP-1889
+  ToDO: remove this test after eis impl - TGP-1889
 
   The client ID does not need to be checked anymore as EIS has removed it
   from the header

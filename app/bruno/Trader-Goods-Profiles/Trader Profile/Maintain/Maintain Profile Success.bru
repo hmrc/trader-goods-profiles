@@ -1,0 +1,35 @@
+meta {
+  name: Maintain Profile Success
+  type: http
+  seq: 1
+}
+
+put {
+  url: http://localhost:10902/GB123456789001
+  body: json
+  auth: bearer
+}
+
+headers {
+  X-Client-ID: test
+  Accept: application/vnd.hmrc.1.0+json
+  ~Content-Type: application/json
+}
+
+auth:basic {
+  username: 
+  password: 
+}
+
+auth:bearer {
+  token: BXQ3/Treo4kQCZvVcCqKPpO4H8c3/7uZaiuKWi7NXQQoUYd1rGbSocyafVw4LYm6XVKrAXgeqe1VSQPfF9E9BS8gUYpWFkO0tWy2yeoZv3CRsqyDx5U8DDGdbGadSkQNQoT+edwtObrCSx6PjMh8dMF6hbJYrddCpFYyZ6cX7tL9KwIkeIPK/mMlBESjue4V
+}
+
+body:json {
+  {
+      "actorId": "GB987654321098",
+      "ukimsNumber": "XIUKIM47699357400020231115081800",
+      "nirmsNumber": "RMS-GB-123456",
+      "niphlNumber": "SM12345"
+  }
+}

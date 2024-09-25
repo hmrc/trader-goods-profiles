@@ -1,0 +1,38 @@
+meta {
+  name: 201 with min payload -no assesments-
+  type: http
+  seq: 12
+}
+
+post {
+  url: http://localhost:10902/GB123456789001/records
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/vnd.hmrc.1.0+json
+  X-Client-ID: TEST
+}
+
+auth:basic {
+  username: 
+  password: 
+}
+
+auth:bearer {
+  token: BXQ3/Treo4kQCZvVcCqKPs5VFhkDwEBv8xncbS3GPIU4lOtDT1vVoDFk5WC4ySVnSqNvImu0Kkmwmlsd4KvdUs48V5AzVgqqdtoy5ys90MhYDlt//FU2MfYl2FIewaIJ37/g2cEUeAMmqKVfEk7mDgGEndGoQqZl0VPT5e1fETP9KwIkeIPK/mMlBESjue4V
+}
+
+body:json {
+  {
+    "actorId": "GB987654321098",
+    "traderRef": "SKU123456",
+    "comcode": "123456",
+    "goodsDescription": "Bananas",
+    "countryOfOrigin": "GB",
+    "category": 2,
+    "comcodeEffectiveFromDate": "2023-01-01T00:00:00Z"
+  }
+}

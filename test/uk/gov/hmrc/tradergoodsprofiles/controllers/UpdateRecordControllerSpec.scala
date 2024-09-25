@@ -94,7 +94,7 @@ class UpdateRecordControllerSpec
     }
 
     /*
-  ToDO: remove this test after drop1.1 - TGP-1903
+  ToDO: remove this test after eis implementation - TGP-1903
 
   The client ID does not need to be checked anymore as EIS has removed it
   from the header

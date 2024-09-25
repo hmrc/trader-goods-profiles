@@ -47,7 +47,7 @@ class DocumentationController @Inject() (
     logger.info(
       s"""Generating OpenAPI Spec with includeWithdrawAdviceEndpoint: ${appConfig.requestAdviceEnabled},
           includeWithdrawAdviceEndpoint: ${appConfig.withdrawAdviceEnabled},
-          drop2Enabled: ${appConfig.isDrop2Enabled}"""
+          putMethodEnabled: ${appConfig.putMethodEnabled}"""
     )
     Ok(apiSpec()).as("application/yaml")
   }

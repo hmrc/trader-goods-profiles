@@ -28,8 +28,8 @@ trait BaseConnector {
   val routerBaseRoute: String = "/trader-goods-profiles-router"
 
   /* TGP-1889
-  ToDo: Remove the  withClientId and withClientIdIfSupported after drop1.1
-  as EIS does not accept the client Id i the header anymore.
+  ToDo: Remove the  withClientId and withClientIdIfSupported
+  as EIS does not accept the client Id in the header anymore.
    */
   implicit class HttpResponseHelpers(requestBuilder: RequestBuilder) {
     def withClientId(implicit hc: HeaderCarrier): RequestBuilder =

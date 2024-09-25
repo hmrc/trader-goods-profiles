@@ -76,7 +76,7 @@ class UpdateRecordControllerIntegrationSpec
       "microservice.services.trader-goods-profiles-router.port" -> wireMockPort,
       "microservice.services.user-allow-list.host"              -> wireMockHost,
       "microservice.services.user-allow-list.port"              -> wireMockPort,
-      "feature.userAllowListEnabled"                            -> true
+      "features.userAllowListEnabled"                            -> true
     )
   private val routerError = Json.obj(
     "correlationId" -> correlationId,
@@ -138,7 +138,7 @@ class UpdateRecordControllerIntegrationSpec
       }
     }
 
-    "should not validate client ID is feature flag sendClientId is false" in {
+    "should not validate client ID is features flag sendClientId is false" in {
       withAuthorizedTrader()
       when(appConfig.sendClientId).thenReturn(false)
       val result = updateRecordAndWaitWithoutClientIdHeader()

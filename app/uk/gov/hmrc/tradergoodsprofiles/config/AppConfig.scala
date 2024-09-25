@@ -31,15 +31,15 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   lazy val internalAuthToken: String = config.get[String]("internal-auth.token")
 
-  lazy val withdrawAdviceEnabled: Boolean = config.get[Boolean]("feature.withdrawAdviceEnabled")
-  lazy val requestAdviceEnabled: Boolean  = config.get[Boolean]("feature.requestAdviceEnabled")
-  lazy val userAllowListEnabled: Boolean  = config.get[Boolean]("feature.userAllowListEnabled")
-  lazy val sendAcceptHeader: Boolean      = config.getOptional[Boolean]("feature.sendAcceptHeader").getOrElse(true)
+  lazy val withdrawAdviceEnabled: Boolean = config.get[Boolean]("features.withdrawAdviceEnabled")
+  lazy val requestAdviceEnabled: Boolean  = config.get[Boolean]("features.requestAdviceEnabled")
+  lazy val userAllowListEnabled: Boolean  = config.get[Boolean]("features.userAllowListEnabled")
+  lazy val sendAcceptHeader: Boolean      = config.getOptional[Boolean]("features.sendAcceptHeader").getOrElse(true)
   lazy val sendClientId: Boolean          =
-    config.getOptional[Boolean]("feature.sendClientId").getOrElse(true)
+    config.getOptional[Boolean]("features.sendClientId").getOrElse(true)
 
-  lazy val isDrop2Enabled: Boolean =
+  lazy val putMethodEnabled: Boolean =
     config
-      .getOptional[Boolean]("feature.drop2Enabled")
+      .getOptional[Boolean]("features.putMethodEnabled")
       .getOrElse(false)
 }
