@@ -36,7 +36,7 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   lazy val userAllowListEnabled: Boolean  = config.get[Boolean]("features.userAllowListEnabled")
   lazy val sendAcceptHeader: Boolean      = config.getOptional[Boolean]("features.sendAcceptHeader").getOrElse(true)
   lazy val sendClientId: Boolean          =
-    config.getOptional[Boolean]("features.sendClientId").getOrElse(true)
+    config.getOptional[Boolean]("features.sendClienetId").getOrElse(true)
 
   lazy val putMethodEnabled: Boolean =
     config
