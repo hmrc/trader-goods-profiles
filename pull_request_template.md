@@ -2,7 +2,7 @@
  - [ ] I have merged in main
  - [ ] I have assigned the PR to me
  - [ ] I have run `precheck.sh` to run all tests, format and check the code coverage
- - [ ] I have written unit tests to cover any code that I wrote, where necessary
+ - [ ] I have written unit test and integration tests to cover any code that I wrote, where necessary
  - [ ] I have linked tickets to any TODOs I have written
  - [ ] I have run the microservices with the latest SM2 config
  - [ ] I have checked all the Acceptance Criteria pass
