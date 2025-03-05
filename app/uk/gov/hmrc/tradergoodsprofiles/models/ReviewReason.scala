@@ -27,15 +27,18 @@ object ReviewReason {
   val values: Seq[ReviewReason] = Seq(Commodity, Inadequate, Unclear, Measure, Mismatch)
 
   case object Commodity extends ReviewReason {
-    val description: String = "The commodity code has expired. You'll need to change the commodity code and categorise the goods."
+    val description: String =
+      "The commodity code has expired. You'll need to change the commodity code and categorise the goods."
   }
 
   case object Inadequate extends ReviewReason {
-    val description: String = "HMRC have reviewed this record. The goods description does not have enough detail. If you want to use this record on an IMMI, you'll need to amend the goods description"
+    val description: String =
+      "HMRC have reviewed this record. The goods description does not have enough detail. If you want to use this record on an IMMI, you'll need to amend the goods description"
   }
 
   case object Unclear extends ReviewReason {
-    val description: String = "HMRC have reviewed the record. The goods description is unclear. If you want to use this record on an IMMI, you'll need to amend the goods description."
+    val description: String =
+      "HMRC have reviewed the record. The goods description is unclear. If you want to use this record on an IMMI, you'll need to amend the goods description."
   }
 
   case object Measure extends ReviewReason {
@@ -43,7 +46,8 @@ object ReviewReason {
   }
 
   case object Mismatch extends ReviewReason {
-    val description: String = "HMRC have reviewed this record. The commodity code and goods description do not match. If you want to use this record on an IMMI, you'll need to amend the commodity code and the goods description."
+    val description: String =
+      "HMRC have reviewed this record. The commodity code and goods description do not match. If you want to use this record on an IMMI, you'll need to amend the commodity code and the goods description."
   }
 
   implicit val writes: Writes[ReviewReason] = Writes(reviewReason => JsString(reviewReason.description))
@@ -58,6 +62,6 @@ object ReviewReason {
         case "mismatch"   => JsSuccess(Mismatch)
         case _            => JsError(s"[ReviewReason] Reads unknown ReviewReason: $value")
       }
-    case other => JsError(s"[ReviewReason] Reads expected JsString but got: $other")
+    case other           => JsError(s"[ReviewReason] Reads expected JsString but got: $other")
   }
 }

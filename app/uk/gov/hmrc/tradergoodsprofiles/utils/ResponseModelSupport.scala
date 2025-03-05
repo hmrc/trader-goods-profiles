@@ -17,7 +17,6 @@
 package uk.gov.hmrc.tradergoodsprofiles.utils
 
 import play.api.libs.json.{JsNull, JsObject}
-import uk.gov.hmrc.tradergoodsprofiles.models.ReviewReason
 
 object ResponseModelSupport {
 
