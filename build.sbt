@@ -31,3 +31,5 @@ lazy val it = project
   .dependsOn(microservice % "test->test")
   .settings(DefaultBuildSettings.itSettings())
   .settings(libraryDependencies ++= AppDependencies.it)
+
+Test / javaOptions += "-Dlogger.conf=logback-test.xml"

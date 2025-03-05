@@ -17,8 +17,8 @@
 package uk.gov.hmrc.tradergoodsprofiles.models.response
 
 import play.api.libs.json._
-import uk.gov.hmrc.tradergoodsprofiles.models.Assessment
-import uk.gov.hmrc.tradergoodsprofiles.utils.ResponseModelSupport.{removeNulls, translateReviewReason}
+import uk.gov.hmrc.tradergoodsprofiles.models.{Assessment, ReviewReason}
+import uk.gov.hmrc.tradergoodsprofiles.utils.ResponseModelSupport.removeNulls
 
 import java.time.Instant
 
@@ -40,7 +40,7 @@ case class GetRecordResponse(
   version: Int,
   active: Boolean,
   toReview: Boolean,
-  reviewReason: Option[String],
+  reviewReason: Option[ReviewReason],
   declarable: String,
   ukimsNumber: String,
   nirmsNumber: Option[String],
@@ -73,7 +73,7 @@ object GetRecordResponse {
         "version"                  -> Json.toJson(o.version),
         "active"                   -> Json.toJson(o.active),
         "toReview"                 -> Json.toJson(o.toReview),
-        "reviewReason"             -> Json.toJson(translateReviewReason(o.reviewReason, o.toReview)),
+        "reviewReason"             -> Json.toJson(o.reviewReason),
         "declarable"               -> Json.toJson(o.declarable),
         "ukimsNumber"              -> Json.toJson(o.ukimsNumber),
         "nirmsNumber"              -> Json.toJson(o.nirmsNumber),
@@ -128,7 +128,7 @@ object GetRecordResponse {
       val version                  = read[Int]("version")
       val active                   = read[Boolean]("active")
       val toReview                 = read[Boolean]("toReview")
-      val reviewReason             = readOption[String]("reviewReason")
+      val reviewReason             = readOption[ReviewReason]("reviewReason")
       val declarable               = read[String]("declarable")
       val ukimsNumber              = read[String]("ukimsNumber")
       val nirmsNumber              = readOption[String]("nirmsNumber")

@@ -19,6 +19,7 @@ package uk.gov.hmrc.tradergoodsprofiles.models
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{JsObject, JsResult, Json}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.GetRecordResponseSupport
+import uk.gov.hmrc.tradergoodsprofiles.models.ReviewReason.Commodity
 import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
 
 import java.time.Instant
@@ -40,7 +41,7 @@ class GetRecordResponseSpec extends PlaySpec with GetRecordResponseSupport {
 
   "toJson" should {
     "convert Object to json" in {
-      Json.toJson(getRecordResponseTranslated) mustBe GetRecordResponseAsJson
+      Json.toJson(getRecordResponseTranslated) mustBe WriteRecordResponseAsJson
     }
   }
 
@@ -91,7 +92,47 @@ class GetRecordResponseSpec extends PlaySpec with GetRecordResponseSupport {
       "version"                  -> 1,
       "active"                   -> true,
       "toReview"                 -> true,
-      "reviewReason"             -> "The commodity code has expired. You'll need to change the commodity code and categorise the goods.",
+      "reviewReason"             -> "commodity",
+      "declarable"               -> "IMMI declarable",
+      "ukimsNumber"              -> "XIUKIM47699357400020231115081800",
+      "nirmsNumber"              -> "RMS-GB-123456",
+      "niphlNumber"              -> "6 S12345",
+      "locked"                   -> false,
+      "createdDateTime"          -> timestamp,
+      "updatedDateTime"          -> timestamp
+    )
+
+  private def WriteRecordResponseAsJson: JsObject =
+    Json.obj(
+      "eori"                     -> "GB123456789012",
+      "actorId"                  -> "GB123456789012",
+      "recordId"                 -> "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f",
+      "traderRef"                -> "SKU123456",
+      "comcode"                  -> "123456",
+      "adviceStatus"             -> "Not Requested",
+      "goodsDescription"         -> "Bananas",
+      "countryOfOrigin"          -> "GB",
+      "category"                 -> 2,
+      "assessments"              -> Json.arr(
+        Json.obj(
+          "assessmentId"    -> "a06846e9a5f61fa4ecf2c4e3b23631fc",
+          "primaryCategory" -> 1,
+          "condition"       -> Json.obj(
+            "type"                 -> "certificate",
+            "conditionId"          -> "Y923",
+            "conditionDescription" -> "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
+            "conditionTraderText"  -> "Excluded product"
+          )
+        )
+      ),
+      "supplementaryUnit"        -> 13,
+      "measurementUnit"          -> "Kilograms",
+      "comcodeEffectiveFromDate" -> timestamp,
+      "comcodeEffectiveToDate"   -> timestamp,
+      "version"                  -> 1,
+      "active"                   -> true,
+      "toReview"                 -> true,
+      "reviewReason"             -> Commodity.description,
       "declarable"               -> "IMMI declarable",
       "ukimsNumber"              -> "XIUKIM47699357400020231115081800",
       "nirmsNumber"              -> "RMS-GB-123456",
