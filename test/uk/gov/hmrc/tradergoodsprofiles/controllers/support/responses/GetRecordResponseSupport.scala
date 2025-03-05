@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses
 
+import uk.gov.hmrc.tradergoodsprofiles.models.ReviewReason.Commodity
 import uk.gov.hmrc.tradergoodsprofiles.models.response.{GetRecordResponse, GetRecordsResponse, GoodsItemRecords, Pagination}
 import uk.gov.hmrc.tradergoodsprofiles.models.{Assessment, Condition}
 
@@ -51,18 +52,58 @@ trait GetRecordResponseSupport {
       timestamp,
       Some(timestamp),
       1,
-      true,
-      true,
-      Some("The commodity code has expired. You'll need to change the commodity code and categorise the goods."),
+      active = true,
+      toReview = true,
+      Some(Commodity),
       "IMMI declarable",
       "XIUKIM47699357400020231115081800",
       Some("RMS-GB-123456"),
       Some("6 S12345"),
-      false,
+      locked = false,
       timestamp,
       timestamp
     )
   }
+
+  def createGetRecordResponseReadJson(eori: String, recordId: String, timestamp: Instant): String =
+    s"""{
+       |  "eori": "$eori",
+       |  "actorId": "GB123456789012",
+       |  "recordId": "$recordId",
+       |  "traderRef": "SKU123456",
+       |  "comcode": "123456",
+       |  "adviceStatus": "Not Requested",
+       |  "goodsDescription": "Bananas",
+       |  "countryOfOrigin": "GB",
+       |  "category": 2,
+       |  "assessments": [
+       |    {
+       |      "assessmentId": "a06846e9a5f61fa4ecf2c4e3b23631fc",
+       |      "primaryCategory": 1,
+       |      "condition": {
+       |        "type": "certificate",
+       |        "conditionId": "Y923",
+       |        "conditionDescription": "Products not considered as waste according to Regulation (EC) No 1013/2006 as retained in UK law",
+       |        "conditionTraderText": "Excluded product"
+       |      }
+       |    }
+       |  ],
+       |  "supplementaryUnit": 13,
+       |  "measurementUnit": "Kilograms",
+       |  "comcodeEffectiveFromDate": "$timestamp",
+       |  "comcodeEffectiveToDate": "$timestamp",
+       |  "version": 1,
+       |  "active": true,
+       |  "toReview": true,
+       |  "reviewReason": "commodity",
+       |  "declarable": "IMMI declarable",
+       |  "ukimsNumber": "XIUKIM47699357400020231115081800",
+       |  "nirmsNumber": "RMS-GB-123456",
+       |  "niphlNumber": "6 S12345",
+       |  "locked": false,
+       |  "createdDateTime": "$timestamp",
+       |  "updatedDateTime": "$timestamp"
+       |}""".stripMargin
 
   def createGetRecordResponseForTranslated(
     eori: String,
@@ -92,14 +133,14 @@ trait GetRecordResponseSupport {
       timestamp,
       Some(timestamp),
       1,
-      true,
-      true,
-      Some("commodity"),
+      active = true,
+      toReview = true,
+      Some(Commodity),
       "IMMI declarable",
       "XIUKIM47699357400020231115081800",
       Some("RMS-GB-123456"),
       Some("6 S12345"),
-      false,
+      locked = false,
       timestamp,
       timestamp
     )
@@ -135,7 +176,7 @@ trait GetRecordResponseSupport {
       1,
       active = true,
       toReview = true,
-      Some("The commodity code has expired. You'll need to change the commodity code and categorise the goods."),
+      Some(Commodity),
       "IMMI declarable",
       "XIUKIM47699357400020231115081800",
       Some("RMS-GB-123456"),
