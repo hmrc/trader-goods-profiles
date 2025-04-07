@@ -20,7 +20,6 @@ trait ErrorNumberConstants {
   val errorNumber: String
 }
 
-
 case object TraderDoesNotHaveATGPErrorNumber extends ErrorNumberConstants {
   val errorNumber: String = "101"
 }
@@ -32,4 +31,3 @@ case object InvalidAffinityGroupErrorNumber extends ErrorNumberConstants {
 case object EoriNumberIsIncorrect extends ErrorNumberConstants {
   val errorNumber: String = "103"
 }
-
