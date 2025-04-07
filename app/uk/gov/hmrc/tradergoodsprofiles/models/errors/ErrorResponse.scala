@@ -24,6 +24,7 @@ case class ErrorResponse(
   correlationId: String,
   code: String,
   message: String,
+  errorNumber: Option[String] = None,
   errors: Option[Seq[Error]] = None
 )
 
@@ -41,27 +42,29 @@ object ErrorResponse {
 
 case class ServiceError(status: Int, errorResponse: ErrorResponse)
 
-case class ForbiddenErrorResponse(correlationId: String, message: String) {
+case class ForbiddenErrorResponse(correlationId: String, message: String, errorNumber: Option[String] = None) {
   def toResult: Result =
     Forbidden(
       Json.toJson(
         ErrorResponse(
           correlationId,
           "FORBIDDEN",
-          message
+          message,
+          errorNumber = errorNumber
         )
       )
     )
 }
 
-case class UnauthorisedErrorResponse(correlationId: String, message: String) {
+case class UnauthorisedErrorResponse(correlationId: String, message: String, errorNumber: Option[String] = None) {
   def toResult: Result =
     Unauthorized(
       Json.toJson(
         ErrorResponse(
           correlationId,
           "UNAUTHORIZED",
-          message
+          message,
+          errorNumber = errorNumber
         )
       )
     )

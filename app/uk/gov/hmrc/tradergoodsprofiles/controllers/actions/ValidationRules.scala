@@ -81,7 +81,7 @@ trait ValidationRules {
           uuidService.uuid,
           "BAD_REQUEST",
           "Bad Request",
-          Some(Seq(Error(code, message, errorNumber)))
+          errors = Some(Seq(Error(code, message, errorNumber)))
         )
       )
     )

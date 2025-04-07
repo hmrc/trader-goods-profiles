@@ -39,7 +39,7 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.UpdateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateOrUpdateRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
-import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
+import uk.gov.hmrc.tradergoodsprofiles.support.{JsonHelper, WireMockServerSpec}
 
 import java.time.Instant
 import java.util.UUID
@@ -54,7 +54,8 @@ class CreateRecordControllerIntegrationSpec
     with CreateOrUpdateRecordResponseSupport
     with UpdateRecordRequestSupport
     with BeforeAndAfterEach
-    with BeforeAndAfterAll {
+    with BeforeAndAfterAll
+    with JsonHelper {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
@@ -62,8 +63,6 @@ class CreateRecordControllerIntegrationSpec
   private val timestamp               = Instant.parse("2024-06-08T12:12:12.456789Z")
   private val recordId                = UUID.randomUUID().toString
   private val uuidService             = mock[UuidService]
-  private val correlationId           = "d677693e-9981-4ee3-8574-654981ebe606"
-
   private val url              = s"http://localhost:$port/$eoriNumber/records"
   private val routerUrl        = s"/trader-goods-profiles-router/traders/$eoriNumber/records"
   private val requestBody      = createUpdateRecordRequestData
@@ -233,7 +232,8 @@ class CreateRecordControllerIntegrationSpec
       result.status mustBe FORBIDDEN
       result.json mustBe createExpectedJson(
         "FORBIDDEN",
-        "EORI number is incorrect"
+        "EORI number is incorrect",
+        Some("103")
       )
     }
 
@@ -245,7 +245,8 @@ class CreateRecordControllerIntegrationSpec
       result.status mustBe FORBIDDEN
       result.json mustBe createExpectedJson(
         "FORBIDDEN",
-        "EORI number is incorrect"
+        "EORI number is incorrect",
+        Some("103")
       )
     }
 
@@ -257,7 +258,8 @@ class CreateRecordControllerIntegrationSpec
       result.status mustBe UNAUTHORIZED
       result.json mustBe createExpectedJson(
         "UNAUTHORIZED",
-        s"The details signed in do not have a Trader Goods Profile"
+        s"The details signed in do not have a Trader Goods Profile",
+        Some("101")
       )
     }
 
@@ -269,7 +271,8 @@ class CreateRecordControllerIntegrationSpec
       result.status mustBe UNAUTHORIZED
       result.json mustBe createExpectedJson(
         "UNAUTHORIZED",
-        s"Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'"
+        s"Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'",
+        Some("102")
       )
     }
 
@@ -281,7 +284,8 @@ class CreateRecordControllerIntegrationSpec
       result.status mustBe UNAUTHORIZED
       result.json mustBe createExpectedJson(
         "UNAUTHORIZED",
-        "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'"
+        "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'",
+        Some("102")
       )
     }
 
@@ -371,27 +375,6 @@ class CreateRecordControllerIntegrationSpec
             .withStatus(status)
             .withBody(responseBody)
         )
-    )
-
-  private def createExpectedError(code: String, message: String, errorNumber: Int): Any =
-    Json.obj(
-      "correlationId" -> correlationId,
-      "code"          -> "BAD_REQUEST",
-      "message"       -> "Bad Request",
-      "errors"        -> Seq(
-        Json.obj(
-          "code"        -> code,
-          "message"     -> message,
-          "errorNumber" -> errorNumber
-        )
-      )
-    )
-
-  private def createExpectedJson(code: String, message: String): Any =
-    Json.obj(
-      "correlationId" -> correlationId,
-      "code"          -> code,
-      "message"       -> message
     )
 
   private def createBadRequestJson(message: String, errorNumber: Int) =

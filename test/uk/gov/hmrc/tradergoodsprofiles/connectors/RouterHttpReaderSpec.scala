@@ -53,7 +53,8 @@ class RouterHttpReaderSpec extends PlaySpec with EitherValues {
 
     "return an error" when {
       "HttpResponse is an error" in new TestRouterHttpReader(uuidService) { reader =>
-        val response     = ErrorResponse("123", "any-code", "error", Some(Seq(Error("BAD_REQUEST", "Bad request", 78890))))
+        val response     =
+          ErrorResponse("123", "any-code", "error", errors = Some(Seq(Error("BAD_REQUEST", "Bad request", 78890))))
         val httpResponse = HttpResponse(BAD_REQUEST, Json.toJson(response), Map.empty)
         val result       = reader.httpReader[TestResponse].read("GET", "any-url", httpResponse)
 
@@ -116,7 +117,8 @@ class RouterHttpReaderSpec extends PlaySpec with EitherValues {
 
     "return an error" when {
       "HttpResponse is an error" in new TestRouterHttpReader(uuidService) { reader =>
-        val response     = ErrorResponse("123", "any-code", "error", Some(Seq(Error("BAD_REQUEST", "Bad request", 78890))))
+        val response     =
+          ErrorResponse("123", "any-code", "error", errors = Some(Seq(Error("BAD_REQUEST", "Bad request", 78890))))
         val httpResponse = HttpResponse(BAD_REQUEST, Json.toJson(response), Map.empty)
         val result       = reader.httpReaderWithoutResponseBody.read("GET", "any-url", httpResponse)
 
