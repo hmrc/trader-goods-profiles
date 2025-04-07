@@ -38,7 +38,7 @@ import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
-import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
+import uk.gov.hmrc.tradergoodsprofiles.support.{JsonHelper, WireMockServerSpec}
 
 import scala.concurrent.ExecutionContext
 
@@ -49,13 +49,13 @@ class MaintainProfileControllerIntegrationSpec
     with AuthTestSupport
     with WireMockServerSpec
     with BeforeAndAfterEach
-    with BeforeAndAfterAll {
+    with BeforeAndAfterAll
+      with JsonHelper {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
   private lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
   private val uuidService             = mock[UuidService]
-  private val correlationId           = "d677693e-9981-4ee3-8574-654981ebe606"
 
   private val url       = s"http://localhost:$port/$eoriNumber"
   private val routerUrl = s"/trader-goods-profiles-router/traders/$eoriNumber"
@@ -219,9 +219,10 @@ class MaintainProfileControllerIntegrationSpec
       val result = updateProfileAndWait()
 
       result.status mustBe FORBIDDEN
-      result.json mustBe updateProfileExpectedJson(
+      result.json mustBe createExpectedJson(
         "FORBIDDEN",
-        "EORI number is incorrect"
+        "EORI number is incorrect",
+        Some("103")
       )
     }
 
@@ -231,9 +232,10 @@ class MaintainProfileControllerIntegrationSpec
       val result = updateProfileAndWait()
 
       result.status mustBe FORBIDDEN
-      result.json mustBe updateProfileExpectedJson(
+      result.json mustBe createExpectedJson(
         "FORBIDDEN",
-        "EORI number is incorrect"
+        "EORI number is incorrect",
+        Some("103")
       )
     }
 
@@ -243,9 +245,10 @@ class MaintainProfileControllerIntegrationSpec
       val result = updateProfileAndWait()
 
       result.status mustBe UNAUTHORIZED
-      result.json mustBe updateProfileExpectedJson(
+      result.json mustBe createExpectedJson(
         "UNAUTHORIZED",
-        "The details signed in do not have a Trader Goods Profile"
+        "The details signed in do not have a Trader Goods Profile",
+        Some("101")
       )
     }
 
@@ -255,9 +258,10 @@ class MaintainProfileControllerIntegrationSpec
       val result = updateProfileAndWait()
 
       result.status mustBe UNAUTHORIZED
-      result.json mustBe updateProfileExpectedJson(
+      result.json mustBe createExpectedJson(
         "UNAUTHORIZED",
-        s"Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'"
+        s"Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'",
+        Some("102")
       )
     }
 
@@ -267,9 +271,10 @@ class MaintainProfileControllerIntegrationSpec
       val result = updateProfileAndWait()
 
       result.status mustBe UNAUTHORIZED
-      result.json mustBe updateProfileExpectedJson(
+      result.json mustBe createExpectedJson(
         "UNAUTHORIZED",
-        "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'"
+        "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'",
+        Some("102")
       )
     }
 
@@ -279,7 +284,7 @@ class MaintainProfileControllerIntegrationSpec
       val result = updateProfileAndWait()
 
       result.status mustBe INTERNAL_SERVER_ERROR
-      result.json mustBe updateProfileExpectedJson(
+      result.json mustBe createExpectedJson(
         "INTERNAL_SERVER_ERROR",
         s"Internal server error for /$eoriNumber with error: runtime exception"
       )
@@ -292,7 +297,7 @@ class MaintainProfileControllerIntegrationSpec
       val result = updateProfileAndWait()
 
       result.status mustBe FORBIDDEN
-      result.json mustBe updateProfileExpectedJson(
+      result.json mustBe createExpectedJson(
         "FORBIDDEN",
         "This service is in private beta and not available to the public. We will aim to open the service to the public soon."
       )
@@ -332,27 +337,6 @@ class MaintainProfileControllerIntegrationSpec
             .withStatus(status)
             .withBody(responseBody)
         )
-    )
-
-  private def createExpectedError(code: String, message: String, errorNumber: Int): Any =
-    Json.obj(
-      "correlationId" -> correlationId,
-      "code"          -> "BAD_REQUEST",
-      "message"       -> "Bad Request",
-      "errors"        -> Seq(
-        Json.obj(
-          "code"        -> code,
-          "message"     -> message,
-          "errorNumber" -> errorNumber
-        )
-      )
-    )
-
-  private def updateProfileExpectedJson(code: String, message: String): Any =
-    Json.obj(
-      "correlationId" -> correlationId,
-      "code"          -> code,
-      "message"       -> message
     )
 
   private val routerError = Json.obj(

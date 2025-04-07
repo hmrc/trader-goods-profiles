@@ -40,6 +40,7 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.UpdateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateOrUpdateRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
+import uk.gov.hmrc.tradergoodsprofiles.support.JsonHelper
 
 import java.time.Instant
 import java.util.UUID
@@ -54,7 +55,8 @@ class UpdateRecordControllerIntegrationSpec
     with CreateOrUpdateRecordResponseSupport
     with UpdateRecordRequestSupport
     with BeforeAndAfterEach
-    with BeforeAndAfterAll {
+    with BeforeAndAfterAll
+      with JsonHelper {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
@@ -62,7 +64,6 @@ class UpdateRecordControllerIntegrationSpec
   private lazy val timestamp          = Instant.parse("2024-06-08T12:12:12.456789Z")
   private val recordId                = UUID.randomUUID().toString
   private val uuidService             = mock[UuidService]
-  private val correlationId           = "d677693e-9981-4ee3-8574-654981ebe606"
 
   private val url              = s"http://localhost:$port/$eoriNumber/records/$recordId"
   private val routerUrl        = s"/trader-goods-profiles-router/traders/$eoriNumber/records/$recordId"
@@ -172,7 +173,7 @@ class UpdateRecordControllerIntegrationSpec
       val result = updateRecordAndWaitWithoutClientIdHeader()
 
       result.status mustBe BAD_REQUEST
-      result.json mustBe updateExpectedError(
+      result.json mustBe createExpectedError(
         "INVALID_HEADER_PARAMETER",
         "X-Client-ID was missing from Header or is in wrong format",
         6000
@@ -185,9 +186,10 @@ class UpdateRecordControllerIntegrationSpec
       val result = updateRecordAndWait()
 
       result.status mustBe FORBIDDEN
-      result.json mustBe updateExpectedJson(
+      result.json mustBe createExpectedJson(
         "FORBIDDEN",
-        "EORI number is incorrect"
+        "EORI number is incorrect",
+        Some("103")
       )
     }
 
@@ -197,9 +199,10 @@ class UpdateRecordControllerIntegrationSpec
       val result = updateRecordAndWait()
 
       result.status mustBe FORBIDDEN
-      result.json mustBe updateExpectedJson(
+      result.json mustBe createExpectedJson(
         "FORBIDDEN",
-        "EORI number is incorrect"
+        "EORI number is incorrect",
+        Some("103")
       )
     }
 
@@ -209,9 +212,10 @@ class UpdateRecordControllerIntegrationSpec
       val result = updateRecordAndWait()
 
       result.status mustBe UNAUTHORIZED
-      result.json mustBe updateExpectedJson(
+      result.json mustBe createExpectedJson(
         "UNAUTHORIZED",
-        s"The details signed in do not have a Trader Goods Profile"
+        s"The details signed in do not have a Trader Goods Profile",
+        Some("101")
       )
     }
 
@@ -221,9 +225,10 @@ class UpdateRecordControllerIntegrationSpec
       val result = updateRecordAndWait()
 
       result.status mustBe UNAUTHORIZED
-      result.json mustBe updateExpectedJson(
+      result.json mustBe createExpectedJson(
         "UNAUTHORIZED",
-        s"Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'"
+        s"Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'",
+        Some("102")
       )
     }
 
@@ -233,9 +238,10 @@ class UpdateRecordControllerIntegrationSpec
       val result = updateRecordAndWait()
 
       result.status mustBe UNAUTHORIZED
-      result.json mustBe updateExpectedJson(
+      result.json mustBe createExpectedJson(
         "UNAUTHORIZED",
-        "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'"
+        "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'",
+        Some("102")
       )
     }
 
@@ -245,7 +251,7 @@ class UpdateRecordControllerIntegrationSpec
       val result = updateRecordAndWait()
 
       result.status mustBe INTERNAL_SERVER_ERROR
-      result.json mustBe updateExpectedJson(
+      result.json mustBe createExpectedJson(
         "INTERNAL_SERVER_ERROR",
         s"Internal server error for /$eoriNumber/records/$recordId with error: runtime exception"
       )
@@ -258,7 +264,7 @@ class UpdateRecordControllerIntegrationSpec
       val result = updateRecordAndWait()
 
       result.status mustBe FORBIDDEN
-      result.json mustBe updateExpectedJson(
+      result.json mustBe createExpectedJson(
         "FORBIDDEN",
         "This service is in private beta and not available to the public. We will aim to open the service to the public soon."
       )
@@ -360,7 +366,7 @@ class UpdateRecordControllerIntegrationSpec
       )
 
       result.status mustBe FORBIDDEN
-      result.json mustBe updateExpectedJson(
+      result.json mustBe createExpectedJson(
         "FORBIDDEN",
         "This service is in private beta and not available to the public. We will aim to open the service to the public soon."
       )
@@ -408,26 +414,6 @@ class UpdateRecordControllerIntegrationSpec
             .withStatus(status)
             .withBody(responseBody)
         )
-    )
-  private def updateExpectedError(code: String, message: String, errorNumber: Int): Any =
-    Json.obj(
-      "correlationId" -> correlationId,
-      "code"          -> "BAD_REQUEST",
-      "message"       -> "Bad Request",
-      "errors"        -> Seq(
-        Json.obj(
-          "code"        -> code,
-          "message"     -> message,
-          "errorNumber" -> errorNumber
-        )
-      )
-    )
-
-  private def updateExpectedJson(code: String, message: String): Any =
-    Json.obj(
-      "correlationId" -> correlationId,
-      "code"          -> code,
-      "message"       -> message
     )
 
   val invalidUpdateRecordRequestDataForAssessmentArray: JsValue = Json

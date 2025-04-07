@@ -2,8 +2,8 @@ import sbt._
 
 object AppDependencies {
 
-  private val bootstrapVersion = "9.7.0"
-  private val catsVersion      = "2.6.1"
+  private val bootstrapVersion = "9.11.0"
+  private val catsVersion      = "2.13.0"
 
   val compile = Seq(
     "uk.gov.hmrc"   %% "bootstrap-backend-play-30" % bootstrapVersion,
@@ -14,10 +14,10 @@ object AppDependencies {
 
   val test = Seq(
     "uk.gov.hmrc"         %% "bootstrap-test-play-30" % bootstrapVersion,
-    "org.mockito"         %% "mockito-scala"          % "1.17.31",
+    "org.mockito"         %% "mockito-scala"          % "1.17.37",
     "org.typelevel"       %% "cats-core"              % catsVersion,
     "io.swagger.parser.v3" % "swagger-parser-v3"      % "2.1.14"
   ).map(_ % Test)
 
-  val it   = Seq.empty
+  val it: Seq[Nothing] = Seq.empty
 }

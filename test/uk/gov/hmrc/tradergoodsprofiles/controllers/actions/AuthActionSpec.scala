@@ -99,7 +99,8 @@ class AuthActionSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEa
         contentAsJson(result) mustBe Json.obj(
           "correlationId" -> correlationId,
           "code"          -> "UNAUTHORIZED",
-          "message"       -> "The details signed in do not have a Trader Goods Profile"
+          "message"       -> "The details signed in do not have a Trader Goods Profile",
+          "errorNumber"   -> "101"
         )
       }
 
@@ -112,7 +113,8 @@ class AuthActionSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEa
         contentAsJson(result) mustBe Json.obj(
           "correlationId" -> correlationId,
           "code"          -> "UNAUTHORIZED",
-          "message"       -> "Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'"
+          "message"       -> "Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'",
+          "errorNumber"   -> "102"
         )
       }
 
@@ -125,7 +127,8 @@ class AuthActionSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEa
         contentAsJson(result) mustBe Json.obj(
           "correlationId" -> correlationId,
           "code"          -> "UNAUTHORIZED",
-          "message"       -> "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'"
+          "message"       -> "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'",
+          "errorNumber"   -> "102"
         )
       }
     }
@@ -153,7 +156,8 @@ class AuthActionSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEa
       contentAsJson(result) mustBe Json.obj(
         "correlationId" -> correlationId,
         "code"          -> "FORBIDDEN",
-        "message"       -> s"EORI number is incorrect"
+        "message"       -> s"EORI number is incorrect",
+        "errorNumber"   -> "103"
       )
     }
 
@@ -166,7 +170,8 @@ class AuthActionSpec extends PlaySpec with AuthTestSupport with BeforeAndAfterEa
       contentAsJson(result) mustBe Json.obj(
         "correlationId" -> correlationId,
         "code"          -> "FORBIDDEN",
-        "message"       -> s"EORI number is incorrect"
+        "message"       -> s"EORI number is incorrect",
+        "errorNumber"   -> "103"
       )
     }
   }
