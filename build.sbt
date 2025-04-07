@@ -1,7 +1,7 @@
 import uk.gov.hmrc.DefaultBuildSettings
 
 ThisBuild / majorVersion := 0
-ThisBuild / scalaVersion := "2.13.16"
+ThisBuild / scalaVersion := "2.13.12"
 
 lazy val microservice = Project("trader-goods-profiles", file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
