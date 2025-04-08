@@ -24,8 +24,8 @@ import uk.gov.hmrc.tradergoodsprofiles.models.errors.ErrorResponse
 class ErrorResponseSpec extends PlaySpec with GetRecordResponseSupport {
 
   private val correlationId = "correlationId"
-  private val code = "1"
-  private val message = "message"
+  private val code          = "1"
+  private val message       = "message"
 
   "toJson" should {
     "convert Object to json when no errorNumber" in {
@@ -45,10 +45,12 @@ class ErrorResponseSpec extends PlaySpec with GetRecordResponseSupport {
           "correlationId" -> correlationId,
           "code"          -> code,
           "message"       -> message,
-          "errorNumber" -> "errorNumber"
+          "errorNumber"   -> "errorNumber"
         )
 
-      Json.toJson(ErrorResponse(correlationId, code, message, Some("errorNumber"), None)) mustBe errorResponseErrorNumberJson
+      Json.toJson(
+        ErrorResponse(correlationId, code, message, Some("errorNumber"), None)
+      ) mustBe errorResponseErrorNumberJson
     }
   }
 }
