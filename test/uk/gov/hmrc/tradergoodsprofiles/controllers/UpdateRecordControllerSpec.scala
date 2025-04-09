@@ -41,7 +41,7 @@ import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
 class UpdateRecordControllerSpec
-  extends PlaySpec
+    extends PlaySpec
     with AuthTestSupport
     with CreateOrUpdateRecordResponseSupport
     with UpdateRecordRequestSupport

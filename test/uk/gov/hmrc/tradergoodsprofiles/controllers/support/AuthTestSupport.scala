@@ -17,7 +17,7 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers.support
 
 import org.mockito.ArgumentMatchers
-import org.mockito.ArgumentMatchers.{any, eq as eqTo}
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
 import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar.mock
 import uk.gov.hmrc.auth.core.authorise.Predicate

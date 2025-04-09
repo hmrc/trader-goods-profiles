@@ -103,7 +103,6 @@ class RemoveRecordRouterConnectorSpec
       verify(requestBuilder).execute(any, any)
     }
 
-
     "return 204 when sendClientId and sendAcceptHeader are true" in {
       when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
         .thenReturn(Future.successful(Right(NO_CONTENT)))

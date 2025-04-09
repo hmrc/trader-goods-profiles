@@ -19,7 +19,8 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
 import io.lemonlabs.uri.Url
-import org.mockito.MockitoSugar.{reset, when}
+import org.mockito.Mockito.{reset, verify, when}
+
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
@@ -111,8 +112,8 @@ class RemoveRecordControllerIntegrationSpec
       result.status mustBe NO_CONTENT
 
       withClue("should add the right headers") {
-        verify(
-          deleteRequestedFor(urlEqualTo(routerUrl))
+      verify(
+        WireMock.deleteRequestedFor(urlEqualTo(routerUrl))
             .withHeader("X-Client-ID", equalTo("clientId"))
         )
       }

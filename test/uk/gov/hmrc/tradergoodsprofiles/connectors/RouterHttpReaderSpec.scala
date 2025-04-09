@@ -44,7 +44,7 @@ class RouterHttpReaderSpec extends PlaySpec with EitherValues {
     when(uuidService.uuid).thenReturn(correlationId)
 
     "return the object requested" in new TestRouterHttpReader(uuidService) { reader =>
-      val response: HttpResponse = HttpResponse(200, Json.toJson(TestResponse("123")), Map.empty)
+      val response: HttpResponse                     = HttpResponse(200, Json.toJson(TestResponse("123")), Map.empty)
       val result: Either[ServiceError, TestResponse] = reader.httpReader[TestResponse].read("GET", "any-url", response)
 
       result.value mustBe TestResponse("123")
@@ -52,17 +52,18 @@ class RouterHttpReaderSpec extends PlaySpec with EitherValues {
 
     "return an error" when {
       "HttpResponse is an error" in new TestRouterHttpReader(uuidService) { reader =>
-        val response: ErrorResponse =
+        val response: ErrorResponse                    =
           ErrorResponse("123", "any-code", "error", errors = Some(Seq(Error("BAD_REQUEST", "Bad request", 78890))))
-        val httpResponse: HttpResponse = HttpResponse(BAD_REQUEST, Json.toJson(response), Map.empty)
-        val result: Either[ServiceError, TestResponse] = reader.httpReader[TestResponse].read("GET", "any-url", httpResponse)
+        val httpResponse: HttpResponse                 = HttpResponse(BAD_REQUEST, Json.toJson(response), Map.empty)
+        val result: Either[ServiceError, TestResponse] =
+          reader.httpReader[TestResponse].read("GET", "any-url", httpResponse)
 
         result.left.value mustBe ServiceError(BAD_REQUEST, response)
       }
     }
 
     "cannot parse a success response" in new TestRouterHttpReader(uuidService) { reader =>
-      val response: HttpResponse = HttpResponse(200, Json.obj(), Map.empty)
+      val response: HttpResponse                     = HttpResponse(200, Json.obj(), Map.empty)
       val result: Either[ServiceError, TestResponse] = reader.httpReader[TestResponse].read("GET", "any-url", response)
 
       result.left.value mustBe ServiceError(
@@ -77,7 +78,7 @@ class RouterHttpReaderSpec extends PlaySpec with EitherValues {
     }
 
     "cannot parse an error response" in new TestRouterHttpReader(uuidService) { reader =>
-      val response: HttpResponse = HttpResponse(NOT_FOUND, Json.obj(), Map.empty)
+      val response: HttpResponse                     = HttpResponse(NOT_FOUND, Json.obj(), Map.empty)
       val result: Either[ServiceError, TestResponse] = reader.httpReader[TestResponse].read("GET", "any-url", response)
 
       result.left.value mustBe ServiceError(
@@ -91,7 +92,7 @@ class RouterHttpReaderSpec extends PlaySpec with EitherValues {
     }
 
     "cannot parse json" in new TestRouterHttpReader(uuidService) { reader =>
-      val response: HttpResponse = HttpResponse(200, "error")
+      val response: HttpResponse                     = HttpResponse(200, "error")
       val result: Either[ServiceError, TestResponse] = reader.httpReader[TestResponse].read("GET", "any-url", response)
 
       result.left.value mustBe ServiceError(
@@ -109,7 +110,7 @@ class RouterHttpReaderSpec extends PlaySpec with EitherValues {
     when(uuidService.uuid).thenReturn(correlationId)
 
     "return the object requested" in new TestRouterHttpReader(uuidService) { reader =>
-      val response: HttpResponse = HttpResponse(200, Json.obj(), Map.empty)
+      val response: HttpResponse            = HttpResponse(200, Json.obj(), Map.empty)
       val result: Either[ServiceError, Int] = reader.httpReaderWithoutResponseBody.read("GET", "any-url", response)
 
       result.value mustBe 200
@@ -117,17 +118,18 @@ class RouterHttpReaderSpec extends PlaySpec with EitherValues {
 
     "return an error" when {
       "HttpResponse is an error" in new TestRouterHttpReader(uuidService) { reader =>
-        val response: ErrorResponse =
+        val response: ErrorResponse           =
           ErrorResponse("123", "any-code", "error", errors = Some(Seq(Error("BAD_REQUEST", "Bad request", 78890))))
-        val httpResponse: HttpResponse = HttpResponse(BAD_REQUEST, Json.toJson(response), Map.empty)
-        val result: Either[ServiceError, Int] = reader.httpReaderWithoutResponseBody.read("GET", "any-url", httpResponse)
+        val httpResponse: HttpResponse        = HttpResponse(BAD_REQUEST, Json.toJson(response), Map.empty)
+        val result: Either[ServiceError, Int] =
+          reader.httpReaderWithoutResponseBody.read("GET", "any-url", httpResponse)
 
         result.left.value mustBe ServiceError(BAD_REQUEST, response)
       }
     }
 
     "cannot parse an error response" in new TestRouterHttpReader(uuidService) { reader =>
-      val response: HttpResponse = HttpResponse(NOT_FOUND, Json.obj(), Map.empty)
+      val response: HttpResponse            = HttpResponse(NOT_FOUND, Json.obj(), Map.empty)
       val result: Either[ServiceError, Int] = reader.httpReaderWithoutResponseBody.read("GET", "any-url", response)
 
       result.left.value mustBe ServiceError(

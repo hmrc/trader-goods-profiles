@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
-import org.mockito.ArgumentMatchers.{any, eq as mockEq}
+import org.mockito.ArgumentMatchers.{any, eq => mockEq}
 import org.mockito.Mockito.{reset, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar.mock

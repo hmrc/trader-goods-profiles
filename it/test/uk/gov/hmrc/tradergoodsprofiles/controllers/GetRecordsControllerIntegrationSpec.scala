@@ -17,15 +17,15 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.client.WireMock.*
 import io.lemonlabs.uri.Url
-import org.mockito.MockitoSugar.{reset, when}
+import org.mockito.Mockito.{reset, when}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
-import play.api.http.Status._
+import play.api.http.Status.*
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
@@ -44,7 +44,6 @@ import uk.gov.hmrc.tradergoodsprofiles.support.{JsonHelper, WireMockServerSpec}
 
 import java.time.Instant
 import java.util.UUID
-import scala.reflect.runtime.universe.typeOf
 
 class GetRecordsControllerIntegrationSpec
     extends PlaySpec
@@ -123,9 +122,7 @@ class GetRecordsControllerIntegrationSpec
       result.json mustBe getSingleRecordRouterResponse
 
       withClue("should add the right headers") {
-        verify(
-          getRequestedFor(urlEqualTo(getSingleRecordRouterUrl))
-        )
+        verify(WireMock.getRequestedFor(urlEqualTo(getSingleRecordRouterUrl)))
       }
     }
 
@@ -140,7 +137,7 @@ class GetRecordsControllerIntegrationSpec
 
       withClue("should add the right headers") {
         verify(
-          getRequestedFor(urlEqualTo(getSingleRecordRouterUrl))
+          WireMock.getRequestedFor(urlEqualTo(getSingleRecordRouterUrl))
         )
       }
     }
@@ -289,7 +286,7 @@ class GetRecordsControllerIntegrationSpec
       result.json mustBe Json.obj(
         "correlationId" -> correlationId,
         "code"          -> "INTERNAL_SERVER_ERROR",
-        "message"       -> s"Response body could not be read as type ${typeOf[GetRecordResponse]}"
+        "message"        -> "Response body could not be read as type GetRecordResponse"
       )
     }
 
@@ -317,9 +314,10 @@ class GetRecordsControllerIntegrationSpec
       result.json mustBe getMultipleRecordsCallerResponse
 
       withClue("should add the right headers") {
-        verify(
-          getRequestedFor(urlEqualTo(getMultipleRecordsRouterUrl))
-        )
+
+        verify(WireMock.getRequestedFor(urlEqualTo(getMultipleRecordsRouterUrl)))
+
+
       }
     }
 
@@ -338,7 +336,7 @@ class GetRecordsControllerIntegrationSpec
 
       withClue("should add the right headers") {
         verify(
-          getRequestedFor(urlEqualTo(getMultipleRecordsRouterUrl))
+          WireMock.getRequestedFor(urlEqualTo(getMultipleRecordsRouterUrl))
         )
       }
     }
@@ -373,7 +371,7 @@ class GetRecordsControllerIntegrationSpec
 
       withClue("should add the right headers") {
         verify(
-          getRequestedFor(
+          WireMock.getRequestedFor(
             urlEqualTo(s"$getMultipleRecordsRouterUrl?lastUpdatedDate=2024-06-08T12:12:12Z&page=1&size=1")
           )
         )

@@ -54,7 +54,7 @@ class AuthActionImpl @Inject() (
   ): ActionBuilder[UserRequest, AnyContent] with ActionFunction[Request, UserRequest] =
     new ActionBuilder[UserRequest, AnyContent] with ActionFunction[Request, UserRequest] {
 
-      override val parser: BodyParsers.Default = bodyParser
+      override val parser: BodyParsers.Default         = bodyParser
       protected def executionContext: ExecutionContext = ec
 
       override def invokeBlock[A](

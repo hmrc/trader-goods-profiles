@@ -16,16 +16,17 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
-import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import io.lemonlabs.uri.Url
-import org.mockito.MockitoSugar.{reset, when}
+import org.mockito.Mockito.{reset, verify, when}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
-import play.api.http.Status._
+import play.api.http.Status.*
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
@@ -41,6 +42,9 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.UpdateRecord
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateOrUpdateRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.support.JsonHelper
+import play.api.libs.ws.JsonBodyWritables.writeableOf_JsValue
+import play.api.libs.ws.WSBodyWritables.writeableOf_JsValue
+import play.api.libs.ws.writeableOf_JsValue
 
 import java.time.Instant
 import java.util.UUID
@@ -132,7 +136,7 @@ class UpdateRecordControllerIntegrationSpec
 
       withClue("should add the right headers") {
         verify(
-          patchRequestedFor(urlEqualTo(routerUrl))
+          WireMock.patchRequestedFor(urlEqualTo(routerUrl))
             .withHeader("Content-Type", equalTo("application/json"))
             .withHeader("X-Client-ID", equalTo("clientId"))
         )
@@ -149,7 +153,7 @@ class UpdateRecordControllerIntegrationSpec
 
       withClue("should add the right headers") {
         verify(
-          patchRequestedFor(urlEqualTo(routerUrl))
+          WireMock.patchRequestedFor(urlEqualTo(routerUrl))
             .withHeader("Content-Type", equalTo("application/json"))
         )
       }
@@ -291,8 +295,8 @@ class UpdateRecordControllerIntegrationSpec
       result.json mustBe expectedResponse
 
       withClue("should add the right headers") {
-        verify(
-          putRequestedFor(urlEqualTo(routerUrl))
+      verify(
+        WireMock.putRequestedFor(urlEqualTo(routerUrl))
             .withHeader("Content-Type", equalTo("application/json"))
             .withHeader("Accept", equalTo("application/vnd.hmrc.1.0+json"))
         )
