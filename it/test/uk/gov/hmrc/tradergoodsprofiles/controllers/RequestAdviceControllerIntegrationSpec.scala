@@ -110,7 +110,7 @@ class RequestAdviceControllerIntegrationSpec
       result.status mustBe CREATED
 
       withClue("should add the right headers") {
-        verify(
+        WireMock.verify(
           WireMock.postRequestedFor(urlEqualTo(routerUrl))
             .withHeader("Content-Type", equalTo("application/json"))
             .withHeader("X-Client-ID", equalTo("clientId"))

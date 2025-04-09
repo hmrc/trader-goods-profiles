@@ -122,7 +122,7 @@ class GetRecordsControllerIntegrationSpec
       result.json mustBe getSingleRecordRouterResponse
 
       withClue("should add the right headers") {
-        verify(WireMock.getRequestedFor(urlEqualTo(getSingleRecordRouterUrl)))
+        WireMock.verify(WireMock.getRequestedFor(urlEqualTo(getSingleRecordRouterUrl)))
       }
     }
 
@@ -136,7 +136,7 @@ class GetRecordsControllerIntegrationSpec
       result.json mustBe getSingleRecordRouterResponse
 
       withClue("should add the right headers") {
-        verify(
+        WireMock.verify(
           WireMock.getRequestedFor(urlEqualTo(getSingleRecordRouterUrl))
         )
       }
@@ -315,7 +315,7 @@ class GetRecordsControllerIntegrationSpec
 
       withClue("should add the right headers") {
 
-        verify(WireMock.getRequestedFor(urlEqualTo(getMultipleRecordsRouterUrl)))
+        WireMock.verify(WireMock.getRequestedFor(urlEqualTo(getMultipleRecordsRouterUrl)))
 
 
       }
@@ -335,7 +335,7 @@ class GetRecordsControllerIntegrationSpec
       result.json mustBe getMultipleRecordsCallerResponse
 
       withClue("should add the right headers") {
-        verify(
+        WireMock.verify(
           WireMock.getRequestedFor(urlEqualTo(getMultipleRecordsRouterUrl))
         )
       }

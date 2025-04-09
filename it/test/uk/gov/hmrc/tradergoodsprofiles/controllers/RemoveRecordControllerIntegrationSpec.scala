@@ -112,7 +112,7 @@ class RemoveRecordControllerIntegrationSpec
       result.status mustBe NO_CONTENT
 
       withClue("should add the right headers") {
-      verify(
+        WireMock.verify(
         WireMock.deleteRequestedFor(urlEqualTo(routerUrl))
             .withHeader("X-Client-ID", equalTo("clientId"))
         )

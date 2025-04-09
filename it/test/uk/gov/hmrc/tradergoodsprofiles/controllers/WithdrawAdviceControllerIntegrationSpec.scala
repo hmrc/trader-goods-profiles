@@ -18,7 +18,7 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, configureFor, equalTo, urlEqualTo}
-import org.mockito.Mockito.{reset, verify, when}
+import org.mockito.Mockito.{reset, when}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
@@ -104,7 +104,7 @@ class WithdrawAdviceControllerIntegrationSpec
       result.status mustBe NO_CONTENT
 
       withClue("should add the right headers") {
-        verify(
+        WireMock.verify(
           WireMock.putRequestedFor(urlEqualTo(routerUrl))
             .withHeader("X-Client-ID", equalTo("clientId"))
         )

@@ -135,7 +135,7 @@ class UpdateRecordControllerIntegrationSpec
       result.json mustBe expectedResponse
 
       withClue("should add the right headers") {
-        verify(
+        WireMock.verify(
           WireMock.patchRequestedFor(urlEqualTo(routerUrl))
             .withHeader("Content-Type", equalTo("application/json"))
             .withHeader("X-Client-ID", equalTo("clientId"))
@@ -152,7 +152,7 @@ class UpdateRecordControllerIntegrationSpec
       result.json mustBe expectedResponse
 
       withClue("should add the right headers") {
-        verify(
+        WireMock.verify(
           WireMock.patchRequestedFor(urlEqualTo(routerUrl))
             .withHeader("Content-Type", equalTo("application/json"))
         )
@@ -295,7 +295,7 @@ class UpdateRecordControllerIntegrationSpec
       result.json mustBe expectedResponse
 
       withClue("should add the right headers") {
-      verify(
+      WireMock.verify(
         WireMock.putRequestedFor(urlEqualTo(routerUrl))
             .withHeader("Content-Type", equalTo("application/json"))
             .withHeader("Accept", equalTo("application/vnd.hmrc.1.0+json"))
