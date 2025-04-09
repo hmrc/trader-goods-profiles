@@ -20,6 +20,7 @@ import io.lemonlabs.uri.UrlPath
 import play.api.Logging
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.JsValue
+import play.api.libs.ws.writeableOf_JsValue
 import play.api.mvc.Request
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
@@ -79,7 +80,7 @@ class UpdateRecordRouterConnector @Inject() (
   private def logAndReturnInternalServerError(
     eori: String,
     recordId: String,
-    url: appConfig.routerUrl.Self,
+    url: io.lemonlabs.uri.Url,
     ex: Throwable
   ): Left[ServiceError, Nothing] = {
     logger.warn(

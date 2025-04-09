@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,14 +23,14 @@ import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
-import scala.reflect.runtime.universe.{TypeTag, typeOf}
+import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
 trait RouterHttpReader {
 
   def uuidService: UuidService
 
-  implicit def httpReader[T](implicit reads: Reads[T], tt: TypeTag[T]): HttpReads[Either[ServiceError, T]] =
+  implicit def httpReader[T](implicit reads: Reads[T], ct: ClassTag[T]): HttpReads[Either[ServiceError, T]] =
     new HttpReads[Either[ServiceError, T]] {
       override def read(method: String, url: String, response: HttpResponse): Either[ServiceError, T] =
         response match {
@@ -50,20 +50,20 @@ trait RouterHttpReader {
         }
     }
 
-  private def jsonAs[T](responseBody: String)(implicit reads: Reads[T], tt: TypeTag[T]): Either[ErrorResponse, T] =
+  private def jsonAs[T](responseBody: String)(implicit reads: Reads[T], ct: ClassTag[T]): Either[ErrorResponse, T] =
     Try(Json.parse(responseBody)) match {
       case Success(value)     =>
         value.validate[T] match {
           case JsSuccess(v, _) => Right(v)
           case JsError(error)  =>
             logger.warn(
-              s"[RouterHttpReader] - Response body could not be read as type ${typeOf[T]}, error ${error.toString()}"
+              s"[RouterHttpReader] - Response body could not be read as type ${ct.runtimeClass.getSimpleName}, error ${error.toString()}"
             )
             Left(
               ErrorResponse
                 .serverErrorResponse(
                   uuidService.uuid,
-                  s"Response body could not be read as type ${typeOf[T]}"
+                  s"Response body could not be read as type ${ct.runtimeClass.getSimpleName}"
                 )
             )
         }

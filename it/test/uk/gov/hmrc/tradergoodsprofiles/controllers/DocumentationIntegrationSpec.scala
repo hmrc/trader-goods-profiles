@@ -16,17 +16,18 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
-import org.mockito.MockitoSugar.{reset, when}
+import org.mockito.Mockito.{reset, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.http.Status.{NOT_FOUND, OK}
-import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.ws.WSClient
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.api.inject.bind
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.ws.DefaultBodyReadables.readableAsString
+import play.api.libs.ws.{WSClient, WSResponse}
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 
 class DocumentationIntegrationSpec extends PlaySpec with GuiceOneServerPerSuite with BeforeAndAfterEach {
@@ -50,7 +51,7 @@ class DocumentationIntegrationSpec extends PlaySpec with GuiceOneServerPerSuite 
   }
   "DocumentationController" should {
     "return the definition specification" in {
-      val response = await(wsClient.url(s"http://localhost:$port/api/definition").get())
+      val response: WSResponse = await(wsClient.url(s"http://localhost:$port/api/definition").get())
 
       response.status mustBe OK
       response.body must not be empty

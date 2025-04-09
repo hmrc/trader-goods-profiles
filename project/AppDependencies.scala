@@ -14,9 +14,11 @@ object AppDependencies {
 
   val test = Seq(
     "uk.gov.hmrc"         %% "bootstrap-test-play-30" % bootstrapVersion,
-    "org.mockito"         %% "mockito-scala"          % "1.17.37",
+    "uk.gov.hmrc.mongo"   %% "hmrc-mongo-test-play-30" % "2.6.0",
+    "org.scalatestplus"   %% "mockito-4-11"           % "3.2.17.0",
     "org.typelevel"       %% "cats-core"              % catsVersion,
-    "io.swagger.parser.v3" % "swagger-parser-v3"      % "2.1.14"
+    "io.swagger.parser.v3" % "swagger-parser-v3"      % "2.1.14",
+    "org.mongodb.scala" %% "mongo-scala-driver" % "5.1.0" cross CrossVersion.for3Use2_13
   ).map(_ % Test)
 
   val it: Seq[Nothing] = Seq.empty

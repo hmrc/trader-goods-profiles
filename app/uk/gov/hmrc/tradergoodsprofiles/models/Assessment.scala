@@ -17,8 +17,8 @@
 package uk.gov.hmrc.tradergoodsprofiles.models
 
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
+import play.api.libs.json.*
 import play.api.libs.json.Reads.verifying
-import play.api.libs.json._
 
 case class Assessment(assessmentId: Option[String], primaryCategory: Option[Int], condition: Option[Condition])
 

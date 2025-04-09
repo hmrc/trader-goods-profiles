@@ -18,9 +18,9 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers.actions
 
 import com.google.inject.ImplementedBy
 import play.api.Logging
-import play.api.mvc._
+import play.api.mvc.*
+import uk.gov.hmrc.auth.core.*
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
-import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{affinityGroup, authorisedEnrolments}
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.http.HeaderCarrier
@@ -28,7 +28,7 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.AuthAction.{gtpEnrolmentKey, gtpIdentifierKey}
 import uk.gov.hmrc.tradergoodsprofiles.models.UserRequest
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.{EoriNumberIsIncorrect, ForbiddenErrorResponse, InvalidAffinityGroupErrorNumber, ServerErrorResponse, TraderDoesNotHaveATGPErrorNumber, UnauthorisedErrorResponse}
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.*
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import javax.inject.{Inject, Singleton}
@@ -54,7 +54,7 @@ class AuthActionImpl @Inject() (
   ): ActionBuilder[UserRequest, AnyContent] with ActionFunction[Request, UserRequest] =
     new ActionBuilder[UserRequest, AnyContent] with ActionFunction[Request, UserRequest] {
 
-      override val parser                              = bodyParser
+      override val parser: BodyParsers.Default         = bodyParser
       protected def executionContext: ExecutionContext = ec
 
       override def invokeBlock[A](

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.models.errors
 
-import play.api.libs.json._
+import play.api.libs.json.*
 import play.api.mvc.Result
 import play.api.mvc.Results.{Forbidden, InternalServerError, Unauthorized}
 
