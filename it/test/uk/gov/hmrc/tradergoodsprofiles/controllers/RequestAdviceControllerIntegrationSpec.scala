@@ -18,7 +18,7 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.*
-import org.mockito.Mockito.{reset, verify, when}
+import org.mockito.Mockito.{reset, when}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec

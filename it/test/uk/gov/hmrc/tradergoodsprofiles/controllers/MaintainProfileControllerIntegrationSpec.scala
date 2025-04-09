@@ -19,7 +19,7 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.*
 import io.lemonlabs.uri.Url
-import org.mockito.Mockito.{reset, verify, when}
+import org.mockito.Mockito.{reset, when}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
@@ -29,7 +29,8 @@ import play.api.http.Status.*
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
-import play.api.libs.ws.WSClient
+import play.api.libs.ws.JsonBodyWritables.writeableOf_JsValue
+import play.api.libs.ws.{WSClient, writeableOf_JsValue}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
@@ -40,9 +41,6 @@ import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 import uk.gov.hmrc.tradergoodsprofiles.support.{JsonHelper, WireMockServerSpec}
-import play.api.libs.ws.JsonBodyWritables.writeableOf_JsValue
-import play.api.libs.ws.WSBodyWritables.writeableOf_JsValue
-import play.api.libs.ws.writeableOf_JsValue
 
 import scala.concurrent.ExecutionContext
 
