@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers.actions
 
-import org.mockito.MockitoSugar.{reset, when}
+import org.mockito.Mockito.{reset, when}
 import org.scalatest.{BeforeAndAfterEach, EitherValues}
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
@@ -55,19 +55,19 @@ class ValidationRulesSpec extends PlaySpec with EitherValues with BeforeAndAfter
         "X-Client-ID"  -> "some client ID"
       )
 
-      val result = validator.validateAllHeaders(request)
+      val result: Either[Result, ?] = validator.validateAllHeaders(request)
 
       result mustBe Right(())
     }
 
     "return invalid Content-Type error" in new TestValidationRules(uuidService) {
       validator =>
-      val request = FakeRequest().withHeaders(
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest().withHeaders(
         "Accept"      -> "application/vnd.hmrc.1.0+json",
         "X-Client-ID" -> "some client ID"
       )
 
-      val result = validator.validateAllHeaders(request)
+      val result: Either[Result, ?] = validator.validateAllHeaders(request)
 
       result.left.value mustBe createExpectedError(
         "Content-Type was missing from Header or is in the wrong format",
@@ -78,12 +78,12 @@ class ValidationRulesSpec extends PlaySpec with EitherValues with BeforeAndAfter
 
     "return Accept header error" in new TestValidationRules(uuidService) {
       validator =>
-      val request = FakeRequest().withHeaders(
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest().withHeaders(
         "Content-Type" -> "application/json",
         "X-Client-ID"  -> "some client ID"
       )
 
-      val result = validator.validateAllHeaders(request)
+      val result: Either[Result, ?] = validator.validateAllHeaders(request)
 
       result.left.value mustBe createExpectedError(
         "Accept was missing from Header or is in wrong format",
@@ -93,12 +93,12 @@ class ValidationRulesSpec extends PlaySpec with EitherValues with BeforeAndAfter
 
     "return Client ID header error" in new TestValidationRules(uuidService) {
       validator =>
-      val request = FakeRequest().withHeaders(
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest().withHeaders(
         "Accept"       -> "application/vnd.hmrc.1.0+json",
         "Content-Type" -> "application/json"
       )
 
-      val result = validator.validateAllHeaders(request)
+      val result: Either[Result, ?] = validator.validateAllHeaders(request)
 
       result.left.value mustBe createExpectedError(
         "X-Client-ID was missing from Header or is in wrong format",
@@ -108,7 +108,7 @@ class ValidationRulesSpec extends PlaySpec with EitherValues with BeforeAndAfter
 
     "return the first invalid header error when all header are invalid" in new TestValidationRules(uuidService) {
       validator =>
-      val result = validator.validateAllHeaders(FakeRequest())
+      val result: Either[Result, ?] = validator.validateAllHeaders(FakeRequest())
 
       result.left.value mustBe createExpectedError(
         "Accept was missing from Header or is in wrong format",
@@ -120,24 +120,24 @@ class ValidationRulesSpec extends PlaySpec with EitherValues with BeforeAndAfter
   "validateAcceptAndClientIdHeader" should {
     "validate headers" in new TestValidationRules(uuidService) {
       validator =>
-      val request = FakeRequest().withHeaders(
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest().withHeaders(
         "Accept"      -> "application/vnd.hmrc.1.0+json",
         "X-Client-ID" -> "some client ID"
       )
 
-      val result = validator.validateAcceptAndClientIdHeaders(request)
+      val result: Either[Result, ?] = validator.validateAcceptAndClientIdHeaders(request)
 
       result mustBe Right(())
     }
 
     "return Accept header error" in new TestValidationRules(uuidService) {
       validator =>
-      val request = FakeRequest().withHeaders(
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest().withHeaders(
         "Content-Type" -> "application/json",
         "X-Client-ID"  -> "some client ID"
       )
 
-      val result = validator.validateAcceptAndClientIdHeaders(request)
+      val result: Either[Result, ?] = validator.validateAcceptAndClientIdHeaders(request)
 
       result.left.value mustBe createExpectedError(
         "Accept was missing from Header or is in wrong format",
@@ -147,7 +147,7 @@ class ValidationRulesSpec extends PlaySpec with EitherValues with BeforeAndAfter
 
     "return Client ID header error" in new TestValidationRules(uuidService) {
       validator =>
-      val request = FakeRequest().withHeaders(
+      val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest().withHeaders(
         "Accept"       -> "application/vnd.hmrc.1.0+json",
         "Content-Type" -> "application/json"
       )

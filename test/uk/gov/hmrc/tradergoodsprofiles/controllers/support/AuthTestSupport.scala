@@ -17,8 +17,8 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers.support
 
 import org.mockito.ArgumentMatchers
-import org.mockito.ArgumentMatchersSugar.{any, eqTo}
-import org.mockito.MockitoSugar.when
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
+import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar.mock
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{affinityGroup, authorisedEnrolments}
@@ -53,7 +53,7 @@ trait AuthTestSupport {
   }
 
   def withAuthorization(retrieval: Enrolments ~ Option[AffinityGroup]): Unit =
-    when(authConnector.authorise(ArgumentMatchers.argThat((p: Predicate) => true), eqTo(authFetch))(any, any))
+    when(authConnector.authorise(ArgumentMatchers.argThat((* : Predicate) => true), eqTo(authFetch))(any, any))
       .thenReturn(Future.successful(retrieval))
 
   def authorizeWithAffinityGroup(affinityGrp: Option[AffinityGroup]): Unit = {

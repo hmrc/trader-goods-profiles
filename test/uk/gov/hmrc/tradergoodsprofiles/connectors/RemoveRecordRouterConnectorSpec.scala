@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.connectors
 
-import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.Mockito.never
-import org.mockito.MockitoSugar.{reset, verify, when}
+import org.mockito.Mockito.{reset, verify, when}
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, EitherValues}
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT}
@@ -85,7 +85,7 @@ class RemoveRecordRouterConnectorSpec
       val expectedUrl =
         s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId?actorId=$actorId"
       verify(httpClient).delete(eqTo(url"$expectedUrl"))(any)
-      verify(requestBuilder, never()).setHeader(any, any)
+      verify(requestBuilder, never()).setHeader(eqTo("X-Client-ID" -> "clientId"))
       verify(requestBuilder).execute(any, any)
     }
 
@@ -99,9 +99,10 @@ class RemoveRecordRouterConnectorSpec
       val expectedUrl =
         s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId?actorId=$actorId"
       verify(httpClient).delete(eqTo(url"$expectedUrl"))(any)
-      verify(requestBuilder, never()).setHeader(any, any)
+      verify(requestBuilder, never()).setHeader(eqTo("Accept" -> "application/vnd.hmrc.1.0+json"))
       verify(requestBuilder).execute(any, any)
     }
+
 
     "return 204 when sendClientId and sendAcceptHeader are true" in {
       when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
@@ -117,6 +118,7 @@ class RemoveRecordRouterConnectorSpec
       verify(requestBuilder, never()).setHeader()
       verify(requestBuilder).execute(any, any)
     }
+
     "return an error response" when {
       "router API return an error" in {
         val expectedErrorResponse = ErrorResponse("123", "code", "error")

@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
-import org.mockito.ArgumentMatchersSugar.{any, eqTo}
-import org.mockito.MockitoSugar.{reset, verify, when}
-import org.mockito.captor.ArgCaptor
+import org.mockito.ArgumentCaptor
+import org.mockito.Mockito.{reset, verify, when}
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
@@ -41,7 +41,7 @@ import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
 class UpdateRecordControllerSpec
-    extends PlaySpec
+  extends PlaySpec
     with AuthTestSupport
     with CreateOrUpdateRecordResponseSupport
     with UpdateRecordRequestSupport
@@ -93,12 +93,6 @@ class UpdateRecordControllerSpec
       contentAsJson(result) mustBe Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
     }
 
-    /*
-  ToDO: remove this test after eis implementation - TGP-1903
-
-  The client ID does not need to be checked anymore as EIS has removed it
-  from the header
-     */
     "not validate client ID is sendClientId is false" in {
       when(appConfig.sendClientId).thenReturn(false)
       when(connector.patch(any, any, any)(any))
@@ -163,10 +157,10 @@ class UpdateRecordControllerSpec
       contentAsJson(result) mustBe Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
 
       withClue("should sent a request") {
-        val captor = ArgCaptor[Request[JsValue]]
+        val captor = ArgumentCaptor.forClass(classOf[Request[JsValue]])
         verify(connector).put(eqTo(eoriNumber), eqTo(recordId), captor.capture)(any)
 
-        captor.value.body mustBe createUpdateRecordRequestData
+        captor.getValue.body mustBe createUpdateRecordRequestData
       }
     }
 

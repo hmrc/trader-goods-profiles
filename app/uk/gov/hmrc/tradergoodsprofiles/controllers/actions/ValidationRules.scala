@@ -21,7 +21,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{BaseController, Request, Result}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{Error, ErrorResponse}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
-import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
+import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.*
 
 trait ValidationRules {
   this: BaseController =>
