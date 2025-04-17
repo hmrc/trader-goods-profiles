@@ -116,8 +116,6 @@ class GetRecordsControllerIntegrationSpec
     "return a record" in {
       withAuthorizedTrader()
 
-      stubRouterRequest(getSingleRecordRouterUrl, 200, createGetRecordResponseReadJson(eoriNumber, recordId, timestamp))
-
       val result = getRecordAndWait(getSingleRecordUrl)
 
       result.status mustBe OK
@@ -131,8 +129,6 @@ class GetRecordsControllerIntegrationSpec
     "should not validate client ID is features flag sendClientId is false" in {
       withAuthorizedTrader()
       when(appConfig.sendClientId).thenReturn(false)
-
-      stubRouterRequest(getSingleRecordRouterUrl, 200, createGetRecordResponseReadJson(eoriNumber, recordId, timestamp))
 
       val result = getRecordAndWaitWithOutClientIDHeader(getSingleRecordUrl)
 
@@ -176,8 +172,6 @@ class GetRecordsControllerIntegrationSpec
         .withIdentifier(tgpIdentifierName, eoriNumber)
 
       withAuthorizedTrader(enrolment)
-
-      stubRouterRequest(getSingleRecordRouterUrl, 200, createGetRecordResponseReadJson(eoriNumber, recordId, timestamp))
 
       val result = getRecordAndWait(getSingleRecordUrl)
 
