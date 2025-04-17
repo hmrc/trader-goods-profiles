@@ -17,7 +17,7 @@
 package uk.gov.hmrc.tradergoodsprofiles.models.response
 
 import play.api.libs.json.*
-import uk.gov.hmrc.tradergoodsprofiles.models.Assessment
+import uk.gov.hmrc.tradergoodsprofiles.models.{Assessment, ReviewReason}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ResponseModelSupport.removeNulls
 
 import java.time.Instant
@@ -39,7 +39,7 @@ case class GoodsItemRecords(
   version: Int,
   active: Boolean,
   toReview: Boolean,
-  reviewReason: Option[String],
+  reviewReason: Option[ReviewReason],
   declarable: String,
   ukimsNumber: String,
   nirmsNumber: Option[String],
@@ -71,7 +71,7 @@ object GoodsItemRecords {
         (json \ "version").as[Int],
         (json \ "active").as[Boolean],
         (json \ "toReview").as[Boolean],
-        (json \ "reviewReason").asOpt[String],
+        (json \ "reviewReason").asOpt[ReviewReason],
         (json \ "declarable").as[String],
         (json \ "ukimsNumber").as[String],
         (json \ "nirmsNumber").asOpt[String],
