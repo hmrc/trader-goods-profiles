@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.models.response
 
-import play.api.libs.json._
+import play.api.libs.json.*
 import uk.gov.hmrc.tradergoodsprofiles.models.{Assessment, ReviewReason}
 import uk.gov.hmrc.tradergoodsprofiles.utils.ResponseModelSupport.removeNulls
 

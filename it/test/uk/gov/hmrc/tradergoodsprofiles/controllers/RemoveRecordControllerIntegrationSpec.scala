@@ -17,15 +17,15 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.client.WireMock.*
 import io.lemonlabs.uri.Url
-import org.mockito.MockitoSugar.{reset, when}
+import org.mockito.Mockito.{reset, when}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
-import play.api.http.Status._
+import play.api.http.Status.*
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
@@ -38,7 +38,7 @@ import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
-import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
+import uk.gov.hmrc.tradergoodsprofiles.support.{JsonHelper, WireMockServerSpec}
 
 import java.util.UUID
 
@@ -49,13 +49,13 @@ class RemoveRecordControllerIntegrationSpec
     with AuthTestSupport
     with WireMockServerSpec
     with BeforeAndAfterEach
-    with BeforeAndAfterAll {
+    with BeforeAndAfterAll
+    with JsonHelper {
 
   private lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
   private val recordId                = UUID.randomUUID().toString
   private val actorId                 = "GB987654321098"
   private val uuidService             = mock[UuidService]
-  private val correlationId           = "d677693e-9981-4ee3-8574-654981ebe606"
 
   private val url            = s"http://localhost:$port/$eoriNumber/records/$recordId?actorId=$actorId"
   private val routerUrl      = s"/trader-goods-profiles-router/traders/$eoriNumber/records/$recordId?actorId=$actorId"
@@ -111,8 +111,8 @@ class RemoveRecordControllerIntegrationSpec
       result.status mustBe NO_CONTENT
 
       withClue("should add the right headers") {
-        verify(
-          deleteRequestedFor(urlEqualTo(routerUrl))
+        WireMock.verify(
+        WireMock.deleteRequestedFor(urlEqualTo(routerUrl))
             .withHeader("X-Client-ID", equalTo("clientId"))
         )
       }
@@ -160,7 +160,8 @@ class RemoveRecordControllerIntegrationSpec
       result.status mustBe UNAUTHORIZED
       result.json mustBe createExpectedJson(
         "UNAUTHORIZED",
-        s"The details signed in do not have a Trader Goods Profile"
+        s"The details signed in do not have a Trader Goods Profile",
+        Some("101")
       )
     }
 
@@ -172,7 +173,8 @@ class RemoveRecordControllerIntegrationSpec
       result.status mustBe UNAUTHORIZED
       result.json mustBe createExpectedJson(
         "UNAUTHORIZED",
-        s"Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'"
+        s"Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'",
+        Some("102")
       )
     }
 
@@ -184,7 +186,8 @@ class RemoveRecordControllerIntegrationSpec
       result.status mustBe UNAUTHORIZED
       result.json mustBe createExpectedJson(
         "UNAUTHORIZED",
-        "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'"
+        "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'",
+        Some("102")
       )
     }
 
@@ -196,7 +199,8 @@ class RemoveRecordControllerIntegrationSpec
       result.status mustBe FORBIDDEN
       result.json mustBe createExpectedJson(
         "FORBIDDEN",
-        "EORI number is incorrect"
+        "EORI number is incorrect",
+        Some("103")
       )
     }
 
@@ -208,7 +212,8 @@ class RemoveRecordControllerIntegrationSpec
       result.status mustBe FORBIDDEN
       result.json mustBe createExpectedJson(
         "FORBIDDEN",
-        "EORI number is incorrect"
+        "EORI number is incorrect",
+        Some("103")
       )
     }
 
@@ -281,7 +286,6 @@ class RemoveRecordControllerIntegrationSpec
         "This service is in private beta and not available to the public. We will aim to open the service to the public soon."
       )
     }
-
   }
 
   private def removeRecordAndWait(url: String = url) =
@@ -303,26 +307,6 @@ class RemoveRecordControllerIntegrationSpec
         .delete()
     )
 
-  private def createExpectedError(code: String, message: String, errorNumber: Int): Any =
-    Json.obj(
-      "correlationId" -> correlationId,
-      "code"          -> "BAD_REQUEST",
-      "message"       -> "Bad Request",
-      "errors"        -> Seq(
-        Json.obj(
-          "code"        -> code,
-          "message"     -> message,
-          "errorNumber" -> errorNumber
-        )
-      )
-    )
-
-  private def createExpectedJson(code: String, message: String): Any =
-    Json.obj(
-      "correlationId" -> correlationId,
-      "code"          -> code,
-      "message"       -> message
-    )
 
   private def stubRouterResponse(status: Int, errorResponse: String, url: String = routerUrl) =
     wireMock.stubFor(

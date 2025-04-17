@@ -18,9 +18,9 @@ package uk.gov.hmrc.tradergoodsprofiles.controllers.actions
 
 import com.google.inject.ImplementedBy
 import play.api.Logging
-import play.api.mvc._
+import play.api.mvc.*
+import uk.gov.hmrc.auth.core.*
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
-import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{affinityGroup, authorisedEnrolments}
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.http.HeaderCarrier
@@ -28,7 +28,7 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.AuthAction.{gtpEnrolmentKey, gtpIdentifierKey}
 import uk.gov.hmrc.tradergoodsprofiles.models.UserRequest
-import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ForbiddenErrorResponse, ServerErrorResponse, UnauthorisedErrorResponse}
+import uk.gov.hmrc.tradergoodsprofiles.models.errors.*
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import javax.inject.{Inject, Singleton}
@@ -54,7 +54,7 @@ class AuthActionImpl @Inject() (
   ): ActionBuilder[UserRequest, AnyContent] with ActionFunction[Request, UserRequest] =
     new ActionBuilder[UserRequest, AnyContent] with ActionFunction[Request, UserRequest] {
 
-      override val parser                              = bodyParser
+      override val parser: BodyParsers.Default         = bodyParser
       protected def executionContext: ExecutionContext = ec
 
       override def invokeBlock[A](
@@ -72,13 +72,15 @@ class AuthActionImpl @Inject() (
             case _ ~ Some(Agent)                                                      =>
               successful(
                 handleInvalidAffinityGroup(
-                  s"Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'"
+                  s"Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'",
+                  Some(InvalidAffinityGroupErrorNumber.errorNumber)
                 )
               )
             case _                                                                    =>
               successful(
                 handleInvalidAffinityGroup(
-                  "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'"
+                  "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'",
+                  Some(InvalidAffinityGroupErrorNumber.errorNumber)
                 )
               )
 
@@ -117,7 +119,8 @@ class AuthActionImpl @Inject() (
     Future.successful(
       ForbiddenErrorResponse(
         uuidService.uuid,
-        s"EORI number is incorrect"
+        s"EORI number is incorrect",
+        errorNumber = Some(EoriNumberIsIncorrect.errorNumber)
       ).toResult
     )
   }
@@ -132,14 +135,16 @@ class AuthActionImpl @Inject() (
       .distinct
 
   private def handleInvalidAffinityGroup[A](
-    errorMessage: String
+    errorMessage: String,
+    errorNumber: Option[String] = None
   )(implicit request: Request[A]): Result = {
 
     logger.warn(s"Unauthorised exception for ${request.uri} with error $errorMessage")
 
     UnauthorisedErrorResponse(
       uuidService.uuid,
-      errorMessage
+      errorMessage,
+      errorNumber = errorNumber
     ).toResult
   }
 
@@ -151,7 +156,8 @@ class AuthActionImpl @Inject() (
 
     UnauthorisedErrorResponse(
       uuidService.uuid,
-      s"The details signed in do not have a Trader Goods Profile"
+      s"The details signed in do not have a Trader Goods Profile",
+      errorNumber = Some(TraderDoesNotHaveATGPErrorNumber.errorNumber)
     ).toResult
   }
 }

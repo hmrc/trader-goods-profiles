@@ -21,7 +21,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{BaseController, Request, Result}
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{Error, ErrorResponse}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
-import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants._
+import uk.gov.hmrc.tradergoodsprofiles.utils.ApplicationConstants.*
 
 trait ValidationRules {
   this: BaseController =>
@@ -81,7 +81,7 @@ trait ValidationRules {
           uuidService.uuid,
           "BAD_REQUEST",
           "Bad Request",
-          Some(Seq(Error(code, message, errorNumber)))
+          errors = Some(Seq(Error(code, message, errorNumber)))
         )
       )
     )

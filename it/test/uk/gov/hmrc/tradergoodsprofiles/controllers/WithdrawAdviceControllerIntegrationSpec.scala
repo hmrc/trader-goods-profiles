@@ -17,18 +17,18 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
 import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock._
-import org.mockito.MockitoSugar.{reset, when}
+import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, configureFor, equalTo, urlEqualTo}
+import org.mockito.Mockito.{reset, when}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
-import play.api.http.Status._
+import play.api.http.Status.*
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
-import play.api.libs.ws.WSClient
+import play.api.libs.ws.{WSClient, writeableOf_JsValue}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
 import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, InsufficientEnrolments}
@@ -36,7 +36,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.test.HttpClientV2Support
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
-import uk.gov.hmrc.tradergoodsprofiles.support.WireMockServerSpec
+import uk.gov.hmrc.tradergoodsprofiles.support.{JsonHelper, WireMockServerSpec}
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext
@@ -48,14 +48,14 @@ class WithdrawAdviceControllerIntegrationSpec
     with AuthTestSupport
     with WireMockServerSpec
     with BeforeAndAfterEach
-    with BeforeAndAfterAll {
+    with BeforeAndAfterAll
+      with JsonHelper {
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
   private lazy val wsClient: WSClient = app.injector.instanceOf[WSClient]
   private val recordId                = UUID.randomUUID().toString
   private val uuidService             = mock[UuidService]
-  private val correlationId           = "d677693e-9981-4ee3-8574-654981ebe606"
 
   private val url         = s"http://localhost:$port/$eoriNumber/records/$recordId/advice"
   private val routerUrl   =
@@ -104,8 +104,8 @@ class WithdrawAdviceControllerIntegrationSpec
       result.status mustBe NO_CONTENT
 
       withClue("should add the right headers") {
-        verify(
-          putRequestedFor(urlEqualTo(routerUrl))
+        WireMock.verify(
+          WireMock.putRequestedFor(urlEqualTo(routerUrl))
             .withHeader("X-Client-ID", equalTo("clientId"))
         )
       }
@@ -145,9 +145,10 @@ class WithdrawAdviceControllerIntegrationSpec
       val result = withdrawAdviceAndWait()
 
       result.status mustBe FORBIDDEN
-      result.json mustBe expectedJson(
+      result.json mustBe createExpectedJson(
         "FORBIDDEN",
-        "EORI number is incorrect"
+        "EORI number is incorrect",
+        Some("103")
       )
     }
 
@@ -157,9 +158,10 @@ class WithdrawAdviceControllerIntegrationSpec
       val result = withdrawAdviceAndWait()
 
       result.status mustBe FORBIDDEN
-      result.json mustBe expectedJson(
+      result.json mustBe createExpectedJson(
         "FORBIDDEN",
-        "EORI number is incorrect"
+        "EORI number is incorrect",
+        Some("103")
       )
     }
 
@@ -169,9 +171,10 @@ class WithdrawAdviceControllerIntegrationSpec
       val result = withdrawAdviceAndWait()
 
       result.status mustBe UNAUTHORIZED
-      result.json mustBe expectedJson(
+      result.json mustBe createExpectedJson(
         "UNAUTHORIZED",
-        s"The details signed in do not have a Trader Goods Profile"
+        s"The details signed in do not have a Trader Goods Profile",
+        Some("101")
       )
     }
 
@@ -181,9 +184,9 @@ class WithdrawAdviceControllerIntegrationSpec
       val result = withdrawAdviceAndWait()
 
       result.status mustBe UNAUTHORIZED
-      result.json mustBe expectedJson(
+      result.json mustBe createExpectedJson(
         "UNAUTHORIZED",
-        s"Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'"
+        s"Affinity group 'agent' is not supported. Affinity group needs to be 'individual' or 'organisation'", Some("102")
       )
     }
 
@@ -193,9 +196,10 @@ class WithdrawAdviceControllerIntegrationSpec
       val result = withdrawAdviceAndWait()
 
       result.status mustBe UNAUTHORIZED
-      result.json mustBe expectedJson(
+      result.json mustBe createExpectedJson(
         "UNAUTHORIZED",
-        "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'"
+        "Empty affinity group is not supported. Affinity group needs to be 'individual' or 'organisation'",
+        Some("102")
       )
     }
 
@@ -205,7 +209,7 @@ class WithdrawAdviceControllerIntegrationSpec
       val result = withdrawAdviceAndWait()
 
       result.status mustBe INTERNAL_SERVER_ERROR
-      result.json mustBe expectedJson(
+      result.json mustBe createExpectedJson(
         "INTERNAL_SERVER_ERROR",
         s"Internal server error for /$eoriNumber/records/$recordId/advice with error: runtime exception"
       )
@@ -218,7 +222,7 @@ class WithdrawAdviceControllerIntegrationSpec
       val result = withdrawAdviceAndWait()
 
       result.status mustBe FORBIDDEN
-      result.json mustBe expectedJson(
+      result.json mustBe createExpectedJson(
         "FORBIDDEN",
         "This service is in private beta and not available to the public. We will aim to open the service to the public soon."
       )
@@ -289,13 +293,6 @@ class WithdrawAdviceControllerIntegrationSpec
           "Content-Type" -> "application/json"
         )
         .put(requestBody)
-    )
-
-  private def expectedJson(code: String, message: String): Any =
-    Json.obj(
-      "correlationId" -> correlationId,
-      "code"          -> code,
-      "message"       -> message
     )
 
   private def stubRouterResponse(status: Int, errorResponse: String, url: String = routerUrl) =

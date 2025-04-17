@@ -17,8 +17,8 @@
 package uk.gov.hmrc.tradergoodsprofiles.connectors
 
 import io.lemonlabs.uri.Url
-import org.mockito.ArgumentMatchersSugar.any
-import org.mockito.MockitoSugar.{reset, when}
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.{reset, when}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, EitherValues}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}

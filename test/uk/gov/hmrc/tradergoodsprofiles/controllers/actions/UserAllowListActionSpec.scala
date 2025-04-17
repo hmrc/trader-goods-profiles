@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers.actions
 
-import org.mockito.ArgumentMatchersSugar.any
-import org.mockito.MockitoSugar.when
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import org.scalatest.EitherValues
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers

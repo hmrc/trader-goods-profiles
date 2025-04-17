@@ -17,8 +17,8 @@
 package uk.gov.hmrc.tradergoodsprofiles.support
 
 import io.lemonlabs.uri.Url
-import org.mockito.MockitoSugar.when
-import org.mockito.stubbing.ScalaOngoingStubbing
+import org.mockito.Mockito.when
+import org.mockito.stubbing.OngoingStubbing
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
 import play.api.http.MimeTypes
@@ -50,9 +50,8 @@ class BaseConnectorSpec extends PlaySpec {
   protected val correlationId: String          = UUID.randomUUID().toString
   protected val serverUrl: String              = "http://localhost:23123"
 
-  def commonSetUp: ScalaOngoingStubbing[String] = {
+  def commonSetUp: OngoingStubbing[String] = {
     when(appConfig.routerUrl).thenReturn(Url.parse(serverUrl))
     when(uuidService.uuid).thenReturn(correlationId)
   }
-
 }
