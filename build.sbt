@@ -10,14 +10,17 @@ lazy val microservice = Project("trader-goods-profiles", file("."))
     PlayKeys.playDefaultPort := 10902,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     scalacOptions ++= Seq(
-      "-feature",
+      // https://www.scala-lang.org/2021/01/12/configuring-and-suppressing-warnings.html
+      // suppress warnings in generated routes files
       "-Wconf:src=routes/.*:s",
-      "-Wconf:src=templates/.*:s",
+      // Suppress "unused imports" in /templates directory
+      "-Wconf:cat=unused&src=templates/.*\\.scala:s",
+      // Suppress "possible missing interpolator" in /templates directory
+      "-Wconf:src=templates/.*\\.scala&msg=possible missing interpolator:s"
     )
-
   )
   .settings(resolvers += Resolver.jcenterRepo)
-  .settings(CodeCoverageSettings.settings *)
+  .settings(CodeCoverageSettings.settings: _*)
   .settings(
     Compile / unmanagedResourceDirectories += baseDirectory.value / "resources"
   )
@@ -28,5 +31,3 @@ lazy val it = project
   .dependsOn(microservice % "test->test")
   .settings(DefaultBuildSettings.itSettings())
   .settings(libraryDependencies ++= AppDependencies.it)
-
-Test / javaOptions += "-Dlogger.conf=logback-test.xml"

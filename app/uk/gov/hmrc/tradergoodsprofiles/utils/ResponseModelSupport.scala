@@ -17,6 +17,7 @@
 package uk.gov.hmrc.tradergoodsprofiles.utils
 
 import play.api.libs.json.{JsNull, JsObject}
+import uk.gov.hmrc.tradergoodsprofiles.models.responses.ReviewReason
 
 object ResponseModelSupport {
 
@@ -28,4 +29,9 @@ object ResponseModelSupport {
         other
     })
 
+  def translateReviewReason(reviewReason: Option[String], toReview: Boolean): Option[String] = {
+    val enumReviewReason: Option[ReviewReason] = reviewReason.flatMap(ReviewReason.fromString)
+    if (!toReview) None
+    else enumReviewReason.map(_.description)
+  }
 }
