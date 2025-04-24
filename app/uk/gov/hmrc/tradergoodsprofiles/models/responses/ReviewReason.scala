@@ -26,24 +26,28 @@ sealed trait ReviewReason {
 object ReviewReason {
   val values: Seq[ReviewReason] = Seq(Commodity, Inadequate, Unclear, Measure, Mismatch)
 
-  case object Mismatch extends ReviewReason{
-    val value: String = "mismatch"
-    val description: String = "HMRC have reviewed this record. The commodity code and goods description do not match. If you want to use this record on an IMMI, you'll need to amend the commodity code and the goods description."
+  case object Mismatch extends ReviewReason {
+    val value: String       = "mismatch"
+    val description: String =
+      "HMRC have reviewed this record. The commodity code and goods description do not match. If you want to use this record on an IMMI, you'll need to amend the commodity code and the goods description."
   }
   case object Inadequate extends ReviewReason {
-    val value: String = "inadequate"
-    val description: String = "HMRC have reviewed this record. The goods description does not have enough detail. If you want to use this record on an IMMI, you'll need to amend the goods description"
+    val value: String       = "inadequate"
+    val description: String =
+      "HMRC have reviewed this record. The goods description does not have enough detail. If you want to use this record on an IMMI, you'll need to amend the goods description"
   }
   case object Unclear extends ReviewReason {
-    val value: String = "unclear"
-    val description: String = "HMRC have reviewed the record. The goods description is unclear. If you want to use this record on an IMMI, you'll need to amend the goods description."
+    val value: String       = "unclear"
+    val description: String =
+      "HMRC have reviewed the record. The goods description is unclear. If you want to use this record on an IMMI, you'll need to amend the goods description."
   }
   case object Commodity extends ReviewReason {
-    val value: String = "commodity"
-    val description: String = "The commodity code has expired. You'll need to change the commodity code and categorise the goods."
+    val value: String       = "commodity"
+    val description: String =
+      "The commodity code has expired. You'll need to change the commodity code and categorise the goods."
   }
   case object Measure extends ReviewReason {
-    val value: String = "measure"
+    val value: String       = "measure"
     val description: String = "The commodity code or restrictions have changed. You'll need to categorise the record."
   }
 
@@ -58,9 +62,12 @@ object ReviewReason {
     case JsString(value) =>
       fromString(value) match {
         case Some(reason) => JsSuccess(reason)
-        case None => JsError(s"[ReviewReason] Unknown ReviewReason: $value. Expected one of: ${values.map(_.value).mkString(", ")}")
+        case None         =>
+          JsError(
+            s"[ReviewReason] Unknown ReviewReason: $value. Expected one of: ${values.map(_.value).mkString(", ")}"
+          )
       }
-    case other =>
+    case other           =>
       JsError(s"[ReviewReason] Expected JsString, got: $other")
   }
 }
