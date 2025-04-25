@@ -64,7 +64,7 @@ trait GetRecordResponseSupport {
     )
   }
 
-  def createGetRecordResponseForTranslated(
+  def createGetRecordResponseForConverted(
     eori: String,
     recordId: String,
     timestamp: Instant

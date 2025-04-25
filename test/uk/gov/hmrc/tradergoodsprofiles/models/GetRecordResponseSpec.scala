@@ -32,7 +32,7 @@ class GetRecordResponseSpec extends PlaySpec with GetRecordResponseSupport {
     timestamp
   )
 
-  private val getRecordResponseTranslated = createGetRecordResponseForTranslated(
+  private val getRecordResponseConverted = createGetRecordResponseForConverted(
     "GB123456789012",
     "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f",
     timestamp
@@ -40,7 +40,7 @@ class GetRecordResponseSpec extends PlaySpec with GetRecordResponseSupport {
 
   "toJson" should {
     "convert Object to json" in {
-      Json.toJson(getRecordResponseTranslated) mustBe GetRecordResponseAsJson
+      Json.toJson(getRecordResponseConverted) mustBe GetRecordResponseAsJson
     }
   }
 

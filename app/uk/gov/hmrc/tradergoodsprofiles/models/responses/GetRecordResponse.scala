@@ -18,7 +18,7 @@ package uk.gov.hmrc.tradergoodsprofiles.models.response
 
 import play.api.libs.json.*
 import uk.gov.hmrc.tradergoodsprofiles.models.Assessment
-import uk.gov.hmrc.tradergoodsprofiles.utils.ResponseModelSupport.{removeNulls, translateReviewReason}
+import uk.gov.hmrc.tradergoodsprofiles.utils.ResponseModelSupport.{removeNulls, convertReviewReason}
 
 import java.time.Instant
 
@@ -73,7 +73,7 @@ object GetRecordResponse {
         "version"                  -> Json.toJson(o.version),
         "active"                   -> Json.toJson(o.active),
         "toReview"                 -> Json.toJson(o.toReview),
-        "reviewReason"             -> Json.toJson(translateReviewReason(o.reviewReason, o.toReview)),
+        "reviewReason"             -> Json.toJson(convertReviewReason(o.reviewReason, o.toReview)),
         "declarable"               -> Json.toJson(o.declarable),
         "ukimsNumber"              -> Json.toJson(o.ukimsNumber),
         "nirmsNumber"              -> Json.toJson(o.nirmsNumber),

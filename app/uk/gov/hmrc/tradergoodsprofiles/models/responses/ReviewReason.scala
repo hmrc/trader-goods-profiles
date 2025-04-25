@@ -70,4 +70,5 @@ object ReviewReason {
     case other           =>
       JsError(s"[ReviewReason] Expected JsString, got: $other")
   }
+
 }
