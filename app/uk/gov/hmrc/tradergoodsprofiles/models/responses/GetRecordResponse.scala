@@ -18,7 +18,7 @@ package uk.gov.hmrc.tradergoodsprofiles.models.response
 
 import play.api.libs.json.*
 import uk.gov.hmrc.tradergoodsprofiles.models.Assessment
-import uk.gov.hmrc.tradergoodsprofiles.utils.ResponseModelSupport.{removeNulls, convertReviewReason}
+import uk.gov.hmrc.tradergoodsprofiles.utils.ResponseModelSupport.{convertReviewReason, removeNulls}
 
 import java.time.Instant
 
