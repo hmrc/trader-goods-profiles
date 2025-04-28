@@ -29,9 +29,9 @@ object ResponseModelSupport {
         other
     })
 
-  def translateReviewReason(reviewReason: Option[String], toReview: Boolean): Option[String] = {
-    val enumReviewReason: Option[ReviewReason] = reviewReason.flatMap(ReviewReason.fromString)
+  def convertReviewReason(reviewReason: Option[String], toReview: Boolean): Option[String] = {
+    val reviewReasonToMap: Option[ReviewReason] = reviewReason.flatMap(ReviewReason.fromString)
     if (!toReview) None
-    else enumReviewReason.map(_.description)
+    else reviewReasonToMap.map(_.description)
   }
 }

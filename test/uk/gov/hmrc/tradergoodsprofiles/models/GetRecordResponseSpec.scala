@@ -20,6 +20,7 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{JsObject, JsResult, Json}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.GetRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.responses.ReviewReason.Commodity
 
 import java.time.Instant
 
@@ -32,7 +33,7 @@ class GetRecordResponseSpec extends PlaySpec with GetRecordResponseSupport {
     timestamp
   )
 
-  private val getRecordResponseTranslated = createGetRecordResponseForTranslated(
+  private val getRecordResponseConverted = createGetRecordResponseForConverted(
     "GB123456789012",
     "8ebb6b04-6ab0-4fe2-ad62-e6389a8a204f",
     timestamp
@@ -40,7 +41,7 @@ class GetRecordResponseSpec extends PlaySpec with GetRecordResponseSupport {
 
   "toJson" should {
     "convert Object to json" in {
-      Json.toJson(getRecordResponseTranslated) mustBe GetRecordResponseAsJson
+      Json.toJson(getRecordResponseConverted) mustBe GetRecordResponseAsJson
     }
   }
 
@@ -91,7 +92,7 @@ class GetRecordResponseSpec extends PlaySpec with GetRecordResponseSupport {
       "version"                  -> 1,
       "active"                   -> true,
       "toReview"                 -> true,
-      "reviewReason"             -> "The commodity code has expired. You'll need to change the commodity code and categorise the goods.",
+      "reviewReason"             -> Commodity.description,
       "declarable"               -> "IMMI declarable",
       "ukimsNumber"              -> "XIUKIM47699357400020231115081800",
       "nirmsNumber"              -> "RMS-GB-123456",

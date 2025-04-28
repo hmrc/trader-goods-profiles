@@ -16,33 +16,59 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.models.responses
 
-import enumeratum.{Enum, EnumEntry, PlayEnum}
+import play.api.libs.json.*
 
-sealed abstract class ReviewReason(val description: String) extends EnumEntry
+sealed trait ReviewReason {
+  val value: String
+  val description: String
+}
 
-object ReviewReason extends Enum[ReviewReason] with PlayEnum[ReviewReason] {
-  val values: IndexedSeq[ReviewReason] = findValues
+object ReviewReason {
+  val values: Seq[ReviewReason] = Seq(Commodity, Inadequate, Unclear, Measure, Mismatch)
 
-  case object mismatch
-      extends ReviewReason(
-        "HMRC have reviewed this record. The commodity code and goods description do not match. If you want to use this record on an IMMI, you'll need to amend the commodity code and the goods description."
-      )
-  case object inadequate
-      extends ReviewReason(
-        "HMRC have reviewed this record. The goods description does not have enough detail. If you want to use this record on an IMMI, you'll need to amend the goods description"
-      )
-  case object unclear
-      extends ReviewReason(
-        "HMRC have reviewed the record. The goods description is unclear. If you want to use this record on an IMMI, you'll need to amend the goods description."
-      )
-  case object commodity
-      extends ReviewReason(
-        "The commodity code has expired. You'll need to change the commodity code and categorise the goods."
-      )
-  case object measure
-      extends ReviewReason(
-        "The commodity code or restrictions have changed. You'll need to categorise the record."
-      )
+  case object Mismatch extends ReviewReason {
+    val value: String       = "mismatch"
+    val description: String =
+      "HMRC have reviewed this record. The commodity code and goods description do not match. If you want to use this record on an IMMI, you'll need to amend the commodity code and the goods description."
+  }
+  case object Inadequate extends ReviewReason {
+    val value: String       = "inadequate"
+    val description: String =
+      "HMRC have reviewed this record. The goods description does not have enough detail. If you want to use this record on an IMMI, you'll need to amend the goods description"
+  }
+  case object Unclear extends ReviewReason {
+    val value: String       = "unclear"
+    val description: String =
+      "HMRC have reviewed the record. The goods description is unclear. If you want to use this record on an IMMI, you'll need to amend the goods description."
+  }
+  case object Commodity extends ReviewReason {
+    val value: String       = "commodity"
+    val description: String =
+      "The commodity code has expired. You'll need to change the commodity code and categorise the goods."
+  }
+  case object Measure extends ReviewReason {
+    val value: String       = "measure"
+    val description: String = "The commodity code or restrictions have changed. You'll need to categorise the record."
+  }
 
-  def fromString(reason: String): Option[ReviewReason] = withNameOption(reason)
+  def fromString(value: String): Option[ReviewReason] =
+    values.find(_.value.equalsIgnoreCase(value))
+
+  implicit val writes: Writes[ReviewReason] = Writes[ReviewReason] { reason =>
+    JsString(reason.value)
+  }
+
+  implicit val reads: Reads[ReviewReason] = Reads[ReviewReason] {
+    case JsString(value) =>
+      fromString(value) match {
+        case Some(reason) => JsSuccess(reason)
+        case None         =>
+          JsError(
+            s"[ReviewReason] Unknown ReviewReason: $value. Expected one of: ${values.map(_.value).mkString(", ")}"
+          )
+      }
+    case other           =>
+      JsError(s"[ReviewReason] Expected JsString, got: $other")
+  }
+
 }
