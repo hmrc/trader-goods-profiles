@@ -17,6 +17,7 @@
 package uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses
 
 import uk.gov.hmrc.tradergoodsprofiles.models.response.{GetRecordResponse, GetRecordsResponse, GoodsItemRecords, Pagination}
+import uk.gov.hmrc.tradergoodsprofiles.models.responses.ReviewReason.Commodity
 import uk.gov.hmrc.tradergoodsprofiles.models.{Assessment, Condition}
 
 import java.time.Instant
@@ -53,7 +54,7 @@ trait GetRecordResponseSupport {
       1,
       true,
       true,
-      Some("The commodity code has expired. You'll need to change the commodity code and categorise the goods."),
+      Some(Commodity.description),
       "IMMI declarable",
       "XIUKIM47699357400020231115081800",
       Some("RMS-GB-123456"),
@@ -94,7 +95,7 @@ trait GetRecordResponseSupport {
       1,
       true,
       true,
-      Some("commodity"),
+      Some(Commodity.value),
       "IMMI declarable",
       "XIUKIM47699357400020231115081800",
       Some("RMS-GB-123456"),
@@ -135,7 +136,7 @@ trait GetRecordResponseSupport {
       1,
       active = true,
       toReview = true,
-      Some("The commodity code has expired. You'll need to change the commodity code and categorise the goods."),
+      Some(Commodity.description),
       "IMMI declarable",
       "XIUKIM47699357400020231115081800",
       Some("RMS-GB-123456"),

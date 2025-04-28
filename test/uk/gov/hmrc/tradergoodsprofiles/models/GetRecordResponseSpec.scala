@@ -20,6 +20,7 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{JsObject, JsResult, Json}
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.GetRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.response.GetRecordResponse
+import uk.gov.hmrc.tradergoodsprofiles.models.responses.ReviewReason.Commodity
 
 import java.time.Instant
 
@@ -91,7 +92,7 @@ class GetRecordResponseSpec extends PlaySpec with GetRecordResponseSupport {
       "version"                  -> 1,
       "active"                   -> true,
       "toReview"                 -> true,
-      "reviewReason"             -> "The commodity code has expired. You'll need to change the commodity code and categorise the goods.",
+      "reviewReason"             -> Commodity.description,
       "declarable"               -> "IMMI declarable",
       "ukimsNumber"              -> "XIUKIM47699357400020231115081800",
       "nirmsNumber"              -> "RMS-GB-123456",
