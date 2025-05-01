@@ -70,6 +70,7 @@ class UpdateRecordRouterConnector @Inject() (
       .withContentType
       .withAcceptHeader
       .withBody(updateRecordRequest.body)
+      .withClientIdIfSupported
       .execute(httpReader[CreateOrUpdateRecordResponse], ec)
       .recover { case ex: Throwable =>
         logAndReturnInternalServerError(eori, recordId, url, ex)
