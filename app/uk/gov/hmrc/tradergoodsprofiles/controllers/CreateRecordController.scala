@@ -58,11 +58,6 @@ class CreateRecordController @Inject() (
 
     }
 
-  /*
-  ToDO: remove this test - TGP-1889
-  The client ID does not need to be checked anymore as EIS has removed it
-  from the header
-   */
   private def validateClientIdIfSupported(implicit request: Request[_]): EitherT[Future, Result, String] =
     EitherT
       .fromEither[Future](

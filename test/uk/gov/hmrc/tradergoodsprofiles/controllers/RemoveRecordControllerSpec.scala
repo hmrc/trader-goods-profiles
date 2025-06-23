@@ -39,10 +39,6 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
 
   implicit val ec: ExecutionContext = ExecutionContext.global
 
-  /*
-    TODO: remove for eis implementation - TGP-2029
-    The request should have no headers.
-   */
   private val request = FakeRequest()
     .withHeaders(
       "Accept"       -> "application/vnd.hmrc.1.0+json",
@@ -81,11 +77,6 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
   }
 
   "removeRecord" should {
-
-    /*
-    TODO: this test need to be removed for eis implementation - TGP-2029
-    The request should have no headers.
-     */
     "return 204 when sendClientId features flag is true" in {
       val result = sut.removeRecord(eoriNumber, recordId, actorId)(request)
       status(result) mustBe NO_CONTENT

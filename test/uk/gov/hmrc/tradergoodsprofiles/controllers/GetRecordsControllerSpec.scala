@@ -85,12 +85,6 @@ class GetRecordsControllerSpec
       verify(getRecordsConnector).get(eqTo(eoriNumber), eqTo(recordId))(any)
     }
 
-    /*
-    ToDO: remove this test after eis implementation - TGP-1889
-
-    The client ID does not need to be checked anymore as EIS has removed it
-    from the header
-     */
     "not validate client ID is sendClientId is false" in {
       when(appConfig.sendClientId).thenReturn(false)
       val request1 = FakeRequest().withHeaders(
@@ -139,12 +133,6 @@ class GetRecordsControllerSpec
         .get(eqTo(eoriNumber), eqTo(Some("2024-03-26T16:14:52Z")), eqTo(Some(1)), eqTo(Some(1)))(any)
     }
 
-    /*
-    ToDO: remove this test after eis implementation - TGP-1889
-
-    The client ID does not need to be checked anymore as EIS has removed it
-    from the header
-     */
     "not validate client ID is sendClientId is false" in {
       when(appConfig.sendClientId).thenReturn(false)
       val request1 = FakeRequest().withHeaders(

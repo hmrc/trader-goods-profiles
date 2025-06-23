@@ -84,11 +84,6 @@ class CreateRecordControllerSpec
       contentAsJson(result) mustBe Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
     }
 
-    /*
-    ToDO: remove this test after eis implementation- TGP-1889
-    The client ID does not need to be checked anymore as EIS has removed it
-    from the header
-     */
     "not validate client ID is sendClientId is false" in {
       when(appConfig.sendClientId).thenReturn(false)
       val request1 = FakeRequest().withHeaders(
