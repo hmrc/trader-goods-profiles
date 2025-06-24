@@ -17,7 +17,7 @@ object AppDependencies {
     "uk.gov.hmrc.mongo"   %% "hmrc-mongo-test-play-30" % "2.6.0",
     "org.scalatestplus"   %% "mockito-4-11"           % "3.2.18.0",
     "org.typelevel"       %% "cats-core"              % catsVersion,
-    "io.swagger.parser.v3" % "swagger-parser-v3"      % "2.1.30",
+    "io.swagger.parser.v3" % "swagger-parser-v3"      % "2.1.14",
     "org.mongodb.scala" %% "mongo-scala-driver" % "5.1.0" cross CrossVersion.for3Use2_13
   ).map(_ % Test)
 
