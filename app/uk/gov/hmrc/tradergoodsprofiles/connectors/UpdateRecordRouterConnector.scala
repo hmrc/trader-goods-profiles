@@ -52,7 +52,7 @@ class UpdateRecordRouterConnector @Inject() (
       .withContentType
       .withAcceptHeader
       .withBody(updateRecordRequest.body)
-      .withClientIdIfSupported //ToDo: Remove this as EIS does not accept the client Id - TGP-1903
+      .withClientIdIfSupported
       .execute(httpReader[CreateOrUpdateRecordResponse], ec)
       .recover { case ex: Throwable =>
         logAndReturnInternalServerError(eori, recordId, url, ex)

@@ -94,7 +94,6 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
 
   "MaintainProfileController" should {
 
-    // TODO: Create a single test - Ticket-2014
     "return 200 OK when the profile update is successful" in {
       val request: FakeRequest[JsValue] = FakeRequest()
         .withHeaders(requestHeaders: _*)
@@ -105,7 +104,6 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(updateProfileResponse)
     }
-    // TODO: Create a single test - Ticket-2014
     "return 200 OK without validating x-client-id when sendClientId is false" in {
       when(appConfig.sendClientId).thenReturn(false)
 

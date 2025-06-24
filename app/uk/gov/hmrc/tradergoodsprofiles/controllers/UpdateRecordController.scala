@@ -63,12 +63,6 @@ class UpdateRecordController @Inject() (
       }.merge
     }
 
-  /*
-ToDO: remove this test after eis impl - TGP-1903
-
-The client ID does not need to be checked anymore as EIS has removed it
-from the header
-   */
   private def validateClientIdIfSupported(implicit request: Request[_]): EitherT[Future, Result, String] =
     EitherT
       .fromEither[Future](

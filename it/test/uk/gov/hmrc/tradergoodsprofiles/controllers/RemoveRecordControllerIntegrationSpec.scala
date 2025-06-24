@@ -217,7 +217,6 @@ class RemoveRecordControllerIntegrationSpec
       )
     }
 
-    //ToDo: remove after eis implementation - TGP-2029
     "return bad request when X-Client-ID header is missing" in {
       withAuthorizedTrader()
 
@@ -232,7 +231,6 @@ class RemoveRecordControllerIntegrationSpec
       )
     }
 
-    //ToDo: remove after eis implementation  - TGP-2029
     "return bad request when Accept header is invalid" in {
       withAuthorizedTrader()
 

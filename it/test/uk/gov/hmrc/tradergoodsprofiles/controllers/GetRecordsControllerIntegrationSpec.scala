@@ -320,11 +320,7 @@ class GetRecordsControllerIntegrationSpec
 
       }
     }
-
-    /* TGP-1889
-    ToDo: remove this test after eis impl and refactor getRecordAndWait
-    to remove the client ID header
-     */
+    
     "should not validate client ID is features flag sendClientId is false" in {
       withAuthorizedTrader()
       when(appConfig.sendClientId).thenReturn(false)
@@ -550,10 +546,7 @@ class GetRecordsControllerIntegrationSpec
       )
     }
   }
-
-  /* TGP-1889
-   ToDo: remove the X-Client-ID header after eis implementation
-   */
+  
   private def getRecordAndWait(url: String) =
     await(
       wsClient
@@ -564,11 +557,7 @@ class GetRecordsControllerIntegrationSpec
         )
         .get()
     )
-
-  /* TGP-1889
-   ToDo: after eis implementation and refactory of the getRecordAndWait function,
-   this function can be removed
-   */
+  
   private def getRecordAndWaitWithOutClientIDHeader(url: String) =
     await(
       wsClient
