@@ -19,7 +19,6 @@ lazy val microservice = Project("trader-goods-profiles", file("."))
       "-Wconf:src=templates/.*\\.scala&msg=possible missing interpolator:s"
     )
   )
-  .settings(resolvers += Resolver.jcenterRepo)
   .settings(CodeCoverageSettings.settings: _*)
   .settings(
     Compile / unmanagedResourceDirectories += baseDirectory.value / "resources"
