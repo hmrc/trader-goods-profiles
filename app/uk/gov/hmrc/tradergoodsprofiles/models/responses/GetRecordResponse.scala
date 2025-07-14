@@ -73,7 +73,6 @@ object GetRecordResponse {
         "version"                  -> Json.toJson(o.version),
         "active"                   -> Json.toJson(o.active),
         "toReview"                 -> Json.toJson(o.toReview),
-        "reviewReason"             -> Json.toJson(convertReviewReason(o.reviewReason, o.toReview)),
         "declarable"               -> Json.toJson(o.declarable),
         "ukimsNumber"              -> Json.toJson(o.ukimsNumber),
         "nirmsNumber"              -> Json.toJson(o.nirmsNumber),
