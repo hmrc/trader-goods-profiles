@@ -51,14 +51,14 @@ class ReviewReasonSpec extends PlaySpec {
       val result = JsString("unknown").validate[ReviewReason]
       result.isError mustBe true
       val errors = result.asInstanceOf[JsError].errors
-      errors.head._2.head.message must include ("Unknown ReviewReason: unknown")
+      errors.head._2.head.message must include("Unknown ReviewReason: unknown")
     }
 
     "fail to parse a non-string JSON value" in {
       val result = JsNumber(123).validate[ReviewReason]
       result.isError mustBe true
       val errors = result.asInstanceOf[JsError].errors
-      errors.head._2.head.message must include ("Expected JsString")
+      errors.head._2.head.message must include("Expected JsString")
     }
   }
 

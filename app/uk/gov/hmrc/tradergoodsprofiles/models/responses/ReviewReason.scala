@@ -52,8 +52,9 @@ object ReviewReason {
   }
 
   case object Country extends ReviewReason {
-    val value: String = "country"
-    val description: String = "The country of origin is not valid. You'll need to change the country of origin and categorise the record."
+    val value: String       = "country"
+    val description: String =
+      "The country of origin is not valid. You'll need to change the country of origin and categorise the record."
   }
 
   def fromString(value: String): Option[ReviewReason] =
