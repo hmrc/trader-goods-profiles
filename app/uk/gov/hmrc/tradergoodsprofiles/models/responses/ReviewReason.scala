@@ -24,7 +24,7 @@ sealed trait ReviewReason {
 }
 
 object ReviewReason {
-  val values: Seq[ReviewReason] = Seq(Commodity, Inadequate, Unclear, Measure, Mismatch)
+  val values: Seq[ReviewReason] = Seq(Commodity, Inadequate, Unclear, Measure, Mismatch, Country)
 
   case object Mismatch extends ReviewReason {
     val value: String       = "mismatch"
@@ -49,6 +49,12 @@ object ReviewReason {
   case object Measure extends ReviewReason {
     val value: String       = "measure"
     val description: String = "The commodity code or restrictions have changed. You'll need to categorise the record."
+  }
+
+  case object Country extends ReviewReason {
+    val value: String       = "country"
+    val description: String =
+      "The country of origin is not valid. You'll need to change the country of origin and categorise the record."
   }
 
   def fromString(value: String): Option[ReviewReason] =
