@@ -1161,6 +1161,9 @@ components:
         The commodity code has expired. You'll need to change the commodity code and categorise the goods.
 
 
+        The country of origin is not valid. You'll need to change the country of origin and categorise the record.
+
+
         The commodity code or restrictions have changed. You'll need to categorise the record.
 
 
