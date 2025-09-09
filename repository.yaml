@@ -1,4 +1,9 @@
+digital-service: TGP / Trader Goods Profile
+description: Public facing API for TGP
 repoVisibility: public_0C3F0CE3E6E6448FAD341E7BFA50FCD333E06A20CFF05FCACE61154DDBBADF71
 type: service
 service-type: backend
 tags: [ 'api' ]
+test-repositories:
+  - trader-goods-profiles-api-performance-tests
+  - trader-goods-profiles-api-tests
