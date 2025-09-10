@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.tradergoodsprofiles.controllers
+package uk.gov.hmrc.tradergoodsprofiles.documentation
 
 import controllers.Assets
 import play.api.Logging
