@@ -44,7 +44,6 @@ class RemoveRecordController @Inject() (
     (authAction(eori) andThen userAllowListAction).async { implicit request =>
       val result = for {
         _ <- validateClientIdHeaderIfSupported
-        _ <- validateAcceptHeaderIfSupported
         _ <- EitherT(removeRecordConnector.removeRecord(eori, recordId, actorId))
                .leftMap(e => Status(e.status)(toJson(e.errorResponse)))
       } yield NoContent
@@ -59,12 +58,5 @@ class RemoveRecordController @Inject() (
         else Right("")
       )
       .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
-
-  private def validateAcceptHeaderIfSupported(implicit request: Request[_]): EitherT[Future, Result, String] =
-    EitherT
-      .fromEither[Future](
-        if (appConfig.sendAcceptHeader) validateAcceptHeader
-        else Right("")
-      )
-      .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
+  
 }

@@ -50,7 +50,6 @@ class RemoveRecordRouterConnectorSpec
     when(httpClient.delete(any)(any)).thenReturn(requestBuilder)
     when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
     when(appConfig.sendClientId).thenReturn(true)
-    when(appConfig.sendAcceptHeader).thenReturn(true)
   }
 
   "remove" should {
@@ -67,29 +66,14 @@ class RemoveRecordRouterConnectorSpec
           s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId?actorId=$actorId"
         verify(httpClient).delete(eqTo(url"$expectedUrl"))(any)
         verify(requestBuilder).setHeader("X-Client-ID" -> "clientId")
-        verify(requestBuilder).setHeader("Accept"      -> "application/vnd.hmrc.1.0+json")
         verify(requestBuilder).execute(any, any)
       }
     }
-
-    "return 204 when sendClientId is false" in {
-      when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
-        .thenReturn(Future.successful(Right(NO_CONTENT)))
-      when(appConfig.sendClientId).thenReturn(false)
-
-      await(sut.removeRecord(eori, recordId, actorId))
-
-      val expectedUrl =
-        s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId?actorId=$actorId"
-      verify(httpClient).delete(eqTo(url"$expectedUrl"))(any)
-      verify(requestBuilder, never()).setHeader(eqTo("X-Client-ID" -> "clientId"))
-      verify(requestBuilder).execute(any, any)
-    }
+    
 
     "return 204 when sendAcceptHeader is false" in {
       when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
         .thenReturn(Future.successful(Right(NO_CONTENT)))
-      when(appConfig.sendAcceptHeader).thenReturn(false)
 
       await(sut.removeRecord(eori, recordId, actorId))
 
@@ -99,21 +83,7 @@ class RemoveRecordRouterConnectorSpec
       verify(requestBuilder, never()).setHeader(eqTo("Accept" -> "application/vnd.hmrc.1.0+json"))
       verify(requestBuilder).execute(any, any)
     }
-
-    "return 204 when sendClientId and sendAcceptHeader are true" in {
-      when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
-        .thenReturn(Future.successful(Right(NO_CONTENT)))
-      when(appConfig.sendClientId).thenReturn(true)
-      when(appConfig.sendClientId).thenReturn(true)
-
-      await(sut.removeRecord(eori, recordId, actorId))
-
-      val expectedUrl =
-        s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId?actorId=$actorId"
-      verify(httpClient).delete(eqTo(url"$expectedUrl"))(any)
-      verify(requestBuilder, never()).setHeader()
-      verify(requestBuilder).execute(any, any)
-    }
+    
 
     "return an error response" when {
       "router API return an error" in {

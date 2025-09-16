@@ -45,7 +45,6 @@ class RemoveRecordRouterConnector @Inject() (
     httpClient
       .delete(url"$url")
       .withClientIdIfSupported(appConfig.sendClientId)
-      .withAcceptHeaderIfSupported(appConfig.sendAcceptHeader)
       .execute(httpReaderWithoutResponseBody, ec)
       .recover { case ex: Throwable =>
         logger.warn(

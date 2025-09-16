@@ -86,7 +86,6 @@ class RemoveRecordControllerIntegrationSpec
     stubRouterResponse(NO_CONTENT, routerResponse.toString)
     when(uuidService.uuid).thenReturn(correlationId)
     when(appConfig.sendClientId).thenReturn(true)
-    when(appConfig.sendAcceptHeader).thenReturn(true)
     when(appConfig.userAllowListEnabled).thenReturn(true)
     when(appConfig.routerUrl).thenReturn(Url.parse(wireMock.baseUrl))
     when(appConfig.userAllowListBaseUrl).thenReturn(Url.parse(wireMock.baseUrl))
@@ -228,20 +227,6 @@ class RemoveRecordControllerIntegrationSpec
         "INVALID_HEADER_PARAMETER",
         "X-Client-ID was missing from Header or is in wrong format",
         6000
-      )
-    }
-
-    "return bad request when Accept header is invalid" in {
-      withAuthorizedTrader()
-
-      val headers = Seq("X-Client-ID" -> "clientId", "Content-Type" -> "application/json")
-      val result  = removeRecordAndWait(url, headers: _*)
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe createExpectedError(
-        "INVALID_HEADER_PARAMETER",
-        "Accept was missing from Header or is in wrong format",
-        4
       )
     }
 

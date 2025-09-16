@@ -73,7 +73,6 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
     when(connector.removeRecord(any, any, any)(any))
       .thenReturn(Future.successful(Right(OK)))
     when(appConfig.sendClientId).thenReturn(false)
-    when(appConfig.sendAcceptHeader).thenReturn(true)
   }
 
   "removeRecord" should {
@@ -94,7 +93,6 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
     }
 
     "return 204 when sendAcceptHeader features flag is false" in {
-      when(appConfig.sendAcceptHeader).thenReturn(false)
 
       val result = sut.removeRecord(eoriNumber, recordId, actorId)(
         FakeRequest().withHeaders(
@@ -104,18 +102,6 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
       status(result) mustBe NO_CONTENT
     }
 
-    "return 204 when sendAcceptHeader and sendClientId are true" in {
-      when(appConfig.sendAcceptHeader).thenReturn(true)
-      when(appConfig.sendClientId).thenReturn(true)
-
-      val result = sut.removeRecord(eoriNumber, recordId, actorId)(
-        FakeRequest().withHeaders(
-          "X-Client-ID" -> "some client ID",
-          "Accept"      -> "application/vnd.hmrc.1.0+json"
-        )
-      )
-      status(result) mustBe NO_CONTENT
-    }
 
     "remove the record from router" in {
       val result = sut.removeRecord(eoriNumber, recordId, actorId)(request)

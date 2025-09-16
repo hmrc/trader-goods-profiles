@@ -2,7 +2,6 @@
 @()
 @includeWithdrawAdviceEndpoint = @{appConfig.withdrawAdviceEnabled}
 @includeRequestAdviceEndpoint = @{appConfig.requestAdviceEnabled}
-@includeAcceptHeaderForRemoveRecord = @{appConfig.sendAcceptHeader}
 ---
 openapi: 3.0.3
 info:
@@ -263,9 +262,6 @@ paths:
       description: Remove a Trader's goods record
       operationId: removeTraderGoodsProfileRecord
       parameters:
-@if(includeAcceptHeaderForRemoveRecord){
-        - $ref: '#/components/parameters/Accept'
-}
         - $ref: '#/components/parameters/Authorization'
         - $ref: '#/components/parameters/eoriParam'
         - $ref: '#/components/parameters/recordParam'
