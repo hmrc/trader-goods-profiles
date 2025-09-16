@@ -29,7 +29,7 @@ import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubCo
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.connectors.MaintainProfileRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, FakeUserAllowListAction}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.models.responses.MaintainProfileResponse
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
@@ -76,10 +76,8 @@ class MaintainProfileControllerSpec extends PlaySpec with AuthTestSupport with B
 
   private val sut = new MaintainProfileController(
     new FakeSuccessAuthAction(),
-    new FakeUserAllowListAction(),
     connector,
     uuidService,
-    appConfig,
     stubControllerComponents()
   )
 

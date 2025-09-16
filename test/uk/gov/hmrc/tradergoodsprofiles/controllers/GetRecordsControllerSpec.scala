@@ -27,7 +27,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.connectors.GetRecordsRouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, FakeUserAllowListAction}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.GetRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
@@ -58,10 +58,8 @@ class GetRecordsControllerSpec
   private val appConfig           = mock[AppConfig]
   private val sut                 = new GetRecordsController(
     new FakeSuccessAuthAction(),
-    new FakeUserAllowListAction(),
     uuidService,
     getRecordsConnector,
-    appConfig,
     stubControllerComponents()
   )
 

@@ -22,7 +22,7 @@ import play.api.mvc.*
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RemoveRecordRouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, UserAllowListAction, ValidationRules}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidationRules}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import javax.inject.{Inject, Singleton}
@@ -31,9 +31,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class RemoveRecordController @Inject() (
   authAction: AuthAction,
-  userAllowListAction: UserAllowListAction,
   removeRecordConnector: RemoveRecordRouterConnector,
-  appConfig: AppConfig,
   override val uuidService: UuidService,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
@@ -41,17 +39,16 @@ class RemoveRecordController @Inject() (
     with ValidationRules {
 
   def removeRecord(eori: String, recordId: String, actorId: String): Action[AnyContent] =
-    (authAction(eori) andThen userAllowListAction).async { implicit request =>
+    authAction(eori).async { implicit request =>
       val result = for {
         _ <- EitherT
-          .fromEither[Future](validateClientIdHeader)
-          .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
+               .fromEither[Future](validateClientIdHeader)
+               .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
         _ <- EitherT(removeRecordConnector.removeRecord(eori, recordId, actorId))
                .leftMap(e => Status(e.status)(toJson(e.errorResponse)))
       } yield NoContent
 
       result.merge
     }
-
 
 }

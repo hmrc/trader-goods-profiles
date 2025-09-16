@@ -27,13 +27,11 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   lazy val appName: String = config.get[String]("appName")
 
-  lazy val userAllowListBaseUrl: Url = Url.parse(servicesConfig.baseUrl("user-allow-list"))
   lazy val routerUrl: Url            = Url.parse(servicesConfig.baseUrl("trader-goods-profiles-router"))
 
   lazy val internalAuthToken: String = config.get[String]("internal-auth.token")
 
   lazy val withdrawAdviceEnabled: Boolean = config.get[Boolean]("features.withdrawAdviceEnabled")
   lazy val requestAdviceEnabled: Boolean  = config.get[Boolean]("features.requestAdviceEnabled")
-  lazy val userAllowListEnabled: Boolean  = config.get[Boolean]("features.userAllowListEnabled")
 
 }

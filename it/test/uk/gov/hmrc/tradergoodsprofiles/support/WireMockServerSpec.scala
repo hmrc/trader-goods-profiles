@@ -29,27 +29,7 @@ trait WireMockServerSpec {
   def configureServices: Map[String, Any] =
     Map(
       "microservice.services.trader-goods-profiles-router.host" -> wireHost,
-      "microservice.services.trader-goods-profiles-router.port" -> wireMock.port(),
-      "microservice.services.user-allow-list.host"              -> wireHost,
-      "microservice.services.user-allow-list.port"              -> wireMock.port(),
-      "features.userAllowListEnabled"                            -> true
+      "microservice.services.trader-goods-profiles-router.port" -> wireMock.port()
     )
 
-  def stubForUserAllowList: StubMapping =
-    wireMock.stubFor(
-      post(urlEqualTo(s"/user-allow-list/trader-goods-profiles/private-beta/check"))
-        .willReturn(
-          aResponse()
-            .withStatus(200)
-        )
-    )
-
-  def stubForUserAllowListWhereUserItNotAllowed: StubMapping =
-    wireMock.stubFor(
-      post(urlEqualTo(s"/user-allow-list/trader-goods-profiles/private-beta/check"))
-        .willReturn(
-          aResponse()
-            .withStatus(404)
-        )
-    )
 }

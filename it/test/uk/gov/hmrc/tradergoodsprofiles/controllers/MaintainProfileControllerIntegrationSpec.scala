@@ -105,12 +105,9 @@ class MaintainProfileControllerIntegrationSpec
     super.beforeEach()
 
     reset(authConnector)
-    stubForUserAllowList
     stubRouterRequest(OK, expectedResponse.toString())
     when(uuidService.uuid).thenReturn(correlationId)
     when(appConfig.routerUrl).thenReturn(Url.parse(wireMock.baseUrl))
-    when(appConfig.userAllowListEnabled).thenReturn(true)
-    when(appConfig.userAllowListBaseUrl).thenReturn(Url.parse(wireMock.baseUrl))
   }
 
   override def beforeAll(): Unit = {
@@ -269,19 +266,7 @@ class MaintainProfileControllerIntegrationSpec
         s"Internal server error for /$eoriNumber with error: runtime exception"
       )
     }
-
-    "return forbidden when EORI is not on the user allow list" in {
-      withAuthorizedTrader()
-      stubForUserAllowListWhereUserItNotAllowed
-
-      val result = updateProfileAndWait()
-
-      result.status mustBe FORBIDDEN
-      result.json mustBe createExpectedJson(
-        "FORBIDDEN",
-        "This service is in private beta and not available to the public. We will aim to open the service to the public soon."
-      )
-    }
+    
   }
 
   private def updateProfileAndWait(requestBody: JsValue = requestBody) =

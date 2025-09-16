@@ -30,7 +30,7 @@ import uk.gov.hmrc.tradergoodsprofiles.connectors.CreateRecordRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.UpdateRecordRequestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.CreateOrUpdateRecordResponseSupport
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, FakeUserAllowListAction}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
@@ -60,10 +60,8 @@ class CreateRecordControllerSpec
   private val appConfig             = mock[AppConfig]
   private val sut                   = new CreateRecordController(
     new FakeSuccessAuthAction(),
-    new FakeUserAllowListAction(),
     createRecordConnector,
     uuidService,
-    appConfig,
     stubControllerComponents()
   )
 

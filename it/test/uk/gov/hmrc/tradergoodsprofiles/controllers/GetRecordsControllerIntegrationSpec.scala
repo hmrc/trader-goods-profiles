@@ -92,13 +92,10 @@ class GetRecordsControllerIntegrationSpec
     super.beforeEach()
 
     reset(authConnector)
-    stubForUserAllowList
     stubRouterRequest(getMultipleRecordsRouterUrl, 200, getMultipleRecordsRouterResponse.toString())
     stubRouterRequest(getSingleRecordRouterUrl, 200, getSingleRecordRouterResponse.toString())
     when(uuidService.uuid).thenReturn(correlationId)
-    when(appConfig.userAllowListEnabled).thenReturn(true)
     when(appConfig.routerUrl).thenReturn(Url.parse(wireMock.baseUrl))
-    when(appConfig.userAllowListBaseUrl).thenReturn(Url.parse(wireMock.baseUrl))
   }
 
   override def beforeAll(): Unit = {
@@ -272,19 +269,7 @@ class GetRecordsControllerIntegrationSpec
         "message"        -> "Response body could not be read as type GetRecordResponse"
       )
     }
-
-    "return forbidden when EORI is not on the user allow list" in {
-      withAuthorizedTrader()
-      stubForUserAllowListWhereUserItNotAllowed
-
-      val result = getRecordAndWait(getSingleRecordUrl)
-
-      result.status mustBe FORBIDDEN
-      result.json mustBe createExpectedJson(
-        "FORBIDDEN",
-        "This service is in private beta and not available to the public. We will aim to open the service to the public soon."
-      )
-    }
+    
   }
 
   "GET multiple records" should {
@@ -498,19 +483,6 @@ class GetRecordsControllerIntegrationSpec
         "correlationId" -> correlationId,
         "code"          -> "INTERNAL_SERVER_ERROR",
         "message"       -> s"Response body could not be parsed as JSON, body: {test}"
-      )
-    }
-
-    "return forbidden when EORI is not on the user allow list when getting multiple records" in {
-      withAuthorizedTrader()
-      stubForUserAllowListWhereUserItNotAllowed
-
-      val result = getRecordAndWait(getMultipleRecordsUrl)
-
-      result.status mustBe FORBIDDEN
-      result.json mustBe createExpectedJson(
-        "FORBIDDEN",
-        "This service is in private beta and not available to the public. We will aim to open the service to the public soon."
       )
     }
   }

@@ -76,10 +76,7 @@ class UpdateRecordControllerIntegrationSpec
   lazy val configureServices: Map[String, Any] =
     Map(
       "microservice.services.trader-goods-profiles-router.host" -> wireMockHost,
-      "microservice.services.trader-goods-profiles-router.port" -> wireMockPort,
-      "microservice.services.user-allow-list.host"              -> wireMockHost,
-      "microservice.services.user-allow-list.port"              -> wireMockPort,
-      "features.userAllowListEnabled"                            -> true
+      "microservice.services.trader-goods-profiles-router.port" -> wireMockPort
     )
   private val routerError = Json.obj(
     "correlationId" -> correlationId,
@@ -110,12 +107,9 @@ class UpdateRecordControllerIntegrationSpec
     super.beforeEach()
 
     reset(authConnector)
-    stubForUserAllowList
     stubRouterRequest(OK, expectedResponse.toString())
     when(uuidService.uuid).thenReturn(correlationId)
-    when(appConfig.userAllowListEnabled).thenReturn(true)
     when(appConfig.routerUrl).thenReturn(Url.parse(wireMockUrl))
-    when(appConfig.userAllowListBaseUrl).thenReturn(Url.parse(wireMockUrl))
 
   }
 
@@ -139,7 +133,7 @@ class UpdateRecordControllerIntegrationSpec
         )
       }
     }
-    
+
 
     "return BadRequest for invalid request body" in {
       stubRouterRequest(400, routerError.toString)
@@ -243,19 +237,6 @@ class UpdateRecordControllerIntegrationSpec
       )
     }
 
-    "return forbidden when EORI is not on the user allow list" in {
-      withAuthorizedTrader()
-      stubForUserAllowListWhereUserItNotAllowed
-
-      val result = updateRecordAndWait()
-
-      result.status mustBe FORBIDDEN
-      result.json mustBe createExpectedJson(
-        "FORBIDDEN",
-        "This service is in private beta and not available to the public. We will aim to open the service to the public soon."
-      )
-    }
-
   }
 
   "put" should {
@@ -336,27 +317,6 @@ class UpdateRecordControllerIntegrationSpec
 
     }
 
-    "return forbidden when EORI is not on the user allow list" in {
-      withAuthorizedTrader()
-      stubRouterPutRequest(OK, expectedResponse.toString())
-      stubForUserAllowListWhereUserItNotAllowed
-
-      val result = await(
-        wsClient
-          .url(url)
-          .withHttpHeaders(
-            "Accept"       -> "application/vnd.hmrc.1.0+json",
-            "Content-Type" -> "application/json"
-          )
-          .put(requestBody)
-      )
-
-      result.status mustBe FORBIDDEN
-      result.json mustBe createExpectedJson(
-        "FORBIDDEN",
-        "This service is in private beta and not available to the public. We will aim to open the service to the public soon."
-      )
-    }
   }
 
   private def updateRecordAndWaitWithoutClientIdHeader() =
@@ -441,21 +401,4 @@ class UpdateRecordControllerIntegrationSpec
              |}
              |""".stripMargin)
 
-  def stubForUserAllowList: StubMapping =
-    stubFor(
-      post(urlEqualTo(s"/user-allow-list/trader-goods-profiles/private-beta/check"))
-        .willReturn(
-          aResponse()
-            .withStatus(200)
-        )
-    )
-
-  def stubForUserAllowListWhereUserItNotAllowed: StubMapping =
-    stubFor(
-      post(urlEqualTo(s"/user-allow-list/trader-goods-profiles/private-beta/check"))
-        .willReturn(
-          aResponse()
-            .withStatus(404)
-        )
-    )
 }

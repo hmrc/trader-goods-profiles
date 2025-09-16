@@ -29,7 +29,6 @@ import play.api.http.Status.*
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
-import play.api.libs.ws.JsonBodyWritables.writeableOf_JsValue
 import play.api.libs.ws.{WSClient, writeableOf_JsValue}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
@@ -65,10 +64,10 @@ class CreateRecordControllerIntegrationSpec
   private val timestamp               = Instant.parse("2024-06-08T12:12:12.456789Z")
   private val recordId                = UUID.randomUUID().toString
   private val uuidService             = mock[UuidService]
-  private val url              = s"http://localhost:$port/$eoriNumber/records"
-  private val routerUrl        = s"/trader-goods-profiles-router/traders/$eoriNumber/records"
-  private val requestBody      = createUpdateRecordRequestData
-  private val expectedResponse = Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
+  private val url                     = s"http://localhost:$port/$eoriNumber/records"
+  private val routerUrl               = s"/trader-goods-profiles-router/traders/$eoriNumber/records"
+  private val requestBody             = createUpdateRecordRequestData
+  private val expectedResponse        = Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
 
   lazy private val appConfig = mock[AppConfig]
 
@@ -92,11 +91,8 @@ class CreateRecordControllerIntegrationSpec
 
     reset(authConnector)
     stubRouterRequest(CREATED, expectedResponse.toString())
-    stubForUserAllowList
     when(uuidService.uuid).thenReturn(correlationId)
-    when(appConfig.userAllowListEnabled).thenReturn(true)
     when(appConfig.routerUrl).thenReturn(Url.parse(wireMock.baseUrl))
-    when(appConfig.userAllowListBaseUrl).thenReturn(Url.parse(wireMock.baseUrl))
   }
 
   override def beforeAll(): Unit = {
@@ -120,14 +116,14 @@ class CreateRecordControllerIntegrationSpec
 
       withClue("should add the right headers") {
         WireMock.verify(
-          WireMock.postRequestedFor(urlEqualTo(routerUrl))
+          WireMock
+            .postRequestedFor(urlEqualTo(routerUrl))
             .withHeader("Content-Type", equalTo("application/json"))
             .withHeader("X-Client-ID", equalTo("clientId"))
             .withHeader("Accept", equalTo("application/vnd.hmrc.1.0+json"))
         )
       }
     }
-
 
     "successfully create a record without condition and return 201" in {
       withAuthorizedTrader()
@@ -139,7 +135,8 @@ class CreateRecordControllerIntegrationSpec
 
       withClue("should add the right headers") {
         WireMock.verify(
-          WireMock.postRequestedFor(urlEqualTo(routerUrl))
+          WireMock
+            .postRequestedFor(urlEqualTo(routerUrl))
             .withHeader("Content-Type", equalTo("application/json"))
             .withHeader("X-Client-ID", equalTo("clientId"))
             .withHeader("Accept", equalTo("application/vnd.hmrc.1.0+json"))
@@ -282,19 +279,6 @@ class CreateRecordControllerIntegrationSpec
       result.json mustBe createExpectedJson(
         "INTERNAL_SERVER_ERROR",
         s"Internal server error for /$eoriNumber/records with error: runtime exception"
-      )
-    }
-
-    "return forbidden when EORI is not on the user allow list" in {
-      withAuthorizedTrader()
-      stubForUserAllowListWhereUserItNotAllowed
-
-      val result = createRecordAndWait()
-
-      result.status mustBe FORBIDDEN
-      result.json mustBe createExpectedJson(
-        "FORBIDDEN",
-        "This service is in private beta and not available to the public. We will aim to open the service to the public soon."
       )
     }
 
