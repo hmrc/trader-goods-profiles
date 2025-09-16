@@ -3,7 +3,6 @@
 @includeWithdrawAdviceEndpoint = @{appConfig.withdrawAdviceEnabled}
 @includeRequestAdviceEndpoint = @{appConfig.requestAdviceEnabled}
 @includeAcceptHeaderForRemoveRecord = @{appConfig.sendAcceptHeader}
-@includePutMethodEnabled = @{appConfig.putMethodEnabled}
 ---
 openapi: 3.0.3
 info:
@@ -182,7 +181,6 @@ paths:
       security:
         - userRestricted:
             - trader-goods-profiles
-@if(includePutMethodEnabled){
     put:
           tags:
             - Goods records
@@ -258,7 +256,6 @@ paths:
           security:
             - userRestricted:
                 - trader-goods-profiles
-}
     delete:
       tags:
         - Goods records

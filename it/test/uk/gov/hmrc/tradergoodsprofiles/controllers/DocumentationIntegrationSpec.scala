@@ -33,7 +33,7 @@ import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 class DocumentationIntegrationSpec extends PlaySpec with GuiceOneServerPerSuite with BeforeAndAfterEach {
 
   private val wsClient: WSClient = app.injector.instanceOf[WSClient]
-  private lazy val appConfig = mock[AppConfig]
+  private lazy val appConfig     = mock[AppConfig]
 
   override def fakeApplication(): Application =
     GuiceApplicationBuilder()
@@ -47,7 +47,6 @@ class DocumentationIntegrationSpec extends PlaySpec with GuiceOneServerPerSuite 
     super.beforeEach()
 
     reset(appConfig)
-    when(appConfig.putMethodEnabled).thenReturn(false)
   }
   "DocumentationController" should {
     "return the definition specification" in {
@@ -65,15 +64,7 @@ class DocumentationIntegrationSpec extends PlaySpec with GuiceOneServerPerSuite 
       response.body must not be empty
     }
 
-    "return an OpenAPi Specification (OAS) without updateRecord (PUT) endpoint" in {
-      val response = await(wsClient.url(s"http://localhost:$port/api/conf/1.0/application.yaml").get())
-
-      response.status mustBe OK
-      response.body must not.include("updateTraderGoodsProfileRecord")
-    }
-
     "return an OpenAPi Specification (OAS) with updateRecord (PUT) endpoint" in {
-      when(appConfig.putMethodEnabled).thenReturn(true)
       val response = await(wsClient.url(s"http://localhost:$port/api/conf/1.0/application.yaml").get())
 
       response.status mustBe OK

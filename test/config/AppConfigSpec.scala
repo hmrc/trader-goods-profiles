@@ -40,27 +40,6 @@ class AppConfigSpec extends PlaySpec {
 
   "AppConfig" should {
 
-    "return false if putMethodEnabled is missing" in {
-      createAppConfig("").putMethodEnabled mustBe false
-    }
-
-    "return false if putMethodEnabled is false" in {
-      val validAppConfig =
-        """
-          |appName=trader-goods-profiles-router
-          |features.putMethodEnabled=false
-          |""".stripMargin
-      createAppConfig(validAppConfig).putMethodEnabled mustBe false
-    }
-
-    "return true if putMethodEnabled is true" in {
-      val validAppConfig =
-        """
-          |appName=trader-goods-profiles-router
-          |features.putMethodEnabled=true
-          |""".stripMargin
-      createAppConfig(validAppConfig).putMethodEnabled mustBe true
-    }
 
     "return true for sendClientId when it is set to true" in {
       val config =
