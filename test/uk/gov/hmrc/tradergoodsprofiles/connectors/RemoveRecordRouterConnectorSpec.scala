@@ -68,7 +68,6 @@ class RemoveRecordRouterConnectorSpec
         verify(requestBuilder).execute(any, any)
       }
     }
-    
 
     "return 204 when sendAcceptHeader is false" in {
       when(requestBuilder.execute[Either[ServiceError, Int]](any, any))
@@ -82,7 +81,6 @@ class RemoveRecordRouterConnectorSpec
       verify(requestBuilder, never()).setHeader(eqTo("Accept" -> "application/vnd.hmrc.1.0+json"))
       verify(requestBuilder).execute(any, any)
     }
-    
 
     "return an error response" when {
       "router API return an error" in {

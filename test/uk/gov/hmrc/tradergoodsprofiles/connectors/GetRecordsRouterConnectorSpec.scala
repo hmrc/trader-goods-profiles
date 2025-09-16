@@ -124,7 +124,6 @@ class GetRecordsRouterConnectorSpec
       }
     }
 
-
     "return an error" in {
       val expectedErrorResponse = ErrorResponse("123", "code", "error")
       val expectedResponse      = ServiceError(NOT_FOUND, expectedErrorResponse)

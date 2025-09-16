@@ -88,7 +88,6 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
       status(result) mustBe NO_CONTENT
     }
 
-
     "remove the record from router" in {
       val result = sut.removeRecord(eoriNumber, recordId, actorId)(request)
 

@@ -82,7 +82,6 @@ class CreateRecordControllerSpec
       contentAsJson(result) mustBe Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
     }
 
-
     "return 500 when the router service returns an error" in {
 
       val expectedJson  = Json.obj(

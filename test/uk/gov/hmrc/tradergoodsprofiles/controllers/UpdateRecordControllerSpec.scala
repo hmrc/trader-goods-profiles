@@ -74,7 +74,6 @@ class UpdateRecordControllerSpec
       "Content-Type" -> "application/json",
       "X-Client-ID"  -> "some client ID"
     )
-    
 
     "return 200 when the record is successfully updated" in {
       when(connector.patch(any, any, any)(any))

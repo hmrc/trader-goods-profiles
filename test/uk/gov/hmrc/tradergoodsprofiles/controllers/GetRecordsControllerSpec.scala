@@ -118,7 +118,6 @@ class GetRecordsControllerSpec
       verify(getRecordsConnector)
         .get(eqTo(eoriNumber), eqTo(Some("2024-03-26T16:14:52Z")), eqTo(Some(1)), eqTo(Some(1)))(any)
     }
-    
 
     "return an error" when {
       "routerService return an error" in {

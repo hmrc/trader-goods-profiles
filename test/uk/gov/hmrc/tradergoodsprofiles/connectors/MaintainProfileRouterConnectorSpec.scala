@@ -82,7 +82,6 @@ class MaintainProfileRouterConnectorSpec
         verify(requestBuilder).execute(any, any)
       }
     }
-    
 
     "return an error" when {
       "router return an error" in {

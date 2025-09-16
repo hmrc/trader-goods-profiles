@@ -69,5 +69,4 @@ class GetRecordsController @Inject() (
       result.merge
     }
 
-
 }

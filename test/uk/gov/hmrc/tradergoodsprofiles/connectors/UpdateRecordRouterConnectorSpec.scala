@@ -87,7 +87,6 @@ class UpdateRecordRouterConnectorSpec
         verify(requestBuilder).execute(any, any)
       }
     }
-    
 
     "return an error" when {
       "router connector return an error" in {

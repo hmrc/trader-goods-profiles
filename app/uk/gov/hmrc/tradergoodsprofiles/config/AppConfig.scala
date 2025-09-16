@@ -27,7 +27,7 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   lazy val appName: String = config.get[String]("appName")
 
-  lazy val routerUrl: Url            = Url.parse(servicesConfig.baseUrl("trader-goods-profiles-router"))
+  lazy val routerUrl: Url = Url.parse(servicesConfig.baseUrl("trader-goods-profiles-router"))
 
   lazy val internalAuthToken: String = config.get[String]("internal-auth.token")
 
