@@ -49,7 +49,6 @@ class RemoveRecordRouterConnectorSpec
     commonSetUp
     when(httpClient.delete(any)(any)).thenReturn(requestBuilder)
     when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
-    when(appConfig.sendClientId).thenReturn(true)
   }
 
   "remove" should {
@@ -61,7 +60,7 @@ class RemoveRecordRouterConnectorSpec
       val result = await(sut.removeRecord(eori, recordId, actorId))
 
       result.value mustBe NO_CONTENT
-      withClue("send a request with the right url when sendClientId is true") {
+      withClue("send a request with the right url") {
         val expectedUrl =
           s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId?actorId=$actorId"
         verify(httpClient).delete(eqTo(url"$expectedUrl"))(any)

@@ -43,7 +43,9 @@ class RemoveRecordController @Inject() (
   def removeRecord(eori: String, recordId: String, actorId: String): Action[AnyContent] =
     (authAction(eori) andThen userAllowListAction).async { implicit request =>
       val result = for {
-        _ <- validateClientIdHeaderIfSupported
+        _ <- EitherT
+          .fromEither[Future](validateClientIdHeader)
+          .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
         _ <- EitherT(removeRecordConnector.removeRecord(eori, recordId, actorId))
                .leftMap(e => Status(e.status)(toJson(e.errorResponse)))
       } yield NoContent
@@ -51,12 +53,5 @@ class RemoveRecordController @Inject() (
       result.merge
     }
 
-  private def validateClientIdHeaderIfSupported(implicit request: Request[_]): EitherT[Future, Result, String] =
-    EitherT
-      .fromEither[Future](
-        if (appConfig.sendClientId) validateClientIdHeader
-        else Right("")
-      )
-      .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
-  
+
 }

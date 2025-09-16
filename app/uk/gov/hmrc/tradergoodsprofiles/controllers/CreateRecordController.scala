@@ -46,8 +46,7 @@ class CreateRecordController @Inject() (
   def createRecord(eori: String): Action[JsValue] =
     (authAction(eori) andThen userAllowListAction).async(parse.json) { implicit request =>
       val result = for {
-        _               <- validateClientIdIfSupported
-        _               <- EitherT.fromEither[Future](validateAcceptAndContentTypeHeaders)
+        _               <- EitherT.fromEither[Future](validateAllHeaders)
         serviceResponse <-
           EitherT(createRecordConnector.createRecord(eori, request)).leftMap(e =>
             Status(e.status)(toJson(e.errorResponse))
@@ -57,13 +56,5 @@ class CreateRecordController @Inject() (
       result.merge
 
     }
-
-  private def validateClientIdIfSupported(implicit request: Request[_]): EitherT[Future, Result, String] =
-    EitherT
-      .fromEither[Future](
-        if (appConfig.sendClientId) validateClientIdHeader
-        else Right("")
-      )
-      .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
 
 }

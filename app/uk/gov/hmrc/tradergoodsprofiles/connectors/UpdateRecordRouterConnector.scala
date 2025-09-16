@@ -52,7 +52,7 @@ class UpdateRecordRouterConnector @Inject() (
       .withContentType
       .withAcceptHeader
       .withBody(updateRecordRequest.body)
-      .withClientIdIfSupported
+      .withClientId
       .execute(httpReader[CreateOrUpdateRecordResponse], ec)
       .recover { case ex: Throwable =>
         logAndReturnInternalServerError(eori, recordId, url, ex)
@@ -70,7 +70,7 @@ class UpdateRecordRouterConnector @Inject() (
       .withContentType
       .withAcceptHeader
       .withBody(updateRecordRequest.body)
-      .withClientIdIfSupported
+      .withClientId
       .execute(httpReader[CreateOrUpdateRecordResponse], ec)
       .recover { case ex: Throwable =>
         logAndReturnInternalServerError(eori, recordId, url, ex)

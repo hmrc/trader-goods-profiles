@@ -84,17 +84,6 @@ class CreateRecordControllerSpec
       contentAsJson(result) mustBe Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
     }
 
-    "not validate client ID is sendClientId is false" in {
-      when(appConfig.sendClientId).thenReturn(false)
-      val request1 = FakeRequest().withHeaders(
-        "Accept"       -> "application/vnd.hmrc.1.0+json",
-        "Content-Type" -> "application/json"
-      )
-      val result   = sut.createRecord(eoriNumber)(request1.withBody(createUpdateRecordRequestData))
-
-      status(result) mustBe CREATED
-      contentAsJson(result) mustBe Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
-    }
 
     "return 500 when the router service returns an error" in {
 

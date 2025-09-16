@@ -96,7 +96,6 @@ class GetRecordsControllerIntegrationSpec
     stubRouterRequest(getMultipleRecordsRouterUrl, 200, getMultipleRecordsRouterResponse.toString())
     stubRouterRequest(getSingleRecordRouterUrl, 200, getSingleRecordRouterResponse.toString())
     when(uuidService.uuid).thenReturn(correlationId)
-    when(appConfig.sendClientId).thenReturn(true)
     when(appConfig.userAllowListEnabled).thenReturn(true)
     when(appConfig.routerUrl).thenReturn(Url.parse(wireMock.baseUrl))
     when(appConfig.userAllowListBaseUrl).thenReturn(Url.parse(wireMock.baseUrl))
@@ -123,22 +122,6 @@ class GetRecordsControllerIntegrationSpec
 
       withClue("should add the right headers") {
         WireMock.verify(WireMock.getRequestedFor(urlEqualTo(getSingleRecordRouterUrl)))
-      }
-    }
-
-    "should not validate client ID is features flag sendClientId is false" in {
-      withAuthorizedTrader()
-      when(appConfig.sendClientId).thenReturn(false)
-
-      val result = getRecordAndWaitWithOutClientIDHeader(getSingleRecordUrl)
-
-      result.status mustBe OK
-      result.json mustBe getSingleRecordRouterResponse
-
-      withClue("should add the right headers") {
-        WireMock.verify(
-          WireMock.getRequestedFor(urlEqualTo(getSingleRecordRouterUrl))
-        )
       }
     }
 
@@ -321,21 +304,6 @@ class GetRecordsControllerIntegrationSpec
       }
     }
     
-    "should not validate client ID is features flag sendClientId is false" in {
-      withAuthorizedTrader()
-      when(appConfig.sendClientId).thenReturn(false)
-
-      val result = getRecordAndWaitWithOutClientIDHeader(getMultipleRecordsUrl)
-
-      result.status mustBe OK
-      result.json mustBe getMultipleRecordsCallerResponse
-
-      withClue("should add the right headers") {
-        WireMock.verify(
-          WireMock.getRequestedFor(urlEqualTo(getMultipleRecordsRouterUrl))
-        )
-      }
-    }
     "return multiple records with optional query parameters" in {
       withAuthorizedTrader()
       wireMock.stubFor(

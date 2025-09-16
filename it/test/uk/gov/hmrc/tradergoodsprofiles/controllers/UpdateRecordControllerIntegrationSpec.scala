@@ -113,7 +113,6 @@ class UpdateRecordControllerIntegrationSpec
     stubForUserAllowList
     stubRouterRequest(OK, expectedResponse.toString())
     when(uuidService.uuid).thenReturn(correlationId)
-    when(appConfig.sendClientId).thenReturn(true)
     when(appConfig.userAllowListEnabled).thenReturn(true)
     when(appConfig.routerUrl).thenReturn(Url.parse(wireMockUrl))
     when(appConfig.userAllowListBaseUrl).thenReturn(Url.parse(wireMockUrl))
@@ -140,22 +139,7 @@ class UpdateRecordControllerIntegrationSpec
         )
       }
     }
-
-    "should not validate client ID is features flag sendClientId is false" in {
-      withAuthorizedTrader()
-      when(appConfig.sendClientId).thenReturn(false)
-      val result = updateRecordAndWaitWithoutClientIdHeader()
-
-      result.status mustBe OK
-      result.json mustBe expectedResponse
-
-      withClue("should add the right headers") {
-        WireMock.verify(
-          WireMock.patchRequestedFor(urlEqualTo(routerUrl))
-            .withHeader("Content-Type", equalTo("application/json"))
-        )
-      }
-    }
+    
 
     "return BadRequest for invalid request body" in {
       stubRouterRequest(400, routerError.toString)

@@ -56,7 +56,6 @@ class MaintainProfileRouterConnectorSpec
 
   "put" should {
     "return 200 when the profile is successfully updated" in {
-      when(appConfig.sendClientId).thenReturn(true)
 
       val response = MaintainProfileResponse(
         eori = "GB123456789012",
@@ -83,35 +82,7 @@ class MaintainProfileRouterConnectorSpec
         verify(requestBuilder).execute(any, any)
       }
     }
-
-    "not send the client ID in the header when sendClientId is false" in {
-      when(appConfig.sendClientId).thenReturn(false)
-
-      val response = MaintainProfileResponse(
-        eori = "GB123456789012",
-        actorId = "GB987654321098",
-        ukimsNumber = Some("XIUKIM47699357400020231115081800"),
-        nirmsNumber = Some("RMS-GB-123456"),
-        niphlNumber = Some("6 S12345")
-      )
-      when(requestBuilder.execute[Either[ServiceError, MaintainProfileResponse]](any, any))
-        .thenReturn(Future.successful(Right(response)))
-
-      val result = await(sut.put(eori, createRequest(updateProfileRequestData())))
-      result.value mustBe response
-
-      withClue("send a request with the right parameters") {
-        val expectedUrl =
-          UrlPath.parse(s"$serverUrl/trader-goods-profiles-router/traders/$eori")
-        verify(httpClient).put(eqTo(url"$expectedUrl"))(any)
-        verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-        verify(requestBuilder).setHeader("Accept"                 -> "application/vnd.hmrc.1.0+json")
-        verify(requestBuilder, never()).setHeader("X-Client-ID"   -> "clientId")
-        verify(requestBuilder).withBody(eqTo(updateProfileRequestData()))(any, any, any)
-        verify(requestBuilder).execute(any, any)
-      }
-
-    }
+    
 
     "return an error" when {
       "router return an error" in {

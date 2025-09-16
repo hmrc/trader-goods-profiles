@@ -35,7 +35,5 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   lazy val withdrawAdviceEnabled: Boolean = config.get[Boolean]("features.withdrawAdviceEnabled")
   lazy val requestAdviceEnabled: Boolean  = config.get[Boolean]("features.requestAdviceEnabled")
   lazy val userAllowListEnabled: Boolean  = config.get[Boolean]("features.userAllowListEnabled")
-  lazy val sendClientId: Boolean          =
-    config.getOptional[Boolean]("features.sendClientId").getOrElse(true)
 
 }

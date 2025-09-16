@@ -68,7 +68,6 @@ class UpdateRecordControllerSpec
     super.beforeEach()
     reset(uuidService, connector)
     when(uuidService.uuid).thenReturn(correlationId)
-    when(appConfig.sendClientId).thenReturn(false)
   }
 
   "patchRecord" should {
@@ -77,27 +76,12 @@ class UpdateRecordControllerSpec
       "Content-Type" -> "application/json",
       "X-Client-ID"  -> "some client ID"
     )
-
-    val requestWithoutClientId = createFakeRequestWithHeaders(
-      "Accept"       -> "application/vnd.hmrc.1.0+json",
-      "Content-Type" -> "application/json",
-      "X-Client-ID"  -> "some client ID"
-    )
+    
 
     "return 200 when the record is successfully updated" in {
       when(connector.patch(any, any, any)(any))
         .thenReturn(Future.successful(Right(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))))
       val result = sut.patchRecord(eoriNumber, recordId)(request)
-
-      status(result) mustBe OK
-      contentAsJson(result) mustBe Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))
-    }
-
-    "not validate client ID is sendClientId is false" in {
-      when(appConfig.sendClientId).thenReturn(false)
-      when(connector.patch(any, any, any)(any))
-        .thenReturn(Future.successful(Right(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))))
-      val result = sut.patchRecord(eoriNumber, recordId)(requestWithoutClientId)
 
       status(result) mustBe OK
       contentAsJson(result) mustBe Json.toJson(createCreateOrUpdateRecordResponse(recordId, eoriNumber, timestamp))

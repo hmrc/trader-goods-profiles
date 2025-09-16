@@ -43,8 +43,7 @@ class UpdateRecordController @Inject() (
   def patchRecord(eori: String, recordId: String): Action[JsValue] =
     (authAction(eori) andThen userAllowListAction).async(parse.json) { implicit request =>
       val result = for {
-        _               <- validateClientIdIfSupported
-        _               <- EitherT.fromEither[Future](validateAcceptAndContentTypeHeaders)
+        _               <- EitherT.fromEither[Future](validateAllHeaders)
         serviceResponse <- EitherT(updateRecordConnector.patch(eori, recordId, request))
                              .leftMap(e => Status(e.status)(toJson(e.errorResponse)))
       } yield Ok(toJson(serviceResponse))
@@ -63,11 +62,4 @@ class UpdateRecordController @Inject() (
       }.merge
     }
 
-  private def validateClientIdIfSupported(implicit request: Request[_]): EitherT[Future, Result, String] =
-    EitherT
-      .fromEither[Future](
-        if (appConfig.sendClientId) validateClientIdHeader
-        else Right("")
-      )
-      .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
 }

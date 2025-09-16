@@ -126,7 +126,6 @@ class MaintainProfileControllerIntegrationSpec
   "MaintainProfileController" should {
     "return 200 OK when the profile update is successful" in {
       withAuthorizedTrader()
-      when(appConfig.sendClientId).thenReturn(true)
 
       val result = updateProfileAndWait()
 
@@ -139,23 +138,6 @@ class MaintainProfileControllerIntegrationSpec
             .withHeader("Content-Type", equalTo("application/json"))
             .withHeader("Accept", equalTo("application/vnd.hmrc.1.0+json"))
             .withHeader("X-Client-ID", equalTo("Some client Id"))
-        )
-      }
-    }
-    "return 200 OK without validating x-client-id when sendClientId is false" in {
-      withAuthorizedTrader()
-      when(appConfig.sendClientId).thenReturn(false)
-
-      val result = updateProfileAndWaitWithoutClientId()
-
-      result.status mustBe OK
-      result.json mustBe expectedResponse
-
-      withClue("should add the right headers") {
-        WireMock.verify(
-          WireMock.putRequestedFor(urlEqualTo(routerUrl))
-            .withHeader("Content-Type", equalTo("application/json"))
-            .withHeader("Accept", equalTo("application/vnd.hmrc.1.0+json"))
         )
       }
     }

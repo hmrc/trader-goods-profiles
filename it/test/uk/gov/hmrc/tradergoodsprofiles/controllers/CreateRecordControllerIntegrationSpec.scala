@@ -94,7 +94,6 @@ class CreateRecordControllerIntegrationSpec
     stubRouterRequest(CREATED, expectedResponse.toString())
     stubForUserAllowList
     when(uuidService.uuid).thenReturn(correlationId)
-    when(appConfig.sendClientId).thenReturn(true)
     when(appConfig.userAllowListEnabled).thenReturn(true)
     when(appConfig.routerUrl).thenReturn(Url.parse(wireMock.baseUrl))
     when(appConfig.userAllowListBaseUrl).thenReturn(Url.parse(wireMock.baseUrl))
@@ -129,23 +128,6 @@ class CreateRecordControllerIntegrationSpec
       }
     }
 
-    "should not validate client ID is features flag sendClientId is false" in {
-      withAuthorizedTrader()
-      when(appConfig.sendClientId).thenReturn(false)
-
-      val result = createRecordAndWait()
-
-      result.status mustBe CREATED
-      result.json mustBe expectedResponse
-
-      withClue("should add the right headers") {
-        WireMock.verify(
-          WireMock.postRequestedFor(urlEqualTo(routerUrl))
-            .withHeader("Content-Type", equalTo("application/json"))
-            .withHeader("Accept", equalTo("application/vnd.hmrc.1.0+json"))
-        )
-      }
-    }
 
     "successfully create a record without condition and return 201" in {
       withAuthorizedTrader()

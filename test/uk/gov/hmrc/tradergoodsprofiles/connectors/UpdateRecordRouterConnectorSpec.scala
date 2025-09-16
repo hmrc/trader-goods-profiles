@@ -63,7 +63,6 @@ class UpdateRecordRouterConnectorSpec
     when(requestBuilder.setHeader(any)).thenReturn(requestBuilder)
     when(requestBuilder.withBody(any[Object])(any, any, any))
       .thenReturn(requestBuilder)
-    when(appConfig.sendClientId).thenReturn(true)
   }
 
   "patch" should {
@@ -88,27 +87,7 @@ class UpdateRecordRouterConnectorSpec
         verify(requestBuilder).execute(any, any)
       }
     }
-
-    "should not send client ID is features flag sendClientId is false" in {
-      when(appConfig.sendClientId).thenReturn(false)
-      val response = createCreateOrUpdateRecordResponse(recordId, eori, Instant.now)
-      when(requestBuilder.execute[Either[ServiceError, CreateOrUpdateRecordResponse]](any, any))
-        .thenReturn(Future.successful(Right(response)))
-
-      val result = await(sut.patch(eori, recordId, createUpdateRecordRequest))
-
-      result.value mustBe response
-
-      withClue("send a request with the right url") {
-        val expectedUrl =
-          UrlPath.parse(s"$serverUrl/trader-goods-profiles-router/traders/$eori/records/$recordId")
-        verify(httpClient).patch(eqTo(url"$expectedUrl"))(any)
-        verify(requestBuilder).setHeader(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-        verify(requestBuilder).setHeader("Accept"                 -> "application/vnd.hmrc.1.0+json")
-        verify(requestBuilder).withBody(eqTo(createUpdateRecordRequestData))(any, any, any)
-        verify(requestBuilder).execute(any, any)
-      }
-    }
+    
 
     "return an error" when {
       "router connector return an error" in {

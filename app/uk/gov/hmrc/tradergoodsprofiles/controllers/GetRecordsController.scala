@@ -45,10 +45,7 @@ class GetRecordsController @Inject() (
   def getRecord(eori: String, recordId: String): Action[AnyContent] =
     (authAction(eori) andThen userAllowListAction).async { implicit request =>
       val result = for {
-        _               <- validateClientIdIfSupported
-        _               <- EitherT
-                             .fromEither[Future](validateAcceptHeader)
-                             .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
+        _               <- EitherT.fromEither[Future](validateAcceptAndClientIdHeaders)
         serviceResponse <-
           EitherT(getRecordsConnector.get(eori, recordId)).leftMap(e => Status(e.status)(toJson(e.errorResponse)))
       } yield Ok(toJson(serviceResponse))
@@ -64,10 +61,8 @@ class GetRecordsController @Inject() (
   ): Action[AnyContent] =
     (authAction(eori) andThen userAllowListAction).async { implicit request =>
       val result = for {
-        _               <- validateClientIdIfSupported
         _               <- EitherT
-                             .fromEither[Future](validateAcceptHeader)
-                             .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
+                             .fromEither[Future](validateAcceptAndClientIdHeaders)
         serviceResponse <-
           EitherT(getRecordsConnector.get(eori, lastUpdatedDate, page, size)).leftMap(e =>
             Status(e.status)(toJson(e.errorResponse))
@@ -77,12 +72,5 @@ class GetRecordsController @Inject() (
       result.merge
     }
 
-  private def validateClientIdIfSupported(implicit request: Request[_]): EitherT[Future, Result, String] =
-    EitherT
-      .fromEither[Future](
-        if (appConfig.sendClientId) validateClientIdHeader
-        else Right("")
-      )
-      .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
 
 }
