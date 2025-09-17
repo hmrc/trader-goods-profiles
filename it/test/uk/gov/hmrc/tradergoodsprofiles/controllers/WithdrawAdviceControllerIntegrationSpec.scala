@@ -80,7 +80,6 @@ class WithdrawAdviceControllerIntegrationSpec
     super.beforeEach()
 
     reset(authConnector)
-    stubForUserAllowList
     stubRouterResponse(NO_CONTENT, "204")
     when(uuidService.uuid).thenReturn(correlationId)
   }
@@ -212,19 +211,6 @@ class WithdrawAdviceControllerIntegrationSpec
       result.json mustBe createExpectedJson(
         "INTERNAL_SERVER_ERROR",
         s"Internal server error for /$eoriNumber/records/$recordId/advice with error: runtime exception"
-      )
-    }
-
-    "return forbidden when EORI is not on the user allow list" in {
-      withAuthorizedTrader()
-      stubForUserAllowListWhereUserItNotAllowed
-
-      val result = withdrawAdviceAndWait()
-
-      result.status mustBe FORBIDDEN
-      result.json mustBe createExpectedJson(
-        "FORBIDDEN",
-        "This service is in private beta and not available to the public. We will aim to open the service to the public soon."
       )
     }
 

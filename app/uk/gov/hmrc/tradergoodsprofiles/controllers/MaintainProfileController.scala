@@ -20,11 +20,10 @@ import cats.data.EitherT
 import play.api.Logging
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json.toJson
-import play.api.mvc.{Action, ControllerComponents, Request, Result}
+import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.connectors.MaintainProfileRouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, UserAllowListAction, ValidationRules}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidationRules}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import javax.inject.{Inject, Singleton}
@@ -33,10 +32,8 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class MaintainProfileController @Inject() (
   authAction: AuthAction,
-  userAllowListAction: UserAllowListAction,
   maintainProfileRouterConnector: MaintainProfileRouterConnector,
   override val uuidService: UuidService,
-  appConfig: AppConfig,
   cc: ControllerComponents
 )(implicit ec: ExecutionContext)
     extends BackendController(cc)
@@ -44,10 +41,9 @@ class MaintainProfileController @Inject() (
     with Logging {
 
   def updateProfile(eori: String): Action[JsValue] =
-    (authAction(eori) andThen userAllowListAction).async(parse.json) { implicit request =>
+    authAction(eori).async(parse.json) { implicit request =>
       val result = for {
-        _               <- EitherT.fromEither[Future](validateAcceptAndContentTypeHeaders)
-        _               <- validateClientIdIfSupported
+        _               <- EitherT.fromEither[Future](validateAllHeaders)
         serviceResponse <-
           EitherT(maintainProfileRouterConnector.put(eori, request)).leftMap(e =>
             Status(e.status)(toJson(e.errorResponse))
@@ -56,13 +52,5 @@ class MaintainProfileController @Inject() (
 
       result.merge
     }
-
-  private def validateClientIdIfSupported(implicit request: Request[_]): EitherT[Future, Result, String] =
-    EitherT
-      .fromEither[Future](
-        if (appConfig.sendClientId) validateClientIdHeader
-        else Right("")
-      )
-      .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
 
 }

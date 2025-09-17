@@ -27,7 +27,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.connectors.GetRecordsRouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, FakeUserAllowListAction}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.responses.GetRecordResponseSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
@@ -58,10 +58,8 @@ class GetRecordsControllerSpec
   private val appConfig           = mock[AppConfig]
   private val sut                 = new GetRecordsController(
     new FakeSuccessAuthAction(),
-    new FakeUserAllowListAction(),
     uuidService,
     getRecordsConnector,
-    appConfig,
     stubControllerComponents()
   )
 
@@ -74,7 +72,6 @@ class GetRecordsControllerSpec
       .thenReturn(Future.successful(Right(createGetRecordResponse(eoriNumber, recordId, timestamp))))
     when(getRecordsConnector.get(any, any, any, any)(any))
       .thenReturn(Future.successful(Right(createGetRecordsResponse(eoriNumber, recordId, timestamp))))
-    when(appConfig.sendClientId).thenReturn(false)
   }
 
   "getRecord" should {
@@ -83,17 +80,6 @@ class GetRecordsControllerSpec
 
       status(result) mustBe OK
       verify(getRecordsConnector).get(eqTo(eoriNumber), eqTo(recordId))(any)
-    }
-
-    "not validate client ID is sendClientId is false" in {
-      when(appConfig.sendClientId).thenReturn(false)
-      val request1 = FakeRequest().withHeaders(
-        "Accept"       -> "application/vnd.hmrc.1.0+json",
-        "Content-Type" -> "application/json"
-      )
-      val result   = sut.getRecord(eoriNumber, recordId)(request1)
-
-      status(result) mustBe OK
     }
 
     "return an error" when {
@@ -131,17 +117,6 @@ class GetRecordsControllerSpec
       contentAsJson(result) mustBe Json.toJson(createGetRecordsResponse(eoriNumber, recordId, timestamp))
       verify(getRecordsConnector)
         .get(eqTo(eoriNumber), eqTo(Some("2024-03-26T16:14:52Z")), eqTo(Some(1)), eqTo(Some(1)))(any)
-    }
-
-    "not validate client ID is sendClientId is false" in {
-      when(appConfig.sendClientId).thenReturn(false)
-      val request1 = FakeRequest().withHeaders(
-        "Accept"       -> "application/vnd.hmrc.1.0+json",
-        "Content-Type" -> "application/json"
-      )
-      val result   = sut.getRecords(eoriNumber, Some("2024-03-26T16:14:52Z"), Some(1), Some(1))(request1)
-
-      status(result) mustBe OK
     }
 
     "return an error" when {

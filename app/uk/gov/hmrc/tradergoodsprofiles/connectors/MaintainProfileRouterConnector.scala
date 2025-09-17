@@ -51,7 +51,7 @@ class MaintainProfileRouterConnector @Inject() (
       .put(url"$url")
       .withContentType
       .withAcceptHeader
-      .withClientIdIfSupported
+      .withClientId
       .withBody(updateProfileRequest.body)
       .execute(httpReader[MaintainProfileResponse], ec)
       .recover { case ex: Throwable =>

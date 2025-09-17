@@ -20,11 +20,10 @@ import cats.data.EitherT
 import play.api.Logging
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json.toJson
-import play.api.mvc.{Action, ControllerComponents, Request, Result}
+import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendBaseController
-import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.connectors.CreateRecordRouterConnector
-import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, UserAllowListAction, ValidationRules}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidationRules}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
 import javax.inject.{Inject, Singleton}
@@ -33,10 +32,8 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class CreateRecordController @Inject() (
   authAction: AuthAction,
-  userAllowListAction: UserAllowListAction,
   createRecordConnector: CreateRecordRouterConnector,
   override val uuidService: UuidService,
-  appConfig: AppConfig,
   override val controllerComponents: ControllerComponents
 )(implicit ec: ExecutionContext)
     extends BackendBaseController
@@ -44,10 +41,9 @@ class CreateRecordController @Inject() (
     with Logging {
 
   def createRecord(eori: String): Action[JsValue] =
-    (authAction(eori) andThen userAllowListAction).async(parse.json) { implicit request =>
+    authAction(eori).async(parse.json) { implicit request =>
       val result = for {
-        _               <- validateClientIdIfSupported
-        _               <- EitherT.fromEither[Future](validateAcceptAndContentTypeHeaders)
+        _               <- EitherT.fromEither[Future](validateAllHeaders)
         serviceResponse <-
           EitherT(createRecordConnector.createRecord(eori, request)).leftMap(e =>
             Status(e.status)(toJson(e.errorResponse))
@@ -57,13 +53,5 @@ class CreateRecordController @Inject() (
       result.merge
 
     }
-
-  private def validateClientIdIfSupported(implicit request: Request[_]): EitherT[Future, Result, String] =
-    EitherT
-      .fromEither[Future](
-        if (appConfig.sendClientId) validateClientIdHeader
-        else Right("")
-      )
-      .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
 
 }

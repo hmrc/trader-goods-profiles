@@ -82,14 +82,9 @@ class RemoveRecordControllerIntegrationSpec
     super.beforeEach()
 
     reset(authConnector)
-    stubForUserAllowList
     stubRouterResponse(NO_CONTENT, routerResponse.toString)
     when(uuidService.uuid).thenReturn(correlationId)
-    when(appConfig.sendClientId).thenReturn(true)
-    when(appConfig.sendAcceptHeader).thenReturn(true)
-    when(appConfig.userAllowListEnabled).thenReturn(true)
     when(appConfig.routerUrl).thenReturn(Url.parse(wireMock.baseUrl))
-    when(appConfig.userAllowListBaseUrl).thenReturn(Url.parse(wireMock.baseUrl))
   }
 
   override def beforeAll(): Unit = {
@@ -112,7 +107,8 @@ class RemoveRecordControllerIntegrationSpec
 
       withClue("should add the right headers") {
         WireMock.verify(
-        WireMock.deleteRequestedFor(urlEqualTo(routerUrl))
+          WireMock
+            .deleteRequestedFor(urlEqualTo(routerUrl))
             .withHeader("X-Client-ID", equalTo("clientId"))
         )
       }
@@ -231,20 +227,6 @@ class RemoveRecordControllerIntegrationSpec
       )
     }
 
-    "return bad request when Accept header is invalid" in {
-      withAuthorizedTrader()
-
-      val headers = Seq("X-Client-ID" -> "clientId", "Content-Type" -> "application/json")
-      val result  = removeRecordAndWait(url, headers: _*)
-
-      result.status mustBe BAD_REQUEST
-      result.json mustBe createExpectedError(
-        "INVALID_HEADER_PARAMETER",
-        "Accept was missing from Header or is in wrong format",
-        4
-      )
-    }
-
     "return internal server error if auth throw" in {
       withUnauthorizedTrader(new RuntimeException("runtime exception"))
 
@@ -272,18 +254,6 @@ class RemoveRecordControllerIntegrationSpec
 
     }
 
-    "return forbidden when EORI is not on the user allow list" in {
-      withAuthorizedTrader()
-      stubForUserAllowListWhereUserItNotAllowed
-
-      val result = removeRecordAndWait()
-
-      result.status mustBe FORBIDDEN
-      result.json mustBe createExpectedJson(
-        "FORBIDDEN",
-        "This service is in private beta and not available to the public. We will aim to open the service to the public soon."
-      )
-    }
   }
 
   private def removeRecordAndWait(url: String = url) =
@@ -304,7 +274,6 @@ class RemoveRecordControllerIntegrationSpec
         .withHttpHeaders(headers: _*)
         .delete()
     )
-
 
   private def stubRouterResponse(status: Int, errorResponse: String, url: String = routerUrl) =
     wireMock.stubFor(

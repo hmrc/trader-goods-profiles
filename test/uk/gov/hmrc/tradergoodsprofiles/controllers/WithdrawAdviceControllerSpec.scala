@@ -27,7 +27,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
 import uk.gov.hmrc.tradergoodsprofiles.connectors.WithdrawAdviceRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, FakeUserAllowListAction}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
@@ -49,7 +49,6 @@ class WithdrawAdviceControllerSpec extends PlaySpec with AuthTestSupport with Be
   private val withdrawAdviceRouterConnector = mock[WithdrawAdviceRouterConnector]
   private val sut                           = new WithdrawAdviceController(
     new FakeSuccessAuthAction(),
-    new FakeUserAllowListAction(),
     withdrawAdviceRouterConnector,
     uuidService,
     stubControllerComponents()

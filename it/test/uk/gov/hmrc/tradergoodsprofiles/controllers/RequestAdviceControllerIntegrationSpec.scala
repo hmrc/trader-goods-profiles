@@ -80,7 +80,6 @@ class RequestAdviceControllerIntegrationSpec
     super.beforeEach()
 
     reset(authConnector)
-    stubForUserAllowList
     wireMock.stubFor(
       post(urlEqualTo(routerUrl))
         .willReturn(
@@ -111,7 +110,8 @@ class RequestAdviceControllerIntegrationSpec
 
       withClue("should add the right headers") {
         WireMock.verify(
-          WireMock.postRequestedFor(urlEqualTo(routerUrl))
+          WireMock
+            .postRequestedFor(urlEqualTo(routerUrl))
             .withHeader("Content-Type", equalTo("application/json"))
             .withHeader("X-Client-ID", equalTo("clientId"))
         )
@@ -227,19 +227,6 @@ class RequestAdviceControllerIntegrationSpec
       )
     }
 
-    "return forbidden when EORI is not on the user allow list" in {
-      withAuthorizedTrader()
-      stubForUserAllowListWhereUserItNotAllowed
-
-      val result = requestAdviceAndWait()
-
-      result.status mustBe FORBIDDEN
-      result.json mustBe createExpectedJson(
-        "FORBIDDEN",
-        "This service is in private beta and not available to the public. We will aim to open the service to the public soon."
-      )
-    }
-
   }
 
   private def createRequestAdviceRequest: JsValue = Json
@@ -273,7 +260,6 @@ class RequestAdviceControllerIntegrationSpec
         )
         .post(requestBody)
     )
-
 
   private val routerError                                   = Json.obj(
     "correlationId" -> correlationId,

@@ -28,7 +28,7 @@ import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubCo
 import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RemoveRecordRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
-import uk.gov.hmrc.tradergoodsprofiles.controllers.support.{AuthTestSupport, FakeUserAllowListAction}
+import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.models.errors.{ErrorResponse, ServiceError}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService
 
@@ -58,9 +58,7 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
   private val appConfig                     = mock[AppConfig]
   private val sut                           = new RemoveRecordController(
     new FakeSuccessAuthAction(),
-    new FakeUserAllowListAction(),
     connector,
-    appConfig,
     uuidService,
     stubControllerComponents()
   )
@@ -72,46 +70,19 @@ class RemoveRecordControllerSpec extends PlaySpec with AuthTestSupport with Befo
     when(uuidService.uuid).thenReturn(correlationId)
     when(connector.removeRecord(any, any, any)(any))
       .thenReturn(Future.successful(Right(OK)))
-    when(appConfig.sendClientId).thenReturn(false)
-    when(appConfig.sendAcceptHeader).thenReturn(true)
   }
 
   "removeRecord" should {
-    "return 204 when sendClientId features flag is true" in {
+    "return 204" in {
       val result = sut.removeRecord(eoriNumber, recordId, actorId)(request)
       status(result) mustBe NO_CONTENT
     }
 
-    "return 204 when sendClientId features flag is false" in {
-      when(appConfig.sendClientId).thenReturn(false)
-
-      val result = sut.removeRecord(eoriNumber, recordId, actorId)(
-        FakeRequest().withHeaders(
-          "Accept" -> "application/vnd.hmrc.1.0+json"
-        )
-      )
-      status(result) mustBe NO_CONTENT
-    }
-
     "return 204 when sendAcceptHeader features flag is false" in {
-      when(appConfig.sendAcceptHeader).thenReturn(false)
 
       val result = sut.removeRecord(eoriNumber, recordId, actorId)(
         FakeRequest().withHeaders(
           "X-Client-ID" -> "some client ID"
-        )
-      )
-      status(result) mustBe NO_CONTENT
-    }
-
-    "return 204 when sendAcceptHeader and sendClientId are true" in {
-      when(appConfig.sendAcceptHeader).thenReturn(true)
-      when(appConfig.sendClientId).thenReturn(true)
-
-      val result = sut.removeRecord(eoriNumber, recordId, actorId)(
-        FakeRequest().withHeaders(
-          "X-Client-ID" -> "some client ID",
-          "Accept"      -> "application/vnd.hmrc.1.0+json"
         )
       )
       status(result) mustBe NO_CONTENT

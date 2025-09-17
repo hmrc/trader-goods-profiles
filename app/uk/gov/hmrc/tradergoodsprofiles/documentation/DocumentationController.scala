@@ -46,8 +46,7 @@ class DocumentationController @Inject() (
   private def returnTemplatedYaml(): Action[AnyContent] = Action {
     logger.info(
       s"""Generating OpenAPI Spec with includeWithdrawAdviceEndpoint: ${appConfig.requestAdviceEnabled},
-          includeWithdrawAdviceEndpoint: ${appConfig.withdrawAdviceEnabled},
-          putMethodEnabled: ${appConfig.putMethodEnabled}"""
+          includeWithdrawAdviceEndpoint: ${appConfig.withdrawAdviceEnabled}"""
     )
     Ok(apiSpec()).as("application/yaml")
   }
