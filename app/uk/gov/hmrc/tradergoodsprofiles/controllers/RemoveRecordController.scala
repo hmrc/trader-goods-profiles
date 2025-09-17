@@ -48,7 +48,7 @@ class RemoveRecordController @Inject() (
 
       result.merge
     }
-  
+
   private def validateClientId(implicit request: Request[_]): EitherT[Future, Result, String] =
     EitherT
       .fromEither[Future](validateClientIdHeader)
