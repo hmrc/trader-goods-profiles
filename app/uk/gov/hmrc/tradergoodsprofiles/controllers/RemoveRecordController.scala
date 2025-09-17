@@ -41,14 +41,17 @@ class RemoveRecordController @Inject() (
   def removeRecord(eori: String, recordId: String, actorId: String): Action[AnyContent] =
     authAction(eori).async { implicit request =>
       val result = for {
-        _ <- EitherT
-               .fromEither[Future](validateClientIdHeader)
-               .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
+        _ <- validateClientId
         _ <- EitherT(removeRecordConnector.removeRecord(eori, recordId, actorId))
                .leftMap(e => Status(e.status)(toJson(e.errorResponse)))
       } yield NoContent
 
       result.merge
     }
+
+  private def validateClientId(implicit request: Request[_]): EitherT[Future, Result, String] =
+    EitherT
+      .fromEither[Future](validateClientIdHeader)
+      .leftMap(e => createBadRequestResponse(e.code, e.message, e.errorNumber))
 
 }
