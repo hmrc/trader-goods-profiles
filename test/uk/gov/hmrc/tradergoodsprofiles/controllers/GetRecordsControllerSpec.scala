@@ -25,7 +25,6 @@ import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
-import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.connectors.GetRecordsRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.AuthTestSupport
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
@@ -55,7 +54,6 @@ class GetRecordsControllerSpec
   private val timestamp           = Instant.parse("2024-01-12T12:12:12Z")
   private val uuidService         = mock[UuidService]
   private val getRecordsConnector = mock[GetRecordsRouterConnector]
-  private val appConfig           = mock[AppConfig]
   private val sut                 = new GetRecordsController(
     new FakeSuccessAuthAction(),
     uuidService,

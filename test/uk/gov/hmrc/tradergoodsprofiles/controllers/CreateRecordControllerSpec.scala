@@ -25,7 +25,6 @@ import play.api.http.Status.{CREATED, INTERNAL_SERVER_ERROR}
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status, stubControllerComponents}
-import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.connectors.CreateRecordRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.FakeAuth.FakeSuccessAuthAction
 import uk.gov.hmrc.tradergoodsprofiles.controllers.support.requests.UpdateRecordRequestSupport
@@ -57,7 +56,6 @@ class CreateRecordControllerSpec
   private val correlationId         = "d677693e-9981-4ee3-8574-654981ebe606"
   private val uuidService           = mock[UuidService]
   private val createRecordConnector = mock[CreateRecordRouterConnector]
-  private val appConfig             = mock[AppConfig]
   private val sut                   = new CreateRecordController(
     new FakeSuccessAuthAction(),
     createRecordConnector,

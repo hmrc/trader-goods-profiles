@@ -20,7 +20,6 @@ import cats.data.EitherT
 import play.api.libs.json.Json.toJson
 import play.api.mvc.*
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import uk.gov.hmrc.tradergoodsprofiles.config.AppConfig
 import uk.gov.hmrc.tradergoodsprofiles.connectors.RemoveRecordRouterConnector
 import uk.gov.hmrc.tradergoodsprofiles.controllers.actions.{AuthAction, ValidationRules}
 import uk.gov.hmrc.tradergoodsprofiles.services.UuidService

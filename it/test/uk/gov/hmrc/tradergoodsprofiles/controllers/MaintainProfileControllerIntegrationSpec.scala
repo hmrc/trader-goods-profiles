@@ -29,7 +29,6 @@ import play.api.http.Status.*
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Json}
-import play.api.libs.ws.JsonBodyWritables.writeableOf_JsValue
 import play.api.libs.ws.{WSClient, writeableOf_JsValue}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.AffinityGroup.Agent
@@ -275,17 +274,6 @@ class MaintainProfileControllerIntegrationSpec
         .url(url)
         .withHttpHeaders(
           "X-Client-ID"  -> "Some client Id",
-          "Accept"       -> "application/vnd.hmrc.1.0+json",
-          "Content-Type" -> "application/json"
-        )
-        .put(requestBody)
-    )
-
-  private def updateProfileAndWaitWithoutClientId(requestBody: JsValue = requestBody) =
-    await(
-      wsClient
-        .url(url)
-        .withHttpHeaders(
           "Accept"       -> "application/vnd.hmrc.1.0+json",
           "Content-Type" -> "application/json"
         )

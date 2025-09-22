@@ -17,9 +17,7 @@
 package uk.gov.hmrc.tradergoodsprofiles.support
 
 import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, post, urlEqualTo}
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
-import com.github.tomakehurst.wiremock.stubbing.StubMapping
 
 trait WireMockServerSpec {
 

@@ -497,16 +497,6 @@ class GetRecordsControllerIntegrationSpec
         )
         .get()
     )
-  
-  private def getRecordAndWaitWithOutClientIDHeader(url: String) =
-    await(
-      wsClient
-        .url(url)
-        .withHttpHeaders(
-          "Accept" -> "application/vnd.hmrc.1.0+json"
-        )
-        .get()
-    )
 
   private def stubRouterRequest(url: String, status: Int, response: String) =
     wireMock.stubFor(

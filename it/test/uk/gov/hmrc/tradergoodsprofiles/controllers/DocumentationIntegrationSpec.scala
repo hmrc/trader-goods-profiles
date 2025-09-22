@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.tradergoodsprofiles.controllers
 
-import org.mockito.Mockito.{reset, when}
+import org.mockito.Mockito.{reset}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatestplus.play.PlaySpec
