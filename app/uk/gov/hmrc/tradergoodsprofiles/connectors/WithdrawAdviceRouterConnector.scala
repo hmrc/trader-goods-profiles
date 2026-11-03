@@ -55,7 +55,7 @@ class WithdrawAdviceRouterConnector @Inject() (
       .execute(httpReaderWithoutResponseBody, ec)
       .recover { case ex: Throwable =>
         logger.warn(
-          s"[WithdrawAdviceRouterConnector] - Exception when withdraw advice  for eori number $eori, record ID $recordId, with message ${ex.getMessage}",
+          s"Exception when withdraw advice  for eori number $eori, record ID $recordId, with message ${ex.getMessage}",
           ex
         )
         Left(
