@@ -50,7 +50,7 @@ class GetRecordsRouterConnector @Inject() (
       .execute(httpReader[GetRecordResponse], ec)
       .recover { case ex: Throwable =>
         logger.warn(
-          s"[GetRecordsRouterConnector] - Exception when retrieving record for eori number $eori and record ID $recordId, with message ${ex.getMessage}",
+          s"Exception when retrieving record for eori number $eori and record ID $recordId, with message ${ex.getMessage}",
           ex
         )
         Left(
@@ -80,7 +80,7 @@ class GetRecordsRouterConnector @Inject() (
       .execute(httpReader[GetRecordsResponse], ec)
       .recover { case ex: Throwable =>
         logger.warn(
-          s"[GetRecordsRouterConnector] - Exception when retrieving multiple records for eori number $eori, with message ${ex.getMessage}",
+          s"Exception when retrieving multiple records for eori number $eori, with message ${ex.getMessage}",
           ex
         )
         Left(

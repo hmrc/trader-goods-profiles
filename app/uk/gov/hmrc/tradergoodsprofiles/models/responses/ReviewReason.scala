@@ -70,11 +70,11 @@ object ReviewReason {
         case Some(reason) => JsSuccess(reason)
         case None         =>
           JsError(
-            s"[ReviewReason] Unknown ReviewReason: $value. Expected one of: ${values.map(_.value).mkString(", ")}"
+            s"Unknown ReviewReason: $value. Expected one of: ${values.map(_.value).mkString(", ")}"
           )
       }
     case other           =>
-      JsError(s"[ReviewReason] Expected JsString, got: $other")
+      JsError(s"Expected JsString, got: $other")
   }
 
 }

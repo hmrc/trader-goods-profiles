@@ -56,7 +56,7 @@ class AdviceRouterConnector @Inject() (
       .execute(httpReaderWithoutResponseBody, ec)
       .recover { case ex: Throwable =>
         logger.warn(
-          s"[RequestAdviceRouterConnector] - Exception when requesting advice for eori number $eori with message ${ex.getMessage}",
+          s"Exception when requesting advice for eori number $eori with message ${ex.getMessage}",
           ex
         )
         Left(

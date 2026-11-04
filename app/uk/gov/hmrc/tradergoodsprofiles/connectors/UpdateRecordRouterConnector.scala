@@ -85,7 +85,7 @@ class UpdateRecordRouterConnector @Inject() (
     ex: Throwable
   ): Left[ServiceError, Nothing] = {
     logger.warn(
-      s"""[UpdateRecordRouterConnector] - Exception when updating record for eori number $eori,
+      s"""Exception when updating record for eori number $eori,
                recordId $recordId, url: $url and message ${ex.getMessage}""".stripMargin,
       ex
     )

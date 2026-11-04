@@ -56,7 +56,7 @@ class CreateRecordRouterConnector @Inject() (
       .execute(httpReader[CreateOrUpdateRecordResponse], ec)
       .recover { case ex: Throwable =>
         logger.warn(
-          s"[CreateRecordRouterConnector] - Exception when creating record for eori number $eori, with message ${ex.getMessage}",
+          s"Exception when creating record for eori number $eori, with message ${ex.getMessage}",
           ex
         )
         Left(
